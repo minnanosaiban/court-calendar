@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>裁判カレンダー</title>
+<style>
+  :root{
+    --bg:#fbfbfa;
+    --panel:#ffffff;
+    --ink:#1c1c1a;
+    --muted:#8a8a84;
+    --line:#e7e7e2;
+    --line2:#f0f0ec;
+    --accent:#3a5a78;
+    --sat:#3b6ea5;
+    --sun:#b5482f;
+    --today:#fdf6e3;
+    --ok:#4a7a52;
+    --warn:#a8843a;
+    --shadow:0 1px 3px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.04);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 24px 80px;}
+
+  header.app{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:24px;}
+  header.app h1{font-size:1.7rem;font-weight:500;letter-spacing:.04em;margin:0;}
+  header.app .sub{color:var(--muted);font-size:.85rem;}
+  .spacer{flex:1;}
+
+  button{
+    font-family:inherit;font-size:.9rem;cursor:pointer;
+    border:1px solid var(--line);background:var(--panel);color:var(--ink);
+    border-radius:8px;padding:8px 14px;transition:.15s;
+  }
+  button:hover{background:#f5f5f2;border-color:#d8d8d2;}
+  button.primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+  button.primary:hover{background:#2f4a63;}
+  button.ghost{border-color:transparent;background:transparent;color:var(--muted);}
+  button.ghost:hover{background:#f0f0ec;color:var(--ink);}
+  button.icon{padding:6px 12px;font-size:1.1rem;line-height:1;}
+  button.tiny{font-size:.8rem;padding:5px 10px;}
+
+  .layout{display:grid;grid-template-columns:1fr 320px;gap:28px;align-items:start;}
+  @media(max-width:880px){.layout{grid-template-columns:1fr;}}
+
+  /* ---- calendar ---- */
+  .calbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .calbar .month{font-size:1.25rem;font-weight:500;min-width:160px;}
+
+  .cal{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);}
+  .dow{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--line);}
+  .dow div{padding:10px 0;text-align:center;font-size:.78rem;color:var(--muted);}
+  .dow div.sat{color:var(--sat);}
+  .dow div.sun{color:var(--sun);}
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);}
+  .cell{
+    min-height:104px;border-right:1px solid var(--line2);border-bottom:1px solid var(--line2);
+    padding:6px 6px 8px;position:relative;cursor:pointer;transition:.12s;
+  }
+  .cell:nth-child(7n){border-right:none;}
+  .cell:hover{background:#fafaf7;}
+  .cell.out{background:#fcfcfb;}
+  .cell.out .dnum{color:#cfcfc8;}
+  .cell.today{background:var(--today);}
+  .dnum{font-size:.82rem;color:var(--ink);display:inline-block;width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;}
+  .cell.today .dnum{background:var(--accent);color:#fff;}
+  .cell.sat .dnum{color:var(--sat);}
+  .cell.sun .dnum{color:var(--sun);}
+  .cell.today.sat .dnum,.cell.today.sun .dnum{color:#fff;}
+  .events{margin-top:4px;display:flex;flex-direction:column;gap:3px;}
+  .chip{
+    font-size:.72rem;line-height:1.35;padding:2px 6px;border-radius:5px;color:#fff;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;
+  }
+  .chip .t{opacity:.85;font-variant-numeric:tabular-nums;margin-right:3px;}
+
+  /* ---- side ---- */
+  .side h2{font-size:1.05rem;font-weight:500;margin:0 0 12px;}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);}
+  .upcoming{padding:6px;}
+  .u-item{display:flex;gap:10px;padding:10px 8px;border-radius:9px;cursor:pointer;transition:.12s;}
+  .u-item:hover{background:#f6f6f3;}
+  .u-bar{width:4px;border-radius:3px;flex:0 0 4px;}
+  .u-body{min-width:0;flex:1;}
+  .u-date{font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .u-date .dd{color:var(--ink);font-weight:600;}
+  .u-title{font-size:.92rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .u-meta{font-size:.76rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .u-empty{color:var(--muted);font-size:.85rem;padding:20px 12px;text-align:center;}
+
+  .legend{margin-top:18px;}
+  .legend .row{display:flex;align-items:center;gap:8px;padding:5px 8px;font-size:.85rem;}
+  .legend .dot{width:11px;height:11px;border-radius:50%;flex:0 0 11px;}
+  .legend .cnt{color:var(--muted);font-size:.78rem;margin-left:auto;font-variant-numeric:tabular-nums;}
+
+  /* ---- storage status ---- */
+  .store{margin-top:18px;padding:14px;}
+  .store .st-head{display:flex;align-items:center;gap:8px;font-size:.9rem;margin-bottom:6px;}
+  .store .st-dot{width:9px;height:9px;border-radius:50%;background:#cfcfc8;flex:0 0 9px;}
+  .store.connected .st-dot{background:var(--ok);}
+  .store.warn .st-dot{background:var(--warn);}
+  .store .st-path{font-size:.82rem;color:var(--muted);word-break:break-all;margin-bottom:10px;}
+  .store .st-actions{display:flex;flex-wrap:wrap;gap:8px;}
+  .store .note{font-size:.78rem;color:var(--muted);margin-top:10px;}
+
+  .tools{margin-top:14px;display:flex;flex-direction:column;gap:8px;}
+  .tools .small{font-size:.78rem;color:var(--muted);}
+
+  /* ---- modal ---- */
+  .overlay{position:fixed;inset:0;background:rgba(28,28,26,.32);display:none;align-items:center;justify-content:center;padding:20px;z-index:50;}
+  .overlay.show{display:flex;}
+  .modal{background:var(--panel);border-radius:16px;width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,.25);max-height:92vh;overflow:auto;}
+  .modal .mhead{padding:20px 24px 4px;font-size:1.15rem;font-weight:500;}
+  .modal .mbody{padding:14px 24px 4px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:.8rem;color:var(--muted);margin-bottom:5px;}
+  .field input,.field select,.field textarea{
+    width:100%;font-family:inherit;font-size:.95rem;color:var(--ink);
+    border:1px solid var(--line);border-radius:9px;padding:9px 11px;background:#fff;
+  }
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);}
+  .field textarea{resize:vertical;min-height:64px;}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .mfoot{padding:14px 24px 22px;display:flex;gap:10px;align-items:center;}
+  .mfoot .spacer{flex:1;}
+  .danger{color:var(--sun);border-color:transparent;background:transparent;}
+  .danger:hover{background:#fbeeec;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="app">
+    <h1>裁判カレンダー</h1>
+    <span class="sub">期日の管理</span>
+    <span class="spacer"></span>
+    <button class="primary" id="btnAdd">＋ 期日を追加</button>
+  </header>
+
+  <div class="layout">
+    <main>
+      <div class="calbar">
+        <button class="icon" id="prev" title="前の月">‹</button>
+        <div class="month" id="monthLabel"></div>
+        <button class="icon" id="next" title="次の月">›</button>
+        <button class="ghost" id="todayBtn">今日</button>
+      </div>
+      <div class="cal">
+        <div class="dow">
+          <div class="sun">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div class="sat">土</div>
+        </div>
+        <div class="grid" id="grid"></div>
+      </div>
+    </main>
+
+    <aside class="side">
+      <h2>今後の期日</h2>
+      <div class="panel"><div class="upcoming" id="upcoming"></div></div>
+
+      <div class="legend panel" id="legendPanel" style="display:none;">
+        <div style="padding:12px 14px 4px;font-size:.85rem;color:var(--muted);">事件</div>
+        <div id="legend" style="padding:0 6px 10px;"></div>
+      </div>
+
+      <!-- 保存先ステータス -->
+      <div class="store panel" id="store">
+        <div class="st-head"><span class="st-dot"></span><span id="stTitle">保存先を確認中…</span></div>
+        <div class="st-path" id="stPath"></div>
+        <div class="st-actions" id="stActions"></div>
+        <div class="note" id="stNote"></div>
+      </div>
+
+      <div class="tools">
+        <button class="tiny" id="btnExport">バックアップを別名で書き出す</button>
+        <button class="tiny" id="btnImport">ファイルから読み込んで統合</button>
+        <input type="file" id="fileInput" accept="application/json,.json" style="display:none;">
+        <div class="small">「保存先ファイル」を設定すると、以後の変更はそのファイルに自動保存されます。</div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- modal -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="mhead" id="modalTitle">期日を追加</div>
+    <div class="mbody">
+      <div class="field">
+        <label>事件名 <span style="color:var(--sun)">*</span></label>
+        <input type="text" id="fCase" list="caseList" placeholder="例）令和7年(ネ)第○○号 損害賠償請求控訴事件">
+        <datalist id="caseList"></datalist>
+      </div>
+      <div class="two">
+        <div class="field">
+          <label>期日 <span style="color:var(--sun)">*</span></label>
+          <input type="date" id="fDate">
+        </div>
+        <div class="field">
+          <label>時刻</label>
+          <input type="time" id="fTime">
+        </div>
+      </div>
+      <div class="two">
+        <div class="field">
+          <label>種別</label>
+          <select id="fType">
+            <option value="口頭弁論">口頭弁論</option>
+            <option value="弁論準備">弁論準備</option>
+            <option value="進行協議">進行協議</option>
+            <option value="和解">和解</option>
+            <option value="尋問">尋問</option>
+            <option value="判決言渡">判決言渡</option>
+            <option value="提出期限">提出期限（書面）</option>
+            <option value="その他">その他</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>裁判所・法廷</label>
+          <input type="text" id="fPlace" placeholder="例）東京高裁 第○法廷">
+        </div>
+      </div>
+      <div class="field">
+        <label>メモ</label>
+        <textarea id="fNote" placeholder="準備すること、提出物、持ち物など"></textarea>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="danger" id="btnDelete" style="display:none;">削除</button>
+      <span class="spacer"></span>
+      <button class="ghost" id="btnCancel">キャンセル</button>
+      <button class="primary" id="btnSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  const STORAGE_KEY = "court-calendar.events.v1";
+  const IDB_NAME = "court-cal", IDB_STORE = "kv", HANDLE_KEY = "fileHandle";
+  const PALETTE = ["#3a5a78","#9c5d3a","#4a7a52","#7a4a6e","#a8843a","#3f6e7a","#8a4a4a","#5a5a8a","#6e7a3a","#7a5a3a"];
+  const hasFS = (typeof window.showSaveFilePicker === "function");
+
+  // ---- state ----
+  let events = loadLocal();
+  let view = startOfMonth(new Date());
+  let editingId = null;
+  let fileHandle = null;     // 接続中の保存先ファイル
+  let connected = false;     // 読み書き許可あり
+  let writeChain = Promise.resolve();
+
+  // ---- elements ----
+  const grid = document.getElementById("grid");
+  const monthLabel = document.getElementById("monthLabel");
+  const upcoming = document.getElementById("upcoming");
+  const legend = document.getElementById("legend");
+  const legendPanel = document.getElementById("legendPanel");
+  const overlay = document.getElementById("overlay");
+  const modalTitle = document.getElementById("modalTitle");
+  const fCase = document.getElementById("fCase");
+  const fDate = document.getElementById("fDate");
+  const fTime = document.getElementById("fTime");
+  const fType = document.getElementById("fType");
+  const fPlace = document.getElementById("fPlace");
+  const fNote = document.getElementById("fNote");
+  const caseList = document.getElementById("caseList");
+  const btnDelete = document.getElementById("btnDelete");
+  const storeBox = document.getElementById("store");
+  const stTitle = document.getElementById("stTitle");
+  const stPath = document.getElementById("stPath");
+  const stActions = document.getElementById("stActions");
+  const stNote = document.getElementById("stNote");
+
+  // ================= storage =================
+  function loadLocal(){
+    try{ const r=localStorage.getItem(STORAGE_KEY); return r?JSON.parse(r):[]; }catch(e){ return []; }
+  }
+  function saveLocal(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(events)); }
+
+  // 変更を保存：ローカルキャッシュ＋（接続中なら）ファイル
+  function persist(){
+    saveLocal();
+    if(connected && fileHandle){
+      writeChain = writeChain.then(async ()=>{
+        const w = await fileHandle.createWritable();
+        await w.write(JSON.stringify(events,null,2));
+        await w.close();
+      }).catch(err=>{ connected=false; renderStore(); });
+    }
+  }
+
+  // ---- IndexedDB（ファイルハンドルの記憶用）----
+  function idb(){
+    return new Promise((res,rej)=>{
+      const r=indexedDB.open(IDB_NAME,1);
+      r.onupgradeneeded=()=>{ r.result.createObjectStore(IDB_STORE); };
+      r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);
+    });
+  }
+  async function idbSet(k,v){ const db=await idb(); return new Promise((res,rej)=>{ const t=db.transaction(IDB_STORE,"readwrite"); t.objectStore(IDB_STORE).put(v,k); t.oncomplete=()=>res(); t.onerror=()=>rej(t.error); }); }
+  async function idbGet(k){ const db=await idb(); return new Promise((res,rej)=>{ const t=db.transaction(IDB_STORE,"readonly"); const q=t.objectStore(IDB_STORE).get(k); q.onsuccess=()=>res(q.result); q.onerror=()=>rej(q.error); }); }
+  async function idbDel(k){ const db=await idb(); return new Promise((res,rej)=>{ const t=db.transaction(IDB_STORE,"readwrite"); t.objectStore(IDB_STORE).delete(k); t.oncomplete=()=>res(); t.onerror=()=>rej(t.error); }); }
+
+  async function readFromHandle(h){
+    const file = await h.getFile();
+    const text = await file.text();
+    if(!text.trim()) return [];
+    const data = JSON.parse(text);
+    if(!Array.isArray(data)) throw new Error("形式が違います");
+    return data;
+  }
+
+  // 新規に保存先ファイルを作成（または既存を選んで上書き先に）
+  async function chooseSaveFile(){
+    try{
+      const h = await window.showSaveFilePicker({
+        suggestedName:"裁判カレンダー.json",
+        types:[{description:"裁判カレンダー データ", accept:{"application/json":[".json"]}}]
+      });
+      fileHandle=h; connected=true;
+      await idbSet(HANDLE_KEY,h);
+      persist();              // 現在のデータをそのファイルへ書き込む
+      renderStore();
+      alert("保存先を設定しました。以後の変更は自動的にこのファイルへ保存されます。");
+    }catch(e){ /* ユーザーがキャンセル */ }
+  }
+
+  // 既存のデータファイルを開いて、それを保存先にする
+  async function openExistingFile(){
+    try{
+      const [h] = await window.showOpenFilePicker({
+        types:[{description:"裁判カレンダー データ", accept:{"application/json":[".json"]}}],
+        multiple:false
+      });
+      const data = await readFromHandle(h);
+      // 許可を読み書きに昇格
+      if(h.requestPermission){ await h.requestPermission({mode:"readwrite"}); }
+      fileHandle=h; connected=true;
+      events = data;
+      await idbSet(HANDLE_KEY,h);
+      saveLocal();
+      renderStore(); render();
+      alert("このファイルを保存先にしました。");
+    }catch(e){ if(e && e.name!=="AbortError") alert("開けませんでした：" + e.message); }
+  }
+
+  // 起動時に前回のファイルへ再接続
+  async function tryReconnect(){
+    if(!hasFS){ renderStore(); return; }
+    let h=null;
+    try{ h=await idbGet(HANDLE_KEY); }catch(e){}
+    if(!h){ renderStore(); return; }
+    fileHandle=h;
+    try{
+      const perm = await h.queryPermission({mode:"readwrite"});
+      if(perm==="granted"){
+        events = await readFromHandle(h);
+        connected=true; saveLocal(); render();
+      }else{
+        connected=false;   // クリックで再接続が必要
+      }
+    }catch(e){ connected=false; }
+    renderStore();
+  }
+
+  async function reconnectClick(){
+    if(!fileHandle) return;
+    try{
+      const perm = await fileHandle.requestPermission({mode:"readwrite"});
+      if(perm==="granted"){
+        events = await readFromHandle(fileHandle);
+        connected=true; saveLocal(); render(); renderStore();
+      }
+    }catch(e){ alert("再接続できませんでした：" + e.message); }
+  }
+
+  async function disconnectFile(){
+    if(!confirm("保存先ファイルの設定を解除します。データはファイルに残ります。よろしいですか？")) return;
+    fileHandle=null; connected=false;
+    try{ await idbDel(HANDLE_KEY); }catch(e){}
+    renderStore();
+  }
+
+  function renderStore(){
+    storeBox.classList.remove("connected","warn");
+    stActions.innerHTML="";
+    if(!hasFS){
+      stTitle.textContent="自動保存：非対応のブラウザ";
+      stPath.textContent="このブラウザではファイル自動保存が使えません。下の「バックアップを別名で書き出す」で保存してください。";
+      stNote.textContent="（Microsoft Edge または Google Chrome で開くと自動保存が使えます）";
+      return;
+    }
+    if(connected && fileHandle){
+      storeBox.classList.add("connected");
+      stTitle.textContent="自動保存中";
+      stPath.textContent="保存先：" + fileHandle.name;
+      stNote.textContent="変更するたびに、このファイルへ自動で保存されます。";
+      addBtn("保存先を変更","tiny ghost",chooseSaveFile);
+      addBtn("解除","tiny ghost",disconnectFile);
+    }else if(fileHandle && !connected){
+      storeBox.classList.add("warn");
+      stTitle.textContent="再接続が必要です";
+      stPath.textContent="前回の保存先：" + fileHandle.name;
+      stNote.textContent="セキュリティのため、開くたびに一度だけ許可が必要です。";
+      addBtn("このファイルに再接続","tiny primary",reconnectClick);
+      addBtn("別のファイルにする","tiny ghost",openExistingFile);
+    }else{
+      stTitle.textContent="保存先が未設定です";
+      stPath.textContent="今はブラウザ内に一時保存中。失わないために保存先ファイルを設定してください。";
+      stNote.textContent="OneDrive 内のフォルダに作れば、自動でバックアップ・同期されます。";
+      addBtn("保存先ファイルを作る","tiny primary",chooseSaveFile);
+      addBtn("既存ファイルを開く","tiny ghost",openExistingFile);
+    }
+  }
+  function addBtn(label,cls,fn){
+    const b=document.createElement("button");
+    b.className=cls; b.textContent=label; b.addEventListener("click",fn);
+    stActions.appendChild(b);
+  }
+
+  // ================= calendar =================
+  function startOfMonth(d){ return new Date(d.getFullYear(), d.getMonth(), 1); }
+  function ymd(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
+  function parseYmd(s){ const [y,m,d]=s.split("-").map(Number); return new Date(y,m-1,d); }
+  function todayStr(){ return ymd(new Date()); }
+  const WD=["日","月","火","水","木","金","土"];
+
+  function colorFor(name){
+    const names=[...new Set(events.map(e=>e.case))].sort();
+    const idx=names.indexOf(name);
+    return PALETTE[(idx<0?0:idx)%PALETTE.length];
+  }
+
+  function render(){
+    const y=view.getFullYear(), m=view.getMonth();
+    monthLabel.textContent=`${y}年 ${m+1}月`;
+    const first=new Date(y,m,1);
+    const gridStart=new Date(y,m,1-first.getDay());
+    const today=todayStr();
+
+    grid.innerHTML="";
+    for(let i=0;i<42;i++){
+      const d=new Date(gridStart.getFullYear(),gridStart.getMonth(),gridStart.getDate()+i);
+      const ds=ymd(d);
+      const cell=document.createElement("div");
+      cell.className="cell";
+      if(d.getMonth()!==m) cell.classList.add("out");
+      if(ds===today) cell.classList.add("today");
+      if(d.getDay()===0) cell.classList.add("sun");
+      if(d.getDay()===6) cell.classList.add("sat");
+
+      const dn=document.createElement("span");
+      dn.className="dnum"; dn.textContent=d.getDate();
+      cell.appendChild(dn);
+
+      const evWrap=document.createElement("div"); evWrap.className="events";
+      const dayEvents=events.filter(e=>e.date===ds).sort(byTime);
+      for(const ev of dayEvents){
+        const chip=document.createElement("div");
+        chip.className="chip"; chip.style.background=colorFor(ev.case);
+        chip.title=`${ev.time?ev.time+" ":""}${ev.case}${ev.type?" ／ "+ev.type:""}${ev.place?" ／ "+ev.place:""}`;
+        chip.innerHTML=`${ev.time?`<span class="t">${ev.time}</span>`:""}${escapeHtml(ev.type||ev.case)}`;
+        chip.addEventListener("click",(e)=>{e.stopPropagation();openEdit(ev.id);});
+        evWrap.appendChild(chip);
+      }
+      cell.appendChild(evWrap);
+      cell.addEventListener("click",()=>openAdd(ds));
+      grid.appendChild(cell);
+    }
+    renderUpcoming(); renderLegend();
+  }
+
+  function byTime(a,b){ return (a.time||"99:99").localeCompare(b.time||"99:99"); }
+
+  function renderUpcoming(){
+    const today=todayStr();
+    const list=events.filter(e=>e.date>=today)
+      .sort((a,b)=> a.date===b.date?byTime(a,b):a.date.localeCompare(b.date)).slice(0,12);
+    upcoming.innerHTML="";
+    if(!list.length){ upcoming.innerHTML=`<div class="u-empty">今後の予定はありません</div>`; return; }
+    for(const ev of list){
+      const d=parseYmd(ev.date);
+      const item=document.createElement("div"); item.className="u-item";
+      const bar=document.createElement("div"); bar.className="u-bar"; bar.style.background=colorFor(ev.case);
+      const body=document.createElement("div"); body.className="u-body";
+      const dd=`${d.getMonth()+1}/${d.getDate()}`;
+      body.innerHTML=
+        `<div class="u-date"><span class="dd">${dd}</span>（${WD[d.getDay()]}）${ev.time?" "+ev.time:""}</div>`+
+        `<div class="u-title">${escapeHtml(ev.case)}</div>`+
+        `<div class="u-meta">${escapeHtml([ev.type,ev.place].filter(Boolean).join(" ／ "))||"&nbsp;"}</div>`;
+      item.appendChild(bar); item.appendChild(body);
+      item.addEventListener("click",()=>openEdit(ev.id));
+      upcoming.appendChild(item);
+    }
+  }
+
+  function renderLegend(){
+    const names=[...new Set(events.map(e=>e.case))].sort();
+    if(!names.length){ legendPanel.style.display="none"; return; }
+    legendPanel.style.display="block"; legend.innerHTML="";
+    for(const n of names){
+      const cnt=events.filter(e=>e.case===n).length;
+      const row=document.createElement("div"); row.className="row";
+      row.innerHTML=`<span class="dot" style="background:${colorFor(n)}"></span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(n)}</span><span class="cnt">${cnt}件</span>`;
+      legend.appendChild(row);
+    }
+  }
+
+  // ================= modal =================
+  function refreshCaseList(){
+    const names=[...new Set(events.map(e=>e.case))].sort();
+    caseList.innerHTML=names.map(n=>`<option value="${escapeAttr(n)}">`).join("");
+  }
+  function openAdd(dateStr){
+    editingId=null; modalTitle.textContent="期日を追加"; btnDelete.style.display="none";
+    refreshCaseList();
+    fCase.value=""; fDate.value=dateStr||todayStr(); fTime.value="";
+    fType.value="口頭弁論"; fPlace.value=""; fNote.value="";
+    if(events.length){
+      const recent=[...events].sort((a,b)=>b.date.localeCompare(a.date))[0];
+      fCase.value=recent.case; fPlace.value=recent.place||"";
+    }
+    overlay.classList.add("show"); fDate.focus();
+  }
+  function openEdit(id){
+    const ev=events.find(e=>e.id===id); if(!ev) return;
+    editingId=id; modalTitle.textContent="期日を編集"; btnDelete.style.display="inline-block";
+    refreshCaseList();
+    fCase.value=ev.case; fDate.value=ev.date; fTime.value=ev.time||"";
+    fType.value=ev.type||"その他"; fPlace.value=ev.place||""; fNote.value=ev.note||"";
+    overlay.classList.add("show");
+  }
+  function closeModal(){ overlay.classList.remove("show"); editingId=null; }
+
+  function saveEntry(){
+    const c=fCase.value.trim(), d=fDate.value;
+    if(!c){ alert("事件名を入力してください。"); fCase.focus(); return; }
+    if(!d){ alert("期日（日付）を入力してください。"); fDate.focus(); return; }
+    const data={case:c,date:d,time:fTime.value,type:fType.value,place:fPlace.value.trim(),note:fNote.value.trim()};
+    if(editingId){ Object.assign(events.find(e=>e.id===editingId),data); }
+    else{ data.id=uid(); events.push(data); }
+    persist(); closeModal(); render();
+  }
+  function deleteEntry(){
+    if(!editingId) return;
+    if(!confirm("この期日を削除します。よろしいですか？")) return;
+    events=events.filter(e=>e.id!==editingId);
+    persist(); closeModal(); render();
+  }
+
+  // ================= manual backup =================
+  function exportData(){
+    const blob=new Blob([JSON.stringify(events,null,2)],{type:"application/json"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    const t=new Date();
+    a.href=url;
+    a.download=`裁判カレンダー_${t.getFullYear()}${String(t.getMonth()+1).padStart(2,"0")}${String(t.getDate()).padStart(2,"0")}.json`;
+    a.click(); URL.revokeObjectURL(url);
+  }
+  function importMerge(file){
+    const r=new FileReader();
+    r.onload=()=>{
+      try{
+        const data=JSON.parse(r.result);
+        if(!Array.isArray(data)) throw new Error("形式が違います");
+        if(!confirm("読み込んだ内容を現在のデータに統合します。よろしいですか？")) return;
+        const ids=new Set(events.map(e=>e.id));
+        for(const e of data){ if(!e.id) e.id=uid(); if(!ids.has(e.id)){ events.push(e); ids.add(e.id); } }
+        persist(); render(); alert("統合しました。");
+      }catch(err){ alert("読み込めませんでした：" + err.message); }
+    };
+    r.readAsText(file);
+  }
+
+  // ---- utils ----
+  function uid(){ return "e"+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+  function escapeHtml(s){ return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+  function escapeAttr(s){ return String(s||"").replace(/"/g,"&quot;"); }
+
+  // ---- wire ----
+  document.getElementById("prev").addEventListener("click",()=>{view=new Date(view.getFullYear(),view.getMonth()-1,1);render();});
+  document.getElementById("next").addEventListener("click",()=>{view=new Date(view.getFullYear(),view.getMonth()+1,1);render();});
+  document.getElementById("todayBtn").addEventListener("click",()=>{view=startOfMonth(new Date());render();});
+  document.getElementById("btnAdd").addEventListener("click",()=>openAdd(todayStr()));
+  document.getElementById("btnSave").addEventListener("click",saveEntry);
+  document.getElementById("btnCancel").addEventListener("click",closeModal);
+  document.getElementById("btnDelete").addEventListener("click",deleteEntry);
+  document.getElementById("btnExport").addEventListener("click",exportData);
+  document.getElementById("btnImport").addEventListener("click",()=>document.getElementById("fileInput").click());
+  document.getElementById("fileInput").addEventListener("change",(e)=>{ if(e.target.files[0]) importMerge(e.target.files[0]); e.target.value=""; });
+  overlay.addEventListener("click",(e)=>{ if(e.target===overlay) closeModal(); });
+  document.addEventListener("keydown",(e)=>{
+    if(e.key==="Escape"&&overlay.classList.contains("show")) closeModal();
+    if((e.ctrlKey||e.metaKey)&&e.key==="Enter"&&overlay.classList.contains("show")) saveEntry();
+  });
+
+  render();
+  tryReconnect();
+})();
+</script>
+</body>
+</html>
