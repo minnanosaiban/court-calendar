@@ -1,0 +1,15 @@
+{
+  "name": "court-calendar",
+  "private": true,
+  "version": "1.0.0",
+  "description": "裁判の期日を共有するカレンダー（Cloudflare Pages + Functions + D1 + Access）",
+  "scripts": {
+    "db:init:local": "wrangler d1 execute court-calendar --local --file schema.sql",
+    "db:init:remote": "wrangler d1 execute court-calendar --remote --file schema.sql",
+    "dev": "wrangler pages dev",
+    "deploy": "wrangler pages deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.105.0"
+  }
+}
