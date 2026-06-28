@@ -1,11 +1,11 @@
-import { json, rowToEvent, getIdentity, canWrite } from "../../_common.js";
+import { json, rowToEvent, getIdentity, authorizeWrite } from "../../_common.js";
 
 const COLS = "id, case_name, date, time, type, place, note, created_by, updated_by, updated_at";
 
 // 更新（書き込み権限が必要）
 export async function onRequestPut({ request, env, params }) {
   const id = await getIdentity(request, env);
-  if (!canWrite(id.email, env)) return json({ error: "forbidden" }, 403);
+  if (!authorizeWrite(request, env, id)) return json({ error: "forbidden" }, 403);
 
   const eid = params.id;
   let body;
@@ -38,7 +38,7 @@ export async function onRequestPut({ request, env, params }) {
 // 削除（書き込み権限が必要）
 export async function onRequestDelete({ request, env, params }) {
   const id = await getIdentity(request, env);
-  if (!canWrite(id.email, env)) return json({ error: "forbidden" }, 403);
+  if (!authorizeWrite(request, env, id)) return json({ error: "forbidden" }, 403);
 
   const res = await env.DB.prepare(`DELETE FROM events WHERE id=?`).bind(params.id).run();
   if (!res.meta || res.meta.changes === 0) return json({ error: "not found" }, 404);

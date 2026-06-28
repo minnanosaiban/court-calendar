@@ -100,10 +100,17 @@ export async function getIdentity(request, env) {
   return { email: null, viaAccess: false };
 }
 
-// 書き込み権限の判定
-// 第1段階: OWNER_EMAIL のみ true / 第2段階: ALLOW_ALL_WRITES="true" で全員 true
-export function canWrite(email, env) {
-  if (!email) return false;
-  if (String(env.ALLOW_ALL_WRITES).toLowerCase() === "true") return true;
-  return email === String(env.OWNER_EMAIL || "").toLowerCase();
+// 書き込み権限の判定。次のどちらかを満たせば許可：
+//  (A) 編集パスワード一致（公開運用の基本。ヘッダ X-Edit-Key が EDIT_PASSWORD と一致）
+//  (B) 将来 Access を入れた場合のログイン許可（email が OWNER_EMAIL、または ALLOW_ALL_WRITES="true"）
+export function authorizeWrite(request, env, identity) {
+  // (A) 編集パスワード
+  const key = request.headers.get("X-Edit-Key");
+  if (env.EDIT_PASSWORD && key && key === env.EDIT_PASSWORD) return true;
+  // (B) Access ログイン（将来用。今は identity.email は null）
+  if (identity && identity.email) {
+    if (String(env.ALLOW_ALL_WRITES).toLowerCase() === "true") return true;
+    if (identity.email === String(env.OWNER_EMAIL || "").toLowerCase()) return true;
+  }
+  return false;
 }

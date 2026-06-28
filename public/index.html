@@ -249,8 +249,10 @@
 (function(){
   "use strict";
   const PALETTE = ["#3a5a78","#9c5d3a","#4a7a52","#7a4a6e","#a8843a","#3f6e7a","#8a4a4a","#5a5a8a","#6e7a3a","#7a5a3a"];
+  const EDITKEY_LS = "court-calendar.editkey";
 
   // ---- state ----
+  let editKey = localStorage.getItem(EDITKEY_LS) || "";   // 編集パスワード（この端末に保存）
   let events = [];
   let me = { email:null, canWrite:false, viaAccess:false, allowAll:false };
   let view = startOfMonth(new Date());
@@ -286,6 +288,7 @@
   // ================= API =================
   async function api(method, path, body){
     const opt = { method, headers:{} };
+    if(editKey) opt.headers["X-Edit-Key"]=editKey;
     if(body!==undefined){ opt.headers["content-type"]="application/json"; opt.body=JSON.stringify(body); }
     const res = await fetch(path, opt);
     if(!res.ok){
@@ -399,24 +402,42 @@
   function renderStatus(){
     storeBox.classList.remove("connected","warn");
     stActions.innerHTML="";
-    if(me.email && me.canWrite){
+    if(me.canWrite){
       storeBox.classList.add("connected");
       stTitle.textContent="編集できます";
-      stPath.textContent="ログイン中：" + me.email;
-      stNote.textContent = me.allowAll
-        ? "閲覧を許可された人は全員、期日を入力できます（第2段階）。"
-        : "いまは第1段階：入力できるのはあなたのみ。閲覧者には表示専用で見えます。";
-    } else if(me.email){
-      storeBox.classList.add("warn");
-      stTitle.textContent="閲覧のみ";
-      stPath.textContent="ログイン中：" + me.email;
-      stNote.textContent="このアカウントは表示専用です。期日の追加・編集はできません。";
+      stPath.textContent="この端末は編集ロック解除済み";
+      stNote.textContent="誰でも閲覧できる公開カレンダーです。編集できるのは編集パスワードを知っている人だけです。";
+      addBtn("ロックする","tiny ghost",lockEditing);
     } else {
       storeBox.classList.add("warn");
-      stTitle.textContent="ログイン情報を取得できません";
-      stPath.textContent="";
-      stNote.textContent="ページを再読み込みしてください。問題が続く場合は管理者へ連絡してください。";
+      stTitle.textContent="閲覧モード（公開）";
+      stPath.textContent="どなたでも閲覧できます。";
+      stNote.textContent="期日を追加・編集するには編集パスワードが必要です。";
+      addBtn("編集パスワードを入力","tiny primary",unlockEditing);
     }
+  }
+  function addBtn(label,cls,fn){
+    const b=document.createElement("button"); b.className=cls; b.textContent=label;
+    b.addEventListener("click",fn); stActions.appendChild(b);
+  }
+  async function unlockEditing(){
+    const pw = prompt("編集パスワードを入力してください");
+    if(pw==null) return;
+    editKey = pw;
+    try{
+      const r = await apiMe();
+      if(r && r.canWrite){
+        localStorage.setItem(EDITKEY_LS, editKey);
+        me = r; applyPerm(); renderStatus(); render();
+      }else{
+        editKey=""; alert("パスワードが違います。");
+      }
+    }catch(e){ editKey=""; alert("確認できませんでした：" + (e.message||e)); }
+  }
+  function lockEditing(){
+    editKey=""; localStorage.removeItem(EDITKEY_LS);
+    me = Object.assign({}, me, {canWrite:false});
+    applyPerm(); renderStatus(); render();
   }
 
   // ================= modal =================

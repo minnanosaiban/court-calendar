@@ -1,4 +1,4 @@
-import { json, rowToEvent, getIdentity, canWrite } from "../_common.js";
+import { json, rowToEvent, getIdentity, authorizeWrite } from "../_common.js";
 
 const COLS = "id, case_name, date, time, type, place, note, created_by, updated_by, updated_at";
 
@@ -17,7 +17,7 @@ export async function onRequestGet({ env }) {
 // 追加（書き込み権限が必要）
 export async function onRequestPost({ request, env }) {
   const id = await getIdentity(request, env);
-  if (!canWrite(id.email, env)) return json({ error: "forbidden" }, 403);
+  if (!authorizeWrite(request, env, id)) return json({ error: "forbidden" }, 403);
 
   let body;
   try { body = await request.json(); } catch { return json({ error: "bad json" }, 400); }
