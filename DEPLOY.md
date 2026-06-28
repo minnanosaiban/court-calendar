@@ -10,7 +10,7 @@
 ## 構成
 
 ```
-index.html              画面（カレンダー）
+public/index.html       画面（カレンダー・これだけが公開配信される）
 functions/_common.js    共通処理（認証・権限・JSON）
 functions/api/me.js          GET  /api/me      ログイン状態と権限
 functions/api/events.js      GET  /api/events  一覧 / POST  追加
@@ -77,9 +77,13 @@ npx wrangler pages deploy
 
 ## ローカルでの動作確認（ログイン不要）
 
+ローカルでは擬似ログインを使う。プロジェクト直下に `.dev.vars`（gitには載らない）を作る：
+```
+LOCAL_DEV="true"
+DEV_EMAIL="you@example.com"
+```
+`LOCAL_DEV="true"` のときだけ `DEV_EMAIL` がログインユーザー扱いになる（本番には置かないので、本番は必ず Access の実ログインが必要）。閲覧者を試すときは `DEV_EMAIL` を別アドレスにする。
 ```
 npx wrangler d1 execute court-calendar --local --file schema.sql   # 最初の1回
 npx wrangler pages dev                                              # http://127.0.0.1:8788
 ```
-ローカルでは `DEV_EMAIL` をログインユーザーとみなす。別ユーザー（閲覧者）を試すには
-プロジェクト直下に `.dev.vars` を作り `DEV_EMAIL="someone@example.com"` と書く（gitには載らない）。

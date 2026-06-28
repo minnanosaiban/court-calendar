@@ -91,9 +91,13 @@ export async function getIdentity(request, env) {
       return { email: null, viaAccess: true, error: e.message };
     }
   }
-  // Access 未設定（ローカル開発など）
-  const dev = String(env.DEV_EMAIL || "").toLowerCase();
-  return { email: dev || null, viaAccess: false };
+  // ローカル開発時のみ: .dev.vars に LOCAL_DEV="true" があるときだけ DEV_EMAIL を擬似ログインとして使う。
+  // 本番(Pages)では LOCAL_DEV を設定しないので、Access 未設定 or JWT 無しは「未認証＝書き込み不可」になる。
+  if (String(env.LOCAL_DEV).toLowerCase() === "true") {
+    const dev = String(env.DEV_EMAIL || "").toLowerCase();
+    return { email: dev || null, viaAccess: false };
+  }
+  return { email: null, viaAccess: false };
 }
 
 // 書き込み権限の判定
