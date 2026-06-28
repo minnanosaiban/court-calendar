@@ -104,9 +104,10 @@ export async function getIdentity(request, env) {
 //  (A) 編集パスワード一致（公開運用の基本。ヘッダ X-Edit-Key が EDIT_PASSWORD と一致）
 //  (B) 将来 Access を入れた場合のログイン許可（email が OWNER_EMAIL、または ALLOW_ALL_WRITES="true"）
 export function authorizeWrite(request, env, identity) {
-  // (A) 編集パスワード
+  // (A) 編集パスワード（保存時の末尾改行などに備え前後空白を除去して比較）
   const key = request.headers.get("X-Edit-Key");
-  if (env.EDIT_PASSWORD && key && key === env.EDIT_PASSWORD) return true;
+  const pw = env.EDIT_PASSWORD ? String(env.EDIT_PASSWORD).trim() : "";
+  if (pw && key && key.trim() === pw) return true;
   // (B) Access ログイン（将来用。今は identity.email は null）
   if (identity && identity.email) {
     if (String(env.ALLOW_ALL_WRITES).toLowerCase() === "true") return true;
