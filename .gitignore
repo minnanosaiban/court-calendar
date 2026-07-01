@@ -2,3 +2,7 @@ node_modules/
 .wrangler/
 .dev.vars
 *.log
+
+# 実運用の値（メール・D1のID等）を含むため公開しない。
+# 公開用のひな形は wrangler.toml.example を参照。
+wrangler.toml

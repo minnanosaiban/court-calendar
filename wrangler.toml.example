@@ -1,0 +1,29 @@
+# これは公開用のひな形です。
+# このファイルをコピーして wrangler.toml を作り、実際の値を記入してください。
+# （wrangler.toml は .gitignore 済み＝GitHub には公開されません）
+
+name = "court-calendar"
+compatibility_date = "2026-06-01"
+pages_build_output_dir = "public"
+
+# 共有データベース（D1）
+[[d1_databases]]
+binding = "DB"
+database_name = "court-calendar"
+database_id = "YOUR_D1_DATABASE_ID"   # `npx wrangler d1 list` で確認できるID
+
+[vars]
+# 第1段階: 書き込みは OWNER_EMAIL のみ。
+# 第2段階に進むときは ALLOW_ALL_WRITES = "true" に変えて再デプロイすれば、
+# Access を通った人（＝閲覧を許可した人）全員が入力できるようになる。
+ALLOW_ALL_WRITES = "false"
+OWNER_EMAIL = "you@example.com"        # 書き込みを許可する本人のメール
+
+# ローカル開発の擬似ログインは .dev.vars（git管理外）に LOCAL_DEV="true" と DEV_EMAIL を書く。
+# 本番にはこれらを置かないので、本番は必ず Access の実ログインが要る。
+
+# ↓ Cloudflare Access のアプリを作った後に設定する（それまでは空）。
+#   CF_ACCESS_TEAM_DOMAIN = "yourteam.cloudflareaccess.com"
+#   CF_ACCESS_AUD = "（Access アプリの Application Audience タグ）"
+CF_ACCESS_TEAM_DOMAIN = ""
+CF_ACCESS_AUD = ""
