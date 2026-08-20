@@ -24,6 +24,7 @@
 
   <!-- 最近の期日：直近に期日がある事件の詳細を、常にここに固定表示する -->
   <section aria-labelledby="recent-h">
+    <p class="jumplink"><a href="#cal-h">→ カレンダーを見る</a></p>
     <p class="sech" id="recent-h">最近の期日</p>
     <div id="recentBody"></div>
   </section>
@@ -31,6 +32,7 @@
   <!-- カレンダー：日付にカーソルを合わせる（タップする）とその日の予定が出て、クリックすると詳しいページへ -->
   <section aria-labelledby="cal-h">
     <p class="sech" id="cal-h">カレンダー</p>
+    <p class="hint" id="calHint"></p>
     <div class="calhead">
       <div class="navbtns">
         <span id="prev">‹ 前の月</span>
@@ -58,7 +60,6 @@
       <span><i></i>誰でも傍聴できる</span>
       <span><i class="o"></i>非公開・要確認</span>
     </p>
-    <p class="hint" id="calHint"></p>
   </section>
 
   <!-- 今後の期日 -->
@@ -271,9 +272,9 @@
       const barsWrap=document.createElement("span");
       barsWrap.className="bars"+(shown.length>1?" n"+shown.length:"");
       for(const ev of shown){
+        // 開いている期日は朱印と同じ赤（CSS既定）／非公開は輪郭だけ（.shut）
         const bar=document.createElement("i");
         bar.className="bar"+(ev.open===false?" shut":"");
-        if(ev.open!==false) bar.style.background=CC.colorFor(ev.case);
         barsWrap.appendChild(bar);
       }
       if(dayEvents.length>shown.length){
@@ -311,15 +312,16 @@
     for(const ev of list){
       const d=CC.parseYmd(ev.date);
       const item=document.createElement("div"); item.className="u";
-      const dot=document.createElement("span"); dot.className="udot";
-      dot.style.background = ev.open===false ? "#a9a7a0" : CC.colorFor(ev.case);
+      // 事件ごとの色は縦棒で（カレンダーの横線は開閉だけを示す赤に統一したので、事件の見分けはここで）
+      const bar=document.createElement("span"); bar.className="ubar";
+      bar.style.background = ev.open===false ? "#a9a7a0" : CC.colorFor(ev.case);
       const body=document.createElement("div"); body.className="ubody";
       const place=[ev.court,ev.place].filter(Boolean).join(" ");
       body.innerHTML=
         `<div class="ud"><b>${d.getMonth()+1}/${d.getDate()}</b>（${CC.WD[d.getDay()]}）${ev.time?" "+ev.time:""}</div>`+
         `<div class="ut">${CC.escapeHtml(ev.case)}</div>`+
         `<div class="um">${CC.escapeHtml([ev.type,place].filter(Boolean).join(" ／ "))||"&nbsp;"}</div>`;
-      item.appendChild(dot); item.appendChild(body);
+      item.appendChild(bar); item.appendChild(body);
       item.addEventListener("click",()=>{ location.href="case?case="+encodeURIComponent(ev.case); });
       upcomingBox.appendChild(item);
     }

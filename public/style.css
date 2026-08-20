@@ -73,6 +73,7 @@ a{color:inherit}
 .bround{font-size:.72rem;color:var(--mut);margin-left:.5em}
 .bubble .del{color:var(--mut);font-size:.75rem;margin-left:.5em;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .board-empty{color:var(--mut);font-size:.85rem;margin-top:10px}
+.board-empty a{color:var(--ink);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 .bwrite{margin-top:12px}
 .bwrite a{display:inline-block;background:#fff;border-radius:999px;padding:7px 18px;
   font-size:.82rem;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.06)}
@@ -116,17 +117,19 @@ a{color:inherit}
 .cell.we .n{color:#8a877d}
 .cell.today .n{background:var(--ink);color:#fff}
 .cell.previewing{box-shadow:inset 0 0 0 1.5px var(--faint);border-radius:12px}
-/* 期日の印＝数字の下の下線バー。件数が増えるとバーが分かれて本数で伝わる */
+/* 期日の印＝数字の下の下線バー、朱印と同じ赤。件数が増えるとバーが分かれて本数で伝わる */
 .bars{height:9px;margin-top:3px;display:flex;justify-content:center;gap:3px;align-items:center}
-.bar{width:16px;height:3px;border-radius:2px}
+.bar{width:16px;height:3px;border-radius:2px;background:var(--stamp)}
 .bars.n2 .bar{width:8px}
 .bars.n3 .bar{width:6px}
 .bar.shut{background:none !important;box-shadow:inset 0 0 0 1.5px #a9a7a0}
 .bars .more{color:var(--mut);font-size:.58rem;line-height:1}
 .leg{color:var(--mut);font-size:.75rem;margin:12px 8px 0;display:flex;gap:22px;flex-wrap:wrap}
-.leg i{display:inline-block;width:15px;height:3px;border-radius:2px;background:#5f7a63;margin-right:7px;vertical-align:4px}
+.leg i{display:inline-block;width:15px;height:3px;border-radius:2px;background:var(--stamp);margin-right:7px;vertical-align:4px}
 .leg i.o{background:none;box-shadow:inset 0 0 0 1.5px #a9a7a0}
-.hint{color:var(--mut);font-size:.8rem;margin:6px 8px 0}
+.hint{color:var(--mut);font-size:.8rem;margin:6px 8px 22px}
+.jumplink{font-size:.8rem;margin:0 4px 8px}
+.jumplink a{color:var(--mut);text-decoration:underline;text-underline-offset:3px}
 
 /* ---- 日付のプレビュー（ホバー／タップ） ---- */
 .daypop{position:fixed;z-index:60;background:var(--card);border-radius:14px;
@@ -141,9 +144,10 @@ a{color:inherit}
 
 /* ---- upcoming ---- */
 .ucard{padding:8px 10px}
-.u{display:flex;gap:12px;padding:13px 10px;border-radius:14px;cursor:pointer;align-items:baseline}
+.u{display:flex;gap:12px;padding:13px 10px;border-radius:14px;cursor:pointer;align-items:stretch}
 .u:hover{background:var(--tint)}
-.udot{width:7px;height:7px;border-radius:50%;flex:0 0 7px;align-self:center}
+/* 事件ごとの色を示す縦棒（カレンダーの横線＝赤一色に対して、ここは事件の見分けを担う） */
+.ubar{width:4px;border-radius:3px;flex:0 0 4px}
 .ubody{min-width:0}
 .ud{color:var(--mut);font-size:.8rem;font-variant-numeric:tabular-nums}
 .ud b{color:var(--ink);font-weight:600;font-size:.98rem;font-family:"Shippori Mincho",serif}

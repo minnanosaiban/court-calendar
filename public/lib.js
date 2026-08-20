@@ -158,8 +158,8 @@ window.CC = (function(){
         ? postFormHtml(caseName)
         : `<p class="bwrite"><a data-openpost="${escapeAttr(caseName)}">傍聴の報告を書く</a></p>`;
     }else{
-      // 押させてから断らない：受付前はリンクを出さず、一文だけ添える
-      html += `<p class="board-empty">傍聴の報告の投稿は、いま準備中です。</p>`;
+      // 一般の投稿はまだ受け付けていない（Turnstile未設定）。運営は編集パスワードで書けるので、その導線だけ出す
+      html += `<p class="board-empty">傍聴の報告の投稿には、<a data-unlock="1">パスワード</a>が必要です。</p>`;
     }
     html += `</div>`;
     return html;
@@ -290,6 +290,8 @@ window.CC = (function(){
     container.querySelectorAll("[data-delpost]").forEach(a=>{
       a.addEventListener("click",()=>removePost(a.dataset.delpost));
     });
+    const unlockLink = container.querySelector("[data-unlock]");
+    if(unlockLink) unlockLink.addEventListener("click",unlockEditing);
     const q=container.querySelector("#pQuote");
     if(q){
       const c=container.querySelector("#pCount");
@@ -320,7 +322,7 @@ window.CC = (function(){
     }else{
       el.innerHTML =
         `どなたでも閲覧できる公開カレンダーです。掲載内容は呼びかけ人から提供された情報にもとづきます。`+
-        `<br>期日の追加・編集には <a id="stUnlock">編集パスワードを入力</a> してください。`;
+        `<br>期日の追加・編集には、<a id="stUnlock">パスワード</a>が必要です。`;
       el.querySelector("#stUnlock").addEventListener("click",unlockEditing);
     }
   }
