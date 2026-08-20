@@ -3,7 +3,6 @@
 // 呼び出す側（各ページ末尾のスクリプト）は window.CC 経由で使う。
 window.CC = (function(){
   "use strict";
-  const PALETTE = ["#5c6b7d","#5f7a63","#7d5f74","#8a6a50","#607a7d","#7d6a5c","#6b5c7d","#7a7d5f","#8a5c5c","#5c7d75"];
   const EDITKEY_LS = "court-calendar.editkey";
   const WD = ["日","月","火","水","木","金","土"];
 
@@ -28,12 +27,6 @@ window.CC = (function(){
   function escapeHtml(s){ return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
   function escapeAttr(s){ return String(s||"").replace(/"/g,"&quot;"); }
   function cssEsc(s){ return String(s).replace(/"/g,'\\"'); }
-
-  function colorFor(name){
-    const names=[...new Set(events.map(e=>e.case))].sort();
-    const idx=names.indexOf(name);
-    return PALETTE[(idx<0?0:idx)%PALETTE.length];
-  }
 
   // ================= API =================
   async function api(method, path, body, extra){
@@ -516,13 +509,13 @@ window.CC = (function(){
   }
 
   return {
-    PALETTE, WD,
+    WD,
     startOfMonth, ymd, parseYmd, todayStr, byTime, escapeHtml, escapeAttr, cssEsc,
     get events(){ return events; },
     get posts(){ return posts; },
     get me(){ return me; },
     get loaded(){ return loaded; },
-    colorFor, caseEvents, casePosts, nearestCase, eventLine,
+    caseEvents, casePosts, nearestCase, eventLine,
     load, renderCaseDetail, renderStatus, openAdd,
     setOnChange(fn){ onChange = fn; },
   };

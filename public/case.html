@@ -3,12 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>事件の詳細 ｜ 傍聴席から</title>
-<meta name="description" content="傍聴席から見た法廷のいまと、これからの期日を、ひとつのカレンダーに。">
+<title>事件の詳細 ｜ みんなの裁判</title>
+<meta name="description" content="行けない日も、法廷のいまがわかる。裁判の期日と、傍聴に行った人の報告を、ひとつのカレンダーに。">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23f2e4c9'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -17,12 +18,12 @@
   <header class="masthead">
     <div class="stamp" aria-hidden="true">傍聴</div>
     <div>
-      <h1>傍聴席から</h1>
-      <p>傍聴席から見た法廷のいまと、これからの期日を、ひとつのカレンダーに</p>
+      <h1>みんなの裁判</h1>
+      <p>行けない日も、法廷のいまがわかる。裁判の期日と、傍聴に行った人の報告を、ひとつのカレンダーに</p>
     </div>
   </header>
 
-  <a class="backlink" href="index.html">← カレンダーに戻る</a>
+  <a class="backlink" href="index.html"><i class="bi bi-arrow-left" aria-hidden="true"></i> カレンダーに戻る</a>
 
   <section aria-labelledby="case-h" style="margin-top:28px">
     <div id="caseBody"></div>
@@ -32,7 +33,7 @@
   <input type="file" id="fileInput" accept="application/json,.json" style="display:none;">
 
   <footer class="site-footer">
-    <a href="https://github.com/minnanosaiban/court-calendar" target="_blank" rel="noopener">ソースコード（GitHub）↗</a>
+    <a href="https://github.com/minnanosaiban/court-calendar" target="_blank" rel="noopener">ソースコード（GitHub）<i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>
     <p class="disc">本サイトは有志による非公式のツールです。掲載情報の正確性・完全性・最新性は保証しません。期日等は必ず裁判所からの公式な通知でご確認ください。本サイトの利用により生じたいかなる損害についても運営者は責任を負わず、本サイトは法的助言を提供するものではありません。事件の説明は呼びかけ人の主張であり、裁判所が認定した事実とは限りません。当事者のお名前は、ご本人が実名での掲載を望まれる場合をのぞき掲載しません。</p>
   </footer>
 </div>
@@ -143,7 +144,7 @@
   function renderAll(){
     CC.renderCaseDetail(caseBody, caseName);
     CC.renderStatus(statusEl);
-    if(caseName) document.title = caseName + " ｜ 傍聴席から";
+    if(caseName) document.title = caseName + " ｜ みんなの裁判";
   }
   CC.setOnChange(renderAll);
 
