@@ -19,6 +19,12 @@ database_id = "YOUR_D1_DATABASE_ID"   # `npx wrangler d1 list` で確認でき�
 ALLOW_ALL_WRITES = "false"
 OWNER_EMAIL = "you@example.com"        # 書き込みを許可する本人のメール
 
+# 行ってきたよ掲示板のスパム対策（Turnstile）。
+# Site Key は公開されてよい値なのでここに書く。Secret は次のコマンドで入れる：
+#   "<secret>" | npx wrangler pages secret put TURNSTILE_SECRET --project-name <プロジェクト名>
+# どちらも未設定のうちは、一般の人の投稿は通らない（運営だけが書ける）。
+TURNSTILE_SITEKEY = ""
+
 # ローカル開発の擬似ログインは .dev.vars（git管理外）に LOCAL_DEV="true" と DEV_EMAIL を書く。
 # 本番にはこれらを置かないので、本番は必ず Access の実ログインが要る。
 

@@ -1,6 +1,12 @@
 import { json, rowToEvent, getIdentity, authorizeWrite } from "../../_common.js";
 
-const COLS = "id, case_name, date, time, type, place, note, created_by, updated_by, updated_at";
+const COLS = `id, case_name, case_no, date, time, type, court, place, parties, host, contact,
+              lede, points, open, level, created_by, updated_by, updated_at`;
+
+function pointsToText(v) {
+  if (Array.isArray(v)) return v.map((s) => String(s).trim()).filter(Boolean).join("\n");
+  return String(v || "").trim();
+}
 
 // 更新（書き込み権限が必要）
 export async function onRequestPut({ request, env, params }) {
@@ -18,14 +24,25 @@ export async function onRequestPut({ request, env, params }) {
   const now = new Date().toISOString();
   const res = await env.DB.prepare(
     `UPDATE events
-        SET case_name=?, date=?, time=?, type=?, place=?, note=?, updated_by=?, updated_at=?
+        SET case_name=?, case_no=?, date=?, time=?, type=?, court=?, place=?,
+            parties=?, host=?, contact=?, lede=?, points=?, open=?, level=?,
+            updated_by=?, updated_at=?
       WHERE id=?`
   ).bind(
-    caseName, date,
+    caseName,
+    String(body.caseNo || "").trim(),
+    date,
     String(body.time || "").trim(),
     String(body.type || "").trim(),
+    String(body.court || "").trim(),
     String(body.place || "").trim(),
-    String(body.note || "").trim(),
+    String(body.parties || "").trim(),
+    String(body.host || "").trim(),
+    String(body.contact || "").trim(),
+    String(body.lede || "").trim(),
+    pointsToText(body.points),
+    body.open === false ? 0 : 1,
+    String(body.level || "").trim(),
     id.email, now, eid
   ).run();
 

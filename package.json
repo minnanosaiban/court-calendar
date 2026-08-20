@@ -6,7 +6,12 @@
   "scripts": {
     "db:init:local": "wrangler d1 execute court-calendar --local --file schema.sql",
     "db:init:remote": "wrangler d1 execute court-calendar --remote --file schema.sql",
-    "dev": "wrangler pages dev",
+    "db:migrate:local": "wrangler d1 execute court-calendar --local --file migrate_002_call_for_support.sql",
+    "db:migrate:remote": "wrangler d1 execute court-calendar --remote --file migrate_002_call_for_support.sql",
+    "db:board:local": "wrangler d1 execute court-calendar --local --file migrate_003_board.sql",
+    "db:board:remote": "wrangler d1 execute court-calendar --remote --file migrate_003_board.sql",
+    "db:seed:local": "wrangler d1 execute court-calendar --local --file seed_sample.sql",
+    "dev": "wrangler pages dev public",
     "deploy": "wrangler pages deploy"
   },
   "devDependencies": {

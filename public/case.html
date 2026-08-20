@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>事件の詳細 ｜ 傍聴席から</title>
+<meta name="description" content="傍聴席から見た法廷のいまと、これからの期日を、ひとつのカレンダーに。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23f2e4c9'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="stamp" aria-hidden="true">傍聴</div>
+    <div>
+      <h1>傍聴席から</h1>
+      <p>傍聴席から見た法廷のいまと、これからの期日を、ひとつのカレンダーに</p>
+    </div>
+  </header>
+
+  <a class="backlink" href="index.html">← カレンダーに戻る</a>
+
+  <section aria-labelledby="case-h" style="margin-top:28px">
+    <div id="caseBody"></div>
+  </section>
+
+  <p class="status" id="status"></p>
+  <input type="file" id="fileInput" accept="application/json,.json" style="display:none;">
+
+  <footer class="site-footer">
+    <a href="https://github.com/minnanosaiban/court-calendar" target="_blank" rel="noopener">ソースコード（GitHub）↗</a>
+    <p class="disc">本サイトは有志による非公式のツールです。掲載情報の正確性・完全性・最新性は保証しません。期日等は必ず裁判所からの公式な通知でご確認ください。本サイトの利用により生じたいかなる損害についても運営者は責任を負わず、本サイトは法的助言を提供するものではありません。事件の説明は呼びかけ人の主張であり、裁判所が認定した事実とは限りません。当事者のお名前は、ご本人が実名での掲載を望まれる場合をのぞき掲載しません。</p>
+  </footer>
+</div>
+
+<!-- modal -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="mhead" id="modalTitle">期日を追加</div>
+    <div class="mbody">
+      <p class="msec">事件について</p>
+      <div class="field">
+        <label>事件名 <span style="color:var(--stamp)">*</span></label>
+        <input type="text" id="fCase" list="caseList" placeholder="例）令和7年(ネ)第○○号 損害賠償請求控訴事件">
+        <datalist id="caseList"></datalist>
+      </div>
+      <div class="two">
+        <div class="field">
+          <label>事件番号</label>
+          <input type="text" id="fCaseNo" placeholder="わかれば">
+        </div>
+        <div class="field">
+          <label>当事者</label>
+          <input type="text" id="fParties" placeholder="例）原告 ○○　被告 △△">
+        </div>
+      </div>
+      <div class="two">
+        <div class="field">
+          <label>呼びかけ団体・お名前</label>
+          <input type="text" id="fHost">
+        </div>
+        <div class="field">
+          <label>連絡先（公開してよいもの）</label>
+          <input type="text" id="fContact" placeholder="例）メールアドレス">
+        </div>
+      </div>
+      <div class="field">
+        <label>事件の説明（3〜4行）</label>
+        <textarea id="fLede" placeholder="どんな裁判か"></textarea>
+      </div>
+      <div class="field">
+        <label>争われていること（1行に1つ）</label>
+        <textarea id="fPoints" placeholder="例）◯◯の事実があったか"></textarea>
+      </div>
+
+      <p class="msec">この期日について</p>
+      <div class="two">
+        <div class="field">
+          <label>期日 <span style="color:var(--stamp)">*</span></label>
+          <input type="date" id="fDate">
+        </div>
+        <div class="field">
+          <label>時刻</label>
+          <input type="time" id="fTime">
+        </div>
+      </div>
+      <div class="two">
+        <div class="field">
+          <label>種別</label>
+          <input type="text" id="fType" list="typeList" placeholder="例）第3回口頭弁論">
+          <datalist id="typeList">
+            <option value="口頭弁論">
+            <option value="弁論準備">
+            <option value="進行協議">
+            <option value="和解">
+            <option value="尋問">
+            <option value="当事者尋問">
+            <option value="判決言渡">
+            <option value="控訴審 第1回">
+            <option value="提出期限（書面）">
+          </datalist>
+        </div>
+        <div class="field">
+          <label>見どころタグ</label>
+          <input type="text" id="fLevel" placeholder="例）はじめて向け・見ごたえあり">
+        </div>
+      </div>
+      <div class="two">
+        <div class="field">
+          <label>裁判所</label>
+          <input type="text" id="fCourt" placeholder="例）東京地方裁判所">
+        </div>
+        <div class="field">
+          <label>法廷</label>
+          <input type="text" id="fPlace" placeholder="例）610号法廷">
+        </div>
+      </div>
+      <div class="field">
+        <label class="check"><input type="checkbox" id="fOpen" checked> だれでも傍聴できます（チェックを外すと「非公開・要確認」）</label>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn-del" id="btnDelete" style="display:none;">削除</button>
+      <span class="spacer"></span>
+      <button class="btn-cancel" id="btnCancel">キャンセル</button>
+      <button class="btn-save" id="btnSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<script src="lib.js"></script>
+<script>
+(function(){
+  "use strict";
+  const caseBody=document.getElementById("caseBody");
+  const statusEl=document.getElementById("status");
+  const caseName = new URLSearchParams(location.search).get("case") || "";
+
+  function renderAll(){
+    CC.renderCaseDetail(caseBody, caseName);
+    CC.renderStatus(statusEl);
+    if(caseName) document.title = caseName + " ｜ 傍聴席から";
+  }
+  CC.setOnChange(renderAll);
+
+  (async function init(){
+    renderAll();
+    await CC.load();
+    renderAll();
+  })();
+})();
+</script>
+</body>
+</html>

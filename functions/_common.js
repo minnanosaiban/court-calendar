@@ -12,15 +12,77 @@ export function rowToEvent(r) {
   return {
     id: r.id,
     case: r.case_name,
+    caseNo: r.case_no || "",
     date: r.date,
     time: r.time || "",
     type: r.type || "",
+    court: r.court || "",
     place: r.place || "",
-    note: r.note || "",
+    parties: r.parties || "",
+    host: r.host || "",
+    contact: r.contact || "",
+    lede: r.lede || "",
+    points: r.points ? String(r.points).split("\n").map((s) => s.trim()).filter(Boolean) : [],
+    open: r.open === 0 || r.open === false ? false : true,
+    level: r.level || "",
     createdBy: r.created_by || "",
     updatedBy: r.updated_by || "",
     updatedAt: r.updated_at || "",
   };
+}
+
+// ---- 掲示板 ----
+
+// 投稿で選べる語。これ以外は受け付けない（自由記述は quote だけ）
+export const POST_SUBJECTS = ["原告", "被告", "裁判官"];
+export const POST_VERBS = ["主張した", "求めた"];
+export const QUOTE_MAX = 60;
+
+export function rowToPost(r) {
+  return {
+    id: r.id,
+    eventId: r.event_id,
+    case: r.case_name || "",   // JOIN してきた事件名
+    round: r.type || "",       // JOIN してきた期日の種別（第7回口頭弁論 など）
+    date: r.date || "",
+    subject: r.subject,
+    quote: r.quote,
+    verb: r.verb,
+    createdAt: r.created_at || "",
+  };
+}
+
+// Turnstile（スパム対策）の検証。secret 未設定なら常に false。
+export async function verifyTurnstile(token, env, ip) {
+  const secret = env.TURNSTILE_SECRET;
+  if (!secret || !token) return false;
+  const form = new FormData();
+  form.append("secret", secret);
+  form.append("response", token);
+  if (ip) form.append("remoteip", ip);
+  try {
+    const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      body: form,
+    });
+    const data = await res.json();
+    return !!data.success;
+  } catch {
+    return false;
+  }
+}
+
+// 掲示板への投稿を許可するか。
+//  (A) 編集パスワードを知っている人（運営）は常に可
+//  (B) 一般の人は Turnstile を通過したときだけ可
+//  (C) ローカル開発（LOCAL_DEV="true"）のときだけ素通し
+// 本番で TURNSTILE_SECRET を設定していない間は、一般の投稿は一切通らない（公開直後も安全）。
+export async function authorizePost(request, env, identity) {
+  if (authorizeWrite(request, env, identity)) return true;
+  if (String(env.LOCAL_DEV).toLowerCase() === "true") return true;
+  const token = request.headers.get("X-Turnstile-Token");
+  const ip = request.headers.get("CF-Connecting-IP");
+  return await verifyTurnstile(token, env, ip);
 }
 
 // ---- base64url ----

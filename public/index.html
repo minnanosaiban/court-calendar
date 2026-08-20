@@ -3,216 +3,127 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>裁判カレンダー</title>
+<title>傍聴席から ｜ 裁判の期日と傍聴の報告のカレンダー</title>
+<meta name="description" content="傍聴席から見た法廷のいまと、これからの期日を、ひとつのカレンダーに。">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23f2e4c9'/></svg>">
-<style>
-  :root{
-    --bg:#fbfbfa;
-    --panel:#ffffff;
-    --ink:#1c1c1a;
-    --muted:#8a8a84;
-    --line:#e7e7e2;
-    --line2:#f0f0ec;
-    --accent:#3a5a78;
-    --sat:#3b6ea5;
-    --sun:#b5482f;
-    --today:#fdf6e3;
-    --ok:#4a7a52;
-    --warn:#a8843a;
-    --shadow:0 1px 3px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.04);
-  }
-  *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
-  body{
-    background:var(--bg);
-    color:var(--ink);
-    font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif;
-    line-height:1.6;
-    -webkit-font-smoothing:antialiased;
-  }
-  .wrap{max-width:1180px;margin:0 auto;padding:28px 24px 80px;}
-
-  header.app{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:24px;}
-  header.app h1{font-size:2.2rem;font-weight:600;letter-spacing:.04em;margin:0;}
-  header.app .sub{color:var(--muted);font-size:.85rem;}
-  .spacer{flex:1;}
-
-  button{
-    font-family:inherit;font-size:.9rem;cursor:pointer;
-    border:1px solid var(--line);background:var(--panel);color:var(--ink);
-    border-radius:8px;padding:8px 14px;transition:.15s;
-  }
-  button:hover{background:#f5f5f2;border-color:#d8d8d2;}
-  button.primary{background:var(--accent);color:#fff;border-color:var(--accent);}
-  button.primary:hover{background:#2f4a63;}
-  button.ghost{border-color:transparent;background:transparent;color:var(--muted);}
-  button.ghost:hover{background:#f0f0ec;color:var(--ink);}
-  button.icon{padding:6px 12px;font-size:1.1rem;line-height:1;}
-  button.tiny{font-size:.8rem;padding:5px 10px;}
-  button:disabled{opacity:.5;cursor:default;}
-
-  .layout{display:grid;grid-template-columns:1fr 320px;gap:28px;align-items:start;}
-  @media(max-width:880px){.layout{grid-template-columns:1fr;}}
-
-  /* ---- calendar ---- */
-  .calbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
-  .calbar .month{font-size:1.25rem;font-weight:500;min-width:160px;}
-
-  .cal{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);}
-  .dow{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--line);}
-  .dow div{padding:10px 0;text-align:center;font-size:.78rem;color:var(--muted);}
-  .dow div.sat{color:var(--sat);}
-  .dow div.sun{color:var(--sun);}
-  .grid{display:grid;grid-template-columns:repeat(7,1fr);}
-  .cell{
-    min-height:104px;border-right:1px solid var(--line2);border-bottom:1px solid var(--line2);
-    padding:6px 6px 8px;position:relative;cursor:pointer;transition:.12s;
-  }
-  .cell:nth-child(7n){border-right:none;}
-  .cell:hover{background:#fafaf7;}
-  .cell.readonly{cursor:default;}
-  .cell.readonly:hover{background:transparent;}
-  .cell.out{background:#fcfcfb;}
-  .cell.out .dnum{color:#cfcfc8;}
-  .cell.today{background:var(--today);}
-  .dnum{font-size:.82rem;color:var(--ink);display:inline-block;width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;}
-  .cell.today .dnum{background:var(--accent);color:#fff;}
-  .cell.sat .dnum{color:var(--sat);}
-  .cell.sun .dnum{color:var(--sun);}
-  .cell.today.sat .dnum,.cell.today.sun .dnum{color:#fff;}
-  .events{margin-top:4px;display:flex;flex-direction:column;gap:3px;}
-  .chip{
-    font-size:.72rem;line-height:1.35;padding:2px 6px;border-radius:5px;color:#fff;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;
-  }
-  .chip .t{opacity:.85;font-variant-numeric:tabular-nums;margin-right:3px;}
-
-  /* ---- side ---- */
-  .side h2{font-size:1.05rem;font-weight:500;margin:0 0 12px;}
-  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);}
-  .upcoming{padding:6px;}
-  .u-item{display:flex;gap:10px;padding:10px 8px;border-radius:9px;cursor:pointer;transition:.12s;}
-  .u-item:hover{background:#f6f6f3;}
-  .u-bar{width:4px;border-radius:3px;flex:0 0 4px;}
-  .u-body{min-width:0;flex:1;}
-  .u-date{font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums;}
-  .u-date .dd{color:var(--ink);font-weight:600;}
-  .u-title{font-size:.92rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .u-meta{font-size:.76rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .u-empty{color:var(--muted);font-size:.85rem;padding:20px 12px;text-align:center;}
-
-  .legend{margin-top:18px;}
-  .legend .row{display:flex;align-items:center;gap:8px;padding:5px 8px;font-size:.85rem;}
-  .legend .dot{width:11px;height:11px;border-radius:50%;flex:0 0 11px;}
-  .legend .cnt{color:var(--muted);font-size:.78rem;margin-left:auto;font-variant-numeric:tabular-nums;}
-
-  /* ---- status ---- */
-  .store{margin-top:18px;padding:14px;}
-  .store .st-head{display:flex;align-items:center;gap:8px;font-size:.9rem;margin-bottom:6px;}
-  .store .st-dot{width:9px;height:9px;border-radius:50%;background:#cfcfc8;flex:0 0 9px;}
-  .store.connected .st-dot{background:var(--ok);}
-  .store.warn .st-dot{background:var(--warn);}
-  .store .st-path{font-size:.82rem;color:var(--muted);word-break:break-all;margin-bottom:10px;}
-  .store .st-actions{display:flex;flex-wrap:wrap;gap:8px;}
-  .store .note{font-size:.78rem;color:var(--muted);margin-top:10px;}
-
-  .tools{margin-top:14px;display:flex;flex-direction:column;gap:8px;}
-  .tools .small{font-size:.78rem;color:var(--muted);}
-
-  /* ---- modal ---- */
-  .overlay{position:fixed;inset:0;background:rgba(28,28,26,.32);display:none;align-items:center;justify-content:center;padding:20px;z-index:50;}
-  .overlay.show{display:flex;}
-  .modal{background:var(--panel);border-radius:16px;width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,.25);max-height:92vh;overflow:auto;}
-  .modal .mhead{padding:20px 24px 4px;font-size:1.15rem;font-weight:500;}
-  .modal .mbody{padding:14px 24px 4px;}
-  .field{margin-bottom:14px;}
-  .field label{display:block;font-size:.8rem;color:var(--muted);margin-bottom:5px;}
-  .field input,.field select,.field textarea{
-    width:100%;font-family:inherit;font-size:.95rem;color:var(--ink);
-    border:1px solid var(--line);border-radius:9px;padding:9px 11px;background:#fff;
-  }
-  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);}
-  .field input:disabled,.field select:disabled,.field textarea:disabled{background:#f6f6f3;color:var(--ink);opacity:1;}
-  .field textarea{resize:vertical;min-height:64px;}
-  .two{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-  .mfoot{padding:14px 24px 22px;display:flex;gap:10px;align-items:center;}
-  .mfoot .spacer{flex:1;}
-  .danger{color:var(--sun);border-color:transparent;background:transparent;}
-  .danger:hover{background:#fbeeec;}
-  .site-footer{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:.8rem;line-height:1.7;}
-  .site-footer a{color:var(--accent);text-decoration:none;}
-  .site-footer a:hover{text-decoration:underline;}
-  .site-footer .disc{margin:8px 0 0;max-width:760px;}
-</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="wrap">
-  <header class="app">
-    <h1>裁判カレンダー</h1>
-    <span class="spacer"></span>
-    <button class="primary" id="btnAdd" style="display:none;">＋ 期日を追加</button>
+
+  <header class="masthead">
+    <div class="stamp" aria-hidden="true">傍聴</div>
+    <div>
+      <h1>傍聴席から</h1>
+      <p>傍聴席から見た法廷のいまと、これからの期日を、ひとつのカレンダーに</p>
+    </div>
   </header>
 
-  <div class="layout">
-    <main>
-      <div class="calbar">
-        <button class="icon" id="prev" title="前の月">‹</button>
-        <div class="month" id="monthLabel"></div>
-        <button class="icon" id="next" title="次の月">›</button>
-        <button class="ghost" id="todayBtn">今日</button>
+  <!-- 最近の期日：直近に期日がある事件の詳細を、常にここに固定表示する -->
+  <section aria-labelledby="recent-h">
+    <p class="sech" id="recent-h">最近の期日</p>
+    <div id="recentBody"></div>
+  </section>
+
+  <!-- カレンダー：日付にカーソルを合わせる（タップする）とその日の予定が出て、クリックすると詳しいページへ -->
+  <section aria-labelledby="cal-h">
+    <p class="sech" id="cal-h">カレンダー</p>
+    <div class="calhead">
+      <div class="navbtns">
+        <span id="prev">‹ 前の月</span>
+        <span id="next">次の月 ›</span>
+        <span id="todayBtn">今日</span>
       </div>
-      <div class="cal">
-        <div class="dow">
-          <div class="sun">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div class="sat">土</div>
+    </div>
+    <div class="cal-row">
+      <div class="cal-block">
+        <div class="month" id="monthLabel1"></div>
+        <div class="card calcard">
+          <div class="dow"><div>日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div></div>
+          <div class="grid" id="grid1"></div>
         </div>
-        <div class="grid" id="grid"></div>
       </div>
-    </main>
-
-    <aside class="side">
-      <h2>今後の期日</h2>
-      <div class="panel"><div class="upcoming" id="upcoming"></div></div>
-
-      <div class="legend panel" id="legendPanel" style="display:none;">
-        <div style="padding:12px 14px 4px;font-size:.85rem;color:var(--muted);">事件</div>
-        <div id="legend" style="padding:0 6px 10px;"></div>
+      <div class="cal-block cal-block2">
+        <div class="month" id="monthLabel2"></div>
+        <div class="card calcard">
+          <div class="dow"><div>日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div></div>
+          <div class="grid" id="grid2"></div>
+        </div>
       </div>
+    </div>
+    <p class="leg">
+      <span><i></i>誰でも傍聴できる</span>
+      <span><i class="o"></i>非公開・要確認</span>
+    </p>
+    <p class="hint" id="calHint"></p>
+  </section>
 
-      <!-- ログイン・権限の状態 -->
-      <div class="store panel" id="store">
-        <div class="st-head"><span class="st-dot"></span><span id="stTitle">読み込み中…</span></div>
-        <div class="st-path" id="stPath"></div>
-        <div class="st-actions" id="stActions"></div>
-        <div class="note" id="stNote"></div>
-      </div>
+  <!-- 今後の期日 -->
+  <section aria-labelledby="up-h">
+    <p class="sech" id="up-h">今後の期日</p>
+    <div class="card ucard" id="upcoming"></div>
+  </section>
 
-      <div class="tools" id="tools" style="display:none;">
-        <button class="tiny" id="btnExport">バックアップを書き出す（JSON）</button>
-        <button class="tiny" id="btnImport">ファイルから取り込み（共有に追加）</button>
-        <input type="file" id="fileInput" accept="application/json,.json" style="display:none;">
-        <div class="small">予定は全員で共有のデータベースに保存されます。書き出しはバックアップ用です。</div>
-      </div>
-    </aside>
-  </div>
+  <!-- 期日の追加・編集（ひっそり） -->
+  <p class="status" id="status"></p>
+  <input type="file" id="fileInput" accept="application/json,.json" style="display:none;">
+
   <footer class="site-footer">
     <a href="https://github.com/minnanosaiban/court-calendar" target="_blank" rel="noopener">ソースコード（GitHub）↗</a>
-    <p class="disc">本サイトは有志による非公式のツールです。掲載情報の正確性・完全性・最新性は保証しません。期日等は必ず裁判所からの公式な通知でご確認ください。本サイトの利用により生じたいかなる損害についても運営者は責任を負わず、本サイトは法的助言を提供するものではありません。</p>
+    <p class="disc">本サイトは有志による非公式のツールです。掲載情報の正確性・完全性・最新性は保証しません。期日等は必ず裁判所からの公式な通知でご確認ください。本サイトの利用により生じたいかなる損害についても運営者は責任を負わず、本サイトは法的助言を提供するものではありません。事件の説明は呼びかけ人の主張であり、裁判所が認定した事実とは限りません。当事者のお名前は、ご本人が実名での掲載を望まれる場合をのぞき掲載しません。</p>
   </footer>
 </div>
+
+<!-- 日付のプレビュー（ホバー／タップで出す） -->
+<div class="daypop" id="dayPop" hidden></div>
 
 <!-- modal -->
 <div class="overlay" id="overlay">
   <div class="modal">
     <div class="mhead" id="modalTitle">期日を追加</div>
     <div class="mbody">
+      <p class="msec">事件について</p>
       <div class="field">
-        <label>事件名 <span style="color:var(--sun)">*</span></label>
+        <label>事件名 <span style="color:var(--stamp)">*</span></label>
         <input type="text" id="fCase" list="caseList" placeholder="例）令和7年(ネ)第○○号 損害賠償請求控訴事件">
         <datalist id="caseList"></datalist>
       </div>
       <div class="two">
         <div class="field">
-          <label>期日 <span style="color:var(--sun)">*</span></label>
+          <label>事件番号</label>
+          <input type="text" id="fCaseNo" placeholder="わかれば">
+        </div>
+        <div class="field">
+          <label>当事者</label>
+          <input type="text" id="fParties" placeholder="例）原告 ○○　被告 △△">
+        </div>
+      </div>
+      <div class="two">
+        <div class="field">
+          <label>呼びかけ団体・お名前</label>
+          <input type="text" id="fHost">
+        </div>
+        <div class="field">
+          <label>連絡先（公開してよいもの）</label>
+          <input type="text" id="fContact" placeholder="例）メールアドレス">
+        </div>
+      </div>
+      <div class="field">
+        <label>事件の説明（3〜4行）</label>
+        <textarea id="fLede" placeholder="どんな裁判か"></textarea>
+      </div>
+      <div class="field">
+        <label>争われていること（1行に1つ）</label>
+        <textarea id="fPoints" placeholder="例）◯◯の事実があったか"></textarea>
+      </div>
+
+      <p class="msec">この期日について</p>
+      <div class="two">
+        <div class="field">
+          <label>期日 <span style="color:var(--stamp)">*</span></label>
           <input type="date" id="fDate">
         </div>
         <div class="field">
@@ -223,357 +134,221 @@
       <div class="two">
         <div class="field">
           <label>種別</label>
-          <select id="fType">
-            <option value="口頭弁論">口頭弁論</option>
-            <option value="弁論準備">弁論準備</option>
-            <option value="進行協議">進行協議</option>
-            <option value="和解">和解</option>
-            <option value="尋問">尋問</option>
-            <option value="判決言渡">判決言渡</option>
-            <option value="提出期限">提出期限（書面）</option>
-            <option value="その他">その他</option>
-          </select>
+          <input type="text" id="fType" list="typeList" placeholder="例）第3回口頭弁論">
+          <datalist id="typeList">
+            <option value="口頭弁論">
+            <option value="弁論準備">
+            <option value="進行協議">
+            <option value="和解">
+            <option value="尋問">
+            <option value="当事者尋問">
+            <option value="判決言渡">
+            <option value="控訴審 第1回">
+            <option value="提出期限（書面）">
+          </datalist>
         </div>
         <div class="field">
-          <label>裁判所・法廷</label>
-          <input type="text" id="fPlace" placeholder="例）東京高裁 第○法廷">
+          <label>見どころタグ</label>
+          <input type="text" id="fLevel" placeholder="例）はじめて向け・見ごたえあり">
+        </div>
+      </div>
+      <div class="two">
+        <div class="field">
+          <label>裁判所</label>
+          <input type="text" id="fCourt" placeholder="例）東京地方裁判所">
+        </div>
+        <div class="field">
+          <label>法廷</label>
+          <input type="text" id="fPlace" placeholder="例）610号法廷">
         </div>
       </div>
       <div class="field">
-        <label>メモ</label>
-        <textarea id="fNote" placeholder="準備すること、提出物、持ち物など"></textarea>
+        <label class="check"><input type="checkbox" id="fOpen" checked> だれでも傍聴できます（チェックを外すと「非公開・要確認」）</label>
       </div>
     </div>
     <div class="mfoot">
-      <button class="danger" id="btnDelete" style="display:none;">削除</button>
+      <button class="btn-del" id="btnDelete" style="display:none;">削除</button>
       <span class="spacer"></span>
-      <button class="ghost" id="btnCancel">キャンセル</button>
-      <button class="primary" id="btnSave">保存</button>
+      <button class="btn-cancel" id="btnCancel">キャンセル</button>
+      <button class="btn-save" id="btnSave">保存</button>
     </div>
   </div>
 </div>
 
+<script src="lib.js"></script>
 <script>
 (function(){
   "use strict";
-  const PALETTE = ["#3a5a78","#9c5d3a","#4a7a52","#7a4a6e","#a8843a","#3f6e7a","#8a4a4a","#5a5a8a","#6e7a3a","#7a5a3a"];
-  const EDITKEY_LS = "court-calendar.editkey";
+  const grid1=document.getElementById("grid1");
+  const grid2=document.getElementById("grid2");
+  const monthLabel1=document.getElementById("monthLabel1");
+  const monthLabel2=document.getElementById("monthLabel2");
+  const upcomingBox=document.getElementById("upcoming");
+  const statusEl=document.getElementById("status");
+  const recentBody=document.getElementById("recentBody");
+  const dayPop=document.getElementById("dayPop");
 
-  // ---- state ----
-  let editKey = localStorage.getItem(EDITKEY_LS) || "";   // 編集パスワード（この端末に保存）
-  let events = [];
-  let me = { email:null, canWrite:false, viaAccess:false, allowAll:false };
-  let view = startOfMonth(new Date());
-  let editingId = null;
+  let view = CC.startOfMonth(new Date());
+  let popCloseTimer=null;
+  const canHover = window.matchMedia && window.matchMedia("(hover: hover)").matches;
 
-  // ---- elements ----
-  const grid = document.getElementById("grid");
-  const monthLabel = document.getElementById("monthLabel");
-  const upcoming = document.getElementById("upcoming");
-  const legend = document.getElementById("legend");
-  const legendPanel = document.getElementById("legendPanel");
-  const overlay = document.getElementById("overlay");
-  const modalTitle = document.getElementById("modalTitle");
-  const fCase = document.getElementById("fCase");
-  const fDate = document.getElementById("fDate");
-  const fTime = document.getElementById("fTime");
-  const fType = document.getElementById("fType");
-  const fPlace = document.getElementById("fPlace");
-  const fNote = document.getElementById("fNote");
-  const caseList = document.getElementById("caseList");
-  const btnAdd = document.getElementById("btnAdd");
-  const btnSave = document.getElementById("btnSave");
-  const btnCancel = document.getElementById("btnCancel");
-  const btnDelete = document.getElementById("btnDelete");
-  const tools = document.getElementById("tools");
-  const storeBox = document.getElementById("store");
-  const stTitle = document.getElementById("stTitle");
-  const stPath = document.getElementById("stPath");
-  const stActions = document.getElementById("stActions");
-  const stNote = document.getElementById("stNote");
-  const formInputs = [fCase,fDate,fTime,fType,fPlace,fNote];
+  // 案内文は操作方法に合わせる（PC=カーソル／スマホ=タップ）
+  document.getElementById("calHint").textContent = canHover
+    ? "日付にカーソルを合わせると、その日の予定が出ます。クリックすると詳しいページに移ります。"
+    : "日付をタップすると、その日の予定が出ます。出てきた予定をもう一度タップすると、詳しいページに移ります。";
 
-  // ================= API =================
-  async function api(method, path, body){
-    const opt = { method, headers:{} };
-    if(editKey) opt.headers["X-Edit-Key"]=editKey;
-    if(body!==undefined){ opt.headers["content-type"]="application/json"; opt.body=JSON.stringify(body); }
-    const res = await fetch(path, opt);
-    if(!res.ok){
-      let msg = "HTTP " + res.status;
-      try{ const j=await res.json(); if(j&&j.error) msg=j.error; }catch(e){}
-      const err = new Error(msg); err.status=res.status; throw err;
-    }
-    if(res.status===204) return null;
-    return res.json();
+  // ---- 日付のプレビュー ----
+  function popoverHtmlFor(dayEvents){
+    return dayEvents.map(ev=>{
+      const d=CC.parseYmd(ev.date);
+      const dateLine=`${d.getMonth()+1}/${d.getDate()}（${CC.WD[d.getDay()]}） ${ev.time||""}`.trim();
+      const place=[ev.court,ev.place].filter(Boolean).join(" ");
+      return `<div class="pop-row" data-case="${CC.escapeAttr(ev.case)}">
+        <p class="pop-date">${CC.escapeHtml(dateLine)}</p>
+        <p class="pop-title">${CC.escapeHtml(ev.case)}</p>
+        <p class="pop-meta">${CC.escapeHtml([ev.type,place].filter(Boolean).join(" ／ "))}</p>
+      </div>`;
+    }).join("");
   }
-  const apiMe     = ()=> api("GET","/api/me");
-  const apiList   = ()=> api("GET","/api/events");
-  const apiCreate = (d)=> api("POST","/api/events", d);
-  const apiUpdate = (id,d)=> api("PUT","/api/events/"+encodeURIComponent(id), d);
-  const apiDelete = (id)=> api("DELETE","/api/events/"+encodeURIComponent(id));
-  function saveErr(err){
-    if(err && err.status===403) return "この操作は許可されていません（閲覧のみの権限です）。";
-    return "保存できませんでした：" + (err && err.message || err);
+  function openPopover(cell, dayEvents){
+    if(!dayEvents.length) return;
+    clearTimeout(popCloseTimer);
+    document.querySelectorAll(".cell.previewing").forEach(c=>c.classList.remove("previewing"));
+    cell.classList.add("previewing");
+    dayPop.innerHTML = popoverHtmlFor(dayEvents);
+    dayPop.hidden=false;
+    const r=cell.getBoundingClientRect();
+    const pw=Math.min(280, window.innerWidth-24);
+    dayPop.style.width=pw+"px";
+    let left=r.left;
+    if(left+pw>window.innerWidth-12) left=window.innerWidth-12-pw;
+    if(left<12) left=12;
+    let top=r.bottom+6;
+    if(top+140>window.innerHeight) top=r.top-6-Math.min(220,dayEvents.length*90); // 下が窮屈なら上に出す
+    dayPop.style.left=left+"px";
+    dayPop.style.top=Math.max(8,top)+"px";
+    dayPop.querySelectorAll("[data-case]").forEach(row=>{
+      row.addEventListener("click",()=>{ location.href="case?case="+encodeURIComponent(row.dataset.case); });
+    });
   }
-
-  // ================= calendar =================
-  function startOfMonth(d){ return new Date(d.getFullYear(), d.getMonth(), 1); }
-  function ymd(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
-  function parseYmd(s){ const [y,m,d]=s.split("-").map(Number); return new Date(y,m-1,d); }
-  function todayStr(){ return ymd(new Date()); }
-  const WD=["日","月","火","水","木","金","土"];
-
-  function colorFor(name){
-    const names=[...new Set(events.map(e=>e.case))].sort();
-    const idx=names.indexOf(name);
-    return PALETTE[(idx<0?0:idx)%PALETTE.length];
+  function scheduleClosePopover(){ popCloseTimer=setTimeout(closePopoverNow,150); }
+  function closePopoverNow(){
+    clearTimeout(popCloseTimer);
+    dayPop.hidden=true;
+    document.querySelectorAll(".cell.previewing").forEach(c=>c.classList.remove("previewing"));
   }
+  dayPop.addEventListener("mouseenter",()=>clearTimeout(popCloseTimer));
+  dayPop.addEventListener("mouseleave",scheduleClosePopover);
+  document.addEventListener("click",(e)=>{
+    if(!dayPop.hidden && !dayPop.contains(e.target) && !e.target.closest(".cell")) closePopoverNow();
+  });
+  // プレビューは画面固定なので、スクロールしたら閉じる（カレンダーから離れて浮き続けないように）
+  window.addEventListener("scroll",()=>{ if(!dayPop.hidden) closePopoverNow(); },{passive:true});
 
-  function render(){
-    const y=view.getFullYear(), m=view.getMonth();
-    monthLabel.textContent=`${y}年 ${m+1}月`;
+  // ---- カレンダー（2か月ぶん組み立てて、CSSで狭い画面では2つ目を隠す） ----
+  function buildMonthGrid(monthDate, gridEl, labelEl){
+    const y=monthDate.getFullYear(), m=monthDate.getMonth();
+    labelEl.textContent=`${y}年 ${m+1}月`;
     const first=new Date(y,m,1);
     const gridStart=new Date(y,m,1-first.getDay());
-    const today=todayStr();
-
-    grid.innerHTML="";
+    const today=CC.todayStr();
+    gridEl.innerHTML="";
     for(let i=0;i<42;i++){
       const d=new Date(gridStart.getFullYear(),gridStart.getMonth(),gridStart.getDate()+i);
-      const ds=ymd(d);
+      const ds=CC.ymd(d);
       const cell=document.createElement("div");
       cell.className="cell";
-      if(!me.canWrite) cell.classList.add("readonly");
       if(d.getMonth()!==m) cell.classList.add("out");
+      if(d.getDay()===0||d.getDay()===6) cell.classList.add("we");
       if(ds===today) cell.classList.add("today");
-      if(d.getDay()===0) cell.classList.add("sun");
-      if(d.getDay()===6) cell.classList.add("sat");
 
       const dn=document.createElement("span");
-      dn.className="dnum"; dn.textContent=d.getDate();
+      dn.className="n"; dn.textContent=d.getDate();
       cell.appendChild(dn);
 
-      const evWrap=document.createElement("div"); evWrap.className="events";
-      const dayEvents=events.filter(e=>e.date===ds).sort(byTime);
-      for(const ev of dayEvents){
-        const chip=document.createElement("div");
-        chip.className="chip"; chip.style.background=colorFor(ev.case);
-        chip.title=`${ev.time?ev.time+" ":""}${ev.case}${ev.type?" ／ "+ev.type:""}${ev.place?" ／ "+ev.place:""}`;
-        chip.innerHTML=`${ev.time?`<span class="t">${ev.time}</span>`:""}${escapeHtml(ev.type||ev.case)}`;
-        chip.addEventListener("click",(e)=>{e.stopPropagation();openEdit(ev.id);});
-        evWrap.appendChild(chip);
+      const dayEvents=CC.events.filter(e=>e.date===ds).sort(CC.byTime);
+      const shown=dayEvents.slice(0,3);
+      const barsWrap=document.createElement("span");
+      barsWrap.className="bars"+(shown.length>1?" n"+shown.length:"");
+      for(const ev of shown){
+        const bar=document.createElement("i");
+        bar.className="bar"+(ev.open===false?" shut":"");
+        if(ev.open!==false) bar.style.background=CC.colorFor(ev.case);
+        barsWrap.appendChild(bar);
       }
-      cell.appendChild(evWrap);
-      cell.addEventListener("click",()=>openAdd(ds));
-      grid.appendChild(cell);
+      if(dayEvents.length>shown.length){
+        const more=document.createElement("i");
+        more.className="more"; more.textContent="+"+(dayEvents.length-shown.length);
+        barsWrap.appendChild(more);
+      }
+      cell.appendChild(barsWrap);
+
+      if(dayEvents.length){
+        if(canHover){
+          cell.addEventListener("mouseenter",()=>openPopover(cell,dayEvents));
+          cell.addEventListener("mouseleave",scheduleClosePopover);
+        }else{
+          cell.addEventListener("click",(e)=>{ e.stopPropagation(); openPopover(cell,dayEvents); });
+        }
+      }
+      gridEl.appendChild(cell);
     }
-    renderUpcoming(); renderLegend();
+  }
+  function renderCalendars(){
+    buildMonthGrid(view, grid1, monthLabel1);
+    const next=new Date(view.getFullYear(), view.getMonth()+1, 1);
+    buildMonthGrid(next, grid2, monthLabel2);
   }
 
-  function byTime(a,b){ return (a.time||"99:99").localeCompare(b.time||"99:99"); }
-
+  // ---- 今後の期日 ----
   function renderUpcoming(){
-    const today=todayStr();
-    const list=events.filter(e=>e.date>=today)
-      .sort((a,b)=> a.date===b.date?byTime(a,b):a.date.localeCompare(b.date)).slice(0,12);
-    upcoming.innerHTML="";
-    if(!list.length){ upcoming.innerHTML=`<div class="u-empty">今後の予定はありません</div>`; return; }
+    if(!CC.loaded){ upcomingBox.innerHTML=`<div class="u-empty">読み込んでいます…</div>`; return; }
+    const today=CC.todayStr();
+    const list=CC.events.filter(e=>e.date>=today)
+      .sort((a,b)=> a.date===b.date?CC.byTime(a,b):a.date.localeCompare(b.date)).slice(0,12);
+    upcomingBox.innerHTML="";
+    if(!list.length){ upcomingBox.innerHTML=`<div class="u-empty">今後の予定はありません</div>`; return; }
     for(const ev of list){
-      const d=parseYmd(ev.date);
-      const item=document.createElement("div"); item.className="u-item";
-      const bar=document.createElement("div"); bar.className="u-bar"; bar.style.background=colorFor(ev.case);
-      const body=document.createElement("div"); body.className="u-body";
-      const dd=`${d.getMonth()+1}/${d.getDate()}`;
+      const d=CC.parseYmd(ev.date);
+      const item=document.createElement("div"); item.className="u";
+      const dot=document.createElement("span"); dot.className="udot";
+      dot.style.background = ev.open===false ? "#a9a7a0" : CC.colorFor(ev.case);
+      const body=document.createElement("div"); body.className="ubody";
+      const place=[ev.court,ev.place].filter(Boolean).join(" ");
       body.innerHTML=
-        `<div class="u-date"><span class="dd">${dd}</span>（${WD[d.getDay()]}）${ev.time?" "+ev.time:""}</div>`+
-        `<div class="u-title">${escapeHtml(ev.case)}</div>`+
-        `<div class="u-meta">${escapeHtml([ev.type,ev.place].filter(Boolean).join(" ／ "))||"&nbsp;"}</div>`;
-      item.appendChild(bar); item.appendChild(body);
-      item.addEventListener("click",()=>openEdit(ev.id));
-      upcoming.appendChild(item);
+        `<div class="ud"><b>${d.getMonth()+1}/${d.getDate()}</b>（${CC.WD[d.getDay()]}）${ev.time?" "+ev.time:""}</div>`+
+        `<div class="ut">${CC.escapeHtml(ev.case)}</div>`+
+        `<div class="um">${CC.escapeHtml([ev.type,place].filter(Boolean).join(" ／ "))||"&nbsp;"}</div>`;
+      item.appendChild(dot); item.appendChild(body);
+      item.addEventListener("click",()=>{ location.href="case?case="+encodeURIComponent(ev.case); });
+      upcomingBox.appendChild(item);
     }
   }
 
-  function renderLegend(){
-    const names=[...new Set(events.map(e=>e.case))].sort();
-    if(!names.length){ legendPanel.style.display="none"; return; }
-    legendPanel.style.display="block"; legend.innerHTML="";
-    for(const n of names){
-      const cnt=events.filter(e=>e.case===n).length;
-      const row=document.createElement("div"); row.className="row";
-      row.innerHTML=`<span class="dot" style="background:${colorFor(n)}"></span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(n)}</span><span class="cnt">${cnt}件</span>`;
-      legend.appendChild(row);
+  function renderAll(){
+    renderCalendars();
+    renderUpcoming();
+    CC.renderStatus(statusEl);
+    CC.renderCaseDetail(recentBody, CC.nearestCase());
+  }
+  CC.setOnChange(renderAll);
+
+  document.getElementById("prev").addEventListener("click",()=>{view=new Date(view.getFullYear(),view.getMonth()-1,1);renderCalendars();});
+  document.getElementById("next").addEventListener("click",()=>{view=new Date(view.getFullYear(),view.getMonth()+1,1);renderCalendars();});
+  document.getElementById("todayBtn").addEventListener("click",()=>{view=CC.startOfMonth(new Date());renderCalendars();});
+
+  (async function init(){
+    renderAll();
+    await CC.load();
+    const nc=CC.nearestCase();
+    if(nc){
+      const rounds=CC.caseEvents(nc);
+      const upcoming=rounds.filter(e=>e.date>=CC.todayStr());
+      const first=upcoming[0]||rounds[0];
+      if(first){ const d=CC.parseYmd(first.date); view=new Date(d.getFullYear(),d.getMonth(),1); }
     }
-  }
-
-  // ================= status =================
-  function renderStatus(){
-    storeBox.classList.remove("connected","warn");
-    stActions.innerHTML="";
-    if(me.canWrite){
-      storeBox.classList.add("connected");
-      stTitle.textContent="編集できます";
-      stPath.textContent="この端末は編集ロック解除済み";
-      stNote.textContent="誰でも閲覧できる公開カレンダーです。編集できるのは編集パスワードを知っている人だけです。";
-      addBtn("ロックする","tiny ghost",lockEditing);
-    } else {
-      storeBox.classList.add("warn");
-      stTitle.textContent="閲覧モード（公開）";
-      stPath.textContent="どなたでも閲覧できます。";
-      stNote.textContent="期日を追加・編集するには編集パスワードが必要です。";
-      addBtn("編集パスワードを入力","tiny primary",unlockEditing);
-    }
-  }
-  function addBtn(label,cls,fn){
-    const b=document.createElement("button"); b.className=cls; b.textContent=label;
-    b.addEventListener("click",fn); stActions.appendChild(b);
-  }
-  async function unlockEditing(){
-    const pw = prompt("編集パスワードを入力してください");
-    if(pw==null) return;
-    editKey = pw;
-    try{
-      const r = await apiMe();
-      if(r && r.canWrite){
-        localStorage.setItem(EDITKEY_LS, editKey);
-        me = r; applyPerm(); renderStatus(); render();
-      }else{
-        editKey=""; alert("パスワードが違います。");
-      }
-    }catch(e){ editKey=""; alert("確認できませんでした：" + (e.message||e)); }
-  }
-  function lockEditing(){
-    editKey=""; localStorage.removeItem(EDITKEY_LS);
-    me = Object.assign({}, me, {canWrite:false});
-    applyPerm(); renderStatus(); render();
-  }
-
-  // ================= modal =================
-  function refreshCaseList(){
-    const names=[...new Set(events.map(e=>e.case))].sort();
-    caseList.innerHTML=names.map(n=>`<option value="${escapeAttr(n)}">`).join("");
-  }
-  function setReadonly(ro){
-    formInputs.forEach(el=>{ el.disabled=ro; });
-    btnSave.style.display = ro ? "none" : "";
-    btnCancel.textContent = ro ? "閉じる" : "キャンセル";
-  }
-  function openAdd(dateStr){
-    if(!me.canWrite) return;               // 閲覧者は追加できない
-    editingId=null; modalTitle.textContent="期日を追加"; btnDelete.style.display="none";
-    setReadonly(false); refreshCaseList();
-    fCase.value=""; fDate.value=dateStr||todayStr(); fTime.value="";
-    fType.value="口頭弁論"; fPlace.value=""; fNote.value="";
-    if(events.length){
-      const recent=[...events].sort((a,b)=>b.date.localeCompare(a.date))[0];
-      fCase.value=recent.case; fPlace.value=recent.place||"";
-    }
-    overlay.classList.add("show"); fDate.focus();
-  }
-  function openEdit(id){
-    const ev=events.find(e=>e.id===id); if(!ev) return;
-    editingId=id;
-    const ro = !me.canWrite;
-    modalTitle.textContent = ro ? "期日の詳細" : "期日を編集";
-    setReadonly(ro);
-    btnDelete.style.display = ro ? "none" : "inline-block";
-    refreshCaseList();
-    fCase.value=ev.case; fDate.value=ev.date; fTime.value=ev.time||"";
-    fType.value=ev.type||"その他"; fPlace.value=ev.place||""; fNote.value=ev.note||"";
-    overlay.classList.add("show");
-  }
-  function closeModal(){ overlay.classList.remove("show"); editingId=null; }
-
-  async function saveEntry(){
-    if(!me.canWrite) return;
-    const c=fCase.value.trim(), d=fDate.value;
-    if(!c){ alert("事件名を入力してください。"); fCase.focus(); return; }
-    if(!d){ alert("期日（日付）を入力してください。"); fDate.focus(); return; }
-    const data={case:c,date:d,time:fTime.value,type:fType.value,place:fPlace.value.trim(),note:fNote.value.trim()};
-    btnSave.disabled=true;
-    try{
-      if(editingId){
-        const up=await apiUpdate(editingId,data);
-        const i=events.findIndex(e=>e.id===editingId); if(i>=0) events[i]=up;
-      }else{
-        const created=await apiCreate(data);
-        events.push(created);
-      }
-      closeModal(); render();
-    }catch(err){ alert(saveErr(err)); }
-    finally{ btnSave.disabled=false; }
-  }
-  async function deleteEntry(){
-    if(!editingId || !me.canWrite) return;
-    if(!confirm("この期日を削除します。よろしいですか？")) return;
-    btnDelete.disabled=true;
-    try{
-      await apiDelete(editingId);
-      events=events.filter(e=>e.id!==editingId);
-      closeModal(); render();
-    }catch(err){ alert(saveErr(err)); }
-    finally{ btnDelete.disabled=false; }
-  }
-
-  // ================= backup =================
-  function exportData(){
-    const blob=new Blob([JSON.stringify(events,null,2)],{type:"application/json"});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement("a");
-    const t=new Date();
-    a.href=url;
-    a.download=`裁判カレンダー_${t.getFullYear()}${String(t.getMonth()+1).padStart(2,"0")}${String(t.getDate()).padStart(2,"0")}.json`;
-    a.click(); URL.revokeObjectURL(url);
-  }
-  async function importMerge(file){
-    if(!me.canWrite){ alert("取り込みには編集権限が必要です。"); return; }
-    let data;
-    try{ data=JSON.parse(await file.text()); }catch(e){ alert("読み込めませんでした：" + e.message); return; }
-    if(!Array.isArray(data)){ alert("形式が違います（JSON配列ではありません）。"); return; }
-    if(!confirm(`${data.length}件を共有カレンダーに追加します。よろしいですか？`)) return;
-    let ok=0, ng=0;
-    for(const e of data){
-      try{
-        const created=await apiCreate({case:e.case,date:e.date,time:e.time,type:e.type,place:e.place,note:e.note});
-        events.push(created); ok++;
-      }catch(err){ ng++; }
-    }
-    render(); alert(`追加：${ok}件${ng?`／失敗：${ng}件`:""}`);
-  }
-
-  // ---- utils ----
-  function escapeHtml(s){ return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
-  function escapeAttr(s){ return String(s||"").replace(/"/g,"&quot;"); }
-
-  // ---- wire ----
-  document.getElementById("prev").addEventListener("click",()=>{view=new Date(view.getFullYear(),view.getMonth()-1,1);render();});
-  document.getElementById("next").addEventListener("click",()=>{view=new Date(view.getFullYear(),view.getMonth()+1,1);render();});
-  document.getElementById("todayBtn").addEventListener("click",()=>{view=startOfMonth(new Date());render();});
-  btnAdd.addEventListener("click",()=>openAdd(todayStr()));
-  btnSave.addEventListener("click",saveEntry);
-  btnCancel.addEventListener("click",closeModal);
-  btnDelete.addEventListener("click",deleteEntry);
-  document.getElementById("btnExport").addEventListener("click",exportData);
-  document.getElementById("btnImport").addEventListener("click",()=>document.getElementById("fileInput").click());
-  document.getElementById("fileInput").addEventListener("change",(e)=>{ if(e.target.files[0]) importMerge(e.target.files[0]); e.target.value=""; });
-  overlay.addEventListener("click",(e)=>{ if(e.target===overlay) closeModal(); });
-  document.addEventListener("keydown",(e)=>{
-    if(e.key==="Escape"&&overlay.classList.contains("show")) closeModal();
-    if((e.ctrlKey||e.metaKey)&&e.key==="Enter"&&overlay.classList.contains("show")) saveEntry();
-  });
-
-  // ---- init ----
-  function applyPerm(){
-    btnAdd.style.display = me.canWrite ? "" : "none";
-    tools.style.display = me.canWrite ? "flex" : "none";
-  }
-  async function init(){
-    render();
-    try{ me = await apiMe(); }catch(e){ me={email:null,canWrite:false,allowAll:false}; }
-    try{ events = await apiList(); }catch(e){ events=[]; }
-    applyPerm(); renderStatus(); render();
-  }
-  init();
+    renderAll();
+  })();
 })();
 </script>
 </body>
