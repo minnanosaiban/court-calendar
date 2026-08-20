@@ -24,6 +24,8 @@ OWNER_EMAIL = "you@example.com"        # 書き込みを許可する本人のメ
 #   "<secret>" | npx wrangler pages secret put TURNSTILE_SECRET --project-name <プロジェクト名>
 # どちらも未設定のうちは、一般の人の投稿は通らない（運営だけが書ける）。
 TURNSTILE_SITEKEY = ""
+# トークンが本物のサイト上で取られたことの照合先（カンマ区切り・本番のホスト名）。
+TURNSTILE_HOSTNAMES = "your-project.pages.dev"
 
 # ローカル開発の擬似ログインは .dev.vars（git管理外）に LOCAL_DEV="true" と DEV_EMAIL を書く。
 # 本番にはこれらを置かないので、本番は必ず Access の実ログインが要る。

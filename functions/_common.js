@@ -53,9 +53,13 @@ export function rowToPost(r) {
 }
 
 // Turnstile（スパム対策）の検証。secret 未設定なら常に false。
+// success だけでなく、action（このサイトの投稿ウィジェットか）と
+// hostname（本物のサイト上で取られたトークンか）も照合する。
+const TURNSTILE_ACTION = "board-post";
+
 export async function verifyTurnstile(token, env, ip) {
   const secret = env.TURNSTILE_SECRET;
-  if (!secret || !token) return false;
+  if (!secret || !token || typeof token !== "string" || token.length > 2048) return false;
   const form = new FormData();
   form.append("secret", secret);
   form.append("response", token);
@@ -65,8 +69,15 @@ export async function verifyTurnstile(token, env, ip) {
       method: "POST",
       body: form,
     });
+    if (!res.ok) return false;
     const data = await res.json();
-    return !!data.success;
+    if (!data.success) return false;
+    if (data.action !== TURNSTILE_ACTION) return false;
+    // TURNSTILE_HOSTNAMES（カンマ区切り）を設定している場合は、そのホストで取られたトークンだけを通す
+    const allowed = String(env.TURNSTILE_HOSTNAMES || "")
+      .split(",").map((s) => s.trim()).filter(Boolean);
+    if (allowed.length && !allowed.includes(data.hostname)) return false;
+    return true;
   } catch {
     return false;
   }

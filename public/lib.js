@@ -93,11 +93,6 @@ window.CC = (function(){
       `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${WD[d.getDay()]}）${ev.time||""}`
     ].filter(Boolean).join("　");
   }
-  function postSentence(p){
-    const tail = p.verb==="求めた" ? "を求めました" : "と主張しました";
-    return `${escapeHtml(p.subject)}は「${escapeHtml(p.quote)}」${tail}`;
-  }
-
   // ================= 事件の詳細カード（トップ「最近の期日」／別ページ共通） =================
   function caseDetailHtml(caseName){
     const rounds = caseEvents(caseName);
@@ -128,6 +123,19 @@ window.CC = (function(){
   }
 
   // ---- 行ってきたよ掲示板 ----
+  // 発言者ごとの色（吹き出しの頭の「原告」「被告」「裁判官」）
+  const SUBJ_CLASS = { "原告":"g", "被告":"k", "裁判官":"j" };
+
+  function bubbleHtml(p, roundLabel){
+    const tail = p.verb==="求めた" ? "を求めました" : "と主張しました";
+    return `<div class="bubble">`+
+      `<span class="bwho ${SUBJ_CLASS[p.subject]||""}">${escapeHtml(p.subject)}</span>`+
+      `<span class="btext">「${escapeHtml(p.quote)}」${tail}</span>`+
+      (roundLabel?`<span class="bround">${escapeHtml(roundLabel)}</span>`:"")+
+      (me.canWrite?`<a class="del" data-delpost="${escapeAttr(p.id)}">消す</a>`:"")+
+      `</div>`;
+  }
+
   function boardHtml(caseName){
     const rounds = caseEvents(caseName);
     const mine = casePosts(caseName);
@@ -135,23 +143,25 @@ window.CC = (function(){
     const canPost = me.boardOpen || me.canWrite;
     const items = mine.map(p=>{
       const ev = rounds.find(e=>e.id===p.eventId);
-      const roundLabel = (ev && ev.type) || p.round || "";
-      return `<li><span class="round">${escapeHtml(roundLabel)}</span>${postSentence(p)}`+
-        `${me.canWrite?`<a class="del" data-delpost="${escapeAttr(p.id)}">消す</a>`:""}</li>`;
+      return bubbleHtml(p, (ev && ev.type) || p.round || "");
     }).join("");
-    let html=`<p class="minih">行ってきたよ掲示板</p>`;
-    html += items ? `<ul class="board">${items}</ul>`
-      : `<p class="board-empty">${canPost
+    let html=`<div class="bpanel">`+
+      `<div class="bhead"><span class="btitle"><span class="bt-red">行ってきたよ</span>掲示板</span>`+
+      (mine.length?`<span class="bcount">${mine.length}件の報告</span>`:"")+
+      `</div>`;
+    html += items
+      || `<p class="board-empty">${canPost
           ? "まだ報告はありません。傍聴に行かれた方の最初の報告をお待ちしています。"
           : "まだ報告はありません。"}</p>`;
     if(canPost){
       html += boardFormForCase===caseName
         ? postFormHtml(caseName)
-        : `<p class="board-open"><a data-openpost="${escapeAttr(caseName)}">＋ 傍聴の報告を書く</a></p>`;
+        : `<p class="bwrite"><a data-openpost="${escapeAttr(caseName)}">傍聴の報告を書く</a></p>`;
     }else{
       // 押させてから断らない：受付前はリンクを出さず、一文だけ添える
-      html += `<p class="board-open">傍聴の報告の投稿は、いま準備中です。</p>`;
+      html += `<p class="board-empty">傍聴の報告の投稿は、いま準備中です。</p>`;
     }
+    html += `</div>`;
     return html;
   }
 
@@ -209,7 +219,7 @@ window.CC = (function(){
     if(!el) return;
     try{
       await ensureTurnstileScript();
-      window.turnstile.render(el,{sitekey:me.turnstileSiteKey, callback:(t)=>{ tsToken=t; }});
+      window.turnstile.render(el,{sitekey:me.turnstileSiteKey, action:"board-post", callback:(t)=>{ tsToken=t; }});
     }catch(e){
       el.innerHTML=`<span style="color:var(--mut);font-size:.75rem">スパム対策の読み込みに失敗しました。再読み込みしてください。</span>`;
     }
@@ -510,7 +520,7 @@ window.CC = (function(){
     get posts(){ return posts; },
     get me(){ return me; },
     get loaded(){ return loaded; },
-    colorFor, caseEvents, casePosts, nearestCase, eventLine, postSentence,
+    colorFor, caseEvents, casePosts, nearestCase, eventLine,
     load, renderCaseDetail, renderStatus, openAdd,
     setOnChange(fn){ onChange = fn; },
   };
