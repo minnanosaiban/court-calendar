@@ -334,8 +334,11 @@ window.CC = (function(){
   function sideTag(m){ return m.side ? `<span class="mat-side ${SIDE_CLASS[m.side]||""}">${escapeHtml(m.side)}</span>` : ""; }
   // PDF・本文・要約の3つのボタン。無いものはグレーのまま押せない（「この資料には無い」ことが分かるように）
   function matButtonsHtml(m){
+    // ファイル本体（R2/PDF/画像）か、外部サイトへのリンクかでラベル・アイコンを出し分ける
+    const icon = matIcon(m);
+    const label = icon==="bi-box-arrow-up-right" ? "資料" : "PDF";
     const pdf = m.fileUrl
-      ? `<a class="btn pdf" href="${escapeAttr(m.fileUrl)}" target="_blank" rel="noopener"><i class="bi ${matIcon(m)}" aria-hidden="true"></i>PDF</a>`
+      ? `<a class="btn pdf" href="${escapeAttr(m.fileUrl)}" target="_blank" rel="noopener"><i class="bi ${icon}" aria-hidden="true"></i>${label}</a>`
       : `<span class="btn off"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>PDF</span>`;
     const body = m.body
       ? `<a class="btn" href="doc?id=${encodeURIComponent(m.id)}" target="_blank" rel="noopener"><i class="bi bi-file-earmark-text" aria-hidden="true"></i>本文</a>`
