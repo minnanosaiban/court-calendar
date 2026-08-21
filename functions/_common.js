@@ -62,6 +62,7 @@ export function caseFromBody(body) {
 
 // ---- 期日 ----
 export const EVENT_COLS = `e.id, e.case_id, e.date, e.time, e.type, e.court, e.place, e.open, e.level,
+                           e.plaintiff_argument, e.defendant_argument,
                            e.created_by, e.updated_by, e.updated_at, c.name AS case_name`;
 export const EVENT_FROM = `FROM events e JOIN cases c ON c.id = e.case_id`;
 
@@ -77,6 +78,8 @@ export function rowToEvent(r) {
     place: r.place || "",
     open: r.open === 0 || r.open === false ? false : true,
     level: r.level || "",
+    plaintiffArgument: textToLines(r.plaintiff_argument),
+    defendantArgument: textToLines(r.defendant_argument),
     updatedAt: r.updated_at || "",
   };
 }
@@ -113,7 +116,7 @@ export const MATERIAL_MIMES = { "application/pdf": "pdf", "image/png": "png", "i
 export const MATERIAL_MAX_BYTES = 20 * 1024 * 1024;
 
 export const MATERIAL_COLS = `m.id, m.case_id, m.event_id, m.title, m.side, m.kind, m.filed_on,
-                              m.url, m.r2_key, m.file_name, m.file_size, m.mime, m.claims, m.summary,
+                              m.url, m.r2_key, m.file_name, m.file_size, m.mime, m.claims, m.body, m.summary,
                               m.created_at, m.updated_at`;
 
 // 資料の「ファイルのURL」に入れてよい形：https/http の絶対URL、またはこのサイト内の /docs/… （public/docs/ に置いたPDF）
@@ -138,6 +141,7 @@ export function rowToMaterial(r) {
     fileSize: Number(r.file_size || 0),
     mime: r.mime || "",
     claims: textToLines(r.claims),
+    body: r.body || "",
     summary: r.summary || "",
     createdAt: r.created_at || "",
   };

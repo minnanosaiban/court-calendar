@@ -1,5 +1,5 @@
 import {
-  json, newId, rowToEvent, EVENT_COLS, EVENT_FROM, resolveCaseId,
+  json, newId, rowToEvent, linesToText, EVENT_COLS, EVENT_FROM, resolveCaseId,
   getIdentity, authorizeWrite,
 } from "../_common.js";
 
@@ -35,14 +35,18 @@ export async function onRequestPost({ request, env }) {
     place: String(body.place || "").trim(),
     open: body.open === false ? 0 : 1,
     level: String(body.level || "").trim(),
+    plaintiff_argument: linesToText(body.plaintiffArgument),
+    defendant_argument: linesToText(body.defendantArgument),
   };
   const now = new Date().toISOString();
 
   await env.DB.prepare(
     `INSERT INTO events (id, case_id, date, time, type, court, place, open, level,
+                         plaintiff_argument, defendant_argument,
                          created_by, updated_by, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).bind(ev.id, ev.case_id, ev.date, ev.time, ev.type, ev.court, ev.place, ev.open, ev.level,
+         ev.plaintiff_argument, ev.defendant_argument,
          id.email, id.email, now).run();
 
   const row = await env.DB.prepare(`SELECT ${EVENT_COLS} ${EVENT_FROM} WHERE e.id = ?`).bind(ev.id).first();

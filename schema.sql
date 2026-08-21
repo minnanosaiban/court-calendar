@@ -34,6 +34,8 @@ CREATE TABLE IF NOT EXISTS events (
   place       TEXT,            -- 法廷
   open        INTEGER NOT NULL DEFAULT 1, -- 1=誰でも傍聴できる／0=非公開・要確認
   level       TEXT,            -- 見どころタグ（はじめて向け、報道あり など）
+  plaintiff_argument TEXT,     -- この回で原告が主張したこと（1行1項目、改行区切り・任意）
+  defendant_argument TEXT,     -- この回で被告が主張したこと（1行1項目、改行区切り・任意）
   created_by  TEXT,
   updated_by  TEXT,
   updated_at  TEXT
@@ -57,6 +59,7 @@ CREATE TABLE IF NOT EXISTS materials (
   file_size   INTEGER,
   mime        TEXT,
   claims      TEXT,            -- この書面で主張していること（1行1項目、改行区切り・任意）
+  body        TEXT,            -- 本文（Markdownを貼り付け・任意）
   summary     TEXT,            -- 要約（手入力・任意）
   hidden      INTEGER NOT NULL DEFAULT 0,
   created_by  TEXT,

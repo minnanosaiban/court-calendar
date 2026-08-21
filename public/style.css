@@ -86,6 +86,18 @@ a{color:inherit}
 .lede{margin-top:22px;background:var(--tint);border-radius:12px;padding:14px 16px;font-size:.9rem}
 .lede p + p{margin-top:10px}
 .lede .call{font-family:"Shippori Mincho",serif}
+
+/* ---- 資料の本文（Markdownを変換したもの・doc.html） ---- */
+.doc-body{margin-top:22px;font-size:.94rem;line-height:1.9}
+.doc-body h2,.doc-body h3,.doc-body h4{font-family:"Shippori Mincho",serif;font-weight:600;margin:1.6em 0 .5em}
+.doc-body h2:first-child,.doc-body h3:first-child,.doc-body h4:first-child{margin-top:0}
+.doc-body p{margin-top:1em}
+.doc-body p:first-child{margin-top:0}
+.doc-body ul,.doc-body ol{margin:1em 0 1em 1.4em}
+.doc-body li{margin-top:.3em}
+.doc-body blockquote{margin:1em 0;padding:.2em 1em;border-left:3px solid var(--tint);color:var(--mut)}
+.doc-body a{text-underline-offset:3px}
+.doc-body strong{font-weight:700}
 /* 説明文の下に、呼びかけ人と連絡先を添える */
 .credit{display:block;color:var(--mut);font-size:.8rem;line-height:1.85;margin-top:10px}
 .credit a{color:var(--mut);text-underline-offset:3px}
@@ -130,17 +142,37 @@ a{color:inherit}
 .mat-side.k{color:#4a5a74}
 .mat-side.j{color:#8a5c46}
 .mat-name{font-weight:500}
-.mat-name.has-file{text-decoration:underline;text-underline-offset:3px;text-decoration-color:#c9c6bc}
-.mat-name .bi{color:var(--stamp);margin-left:.1em}
 .mat-kind{color:var(--mut);font-size:.72rem}
 .mat-claims{margin-top:6px;font-size:.86rem}
-.mat-sum{margin-top:8px;font-size:.84rem;color:var(--ink)}
+.mat-sum{display:block;margin-top:8px;font-size:.84rem;color:var(--ink);flex-basis:100%}
 .mat-sumh{display:inline-block;font-size:.68rem;letter-spacing:.18em;color:var(--mut);margin-right:.6em}
 .mlist{list-style:none;margin-top:8px;font-size:.88rem}
 .mrow{display:flex;gap:12px;padding:7px 0;border-top:1px solid var(--tint)}
 .mrow:first-child{border-top:none}
 .mdate{flex:none;width:6.2em;color:var(--mut);font-size:.8rem;font-variant-numeric:tabular-nums;padding-top:1px}
 .mmain{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;min-width:0}
+/* PDF・本文・要約のボタン列。無いものはグレーで押せない */
+.btns{display:flex;gap:6px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:4px;font-size:.72rem;color:var(--ink);
+  background:#fff;border:1px solid #e6e4dd;border-radius:999px;padding:3px 10px;
+  cursor:pointer;text-decoration:none;line-height:1.5;font-family:inherit}
+.btn:hover{border-color:#c9c6bc}
+.btn .bi{font-size:.8rem;color:var(--mut)}
+.btn.pdf .bi{color:var(--stamp)}
+.btn.off{opacity:.4;cursor:default;background:none}
+.btn.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn.on .bi{color:#fff}
+.mat .btns{margin-top:8px}
+/* 原告/被告の主張（タイムラインの節の中、資料の上） */
+.args{display:grid;gap:10px;margin-top:10px}
+@media(min-width:560px){.args{grid-template-columns:1fr 1fr}}
+.arg{background:var(--tint);border-radius:12px;padding:11px 14px 12px}
+.arg h4{font-size:.74rem;font-weight:700;letter-spacing:.08em;margin-bottom:5px}
+.arg.g h4{color:#47705a}
+.arg.k h4{color:#4a5a74}
+.arg ul{list-style:none;font-size:.86rem}
+.arg li{padding-left:1.1em;text-indent:-1.1em;line-height:1.75}
+.arg li::before{content:"・";color:var(--faint)}
 
 /* ---- 行ってきたよ掲示板 ---- */
 /* 生成りの面でくくって独立した「場」に見せる。見出しの「行ってきたよ」は朱印と同じ赤 */

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>事件の詳細 ｜ みんなの裁判</title>
+<title>本文 ｜ みんなの裁判</title>
 <meta name="description" content="行けない日も、法廷のいまがわかる。裁判の期日と、傍聴に行った人の報告を、ひとつのカレンダーに。">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23f2e4c9'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,10 +23,10 @@
     </div>
   </header>
 
-  <a class="backlink" href="index.html"><i class="bi bi-arrow-left" aria-hidden="true"></i> カレンダーに戻る</a>
+  <a class="backlink" id="backlink" href="index.html"><i class="bi bi-arrow-left" aria-hidden="true"></i> 戻る</a>
 
-  <section aria-labelledby="case-h" style="margin-top:28px">
-    <div id="caseBody"></div>
+  <section aria-labelledby="doc-h" style="margin-top:28px">
+    <div id="docBody"></div>
   </section>
 
   <p class="status" id="status"></p>
@@ -38,7 +38,7 @@
   </footer>
 </div>
 
-<!-- modal: 期日の追加・編集（事件の説明・争点・よびかけは「事件を編集」から） -->
+<!-- modal: 期日の追加・編集（このページでは使わないが、lib.js が要素を前提にしているため置いておく） -->
 <div class="overlay" id="overlay">
   <div class="modal">
     <div class="mhead" id="modalTitle">期日を追加</div>
@@ -116,21 +116,35 @@
 <script>
 (function(){
   "use strict";
-  const caseBody=document.getElementById("caseBody");
+  const docBody=document.getElementById("docBody");
   const statusEl=document.getElementById("status");
-  // ?id=事件ID で開く。古いリンク（?case=事件名）も、読み込み後に名前で引いて開く
-  const qs = new URLSearchParams(location.search);
-  let caseId = qs.get("id") || "";
-  const legacyName = qs.get("case") || "";
+  const backlink=document.getElementById("backlink");
+  const matId = new URLSearchParams(location.search).get("id") || "";
 
   function renderAll(){
-    if(!caseId && legacyName && CC.loaded){
-      const c=CC.caseByName(legacyName); if(c) caseId=c.id;
-    }
-    CC.renderCaseDetail(caseBody, caseId || legacyName, {full:true});
     CC.renderStatus(statusEl);
-    const c=CC.caseById(caseId);
-    if(c) document.title = c.name + " ｜ みんなの裁判";
+    if(!CC.loaded){
+      docBody.innerHTML = `<div class="card"><p class="empty-msg">読み込んでいます…</p></div>`;
+      return;
+    }
+    const m = CC.materialById(matId);
+    if(!m || !m.body){
+      docBody.innerHTML =
+        `<div class="card"><p class="empty-msg">その本文は見つかりませんでした。</p></div>`;
+      document.title = "本文 ｜ みんなの裁判";
+      return;
+    }
+    const c = CC.caseById(m.caseId);
+    if(c){ backlink.href = "case?id="+encodeURIComponent(c.id); backlink.innerHTML = `<i class="bi bi-arrow-left" aria-hidden="true"></i> ${CC.escapeHtml(c.name)}に戻る`; }
+    document.title = m.title + " ｜ みんなの裁判";
+    const meta = [m.side, m.kind].filter(Boolean).join("／");
+    docBody.innerHTML = `
+      <div class="card dcard">
+        ${meta?`<p class="minih">${CC.escapeHtml(meta)}</p>`:""}
+        <h2 class="d-title">${CC.escapeHtml(m.title)}</h2>
+        ${m.filedOn?`<p class="d-body mut">提出日：${CC.escapeHtml(m.filedOn.replace(/-/g,"."))}</p>`:""}
+        <div class="doc-body">${CC.mdToHtml(m.body)}</div>
+      </div>`;
   }
   CC.setOnChange(renderAll);
 

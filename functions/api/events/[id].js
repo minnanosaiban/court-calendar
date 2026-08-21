@@ -1,5 +1,5 @@
 import {
-  json, rowToEvent, EVENT_COLS, EVENT_FROM, resolveCaseId,
+  json, rowToEvent, linesToText, EVENT_COLS, EVENT_FROM, resolveCaseId,
   getIdentity, authorizeWrite,
 } from "../../_common.js";
 
@@ -20,6 +20,7 @@ export async function onRequestPut({ request, env, params }) {
   const res = await env.DB.prepare(
     `UPDATE events
         SET case_id=?, date=?, time=?, type=?, court=?, place=?, open=?, level=?,
+            plaintiff_argument=?, defendant_argument=?,
             updated_by=?, updated_at=?
       WHERE id=?`
   ).bind(
@@ -30,6 +31,8 @@ export async function onRequestPut({ request, env, params }) {
     String(body.place || "").trim(),
     body.open === false ? 0 : 1,
     String(body.level || "").trim(),
+    linesToText(body.plaintiffArgument),
+    linesToText(body.defendantArgument),
     id.email, new Date().toISOString(), eid
   ).run();
   if (!res.meta || res.meta.changes === 0) return json({ error: "not found" }, 404);

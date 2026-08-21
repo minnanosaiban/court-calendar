@@ -22,6 +22,7 @@ window.CC = (function(){
   let editingImgId = null;       // 編集中の写真
   let boardFormForCase = null;   // 投稿フォームを開いている事件ID
   let openNodes = new Set();     // タイムラインで開いている節（期日ID）
+  let openSummaries = new Set(); // 開いている「要約」ボタン（資料ID）
   let tsToken = "";
   let tsScriptPromise = null;
   let onChange = null;           // ページ側が登録する「データが変わったら呼ぶ」コールバック
@@ -46,6 +47,36 @@ window.CC = (function(){
   function cssEsc(s){ return String(s).replace(/"/g,'\\"'); }
   function jpDate(s){ const d=parseYmd(s); return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${WD[d.getDay()]}）`; }
   function dotDate(s){ return s ? s.replace(/-/g,".") : ""; }
+
+  // ---- 資料の本文（Markdown）を、簡単な安全なHTMLに変換 ----
+  // まず全体をエスケープしてから記法を当てはめるので、貼り付けた本文に生のHTMLが混ざっても実行されない。
+  function inlineMd(s){
+    let t = escapeHtml(s);
+    t = t.replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>");
+    t = t.replace(/(^|[^*])\*([^*]+)\*(?!\*)/g,"$1<em>$2</em>");
+    t = t.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+    return t;
+  }
+  function mdToHtml(src){
+    const blocks = String(src||"").replace(/\r\n/g,"\n").trim().split(/\n{2,}/);
+    return blocks.map(block=>{
+      const lines = block.split("\n").map(l=>l.replace(/\s+$/,""));
+      if(lines.length===1){
+        const h = lines[0].match(/^(#{1,3})\s+(.*)$/);
+        if(h){ const lv=h[1].length+2; return `<h${lv}>${inlineMd(h[2])}</h${lv}>`; }
+      }
+      if(lines.every(l=>/^[-・]\s+/.test(l))){
+        return `<ul>${lines.map(l=>`<li>${inlineMd(l.replace(/^[-・]\s+/,""))}</li>`).join("")}</ul>`;
+      }
+      if(lines.every(l=>/^\d+[.)]\s+/.test(l))){
+        return `<ol>${lines.map(l=>`<li>${inlineMd(l.replace(/^\d+[.)]\s+/,""))}</li>`).join("")}</ol>`;
+      }
+      if(lines.every(l=>/^>\s?/.test(l))){
+        return `<blockquote><p>${lines.map(l=>inlineMd(l.replace(/^>\s?/,""))).join("<br>")}</p></blockquote>`;
+      }
+      return `<p>${lines.map(inlineMd).join("<br>")}</p>`;
+    }).join("\n");
+  }
 
   // ================= API =================
   async function api(method, path, body, extra){
@@ -107,6 +138,7 @@ window.CC = (function(){
   function caseEvents(caseId){ return events.filter(e=>e.caseId===caseId).sort(byDate); }
   function casePosts(caseId){ return posts.filter(p=>p.caseId===caseId); }
   function caseMaterials(caseId){ return materials.filter(m=>m.caseId===caseId); }
+  function materialById(id){ return materials.find(m=>m.id===id) || null; }
   function caseImages(caseId){ return images.filter(im=>im.caseId===caseId).sort((a,b)=>a.sortOrder-b.sortOrder); }
   // 直近に期日がある事件（トップの「最近の期日」・カレンダーの初期表示月に使う）
   function nearestCase(){
@@ -265,19 +297,38 @@ window.CC = (function(){
     if(/^image\//.test(m.mime||"") || /\.(png|jpe?g|gif|webp)(\?|#|$)/.test(u)) return "bi-image";
     return "bi-box-arrow-up-right";
   }
-  function matTitleHtml(m){
-    const icon = m.fileUrl ? `<i class="bi ${matIcon(m)}" aria-hidden="true"></i>` : "";
-    return m.fileUrl
-      ? `<a class="mat-name has-file" href="${escapeAttr(m.fileUrl)}" target="_blank" rel="noopener">${escapeHtml(m.title)} ${icon}</a>`
-      : `<span class="mat-name">${escapeHtml(m.title)}</span>`;
-  }
   function sideTag(m){ return m.side ? `<span class="mat-side ${SIDE_CLASS[m.side]||""}">${escapeHtml(m.side)}</span>` : ""; }
+  // PDF・本文・要約の3つのボタン。無いものはグレーのまま押せない（「この資料には無い」ことが分かるように）
+  function matButtonsHtml(m){
+    const pdf = m.fileUrl
+      ? `<a class="btn pdf" href="${escapeAttr(m.fileUrl)}" target="_blank" rel="noopener"><i class="bi ${matIcon(m)}" aria-hidden="true"></i>PDF</a>`
+      : `<span class="btn off"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>PDF</span>`;
+    const body = m.body
+      ? `<a class="btn" href="doc?id=${encodeURIComponent(m.id)}" target="_blank" rel="noopener"><i class="bi bi-file-earmark-text" aria-hidden="true"></i>本文</a>`
+      : `<span class="btn off"><i class="bi bi-file-earmark-text" aria-hidden="true"></i>本文</span>`;
+    const sum = m.summary
+      ? `<button type="button" class="btn${openSummaries.has(m.id)?" on":""}" data-sumtoggle="${escapeAttr(m.id)}"><i class="bi bi-stars" aria-hidden="true"></i>要約</button>`
+      : `<span class="btn off"><i class="bi bi-stars" aria-hidden="true"></i>要約</span>`;
+    return `<span class="btns">${pdf}${body}${sum}</span>`;
+  }
   function matBlockHtml(m){
     const claims=(m.claims||[]).map(x=>`<li>${escapeHtml(x)}</li>`).join("");
+    const showSum = m.summary && openSummaries.has(m.id);
     return `<div class="mat">
-      <p class="mat-h">${sideTag(m)}${matTitleHtml(m)}${m.kind?`<span class="mat-kind">${escapeHtml(m.kind)}</span>`:""}</p>
+      <p class="mat-h">${sideTag(m)}<span class="mat-name">${escapeHtml(m.title)}</span>${m.kind?`<span class="mat-kind">${escapeHtml(m.kind)}</span>`:""}</p>
+      ${matButtonsHtml(m)}
       ${claims?`<ul class="pts mat-claims">${claims}</ul>`:""}
-      ${m.summary?`<p class="mat-sum"><span class="mat-sumh">要約</span>${escapeHtml(m.summary)}</p>`:""}
+      ${showSum?`<p class="mat-sum"><span class="mat-sumh">要約</span>${escapeHtml(m.summary)}</p>`:""}
+    </div>`;
+  }
+  // 期日ごとの「原告の主張／被告の主張」（3行程度の箇条書き）
+  function argsHtml(ev){
+    const p=(ev.plaintiffArgument||[]).map(x=>`<li>${escapeHtml(x)}</li>`).join("");
+    const d=(ev.defendantArgument||[]).map(x=>`<li>${escapeHtml(x)}</li>`).join("");
+    if(!p && !d) return "";
+    return `<div class="args">
+      ${p?`<div class="arg g"><h4>原告の主張</h4><ul>${p}</ul></div>`:""}
+      ${d?`<div class="arg k"><h4>被告の主張</h4><ul>${d}</ul></div>`:""}
     </div>`;
   }
   function timelineHtml(caseId){
@@ -287,21 +338,23 @@ window.CC = (function(){
     const next=nextEvent(caseId);
     const items=rounds.map(ev=>{
       const own=mats.filter(m=>m.eventId===ev.id);
+      const hasArgs = (ev.plaintiffArgument&&ev.plaintiffArgument.length) || (ev.defendantArgument&&ev.defendantArgument.length);
       const state = ev.date<today ? "past" : (next&&ev.id===next.id ? "next" : "future");
-      const expandable = own.length>0;
+      const expandable = own.length>0 || hasArgs;
       const isOpen = expandable && openNodes.has(ev.id);
       const place=[ev.court,ev.place].filter(Boolean).join(" ");
       const closed = ev.open===false ? `<span class="round-closed">非公開・要確認</span>` : "";
       const editLink = me.canWrite ? `<a class="round-edit" data-edit="${escapeAttr(ev.id)}">編集</a>` : "";
+      const countLabel = own.length>0 ? `資料${own.length}件` : "詳細";
       return `<li class="tl-item ${state}${isOpen?" open":""}">
         <span class="tl-dot" aria-hidden="true"></span>
         <div class="tl-head${expandable?" tl-click":""}"${expandable?` data-tl="${escapeAttr(ev.id)}" role="button" aria-expanded="${isOpen}"`:""}>
           <span class="tl-date">${escapeHtml(jpDate(ev.date))}${ev.time?" "+escapeHtml(ev.time):""}</span>
           <span class="tl-type">${escapeHtml(ev.type||"期日")}</span>
           <span class="tl-meta">${escapeHtml(place)}${closed}${editLink}</span>
-          ${expandable?`<span class="tl-count">資料${own.length}件 <i class="bi bi-chevron-down" aria-hidden="true"></i></span>`:""}
+          ${expandable?`<span class="tl-count">${countLabel} <i class="bi bi-chevron-down" aria-hidden="true"></i></span>`:""}
         </div>
-        ${isOpen?`<div class="tl-body">${own.map(matBlockHtml).join("")}</div>`:""}
+        ${isOpen?`<div class="tl-body">${argsHtml(ev)}${own.map(matBlockHtml).join("")}</div>`:""}
       </li>`;
     }).join("");
     // 期日に紐づいていない資料があることを、タイムラインの下で知らせる（一覧で見られる）
@@ -315,9 +368,11 @@ window.CC = (function(){
     const mats=caseMaterials(caseId);
     const rows=mats.map(m=>{
       const edit = me.canWrite ? `<a class="round-edit" data-editmat="${escapeAttr(m.id)}">編集</a>` : "";
+      const showSum = m.summary && openSummaries.has(m.id);
       return `<li class="mrow">
         <span class="mdate">${escapeHtml(dotDate(m.filedOn))||"&nbsp;"}</span>
-        <span class="mmain">${sideTag(m)}${matTitleHtml(m)}${m.kind?`<span class="mat-kind">${escapeHtml(m.kind)}</span>`:""}${edit}</span>
+        <span class="mmain">${sideTag(m)}<span class="mat-name">${escapeHtml(m.title)}</span>${m.kind?`<span class="mat-kind">${escapeHtml(m.kind)}</span>`:""}${matButtonsHtml(m)}${edit}
+        ${showSum?`<span class="mat-sum"><span class="mat-sumh">要約</span>${escapeHtml(m.summary)}</span>`:""}</span>
       </li>`;
     }).join("");
     return `<p class="minih">訴訟資料一覧</p>
@@ -524,6 +579,14 @@ window.CC = (function(){
         rerender();
       });
     });
+    container.querySelectorAll("[data-sumtoggle]").forEach(b=>{
+      b.addEventListener("click",(e)=>{
+        e.stopPropagation();
+        const id=b.dataset.sumtoggle;
+        if(openSummaries.has(id)) openSummaries.delete(id); else openSummaries.add(id);
+        rerender();
+      });
+    });
     container.querySelectorAll("[data-addmat]").forEach(a=>{
       a.addEventListener("click",()=>openMatAdd(a.dataset.addmat));
     });
@@ -610,11 +673,13 @@ window.CC = (function(){
   const fPlace = document.getElementById("fPlace");
   const fOpen = document.getElementById("fOpen");
   const fLevel = document.getElementById("fLevel");
+  const fPlaintiff = document.getElementById("fPlaintiff");
+  const fDefendant = document.getElementById("fDefendant");
   const caseList = document.getElementById("caseList");
   const btnSave = document.getElementById("btnSave");
   const btnCancel = document.getElementById("btnCancel");
   const btnDelete = document.getElementById("btnDelete");
-  const formInputs = [fCase,fDate,fTime,fType,fCourt,fPlace,fOpen,fLevel];
+  const formInputs = [fCase,fDate,fTime,fType,fCourt,fPlace,fOpen,fLevel,fPlaintiff,fDefendant];
 
   function refreshCaseList(){
     const names=cases.map(c=>c.name).sort();
@@ -629,6 +694,8 @@ window.CC = (function(){
     fCase.value=ev.case||""; fDate.value=ev.date||""; fTime.value=ev.time||"";
     fType.value=ev.type||""; fCourt.value=ev.court||""; fPlace.value=ev.place||"";
     fOpen.checked = ev.open!==false; fLevel.value=ev.level||"";
+    fPlaintiff.value=(ev.plaintiffArgument||[]).join("\n");
+    fDefendant.value=(ev.defendantArgument||[]).join("\n");
   }
   function openAdd(dateStr){
     if(!me.canWrite) return;
@@ -675,6 +742,8 @@ window.CC = (function(){
       caseId: known ? known.id : "", case:c, date:d, time:fTime.value,
       type:fType.value.trim(), court:fCourt.value.trim(), place:fPlace.value.trim(),
       open:fOpen.checked, level:fLevel.value.trim(),
+      plaintiffArgument:fPlaintiff.value.split("\n").map(s=>s.trim()).filter(Boolean),
+      defendantArgument:fDefendant.value.split("\n").map(s=>s.trim()).filter(Boolean),
     };
     btnSave.disabled=true;
     try{
@@ -771,6 +840,11 @@ window.CC = (function(){
         <p class="fnote" id="mFileNow" hidden></p>
       </div>
       <div class="field"><label>この書面で主張していること（1行に1つ・任意）</label><textarea id="mClaims" placeholder="例）不開示決定の取消しを求める"></textarea></div>
+      <div class="field">
+        <label>本文（Markdownを貼り付け・任意）</label>
+        <textarea id="mBody" placeholder="書面の本文をそのまま貼り付けられます（見出し・箇条書き・**強調**などが使えます）" style="min-height:120px"></textarea>
+        <p class="fnote">「本文」ボタンから読めるページになります。原本はPDFなので、本文は補助（検索されやすくする・要点を読みやすくする）目的です。</p>
+      </div>
       <div class="field"><label>要約（任意）</label><textarea id="mSummary" placeholder="手で書いた要約、またはAIに作らせて確認した要約"></textarea></div>
     </div>
     <div class="mfoot">
@@ -808,7 +882,7 @@ window.CC = (function(){
                     lede:$("cLede"), callText:$("cCall"), host:$("cHost"), contact:$("cContact"), links:$("cLinks") };
   const mFields = { title:$("mTitle"), side:$("mSide"), kind:$("mKind"), event:$("mEvent"), filedOn:$("mFiledOn"),
                     url:$("mUrl"), file:$("mFile"), fileField:$("mFileField"), fileNow:$("mFileNow"),
-                    claims:$("mClaims"), summary:$("mSummary") };
+                    claims:$("mClaims"), body:$("mBody"), summary:$("mSummary") };
   let matCaseId = null;
 
   // ---- 事件 ----
@@ -882,7 +956,7 @@ window.CC = (function(){
       `<option value="${escapeAttr(e.id)}"${m.eventId===e.id?" selected":""}>${escapeHtml(e.type||"期日")}　${escapeHtml(e.date)}</option>`).join("");
     mFields.title.value=m.title||""; mFields.side.value=m.side||""; mFields.kind.value=m.kind||"";
     mFields.filedOn.value=m.filedOn||""; mFields.url.value=m.url||""; mFields.file.value="";
-    mFields.claims.value=(m.claims||[]).join("\n"); mFields.summary.value=m.summary||"";
+    mFields.claims.value=(m.claims||[]).join("\n"); mFields.body.value=m.body||""; mFields.summary.value=m.summary||"";
     // アップロード欄は R2 が使えるとき（me.uploads）か、すでに R2 のファイルが付いているときだけ出す
     const hasR2 = !!(m.fileUrl && m.fileUrl.startsWith("/files/"));
     mFields.fileField.hidden = !(me.uploads || hasR2);
@@ -922,6 +996,7 @@ window.CC = (function(){
     fd.append("filedOn", mFields.filedOn.value);
     fd.append("url", mFields.url.value.trim());
     fd.append("claims", mFields.claims.value);
+    fd.append("body", mFields.body.value);
     fd.append("summary", mFields.summary.value);
     const f=mFields.file.files[0];
     if(f){
@@ -1100,7 +1175,8 @@ window.CC = (function(){
     get images(){ return images; },
     get me(){ return me; },
     get loaded(){ return loaded; },
-    caseById, caseByName, caseEvents, casePosts, caseMaterials, caseImages, nearestCase, nextEvent, eventLine,
+    caseById, caseByName, caseEvents, casePosts, caseMaterials, caseImages, materialById, nearestCase, nextEvent, eventLine,
+    mdToHtml,
     load, renderCaseDetail, renderStatus, openAdd,
     setOnChange(fn){ onChange = fn; },
   };

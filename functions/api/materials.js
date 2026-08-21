@@ -46,6 +46,9 @@ export async function readMaterialForm(request, env) {
   const url = get("url");
   if (url && !isMaterialUrl(url)) return { error: "ファイルのURLは https://… か /docs/… の形で入れてください" };
 
+  const body = String(form.get("body") ?? "").trim();   // Markdown。段落の空行を保つので行ごとには整えない
+  if (body.length > 300000) return { error: "本文が長すぎます（30万字まで）" };
+
   const fields = {
     case_id: caseId,
     event_id: eventId || null,
@@ -54,6 +57,7 @@ export async function readMaterialForm(request, env) {
     filed_on: filedOn || null,
     url: url || null,
     claims: linesToText(get("claims")),
+    body,
     summary: get("summary"),
   };
 
@@ -87,11 +91,11 @@ export async function onRequestPost({ request, env }) {
   const f = r.fields;
   await env.DB.prepare(
     `INSERT INTO materials (id, case_id, event_id, title, side, kind, filed_on, url,
-                            r2_key, file_name, file_size, mime, claims, summary,
+                            r2_key, file_name, file_size, mime, claims, body, summary,
                             hidden, created_by, updated_by, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)`
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)`
   ).bind(mid, f.case_id, f.event_id, f.title, f.side, f.kind, f.filed_on, f.url,
-         r2.key, r2.name, r2.size, r2.mime, f.claims, f.summary,
+         r2.key, r2.name, r2.size, r2.mime, f.claims, f.body, f.summary,
          id.email, id.email, now, now).run();
 
   const row = await env.DB.prepare(`${SELECT} AND m.id = ?`).bind(mid).first();
