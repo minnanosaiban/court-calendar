@@ -19,6 +19,9 @@ CREATE TABLE IF NOT EXISTS cases (
   contact     TEXT,                 -- 連絡先（公開してよいものだけ）
   links       TEXT,                 -- 当事者のアカウント等のURL（1行1つ、改行区切り）
   tags        TEXT,                 -- タグ（1行1つ、改行区切り・任意）
+  archived_at TEXT,                 -- 終結日 YYYY-MM-DD（あれば「裁判アーカイブ」扱い・任意）
+  close_type  TEXT,                 -- 終結の種類（判決／和解／取下げ など・任意）
+  result      TEXT,                 -- 結果（1〜2行・任意）
   created_by  TEXT,
   updated_by  TEXT,
   updated_at  TEXT                  -- ISO8601

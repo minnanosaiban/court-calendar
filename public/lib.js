@@ -143,8 +143,12 @@ window.CC = (function(){
   // 直近に期日がある事件（トップの「最近の期日」・カレンダーの初期表示月に使う）
   function nearestCase(){
     const today=todayStr();
-    const list=events.filter(e=>e.date>=today).sort(byDate);
+    const list=events.filter(e=>e.date>=today && !isArchived(e.caseId)).sort(byDate);
     return list[0] ? list[0].caseId : null;
+  }
+  function isArchived(caseId){
+    const c=caseById(caseId);
+    return !!(c && c.archivedAt);
   }
   // その事件の「最近の期日」＝これからの最初の回。すべて済んでいれば最後の回
   function nextEvent(caseId){
@@ -187,6 +191,12 @@ window.CC = (function(){
       link ? `<a class="tag" href="cases?tag=${encodeURIComponent(t)}">${escapeHtml(t)}</a>`
            : `<span class="tag">${escapeHtml(t)}</span>`
     ).join("")+`</div>`;
+  }
+  // 終結した裁判（裁判アーカイブ）の帯
+  function archivedHtml(c){
+    if(!c.archivedAt) return "";
+    const when=[jpDate(c.archivedAt), c.closeType].filter(Boolean).join("　");
+    return `<div class="archived"><i class="bi bi-archive" aria-hidden="true"></i><span>この裁判は <b>${escapeHtml(when)}</b> で終結しました。${c.result?escapeHtml(c.result):""}</span></div>`;
   }
 
   // ---- 写真ギャラリー（事件ページ上部だけに出す） ----
@@ -273,6 +283,7 @@ window.CC = (function(){
           ${linksHtml(c)}
         </div>
         ${tagsHtml(c)}
+        ${archivedHtml(c)}
         ${editCase}
         ${next?`<p class="minih">最近の期日</p><p class="d-body d-next">${escapeHtml(eventLine(next))}${next.open===false?`<span class="round-closed">非公開・要確認</span>`:""}</p>`:""}
         ${points?`<p class="minih">争点</p><ul class="pts">${points}</ul>`:""}
@@ -814,6 +825,15 @@ window.CC = (function(){
         <label>タグ（1行に1つ・任意）</label>
         <textarea id="cTags" placeholder="例）情報公開、行政"></textarea>
       </div>
+      <p class="msec">終結（裁判アーカイブ・終結した事件のみ入れる）</p>
+      <div class="two">
+        <div class="field"><label>終結日</label><input type="date" id="cArchivedAt"></div>
+        <div class="field"><label>終結の種類</label><input type="text" id="cCloseType" placeholder="例）判決、和解、取下げ"></div>
+      </div>
+      <div class="field">
+        <label>結果（1〜2行・任意）</label>
+        <textarea id="cResult" placeholder="例）原告の請求を一部認容（請求額の約6割）。控訴せず確定。"></textarea>
+      </div>
     </div>
     <div class="mfoot">
       <button class="btn-del" id="cDelete" style="display:none;">削除</button>
@@ -894,7 +914,7 @@ window.CC = (function(){
   const caseOverlay=$("caseOverlay"), matOverlay=$("matOverlay");
   const cFields = { name:$("cName"), caseNo:$("cCaseNo"), parties:$("cParties"), points:$("cPoints"),
                     lede:$("cLede"), callText:$("cCall"), host:$("cHost"), contact:$("cContact"), links:$("cLinks"),
-                    tags:$("cTags") };
+                    tags:$("cTags"), archivedAt:$("cArchivedAt"), closeType:$("cCloseType"), result:$("cResult") };
   const mFields = { title:$("mTitle"), side:$("mSide"), kind:$("mKind"), event:$("mEvent"), filedOn:$("mFiledOn"),
                     url:$("mUrl"), file:$("mFile"), fileField:$("mFileField"), fileNow:$("mFileNow"),
                     claims:$("mClaims"), body:$("mBody"), summary:$("mSummary") };
@@ -906,6 +926,7 @@ window.CC = (function(){
     cFields.points.value=(c.points||[]).join("\n"); cFields.lede.value=c.lede||""; cFields.callText.value=c.callText||"";
     cFields.host.value=c.host||""; cFields.contact.value=c.contact||""; cFields.links.value=(c.links||[]).join("\n");
     cFields.tags.value=(c.tags||[]).join("\n");
+    cFields.archivedAt.value=c.archivedAt||""; cFields.closeType.value=c.closeType||""; cFields.result.value=c.result||"";
   }
   function openCaseAdd(){
     if(!me.canWrite) return;
@@ -932,6 +953,7 @@ window.CC = (function(){
       host:cFields.host.value.trim(), contact:cFields.contact.value.trim(),
       links:cFields.links.value.split("\n").map(s=>s.trim()).filter(Boolean),
       tags:cFields.tags.value.split("\n").map(s=>s.trim()).filter(Boolean),
+      archivedAt:cFields.archivedAt.value, closeType:cFields.closeType.value.trim(), result:cFields.result.value.trim(),
     };
     $("cSave").disabled=true;
     try{
@@ -1193,7 +1215,7 @@ window.CC = (function(){
     get me(){ return me; },
     get loaded(){ return loaded; },
     caseById, caseByName, caseEvents, casePosts, caseMaterials, caseImages, materialById, nearestCase, nextEvent, eventLine,
-    mdToHtml, likeHtml, toggleLike,
+    mdToHtml, likeHtml, toggleLike, isArchived,
     load, renderCaseDetail, renderStatus, openAdd,
     setOnChange(fn){ onChange = fn; },
   };

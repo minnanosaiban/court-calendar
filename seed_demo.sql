@@ -14,8 +14,10 @@
 --   8/25 …… 1件（バー1本・掲示板の投稿つき）
 --   9/3  …… 2件・うち1件は非公開（バー2本＋白抜き）
 --   9/10 …… 1件（タイムラインで「次回」）
+--   3/19 …… 終結した事件の例（裁判アーカイブに入る）
 
 INSERT INTO cases (id, name, case_no, parties, points, lede, call_text, host, contact, links, tags,
+                   archived_at, close_type, result,
                    created_by, updated_by, updated_at) VALUES
 (
   'demo-case-joho',
@@ -33,6 +35,7 @@ https://example.com/sample-ombudsman',
   '情報公開
 行政
 はじめて向け',
+  NULL, NULL, NULL,
   'demo', 'demo', '2026-08-20T00:00:00.000Z'
 ),
 (
@@ -49,6 +52,7 @@ https://example.com/sample-ombudsman',
   NULL,
   '労働
 パワハラ',
+  NULL, NULL, NULL,
   'demo', 'demo', '2026-08-20T00:00:00.000Z'
 ),
 (
@@ -63,6 +67,24 @@ https://example.com/sample-ombudsman',
   NULL,
   NULL,
   '家族',
+  NULL, NULL, NULL,
+  'demo', 'demo', '2026-08-20T00:00:00.000Z'
+),
+(
+  'demo-case-kako',
+  '【サンプル】終結した事件の例',
+  NULL,
+  '原告 元従業員 ／ 被告 サンプル物流株式会社',
+  '解雇が客観的に合理的な理由を欠くか
+解雇の手続きが社会通念上相当だったか',
+  'これは動作確認のための架空の事件です。不当解雇を争った裁判が終結した後、という想定にしています。実在の裁判ではありません。',
+  NULL,
+  'サンプル労働相談ネット',
+  NULL,
+  NULL,
+  '労働
+はじめて向け',
+  '2026-03-19', '判決', '原告の請求を一部認容（解雇無効・未払い賃金の一部支払いを命じる判決）。被告は控訴せず、判決が確定した。',
   'demo', 'demo', '2026-08-20T00:00:00.000Z'
 );
 
@@ -89,6 +111,9 @@ INSERT INTO events (id, case_id, date, time, type, court, place, open, level,
   NULL, NULL,
   'demo','demo','2026-08-20T00:00:00.000Z'),
 ('demo-hikoukai-1', 'demo-case-hikoukai', '2026-09-03', '15:00', '弁論準備',   'サンプル地方裁判所', '第3準備室', 0, NULL,
+  NULL, NULL,
+  'demo','demo','2026-08-20T00:00:00.000Z'),
+('demo-kako-1', 'demo-case-kako', '2026-03-19', '13:00', '判決言渡', 'サンプル地方裁判所', '105号法廷', 1, NULL,
   NULL, NULL,
   'demo','demo','2026-08-20T00:00:00.000Z');
 

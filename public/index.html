@@ -296,7 +296,7 @@
   function renderUpcoming(){
     if(!CC.loaded){ upcomingBox.innerHTML=`<div class="u-empty">読み込んでいます…</div>`; return; }
     const today=CC.todayStr();
-    const list=CC.events.filter(e=>e.date>=today)
+    const list=CC.events.filter(e=>e.date>=today && !CC.isArchived(e.caseId))
       .sort((a,b)=> a.date===b.date?CC.byTime(a,b):a.date.localeCompare(b.date)).slice(0,12);
     upcomingBox.innerHTML="";
     if(!list.length){ upcomingBox.innerHTML=`<div class="u-empty">今後の予定はありません</div>`; return; }

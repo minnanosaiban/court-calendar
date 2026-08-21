@@ -22,7 +22,8 @@ export function textToLines(s) {
 
 // ---- 事件 ----
 export const CASE_COLS = `c.id, c.name, c.case_no, c.parties, c.points, c.lede, c.call_text,
-                          c.host, c.contact, c.links, c.tags, c.created_by, c.updated_by, c.updated_at`;
+                          c.host, c.contact, c.links, c.tags, c.archived_at, c.close_type, c.result,
+                          c.created_by, c.updated_by, c.updated_at`;
 
 export function rowToCase(r) {
   return {
@@ -37,6 +38,9 @@ export function rowToCase(r) {
     contact: r.contact || "",
     links: textToLines(r.links).filter(isHttpUrl),
     tags: textToLines(r.tags),
+    archivedAt: r.archived_at || "",
+    closeType: r.close_type || "",
+    result: r.result || "",
     likes: Number(r.likes || 0),
     liked: !!r.liked,
     updatedAt: r.updated_at || "",
@@ -59,7 +63,13 @@ export function caseFromBody(body) {
     contact: String(body.contact || "").trim(),
     links: textToLines(linesToText(body.links)).filter(isHttpUrl).join("\n"),
     tags: linesToText(body.tags),
+    archived_at: isYmd(body.archivedAt) ? body.archivedAt : null,
+    close_type: String(body.closeType || "").trim(),
+    result: String(body.result || "").trim(),
   };
+}
+export function isYmd(s) {
+  return typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s);
 }
 
 // ---- 期日 ----

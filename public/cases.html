@@ -29,6 +29,7 @@
     <p class="sech" id="search-h">事件をさがす</p>
     <div class="search"><i class="bi bi-search" aria-hidden="true"></i><input type="text" id="q" placeholder="事件名で検索" aria-label="事件名で検索"></div>
     <div class="tags" id="tagFilters" style="margin-top:14px"></div>
+    <div class="tabs" id="statusTabs"></div>
     <div class="clist" id="clist"></div>
   </section>
 
@@ -121,9 +122,11 @@
   "use strict";
   const qEl=document.getElementById("q");
   const tagFilters=document.getElementById("tagFilters");
+  const statusTabs=document.getElementById("statusTabs");
   const clistEl=document.getElementById("clist");
   const statusEl=document.getElementById("status");
   let activeTag = new URLSearchParams(location.search).get("tag") || "";
+  let activeStatus = "open";   // "open"=進行中 / "archived"=裁判アーカイブ
 
   function allTagsWithCount(){
     const m=new Map();
@@ -137,7 +140,7 @@
     html += tags.map(([t])=>`<a class="tag${activeTag===t?" on":""}" data-tagf="${CC.escapeAttr(t)}">${CC.escapeHtml(t)}</a>`).join("");
     tagFilters.innerHTML = html;
     tagFilters.querySelectorAll("[data-tagf]").forEach(a=>{
-      a.addEventListener("click",(e)=>{ e.preventDefault(); activeTag=a.dataset.tagf; renderTagFilters(); renderList(); });
+      a.addEventListener("click",(e)=>{ e.preventDefault(); activeTag=a.dataset.tagf; renderTagFilters(); renderTabs(); renderList(); });
     });
   }
   function caseThumb(c){
@@ -148,11 +151,14 @@
   }
   function rowHtml(c){
     const next = CC.nextEvent(c.id);
+    const nextLine = c.archivedAt
+      ? `終結：${CC.escapeHtml(c.archivedAt.replace(/-/g,"."))}${c.closeType?"　"+CC.escapeHtml(c.closeType):""}`
+      : (next?`<b>次回</b>${CC.escapeHtml(CC.eventLine(next))}`:"まだ期日の登録がありません");
     return `<div class="card ccard" data-open="${CC.escapeAttr(c.id)}" role="link" tabindex="0">
       ${caseThumb(c)}
       <div class="cbody">
         <div class="ctitle">${CC.escapeHtml(c.name)}</div>
-        <div class="cnext">${next?`<b>次回</b>${CC.escapeHtml(CC.eventLine(next))}`:"まだ期日の登録がありません"}</div>
+        <div class="cnext">${nextLine}</div>
         <div class="cfoot">
           <div class="tags">${(c.tags||[]).map(t=>`<span class="tag">${CC.escapeHtml(t)}</span>`).join("")}</div>
           <span class="clike"><i class="bi bi-heart-fill" aria-hidden="true"></i>${c.likes||0}</span>
@@ -160,12 +166,28 @@
       </div>
     </div>`;
   }
+  // 検索・タグだけを反映した候補（タブの件数表示に使う。ステータスでは絞らない）
+  function filteredBase(){
+    const q=qEl.value.trim().toLowerCase();
+    return CC.cases.filter(c=> (!q || c.name.toLowerCase().includes(q)) && (!activeTag || (c.tags||[]).includes(activeTag)));
+  }
+  function renderTabs(){
+    const base=filteredBase();
+    const openN=base.filter(c=>!c.archivedAt).length;
+    const archN=base.filter(c=>c.archivedAt).length;
+    statusTabs.innerHTML = `
+      <span class="${activeStatus==="open"?"on":""}" data-statusf="open">進行中 ${openN}</span>
+      <span class="${activeStatus==="archived"?"on":""}" data-statusf="archived">裁判アーカイブ ${archN}</span>`;
+    statusTabs.querySelectorAll("[data-statusf]").forEach(s=>{
+      s.addEventListener("click",()=>{ activeStatus=s.dataset.statusf; renderAll(); });
+    });
+  }
   function renderList(){
     if(!CC.loaded){ clistEl.innerHTML=`<p class="empty-msg">読み込んでいます…</p>`; return; }
-    const q=qEl.value.trim().toLowerCase();
-    const list=CC.cases
-      .filter(c=> (!q || c.name.toLowerCase().includes(q)) && (!activeTag || (c.tags||[]).includes(activeTag)))
+    const list=filteredBase()
+      .filter(c=> activeStatus==="archived" ? !!c.archivedAt : !c.archivedAt)
       .sort((a,b)=>{
+        if(activeStatus==="archived") return (b.archivedAt||"").localeCompare(a.archivedAt||"");
         const na=CC.nextEvent(a.id), nb=CC.nextEvent(b.id);
         if(na && nb) return na.date===nb.date ? 0 : (na.date<nb.date?-1:1);
         if(na) return -1;
@@ -181,11 +203,12 @@
   }
   function renderAll(){
     renderTagFilters();
+    renderTabs();
     renderList();
     CC.renderStatus(statusEl);
   }
   CC.setOnChange(renderAll);
-  qEl.addEventListener("input", renderList);
+  qEl.addEventListener("input", ()=>{ renderTabs(); renderList(); });
 
   (async function init(){
     renderAll();
