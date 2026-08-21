@@ -198,6 +198,18 @@ window.CC = (function(){
     const when=[jpDate(c.archivedAt), c.closeType].filter(Boolean).join("　");
     return `<div class="archived"><i class="bi bi-archive" aria-hidden="true"></i><span>この裁判は <b>${escapeHtml(when)}</b> で終結しました。${c.result?escapeHtml(c.result):""}</span></div>`;
   }
+  // シェア（事件ページのみ）：X・LINE はリンクを新しいタブで開くだけ、リンクをコピーだけJSが要る
+  function shareHtml(c){
+    const shareUrl = location.origin + "/case?id=" + encodeURIComponent(c.id);
+    const text = encodeURIComponent(c.name);
+    const u = encodeURIComponent(shareUrl);
+    return `<div class="share">
+      <span class="share-lab">シェア</span>
+      <a href="https://twitter.com/intent/tweet?text=${text}&url=${u}" target="_blank" rel="noopener" title="Xでシェア" aria-label="Xでシェア"><i class="bi bi-twitter-x" aria-hidden="true"></i></a>
+      <a href="https://social-plugins.line.me/lineit/share?url=${u}" target="_blank" rel="noopener" title="LINEで送る" aria-label="LINEで送る"><i class="bi bi-line" aria-hidden="true"></i></a>
+      <button type="button" class="share-copy" data-copylink="${escapeAttr(shareUrl)}" title="リンクをコピー" aria-label="リンクをコピー"><i class="bi bi-link-45deg" aria-hidden="true"></i></button>
+    </div>`;
+  }
 
   // ---- 写真ギャラリー（事件ページ上部だけに出す） ----
   function galleryHtml(caseId){
@@ -283,6 +295,7 @@ window.CC = (function(){
           ${linksHtml(c)}
         </div>
         ${tagsHtml(c)}
+        ${full ? shareHtml(c) : ""}
         ${archivedHtml(c)}
         ${editCase}
         ${next?`<p class="minih">最近の期日</p><p class="d-body d-next">${escapeHtml(eventLine(next))}${next.open===false?`<span class="round-closed">非公開・要確認</span>`:""}</p>`:""}
@@ -606,6 +619,19 @@ window.CC = (function(){
         const id=b.dataset.sumtoggle;
         if(openSummaries.has(id)) openSummaries.delete(id); else openSummaries.add(id);
         rerender();
+      });
+    });
+    container.querySelectorAll("[data-copylink]").forEach(b=>{
+      b.addEventListener("click",async ()=>{
+        try{
+          await navigator.clipboard.writeText(b.dataset.copylink);
+          const orig=b.innerHTML;
+          b.innerHTML=`<i class="bi bi-check2" aria-hidden="true"></i>`;
+          b.classList.add("copied");
+          setTimeout(()=>{ b.innerHTML=orig; b.classList.remove("copied"); },1500);
+        }catch(err){
+          alert("コピーできませんでした。アドレス欄からコピーしてください。");
+        }
       });
     });
     container.querySelectorAll("[data-addmat]").forEach(a=>{

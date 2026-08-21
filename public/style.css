@@ -81,6 +81,13 @@ a{color:inherit}
 .like:disabled{opacity:.6;cursor:default}
 .like-n{font-variant-numeric:tabular-nums}
 .d-edit{display:inline-block;margin-top:6px;font-size:.75rem;color:var(--mut);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+/* シェア（X・LINE・リンクをコピー） */
+.share{display:flex;gap:2px;align-items:center;margin-top:10px}
+.share-lab{font-size:.7rem;color:var(--mut);letter-spacing:.1em;margin-right:6px}
+.share a,.share button{display:grid;place-content:center;width:30px;height:30px;border-radius:50%;
+  color:var(--mut);font-size:.9rem;text-decoration:none;background:none;border:none;cursor:pointer;font-family:inherit}
+.share a:hover,.share button:hover{background:var(--tint);color:var(--ink)}
+.share button.copied{color:#2f7d4f}
 /* 終結した裁判（裁判アーカイブ）の帯 */
 .archived{display:flex;align-items:flex-start;gap:10px;margin-top:14px;background:var(--tint);
   border-radius:12px;padding:11px 14px;font-size:.84rem;line-height:1.8}
