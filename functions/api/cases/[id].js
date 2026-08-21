@@ -17,10 +17,10 @@ export async function onRequestPut({ request, env, params }) {
 
   const res = await env.DB.prepare(
     `UPDATE cases
-        SET name=?, case_no=?, parties=?, points=?, lede=?, call_text=?, host=?, contact=?, links=?,
+        SET name=?, case_no=?, parties=?, points=?, lede=?, call_text=?, host=?, contact=?, links=?, tags=?,
             updated_by=?, updated_at=?
       WHERE id=?`
-  ).bind(c.name, c.case_no, c.parties, c.points, c.lede, c.call_text, c.host, c.contact, c.links,
+  ).bind(c.name, c.case_no, c.parties, c.points, c.lede, c.call_text, c.host, c.contact, c.links, c.tags,
          id.email, new Date().toISOString(), cid).run();
   if (!res.meta || res.meta.changes === 0) return json({ error: "not found" }, 404);
 

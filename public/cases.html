@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>事件をさがす ｜ みんなの裁判</title>
+<meta name="description" content="行けない日も、法廷のいまがわかる。裁判の期日と、傍聴に行った人の報告を、ひとつのカレンダーに。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23f2e4c9'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="stamp" aria-hidden="true">傍聴</div>
+    <div>
+      <h1>みんなの裁判</h1>
+      <p>行けない日も、法廷のいまがわかる。裁判の期日と、傍聴に行った人の報告を、ひとつのカレンダーに</p>
+    </div>
+  </header>
+
+  <a class="backlink" href="index.html"><i class="bi bi-arrow-left" aria-hidden="true"></i> カレンダーに戻る</a>
+
+  <section aria-labelledby="search-h" style="margin-top:28px">
+    <p class="sech" id="search-h">事件をさがす</p>
+    <div class="search"><i class="bi bi-search" aria-hidden="true"></i><input type="text" id="q" placeholder="事件名で検索" aria-label="事件名で検索"></div>
+    <div class="tags" id="tagFilters" style="margin-top:14px"></div>
+    <div class="clist" id="clist"></div>
+  </section>
+
+  <p class="status" id="status"></p>
+  <input type="file" id="fileInput" accept="application/json,.json" style="display:none;">
+
+  <footer class="site-footer">
+    <a href="https://github.com/minnanosaiban/court-calendar" target="_blank" rel="noopener">ソースコード（GitHub）<i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>
+    <p class="disc">本サイトは有志による非公式のツールです。掲載情報の正確性・完全性・最新性は保証しません。期日等は必ず裁判所からの公式な通知でご確認ください。本サイトの利用により生じたいかなる損害についても運営者は責任を負わず、本サイトは法的助言を提供するものではありません。事件の説明は呼びかけ人の主張であり、裁判所が認定した事実とは限りません。当事者のお名前は、ご本人が実名での掲載を望まれる場合をのぞき掲載しません。</p>
+  </footer>
+</div>
+
+<!-- modal: 期日の追加・編集（このページでは使わないが、lib.js が要素を前提にしているため置いておく） -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="mhead" id="modalTitle">期日を追加</div>
+    <div class="mbody">
+      <div class="field">
+        <label>事件名 <span style="color:var(--stamp)">*</span></label>
+        <input type="text" id="fCase" list="caseList" placeholder="例）令和7年(ネ)第○○号 損害賠償請求控訴事件">
+        <datalist id="caseList"></datalist>
+        <p class="fnote">登録のない事件名を入れると、その名前で新しい事件ができます。当事者・争点などは後から「事件を編集」で入れられます。</p>
+      </div>
+      <div class="two">
+        <div class="field">
+          <label>期日 <span style="color:var(--stamp)">*</span></label>
+          <input type="date" id="fDate">
+        </div>
+        <div class="field">
+          <label>時刻</label>
+          <input type="time" id="fTime">
+        </div>
+      </div>
+      <div class="two">
+        <div class="field">
+          <label>種別</label>
+          <input type="text" id="fType" list="typeList" placeholder="例）第3回口頭弁論">
+          <datalist id="typeList">
+            <option value="口頭弁論">
+            <option value="弁論準備">
+            <option value="進行協議">
+            <option value="和解">
+            <option value="尋問">
+            <option value="当事者尋問">
+            <option value="判決言渡">
+            <option value="控訴審 第1回">
+            <option value="提出期限（書面）">
+          </datalist>
+        </div>
+        <div class="field">
+          <label>見どころタグ</label>
+          <input type="text" id="fLevel" placeholder="例）はじめて向け・見ごたえあり">
+        </div>
+      </div>
+      <div class="two">
+        <div class="field">
+          <label>裁判所</label>
+          <input type="text" id="fCourt" placeholder="例）東京地方裁判所">
+        </div>
+        <div class="field">
+          <label>法廷</label>
+          <input type="text" id="fPlace" placeholder="例）610号法廷">
+        </div>
+      </div>
+      <p class="msec">この回の主張の要約（1行に1つ・任意）</p>
+      <div class="field">
+        <label>原告の主張</label>
+        <textarea id="fPlaintiff" placeholder="例）不開示決定の取消しを求める"></textarea>
+      </div>
+      <div class="field">
+        <label>被告の主張</label>
+        <textarea id="fDefendant" placeholder="例）該当する文書は保有していない"></textarea>
+      </div>
+      <div class="field">
+        <label class="check"><input type="checkbox" id="fOpen" checked> だれでも傍聴できます（チェックを外すと「非公開・要確認」）</label>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn-del" id="btnDelete" style="display:none;">削除</button>
+      <span class="spacer"></span>
+      <button class="btn-cancel" id="btnCancel">キャンセル</button>
+      <button class="btn-save" id="btnSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<script src="lib.js"></script>
+<script>
+(function(){
+  "use strict";
+  const qEl=document.getElementById("q");
+  const tagFilters=document.getElementById("tagFilters");
+  const clistEl=document.getElementById("clist");
+  const statusEl=document.getElementById("status");
+  let activeTag = new URLSearchParams(location.search).get("tag") || "";
+
+  function allTagsWithCount(){
+    const m=new Map();
+    CC.cases.forEach(c=>(c.tags||[]).forEach(t=>m.set(t,(m.get(t)||0)+1)));
+    return [...m.entries()].sort((a,b)=> b[1]-a[1] || a[0].localeCompare(b[0],"ja"));
+  }
+  function renderTagFilters(){
+    const tags=allTagsWithCount();
+    if(!tags.length){ tagFilters.innerHTML=""; return; }
+    let html = `<a class="tag${!activeTag?" on":""}" data-tagf="">すべて</a>`;
+    html += tags.map(([t])=>`<a class="tag${activeTag===t?" on":""}" data-tagf="${CC.escapeAttr(t)}">${CC.escapeHtml(t)}</a>`).join("");
+    tagFilters.innerHTML = html;
+    tagFilters.querySelectorAll("[data-tagf]").forEach(a=>{
+      a.addEventListener("click",(e)=>{ e.preventDefault(); activeTag=a.dataset.tagf; renderTagFilters(); renderList(); });
+    });
+  }
+  function caseThumb(c){
+    const imgs=CC.caseImages(c.id);
+    return imgs.length
+      ? `<img class="thumb" src="${CC.escapeAttr(imgs[0].url)}" alt="">`
+      : `<div class="thumb none"><i class="bi bi-image" aria-hidden="true"></i></div>`;
+  }
+  function rowHtml(c){
+    const next = CC.nextEvent(c.id);
+    return `<div class="card ccard" data-open="${CC.escapeAttr(c.id)}" role="link" tabindex="0">
+      ${caseThumb(c)}
+      <div class="cbody">
+        <div class="ctitle">${CC.escapeHtml(c.name)}</div>
+        <div class="cnext">${next?`<b>次回</b>${CC.escapeHtml(CC.eventLine(next))}`:"まだ期日の登録がありません"}</div>
+        <div class="cfoot">
+          <div class="tags">${(c.tags||[]).map(t=>`<span class="tag">${CC.escapeHtml(t)}</span>`).join("")}</div>
+          <span class="clike"><i class="bi bi-heart-fill" aria-hidden="true"></i>${c.likes||0}</span>
+        </div>
+      </div>
+    </div>`;
+  }
+  function renderList(){
+    if(!CC.loaded){ clistEl.innerHTML=`<p class="empty-msg">読み込んでいます…</p>`; return; }
+    const q=qEl.value.trim().toLowerCase();
+    const list=CC.cases
+      .filter(c=> (!q || c.name.toLowerCase().includes(q)) && (!activeTag || (c.tags||[]).includes(activeTag)))
+      .sort((a,b)=>{
+        const na=CC.nextEvent(a.id), nb=CC.nextEvent(b.id);
+        if(na && nb) return na.date===nb.date ? 0 : (na.date<nb.date?-1:1);
+        if(na) return -1;
+        if(nb) return 1;
+        return a.name.localeCompare(b.name,"ja");
+      });
+    clistEl.innerHTML = list.length ? list.map(rowHtml).join("") : `<p class="empty-msg">見つかりませんでした。</p>`;
+    clistEl.querySelectorAll("[data-open]").forEach(el=>{
+      const go=()=>{ location.href="case?id="+encodeURIComponent(el.dataset.open); };
+      el.addEventListener("click",go);
+      el.addEventListener("keydown",(e)=>{ if(e.key==="Enter") go(); });
+    });
+  }
+  function renderAll(){
+    renderTagFilters();
+    renderList();
+    CC.renderStatus(statusEl);
+  }
+  CC.setOnChange(renderAll);
+  qEl.addEventListener("input", renderList);
+
+  (async function init(){
+    renderAll();
+    await CC.load();
+    renderAll();
+  })();
+})();
+</script>
+</body>
+</html>

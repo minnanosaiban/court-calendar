@@ -22,7 +22,7 @@ export function textToLines(s) {
 
 // ---- 事件 ----
 export const CASE_COLS = `c.id, c.name, c.case_no, c.parties, c.points, c.lede, c.call_text,
-                          c.host, c.contact, c.links, c.created_by, c.updated_by, c.updated_at`;
+                          c.host, c.contact, c.links, c.tags, c.created_by, c.updated_by, c.updated_at`;
 
 export function rowToCase(r) {
   return {
@@ -36,6 +36,7 @@ export function rowToCase(r) {
     host: r.host || "",
     contact: r.contact || "",
     links: textToLines(r.links).filter(isHttpUrl),
+    tags: textToLines(r.tags),
     likes: Number(r.likes || 0),
     liked: !!r.liked,
     updatedAt: r.updated_at || "",
@@ -57,6 +58,7 @@ export function caseFromBody(body) {
     host: String(body.host || "").trim(),
     contact: String(body.contact || "").trim(),
     links: textToLines(linesToText(body.links)).filter(isHttpUrl).join("\n"),
+    tags: linesToText(body.tags),
   };
 }
 

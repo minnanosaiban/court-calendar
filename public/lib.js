@@ -179,6 +179,15 @@ window.CC = (function(){
     return `<button type="button" class="like${c.liked?" on":""}" data-like="${escapeAttr(c.id)}" aria-pressed="${c.liked?"true":"false"}" aria-label="いいね">`+
       `<i class="bi ${c.liked?"bi-heart-fill":"bi-heart"}" aria-hidden="true"></i><span class="like-n">${c.likes||0}</span></button>`;
   }
+  // 事件のタグ。事件ページ等ではリンク（cases.html の絞り込みへ）、一覧ページの各行では非リンクの札として使う
+  function tagsHtml(c, opts){
+    if(!c.tags || !c.tags.length) return "";
+    const link = !(opts && opts.plain);
+    return `<div class="tags">`+c.tags.map(t=>
+      link ? `<a class="tag" href="cases?tag=${encodeURIComponent(t)}">${escapeHtml(t)}</a>`
+           : `<span class="tag">${escapeHtml(t)}</span>`
+    ).join("")+`</div>`;
+  }
 
   // ---- 写真ギャラリー（事件ページ上部だけに出す） ----
   function galleryHtml(caseId){
@@ -263,6 +272,7 @@ window.CC = (function(){
           <h2 class="d-title">${escapeHtml(c.name)} ${likeHtml(c)}</h2>
           ${linksHtml(c)}
         </div>
+        ${tagsHtml(c)}
         ${editCase}
         ${next?`<p class="minih">最近の期日</p><p class="d-body d-next">${escapeHtml(eventLine(next))}${next.open===false?`<span class="round-closed">非公開・要確認</span>`:""}</p>`:""}
         ${points?`<p class="minih">争点</p><ul class="pts">${points}</ul>`:""}
@@ -800,6 +810,10 @@ window.CC = (function(){
         <label>リンク（1行に1つのURL。X・ホームページなど）</label>
         <textarea id="cLinks" placeholder="https://x.com/..."></textarea>
       </div>
+      <div class="field">
+        <label>タグ（1行に1つ・任意）</label>
+        <textarea id="cTags" placeholder="例）情報公開、行政"></textarea>
+      </div>
     </div>
     <div class="mfoot">
       <button class="btn-del" id="cDelete" style="display:none;">削除</button>
@@ -879,7 +893,8 @@ window.CC = (function(){
   const $ = (id)=>document.getElementById(id);
   const caseOverlay=$("caseOverlay"), matOverlay=$("matOverlay");
   const cFields = { name:$("cName"), caseNo:$("cCaseNo"), parties:$("cParties"), points:$("cPoints"),
-                    lede:$("cLede"), callText:$("cCall"), host:$("cHost"), contact:$("cContact"), links:$("cLinks") };
+                    lede:$("cLede"), callText:$("cCall"), host:$("cHost"), contact:$("cContact"), links:$("cLinks"),
+                    tags:$("cTags") };
   const mFields = { title:$("mTitle"), side:$("mSide"), kind:$("mKind"), event:$("mEvent"), filedOn:$("mFiledOn"),
                     url:$("mUrl"), file:$("mFile"), fileField:$("mFileField"), fileNow:$("mFileNow"),
                     claims:$("mClaims"), body:$("mBody"), summary:$("mSummary") };
@@ -890,6 +905,7 @@ window.CC = (function(){
     cFields.name.value=c.name||""; cFields.caseNo.value=c.caseNo||""; cFields.parties.value=c.parties||"";
     cFields.points.value=(c.points||[]).join("\n"); cFields.lede.value=c.lede||""; cFields.callText.value=c.callText||"";
     cFields.host.value=c.host||""; cFields.contact.value=c.contact||""; cFields.links.value=(c.links||[]).join("\n");
+    cFields.tags.value=(c.tags||[]).join("\n");
   }
   function openCaseAdd(){
     if(!me.canWrite) return;
@@ -915,6 +931,7 @@ window.CC = (function(){
       lede:cFields.lede.value.trim(), callText:cFields.callText.value.trim(),
       host:cFields.host.value.trim(), contact:cFields.contact.value.trim(),
       links:cFields.links.value.split("\n").map(s=>s.trim()).filter(Boolean),
+      tags:cFields.tags.value.split("\n").map(s=>s.trim()).filter(Boolean),
     };
     $("cSave").disabled=true;
     try{
@@ -1176,7 +1193,7 @@ window.CC = (function(){
     get me(){ return me; },
     get loaded(){ return loaded; },
     caseById, caseByName, caseEvents, casePosts, caseMaterials, caseImages, materialById, nearestCase, nextEvent, eventLine,
-    mdToHtml,
+    mdToHtml, likeHtml, toggleLike,
     load, renderCaseDetail, renderStatus, openAdd,
     setOnChange(fn){ onChange = fn; },
   };

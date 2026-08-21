@@ -15,7 +15,7 @@
 --   9/3  …… 2件・うち1件は非公開（バー2本＋白抜き）
 --   9/10 …… 1件（タイムラインで「次回」）
 
-INSERT INTO cases (id, name, case_no, parties, points, lede, call_text, host, contact, links,
+INSERT INTO cases (id, name, case_no, parties, points, lede, call_text, host, contact, links, tags,
                    created_by, updated_by, updated_at) VALUES
 (
   'demo-case-joho',
@@ -30,6 +30,9 @@ INSERT INTO cases (id, name, case_no, parties, points, lede, call_text, host, co
   'sample@example.com',
   'https://x.com/sample_ombudsman
 https://example.com/sample-ombudsman',
+  '情報公開
+行政
+はじめて向け',
   'demo', 'demo', '2026-08-20T00:00:00.000Z'
 ),
 (
@@ -44,6 +47,8 @@ https://example.com/sample-ombudsman',
   'サンプル労働相談ネット',
   NULL,
   NULL,
+  '労働
+パワハラ',
   'demo', 'demo', '2026-08-20T00:00:00.000Z'
 ),
 (
@@ -57,6 +62,7 @@ https://example.com/sample-ombudsman',
   'サンプル支援の会',
   NULL,
   NULL,
+  '家族',
   'demo', 'demo', '2026-08-20T00:00:00.000Z'
 );
 

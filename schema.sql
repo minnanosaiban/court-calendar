@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS cases (
   host        TEXT,                 -- 呼びかけている団体・お名前
   contact     TEXT,                 -- 連絡先（公開してよいものだけ）
   links       TEXT,                 -- 当事者のアカウント等のURL（1行1つ、改行区切り）
+  tags        TEXT,                 -- タグ（1行1つ、改行区切り・任意）
   created_by  TEXT,
   updated_by  TEXT,
   updated_at  TEXT                  -- ISO8601
