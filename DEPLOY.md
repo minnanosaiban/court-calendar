@@ -30,6 +30,7 @@ functions/api/images/[id].js      PUT  /api/images/:id    更新（説明・並�
 functions/api/posts.js            GET  /api/posts        掲示板の一覧 / POST 投稿
 functions/api/posts/[id].js       DELETE /api/posts/:id  投稿を消す（運営のみ）
 functions/files/[[path]].js       GET  /files/<key>      R2 に置いたファイル（資料・写真）を配信（誰でも閲覧可）
+functions/case.js                 GET  /case              事件詳細ページの配信。?id=… のときだけ <head> のOGPタグを書き換える
 schema.sql                        D1 のテーブル定義（最新）
 migrate_002_call_for_support.sql  （過去）旧スキーマのDBを傍聴の呼びかけ用へ移行
 migrate_003_board.sql             （過去）行ってきたよ掲示板の posts テーブルを追加
@@ -132,6 +133,23 @@ npx wrangler d1 execute court-calendar --remote --file migrate_004_cases.sql
 - トップの「最近の期日」（`nearestCase`）・「今後の期日」は終結した事件を対象外にする（`CC.isArchived(caseId)`）。カレンダー本体の日付表示は対象外にしない（終結前の実際の期日はそのまま残る）
 - `cases.html` に「進行中／裁判アーカイブ」タブ。件数は検索・タグの絞り込みと連動。アーカイブ側は終結日が新しい順に並び、行の「次回」欄は「終結：日付　種類」に置き換わる
 - 事件モーダルに終結欄（終結日・終結の種類・結果）を追加。空のままなら進行中のまま
+
+### v4：シェアボタン・OGP（2026-08-22〜）
+
+事件ページ（`case.html`）にシェア行（X・LINE・リンクをコピー）を追加。X・LINE は意図URLを新しいタブで開くだけ、
+「リンクをコピー」だけ `navigator.clipboard.writeText` を使う（クリックの直後だけ一時的にチェック印を出す）。
+
+X などでシェアしたときに正しいカード（タイトル・説明・画像）が出るよう、`functions/case.js` が `/case?id=…` へのアクセスを
+横取りして `<head>` を書き換える：
+
+- `public/case.html` はそのまま静的資産として残す。`env.ASSETS.fetch()` で取得し、`HTMLRewriter` で `<title>` と
+  `<meta name="description">` の中身を差し替え、`og:title` `og:description` `og:type` `og:url` `og:site_name`
+  （写真があれば `og:image` も）と `twitter:card` を末尾に追加する
+- `id` が無い・該当する事件が無い場合は、書き換えずに元の静的ページをそのまま返す（壊れない）
+- `env.ASSETS` は `wrangler.toml` に何も書かなくても Pages Functions から使える（`/functions` ディレクトリ配下でも有効。
+  「Advanced Mode（`_worker.js`）専用」という情報を見かけることがあるが誤り。実機・公式ドキュメントの両方で確認済み）
+- 写真の1枚目は「並び順が最初のもの」（`case_images` の `sort_order` 昇順）を使う。写真が無い事件は `og:image` を出さず、
+  X 側はテキストのみのカードになる（ダミー画像は使わない）
 
 ### （過去）events テーブルの列（2026-08-20〜21）
 
