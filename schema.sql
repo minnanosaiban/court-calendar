@@ -66,6 +66,21 @@ CREATE TABLE IF NOT EXISTS materials (
 );
 CREATE INDEX IF NOT EXISTS idx_materials_case ON materials(case_id, filed_on, created_at);
 
+-- 事件の写真（証拠写真・記者会見の様子など）。詳細ページ上部で横に流して見せる。
+CREATE TABLE IF NOT EXISTS case_images (
+  id          TEXT PRIMARY KEY,
+  case_id     TEXT NOT NULL REFERENCES cases(id),
+  r2_key      TEXT NOT NULL,   -- R2 のオブジェクトキー（写真は本文と違い、常にファイルが要る）
+  file_name   TEXT,
+  file_size   INTEGER,
+  mime        TEXT,
+  caption     TEXT,            -- 写真の説明（1行・任意）
+  sort_order  INTEGER NOT NULL DEFAULT 0,  -- 並び順（小さいほど先）
+  created_by  TEXT,
+  created_at  TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_case_images_case ON case_images(case_id, sort_order, created_at);
+
 -- いいね（事件単位）。viewer は端末ごとの識別子を SHA-256 した値。
 CREATE TABLE IF NOT EXISTS likes (
   case_id     TEXT NOT NULL REFERENCES cases(id),

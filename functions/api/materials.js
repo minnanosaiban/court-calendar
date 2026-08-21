@@ -1,8 +1,9 @@
 import {
   json, newId, rowToMaterial, linesToText, MATERIAL_COLS, isMaterialUrl,
   MATERIAL_SIDES, MATERIAL_KINDS, MATERIAL_MIMES, MATERIAL_MAX_BYTES,
-  getIdentity, authorizeWrite,
+  getIdentity, authorizeWrite, putFile,
 } from "../_common.js";
+export { putFile };
 
 export const SELECT = `SELECT ${MATERIAL_COLS} FROM materials m WHERE m.hidden = 0`;
 
@@ -68,15 +69,6 @@ export async function readMaterialForm(request, env) {
   return { fields, file, removeFile: get("removeFile") === "1" };
 }
 
-export async function putFile(env, materialId, file) {
-  const key = `m/${materialId}/${Date.now().toString(36)}.${file.ext}`;
-  await env.FILES.put(key, file.blob.stream(), {
-    httpMetadata: { contentType: file.mime },
-    customMetadata: { name: file.name },
-  });
-  return key;
-}
-
 // 追加（書き込み権限が必要）
 export async function onRequestPost({ request, env }) {
   const id = await getIdentity(request, env);
@@ -89,7 +81,7 @@ export async function onRequestPost({ request, env }) {
   const now = new Date().toISOString();
   let r2 = { key: null, name: null, size: null, mime: null };
   if (r.file) {
-    const key = await putFile(env, mid, r.file);
+    const key = await putFile(env, "m", mid, r.file);
     r2 = { key, name: r.file.name, size: r.file.size, mime: r.file.mime };
   }
   const f = r.fields;

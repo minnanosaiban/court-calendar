@@ -14,10 +14,12 @@ window.CC = (function(){
   let events = [];
   let posts = [];
   let materials = [];
+  let images = [];
   let me = { email:null, canWrite:false, viaAccess:false, allowAll:false, boardOpen:false, turnstileSiteKey:"" };
   let editingId = null;          // 編集中の期日
   let editingCaseId = null;      // 編集中の事件
   let editingMatId = null;       // 編集中の資料
+  let editingImgId = null;       // 編集中の写真
   let boardFormForCase = null;   // 投稿フォームを開いている事件ID
   let openNodes = new Set();     // タイムラインで開いている節（期日ID）
   let tsToken = "";
@@ -78,6 +80,10 @@ window.CC = (function(){
   const apiCreateMat   = (fd)=> api("POST","/api/materials", fd);
   const apiUpdateMat   = (id,fd)=> api("PUT","/api/materials/"+encodeURIComponent(id), fd);
   const apiDeleteMat   = (id)=> api("DELETE","/api/materials/"+encodeURIComponent(id));
+  const apiListImages  = ()=> api("GET","/api/images");
+  const apiCreateImage = (fd)=> api("POST","/api/images", fd);
+  const apiUpdateImage = (id,fd)=> api("PUT","/api/images/"+encodeURIComponent(id), fd);
+  const apiDeleteImage = (id)=> api("DELETE","/api/images/"+encodeURIComponent(id));
   function saveErr(err){
     if(err && err.status===403) return "この操作は許可されていません（閲覧のみの権限です）。";
     return "保存できませんでした：" + (err && err.message || err);
@@ -85,11 +91,12 @@ window.CC = (function(){
 
   async function load(){
     try{ me = await apiMe(); }catch(e){ me={email:null,canWrite:false,allowAll:false,boardOpen:false,turnstileSiteKey:""}; }
-    const [c,e,p,m] = await Promise.all([
+    const [c,e,p,m,im] = await Promise.all([
       apiListCases().catch(()=>[]), apiList().catch(()=>[]),
       apiListPosts().catch(()=>[]), apiListMats().catch(()=>[]),
+      apiListImages().catch(()=>[]),
     ]);
-    cases=c; events=e; posts=p; materials=m;
+    cases=c; events=e; posts=p; materials=m; images=im;
     loaded = true;
   }
   async function reloadCases(){ try{ cases = await apiListCases(); }catch(e){} }
@@ -100,6 +107,7 @@ window.CC = (function(){
   function caseEvents(caseId){ return events.filter(e=>e.caseId===caseId).sort(byDate); }
   function casePosts(caseId){ return posts.filter(p=>p.caseId===caseId); }
   function caseMaterials(caseId){ return materials.filter(m=>m.caseId===caseId); }
+  function caseImages(caseId){ return images.filter(im=>im.caseId===caseId).sort((a,b)=>a.sortOrder-b.sortOrder); }
   // 直近に期日がある事件（トップの「最近の期日」・カレンダーの初期表示月に使う）
   function nearestCase(){
     const today=todayStr();
@@ -140,6 +148,72 @@ window.CC = (function(){
       `<i class="bi ${c.liked?"bi-heart-fill":"bi-heart"}" aria-hidden="true"></i><span class="like-n">${c.likes||0}</span></button>`;
   }
 
+  // ---- 写真ギャラリー（事件ページ上部だけに出す） ----
+  function galleryHtml(caseId){
+    const imgs = caseImages(caseId);
+    if(!imgs.length && !me.canWrite) return "";
+    let html = "";
+    if(imgs.length){
+      const items = imgs.map((im)=>`<a class="gal-item" href="${escapeAttr(im.url)}" target="_blank" rel="noopener">
+        <img src="${escapeAttr(im.url)}" alt="${escapeAttr(im.caption)}" loading="lazy">
+        ${im.caption?`<span class="gal-cap">${escapeHtml(im.caption)}</span>`:""}
+      </a>`).join("");
+      const dots = imgs.length>1
+        ? `<div class="gal-dots">${imgs.map((_,i)=>`<button type="button" class="${i===0?"on":""}" data-dot="${i}" aria-label="${i+1}枚目の写真"></button>`).join("")}</div>`
+        : "";
+      html += `<div class="gal" data-gal="${escapeAttr(caseId)}"><div class="gal-track">${items}</div>${dots}</div>`;
+    }
+    if(me.canWrite){
+      const rows = imgs.map((im,i)=>`<li class="imgrow">
+        <img class="ithumb" src="${escapeAttr(im.url)}" alt="">
+        <span class="icap">${escapeHtml(im.caption)||"&nbsp;"}</span>
+        <span class="iacts">
+          ${i>0?`<a data-imgup="${escapeAttr(im.id)}" title="前へ">↑</a>`:""}
+          ${i<imgs.length-1?`<a data-imgdown="${escapeAttr(im.id)}" title="後ろへ">↓</a>`:""}
+          <a data-editimg="${escapeAttr(im.id)}">編集</a>
+        </span>
+      </li>`).join("");
+      html += `<div class="imgmanage">
+        ${rows?`<ul class="imglist">${rows}</ul>`:`<p class="d-body mut">まだ写真はありません。</p>`}
+        <p class="qact"><a data-addimg="${escapeAttr(caseId)}">＋ 写真を追加</a></p>
+      </div>`;
+    }
+    return html;
+  }
+  // ギャラリーの自動送り。ホバー中は止める。件数が1枚なら動かさない
+  function wireGallery(gal){
+    const track = gal.querySelector(".gal-track");
+    const items = gal.querySelectorAll(".gal-item");
+    const dots = gal.querySelectorAll(".gal-dots button");
+    if(items.length<=1) return;
+    let idx=0, timer=null;
+    function show(i){
+      idx=(i+items.length)%items.length;
+      track.style.transform = `translateX(-${idx*100}%)`;
+      dots.forEach((d,j)=>d.classList.toggle("on", j===idx));
+    }
+    function start(){ stop(); timer=setInterval(()=>show(idx+1),4500); }
+    function stop(){ if(timer) clearInterval(timer); timer=null; }
+    dots.forEach(d=>d.addEventListener("click",(e)=>{ e.preventDefault(); show(Number(d.dataset.dot)); start(); }));
+    gal.addEventListener("mouseenter",stop);
+    gal.addEventListener("mouseleave",start);
+    start();
+  }
+  async function moveImage(id, dir){
+    const im = images.find(x=>x.id===id); if(!im) return;
+    const siblings = caseImages(im.caseId);
+    const i = siblings.findIndex(x=>x.id===id);
+    const other = siblings[i+dir];
+    if(!other) return;
+    try{
+      const fd1=new FormData(); fd1.append("caseId",im.caseId); fd1.append("caption",im.caption); fd1.append("sortOrder",String(other.sortOrder));
+      const fd2=new FormData(); fd2.append("caseId",other.caseId); fd2.append("caption",other.caption); fd2.append("sortOrder",String(im.sortOrder));
+      const [u1,u2] = await Promise.all([apiUpdateImage(im.id,fd1), apiUpdateImage(other.id,fd2)]);
+      [u1,u2].forEach(u=>{ const j=images.findIndex(x=>x.id===u.id); if(j>=0) images[j]=u; });
+      if(onChange) onChange();
+    }catch(err){ alert("並び替えできませんでした：" + (err && err.message || err)); }
+  }
+
   // ================= 事件のカード =================
   // full=false: トップ「最近の期日」用（タイトル〜掲示板＋「詳細を見る」）
   // full=true : 事件ページ用（さらに よびかけ・タイムラインと訴訟資料・資料一覧）
@@ -152,6 +226,7 @@ window.CC = (function(){
 
     let html = `
       <div class="card dcard">
+        ${full ? galleryHtml(caseId) : ""}
         <div class="d-head">
           <h2 class="d-title">${escapeHtml(c.name)} ${likeHtml(c)}</h2>
           ${linksHtml(c)}
@@ -417,6 +492,19 @@ window.CC = (function(){
 
   function wireCaseDetail(container, caseId, opts){
     const rerender=()=>renderCaseDetail(container, caseId, opts);
+    container.querySelectorAll("[data-gal]").forEach(gal=>wireGallery(gal));
+    container.querySelectorAll("[data-addimg]").forEach(a=>{
+      a.addEventListener("click",()=>openImgAdd(a.dataset.addimg));
+    });
+    container.querySelectorAll("[data-editimg]").forEach(a=>{
+      a.addEventListener("click",()=>openImgEdit(a.dataset.editimg));
+    });
+    container.querySelectorAll("[data-imgup]").forEach(a=>{
+      a.addEventListener("click",()=>moveImage(a.dataset.imgup,-1));
+    });
+    container.querySelectorAll("[data-imgdown]").forEach(a=>{
+      a.addEventListener("click",()=>moveImage(a.dataset.imgdown,1));
+    });
     container.querySelectorAll("[data-like]").forEach(b=>{
       b.addEventListener("click",()=>toggleLike(b.dataset.like, b));
     });
@@ -692,6 +780,26 @@ window.CC = (function(){
       <button class="btn-save" id="mSave">保存</button>
     </div>
   </div>
+</div>
+<div class="overlay" id="imgOverlay">
+  <div class="modal">
+    <div class="mhead" id="imgModalTitle">写真を追加</div>
+    <div class="mbody">
+      <div class="field">
+        <label>写真ファイル <span id="iFileReq" style="color:var(--stamp)">*</span></label>
+        <input type="file" id="iFile" accept="image/jpeg,image/png,image/webp">
+        <p class="fnote" id="iFileNow" hidden></p>
+        <p class="fnote">JPEG・PNG・WebP、12MBまで。証拠写真は人の顔・氏名・住所が写り込んでいないか確認してから登録してください。</p>
+      </div>
+      <div class="field"><label>説明（1行・任意）</label><input type="text" id="iCaption" placeholder="例）提訴後の記者会見にて"></div>
+    </div>
+    <div class="mfoot">
+      <button class="btn-del" id="iDelete" style="display:none;">削除</button>
+      <span class="spacer"></span>
+      <button class="btn-cancel" id="iCancel">キャンセル</button>
+      <button class="btn-save" id="iSave">保存</button>
+    </div>
+  </div>
 </div>`;
   document.body.insertAdjacentHTML("beforeend", EXTRA_MODALS);
   const $ = (id)=>document.getElementById(id);
@@ -853,9 +961,71 @@ window.CC = (function(){
   $("mDelete").addEventListener("click",deleteMat);
   matOverlay.addEventListener("click",(e)=>{ if(e.target===matOverlay) closeMatModal(); });
 
+  // ---- 写真 ----
+  const imgOverlay=$("imgOverlay");
+  const iFields = { file:$("iFile"), fileNow:$("iFileNow"), fileReq:$("iFileReq"), caption:$("iCaption") };
+  let imgCaseId = null;
+
+  function openImgAdd(caseId){
+    if(!me.canWrite) return;
+    editingImgId=null; imgCaseId=caseId; $("imgModalTitle").textContent="写真を追加"; $("iDelete").style.display="none";
+    iFields.file.value=""; iFields.caption.value=""; iFields.fileNow.hidden=true; iFields.fileReq.style.display="";
+    imgOverlay.classList.add("show"); iFields.file.focus();
+  }
+  function openImgEdit(id){
+    if(!me.canWrite) return;
+    const im=images.find(x=>x.id===id); if(!im) return;
+    editingImgId=id; imgCaseId=im.caseId; $("imgModalTitle").textContent="写真を編集"; $("iDelete").style.display="inline-block";
+    iFields.file.value=""; iFields.caption.value=im.caption||""; iFields.fileReq.style.display="none";
+    iFields.fileNow.hidden=false;
+    iFields.fileNow.innerHTML=`いまの写真：<img src="${escapeAttr(im.url)}" alt="" style="width:64px;height:46px;object-fit:cover;border-radius:6px;vertical-align:middle;margin-left:6px">`+
+      `　ファイルを選ぶと差し替わります。`;
+    imgOverlay.classList.add("show");
+  }
+  function closeImgModal(){ imgOverlay.classList.remove("show"); editingImgId=null; imgCaseId=null; }
+  async function saveImg(){
+    if(!me.canWrite || !imgCaseId) return;
+    const f=iFields.file.files[0];
+    if(!editingImgId && !f){ alert("写真ファイルを選んでください。"); return; }
+    if(f && f.size>12*1024*1024){ alert("写真は12MBまでです。"); return; }
+    const fd=new FormData();
+    fd.append("caseId", imgCaseId);
+    fd.append("caption", iFields.caption.value.trim());
+    if(f) fd.append("file", f, f.name);
+    $("iSave").disabled=true;
+    try{
+      if(editingImgId){
+        const up=await apiUpdateImage(editingImgId,fd);
+        const i=images.findIndex(x=>x.id===editingImgId); if(i>=0) images[i]=up;
+      }else{
+        const created=await apiCreateImage(fd);
+        images.push(created);
+      }
+      closeImgModal();
+      if(onChange) onChange();
+    }catch(err){ alert(saveErr(err)); }
+    finally{ $("iSave").disabled=false; }
+  }
+  async function deleteImg(){
+    if(!editingImgId || !me.canWrite) return;
+    if(!confirm("この写真を削除します。よろしいですか？")) return;
+    $("iDelete").disabled=true;
+    try{
+      await apiDeleteImage(editingImgId);
+      images=images.filter(x=>x.id!==editingImgId);
+      closeImgModal();
+      if(onChange) onChange();
+    }catch(err){ alert(saveErr(err)); }
+    finally{ $("iDelete").disabled=false; }
+  }
+  $("iSave").addEventListener("click",saveImg);
+  $("iCancel").addEventListener("click",closeImgModal);
+  $("iDelete").addEventListener("click",deleteImg);
+  imgOverlay.addEventListener("click",(e)=>{ if(e.target===imgOverlay) closeImgModal(); });
+
   // ================= バックアップ =================
   function exportData(){
-    const data={ version:3, exportedAt:new Date().toISOString(), cases, events, materials };
+    const data={ version:3, exportedAt:new Date().toISOString(), cases, events, materials, images };
     const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
     const url=URL.createObjectURL(blob);
     const a=document.createElement("a");
@@ -906,11 +1076,13 @@ window.CC = (function(){
       if(overlay.classList.contains("show")) closeModal();
       if(caseOverlay.classList.contains("show")) closeCaseModal();
       if(matOverlay.classList.contains("show")) closeMatModal();
+      if(imgOverlay.classList.contains("show")) closeImgModal();
     }
     if((e.ctrlKey||e.metaKey)&&e.key==="Enter"){
       if(overlay.classList.contains("show")) saveEntry();
       else if(caseOverlay.classList.contains("show")) saveCase();
       else if(matOverlay.classList.contains("show")) saveMat();
+      else if(imgOverlay.classList.contains("show")) saveImg();
     }
   });
   const fileInputEl = document.getElementById("fileInput");
@@ -925,9 +1097,10 @@ window.CC = (function(){
     get events(){ return events; },
     get posts(){ return posts; },
     get materials(){ return materials; },
+    get images(){ return images; },
     get me(){ return me; },
     get loaded(){ return loaded; },
-    caseById, caseByName, caseEvents, casePosts, caseMaterials, nearestCase, nextEvent, eventLine,
+    caseById, caseByName, caseEvents, casePosts, caseMaterials, caseImages, nearestCase, nextEvent, eventLine,
     load, renderCaseDetail, renderStatus, openAdd,
     setOnChange(fn){ onChange = fn; },
   };

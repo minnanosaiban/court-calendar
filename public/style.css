@@ -42,6 +42,26 @@ a{color:inherit}
 /* ---- case detail card ---- */
 .dcard{padding:24px 22px 22px}
 .dcard + .dcard{margin-top:12px}
+
+/* ---- 写真ギャラリー（事件ページの最上部だけ） ---- */
+.gal{position:relative;margin:-24px -22px 22px;border-radius:20px 20px 0 0;overflow:hidden;background:var(--tint);aspect-ratio:16/9}
+.gal-track{display:flex;height:100%;transition:transform .6s cubic-bezier(.4,0,.2,1)}
+.gal-item{flex:0 0 100%;position:relative;display:block}
+.gal-item img{width:100%;height:100%;object-fit:cover;display:block;background:var(--tint)}
+.gal-cap{position:absolute;left:0;right:0;bottom:0;padding:26px 16px 10px;font-size:.76rem;letter-spacing:.02em;
+  background:linear-gradient(transparent,rgba(0,0,0,.55));color:#fff}
+.gal-dots{position:absolute;right:12px;bottom:10px;display:flex;gap:6px}
+.gal-dots button{width:6px;height:6px;padding:0;border-radius:50%;border:none;background:rgba(255,255,255,.5);cursor:pointer}
+.gal-dots button.on{background:#fff}
+/* 写真の管理（編集権限があるときだけ）：ギャラリーの下に小さな一覧 */
+.imgmanage{margin-top:14px}
+.imglist{list-style:none;font-size:.86rem}
+.imgrow{display:flex;align-items:center;gap:10px;padding:6px 0}
+.imgrow + .imgrow{border-top:1px solid var(--tint)}
+.imgrow .ithumb{width:44px;height:44px;border-radius:8px;object-fit:cover;flex:none;background:var(--tint)}
+.imgrow .icap{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--mut)}
+.imgrow .iacts{display:flex;gap:10px;flex:none}
+.imgrow .iacts a{font-size:.74rem;color:var(--mut);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .d-title{font-family:"Shippori Mincho",serif;font-size:1.22rem;font-weight:600;line-height:1.65}
 .d-body{font-size:.9rem;margin-top:6px}
 .mut{color:var(--mut)}
@@ -290,6 +310,7 @@ a{color:inherit}
   .cell .n{width:30px;height:30px;font-size:.88rem}
   .calcard{padding:20px 16px 16px}
   .dcard{padding:28px 30px 26px}
+  .gal{margin:-28px -30px 22px}
   .d-title{font-size:1.35rem}
   .tl-item{padding-left:30px}
   .tl-item::before{left:7px}

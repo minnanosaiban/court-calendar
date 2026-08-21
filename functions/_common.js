@@ -143,6 +143,37 @@ export function rowToMaterial(r) {
   };
 }
 
+// R2 にファイルを置く。prefix は "m"（訴訟資料）/ "i"（写真）などキーの先頭に使う
+export async function putFile(env, prefix, itemId, file) {
+  const key = `${prefix}/${itemId}/${Date.now().toString(36)}.${file.ext}`;
+  await env.FILES.put(key, file.blob.stream(), {
+    httpMetadata: { contentType: file.mime },
+    customMetadata: { name: file.name },
+  });
+  return key;
+}
+
+// ---- 事件の写真 ----
+export const IMAGE_MIMES = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
+export const IMAGE_MAX_BYTES = 12 * 1024 * 1024;
+
+export const IMAGE_COLS = `i.id, i.case_id, i.r2_key, i.file_name, i.file_size, i.mime,
+                           i.caption, i.sort_order, i.created_at`;
+
+export function rowToImage(r) {
+  return {
+    id: r.id,
+    caseId: r.case_id,
+    url: "/files/" + r.r2_key,
+    fileName: r.file_name || "",
+    fileSize: Number(r.file_size || 0),
+    mime: r.mime || "",
+    caption: r.caption || "",
+    sortOrder: Number(r.sort_order || 0),
+    createdAt: r.created_at || "",
+  };
+}
+
 // ---- いいね ----
 // 端末ごとの識別子（X-Viewer ヘッダ）をそのまま保存せず、SHA-256 にして持つ
 export async function viewerHash(request) {

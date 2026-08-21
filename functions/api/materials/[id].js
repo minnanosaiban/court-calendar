@@ -16,7 +16,7 @@ export async function onRequestPut({ request, env, params }) {
 
   let r2 = null;   // null = ファイルは触らない
   if (r.file) {
-    const key = await putFile(env, mid, r.file);
+    const key = await putFile(env, "m", mid, r.file);
     r2 = { key, name: r.file.name, size: r.file.size, mime: r.file.mime };
   } else if (r.removeFile) {
     r2 = { key: null, name: null, size: null, mime: null };

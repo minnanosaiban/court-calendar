@@ -23,13 +23,16 @@ functions/api/events.js           GET  /api/events       期日の一覧 / POST 
 functions/api/events/[id].js      PUT  /api/events/:id   更新 / DELETE 削除（投稿も消え、資料の紐づけは外れる）
 functions/api/materials.js        GET  /api/materials    訴訟資料の一覧 / POST 追加（multipart・ファイル任意）
 functions/api/materials/[id].js   PUT  /api/materials/:id 更新（ファイル差し替え・取り外し可） / DELETE 削除
+functions/api/images.js           GET  /api/images        事件の写真の一覧 / POST 追加（multipart・ファイル必須）
+functions/api/images/[id].js      PUT  /api/images/:id    更新（説明・並び順・ファイル差し替え） / DELETE 削除
 functions/api/posts.js            GET  /api/posts        掲示板の一覧 / POST 投稿
 functions/api/posts/[id].js       DELETE /api/posts/:id  投稿を消す（運営のみ）
-functions/files/[[path]].js       GET  /files/<key>      R2 に置いた資料ファイルを配信（誰でも閲覧可）
-schema.sql                        D1 のテーブル定義（最新・v3）
+functions/files/[[path]].js       GET  /files/<key>      R2 に置いたファイル（資料・写真）を配信（誰でも閲覧可）
+schema.sql                        D1 のテーブル定義（最新）
 migrate_002_call_for_support.sql  （過去）旧スキーマのDBを傍聴の呼びかけ用へ移行
 migrate_003_board.sql             （過去）行ってきたよ掲示板の posts テーブルを追加
 migrate_004_cases.sql             事件（cases）を分離し、訴訟資料（materials）・いいね（likes）を追加する一度きりのマイグレーション
+migrate_005_images.sql            事件の写真（case_images）テーブルを追加する一度きりのマイグレーション
 seed_demo.sql                     動作確認用の架空データ（v3 形式・消し方はファイル冒頭のコメント参照）
 wrangler.toml           設定（D1・R2 バインド・環境変数）
 ```
@@ -56,17 +59,15 @@ CALL4 のように「事件」を中心に据えた。事件に属するもの�
 8. タイムラインと訴訟資料（済んだ回は●、次回は朱色、これからは◯。資料がある節はクリックで開き、資料名→箇条書き→要約）
 9. 訴訟資料一覧（提出日順）
 
-**資料のファイルの置き場（2026-08-21 時点：R2 は未使用）**
+**資料のファイルの置き場（2026-08-22〜：R2 有効化済み）**
 
-R2 はアカウントでの有効化に支払い方法（カード）の登録が要るため、いまは使っていない（`wrangler.toml` の `[[r2_buckets]]` はコメントアウト）。
-PDF は次のように置く：
+R2（バケット `court-calendar-files`）を有効化済み。事件ページの「＋ 資料を追加」「＋ 写真を追加」から、
+ブラウザだけでファイルをアップロードできる（`/api/me` の `uploads` が true）。
+無効化されていた時期の名残として、資料は「ファイルのURL」欄（`/docs/…` や外部 `https://…`）でも登録できる。
+両方とも `fileUrl` は R2 のファイルがあればそちらを優先する。
 
-1. `public/docs/` に PDF を入れる（ファイル名は半角英数が無難。例 `joho_sojo.pdf`）
-2. `deploy.bat` で公開 → `https://court-calendar-6q8.pages.dev/docs/joho_sojo.pdf` で開ける
-3. 事件ページの「＋ 資料を追加」で、**ファイルのURL** 欄に `/docs/joho_sojo.pdf` と入れる（外部サイトの `https://…` でも可）
-
-R2 を有効化したら：ダッシュボードで R2 を有効化 → `wrangler.toml` のコメントを外す → `npm run r2:create` → deploy。
-これだけで資料モーダルに「ファイルをアップロード」欄が出る（`/api/me` の `uploads` が true になる）。`/docs/` 方式の資料もそのまま使える。
+R2 の請求は予算アラート（ダッシュボード → Manage Account → Billing → Billable Usage → Create budget alert）で
+低めのしきい値（$1 目安）を設定しておくと、想定外の使われ方に気づける。通知のみで自動停止はしない点に注意。
 
 **既存のDBを v3 へ移す**（本番は必ずバックアップを取ってから。`events` の行は消えず、事件の説明は直近の回の値で `cases` に写される）：
 
@@ -83,6 +84,16 @@ npx wrangler d1 execute court-calendar --remote --file migrate_004_cases.sql
 
 資料の登録は編集パスワードを知っている人だけ。ファイル無しの「目録だけ」の登録もできる。
 `/docs/…` も `/files/…` も誰でも開ける（公開サイトなので、公開してよい書面だけを置くこと）。
+
+### v4：事件の写真（2026-08-22〜）
+
+`case_images` に、事件の証拠写真・記者会見の様子などを持つ。ファイルは必ず R2（`i/<写真ID>/…` のキー）。
+`caption`（説明・任意）と `sort_order`（並び順）を持つ。旧スキーマのDBを更新する場合は `migrate_005_images.sql` を実行すること。
+
+- 表示は**事件ページ（詳細ページ）の最上部だけ**。カードの天面いっぱいに横幅いっぱいの帯を出し、複数枚あれば4.5秒おきに自動で送る（ホバー中は止める）。1枚だけなら動かさない。0枚なら何も出さない
+- 各写真をクリック（タップ）すると、原寸を新しいタブで開く
+- 編集権限があるときだけ、ギャラリーの下に小さな管理用の一覧（サムネイル・説明・↑↓で並び替え・編集リンク）が出る。「＋ 写真を追加」もここ
+- 証拠写真は人の顔・氏名・住所が写り込みやすいので、登録前に確認するよう追加モーダルに注意書きを入れてある（自動検出はしていない・目視で確認すること）
 
 ### （過去）events テーブルの列（2026-08-20〜21）
 
