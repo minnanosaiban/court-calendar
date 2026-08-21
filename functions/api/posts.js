@@ -1,19 +1,16 @@
 import {
-  json, rowToPost, getIdentity, authorizePost,
+  json, newId, rowToPost, getIdentity, authorizePost,
   POST_SUBJECTS, POST_VERBS, QUOTE_MAX,
 } from "../_common.js";
 
-// 投稿は events と結合して、事件名と期日の種別も一緒に返す
+// 投稿は events・cases と結合して、事件（IDと名前）と期日の種別も一緒に返す
 const SELECT = `
   SELECT p.id, p.event_id, p.subject, p.quote, p.verb, p.created_at,
-         e.case_name, e.type, e.date
+         e.case_id, e.type, e.date, c.name AS case_name
     FROM posts p
     JOIN events e ON e.id = p.event_id
+    JOIN cases  c ON c.id = e.case_id
    WHERE p.hidden = 0`;
-
-function newId() {
-  return "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-}
 
 // 一覧（誰でも閲覧可）。?event=<id> で1つの期日にしぼれる。
 export async function onRequestGet({ request, env }) {
@@ -52,7 +49,7 @@ export async function onRequestPost({ request, env }) {
   if (!ev) return json({ error: "その期日が見つかりません。" }, 400);
 
   const post = {
-    id: newId(),
+    id: newId("p"),
     event_id: eventId,
     subject, quote, verb,
     created_at: new Date().toISOString(),

@@ -4,19 +4,33 @@
 window.CC = (function(){
   "use strict";
   const EDITKEY_LS = "court-calendar.editkey";
+  const VIEWER_LS  = "court-calendar.viewer";
   const WD = ["日","月","火","水","木","金","土"];
 
   // ---- state ----
   let editKey = localStorage.getItem(EDITKEY_LS) || "";   // 編集パスワード（この端末に保存）
   let loaded = false;   // 最初のデータ取得が終わったか（終わるまで「まだありません」系の文言を出さない）
+  let cases = [];
   let events = [];
   let posts = [];
+  let materials = [];
   let me = { email:null, canWrite:false, viaAccess:false, allowAll:false, boardOpen:false, turnstileSiteKey:"" };
-  let editingId = null;
-  let boardFormForCase = null;   // 投稿フォームを開いている事件名
+  let editingId = null;          // 編集中の期日
+  let editingCaseId = null;      // 編集中の事件
+  let editingMatId = null;       // 編集中の資料
+  let boardFormForCase = null;   // 投稿フォームを開いている事件ID
+  let openNodes = new Set();     // タイムラインで開いている節（期日ID）
   let tsToken = "";
   let tsScriptPromise = null;
   let onChange = null;           // ページ側が登録する「データが変わったら呼ぶ」コールバック
+
+  // いいねの二重押し防止に使う、この端末の識別子（中身に意味はない。サーバ側ではハッシュして保存）
+  let viewer = localStorage.getItem(VIEWER_LS) || "";
+  if(!/^[A-Za-z0-9_-]{16,64}$/.test(viewer)){
+    const b = new Uint8Array(18); crypto.getRandomValues(b);
+    viewer = btoa(String.fromCharCode(...b)).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+    localStorage.setItem(VIEWER_LS, viewer);
+  }
 
   // ---- util ----
   function startOfMonth(d){ return new Date(d.getFullYear(), d.getMonth(), 1); }
@@ -24,16 +38,20 @@ window.CC = (function(){
   function parseYmd(s){ const [y,m,d]=s.split("-").map(Number); return new Date(y,m-1,d); }
   function todayStr(){ return ymd(new Date()); }
   function byTime(a,b){ return (a.time||"99:99").localeCompare(b.time||"99:99"); }
+  function byDate(a,b){ return a.date===b.date ? byTime(a,b) : a.date.localeCompare(b.date); }
   function escapeHtml(s){ return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
   function escapeAttr(s){ return String(s||"").replace(/"/g,"&quot;"); }
   function cssEsc(s){ return String(s).replace(/"/g,'\\"'); }
+  function jpDate(s){ const d=parseYmd(s); return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${WD[d.getDay()]}）`; }
+  function dotDate(s){ return s ? s.replace(/-/g,".") : ""; }
 
   // ================= API =================
   async function api(method, path, body, extra){
-    const opt = { method, headers:{} };
+    const opt = { method, headers:{ "X-Viewer": viewer } };
     if(editKey) opt.headers["X-Edit-Key"]=editKey;
     if(extra) Object.assign(opt.headers, extra);
-    if(body!==undefined){ opt.headers["content-type"]="application/json"; opt.body=JSON.stringify(body); }
+    if(body instanceof FormData){ opt.body=body; }
+    else if(body!==undefined){ opt.headers["content-type"]="application/json"; opt.body=JSON.stringify(body); }
     const res = await fetch(path, opt);
     if(!res.ok){
       let msg = "HTTP " + res.status;
@@ -43,13 +61,23 @@ window.CC = (function(){
     if(res.status===204) return null;
     return res.json();
   }
-  const apiMe        = ()=> api("GET","/api/me");
-  const apiList       = ()=> api("GET","/api/events");
-  const apiCreate     = (d)=> api("POST","/api/events", d);
-  const apiUpdate     = (id,d)=> api("PUT","/api/events/"+encodeURIComponent(id), d);
-  const apiDelete     = (id)=> api("DELETE","/api/events/"+encodeURIComponent(id));
-  const apiListPosts  = ()=> api("GET","/api/posts");
-  const apiDeletePost = (id)=> api("DELETE","/api/posts/"+encodeURIComponent(id));
+  const apiMe          = ()=> api("GET","/api/me");
+  const apiListCases   = ()=> api("GET","/api/cases");
+  const apiCreateCase  = (d)=> api("POST","/api/cases", d);
+  const apiUpdateCase  = (id,d)=> api("PUT","/api/cases/"+encodeURIComponent(id), d);
+  const apiDeleteCase  = (id)=> api("DELETE","/api/cases/"+encodeURIComponent(id));
+  const apiLike        = (id)=> api("POST","/api/cases/"+encodeURIComponent(id)+"/like");
+  const apiUnlike      = (id)=> api("DELETE","/api/cases/"+encodeURIComponent(id)+"/like");
+  const apiList        = ()=> api("GET","/api/events");
+  const apiCreate      = (d)=> api("POST","/api/events", d);
+  const apiUpdate      = (id,d)=> api("PUT","/api/events/"+encodeURIComponent(id), d);
+  const apiDelete      = (id)=> api("DELETE","/api/events/"+encodeURIComponent(id));
+  const apiListPosts   = ()=> api("GET","/api/posts");
+  const apiDeletePost  = (id)=> api("DELETE","/api/posts/"+encodeURIComponent(id));
+  const apiListMats    = ()=> api("GET","/api/materials");
+  const apiCreateMat   = (fd)=> api("POST","/api/materials", fd);
+  const apiUpdateMat   = (id,fd)=> api("PUT","/api/materials/"+encodeURIComponent(id), fd);
+  const apiDeleteMat   = (id)=> api("DELETE","/api/materials/"+encodeURIComponent(id));
   function saveErr(err){
     if(err && err.status===403) return "この操作は許可されていません（閲覧のみの権限です）。";
     return "保存できませんでした：" + (err && err.message || err);
@@ -57,62 +85,169 @@ window.CC = (function(){
 
   async function load(){
     try{ me = await apiMe(); }catch(e){ me={email:null,canWrite:false,allowAll:false,boardOpen:false,turnstileSiteKey:""}; }
-    try{ events = await apiList(); }catch(e){ events=[]; }
-    try{ posts = await apiListPosts(); }catch(e){ posts=[]; }
+    const [c,e,p,m] = await Promise.all([
+      apiListCases().catch(()=>[]), apiList().catch(()=>[]),
+      apiListPosts().catch(()=>[]), apiListMats().catch(()=>[]),
+    ]);
+    cases=c; events=e; posts=p; materials=m;
     loaded = true;
   }
+  async function reloadCases(){ try{ cases = await apiListCases(); }catch(e){} }
 
-  // ================= 事件（同じ case_name をまとめる） =================
-  function caseEvents(caseName){
-    return events.filter(e=>e.case===caseName)
-      .sort((a,b)=> a.date===b.date ? byTime(a,b) : a.date.localeCompare(b.date));
-  }
-  function casePosts(caseName){
-    return posts.filter(p=>p.case===caseName);
-  }
+  // ================= 事件 =================
+  function caseById(id){ return cases.find(c=>c.id===id) || null; }
+  function caseByName(name){ return cases.find(c=>c.name===name) || null; }
+  function caseEvents(caseId){ return events.filter(e=>e.caseId===caseId).sort(byDate); }
+  function casePosts(caseId){ return posts.filter(p=>p.caseId===caseId); }
+  function caseMaterials(caseId){ return materials.filter(m=>m.caseId===caseId); }
   // 直近に期日がある事件（トップの「最近の期日」・カレンダーの初期表示月に使う）
   function nearestCase(){
     const today=todayStr();
-    const list=events.filter(e=>e.date>=today)
-      .sort((a,b)=> a.date===b.date?byTime(a,b):a.date.localeCompare(b.date));
-    return list[0] ? list[0].case : null;
+    const list=events.filter(e=>e.date>=today).sort(byDate);
+    return list[0] ? list[0].caseId : null;
+  }
+  // その事件の「最近の期日」＝これからの最初の回。すべて済んでいれば最後の回
+  function nextEvent(caseId){
+    const rounds=caseEvents(caseId);
+    const today=todayStr();
+    return rounds.find(e=>e.date>=today) || rounds[rounds.length-1] || null;
   }
   // 「第2回口頭弁論　東京地方裁判所 610号法廷　2026年8月26日（水）13:30」の1行
   function eventLine(ev){
-    const d=parseYmd(ev.date);
     const place=[ev.court,ev.place].filter(Boolean).join(" ");
-    return [
-      ev.type, place,
-      `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${WD[d.getDay()]}）${ev.time||""}`
-    ].filter(Boolean).join("　");
+    return [ev.type, place, `${jpDate(ev.date)}${ev.time||""}`].filter(Boolean).join("　");
   }
-  // ================= 事件の詳細カード（トップ「最近の期日」／別ページ共通） =================
-  function caseDetailHtml(caseName){
-    const rounds = caseEvents(caseName);
-    if(!rounds.length) return null;
-    const src = rounds[rounds.length-1];   // 直近の回の内容を、事件の説明として使う
-    const points=(src.points||[]).map(p=>`<li>${escapeHtml(p)}</li>`).join("");
+
+  // ---- リンクのアイコン（URLのドメインで決める） ----
+  function linkIcon(url){
+    let h=""; try{ h=new URL(url).hostname.replace(/^www\./,""); }catch(e){}
+    if(h==="x.com"||h==="twitter.com") return ["bi-twitter-x","X"];
+    if(h.endsWith("instagram.com")) return ["bi-instagram","Instagram"];
+    if(h.endsWith("youtube.com")||h==="youtu.be") return ["bi-youtube","YouTube"];
+    if(h.endsWith("facebook.com")) return ["bi-facebook","Facebook"];
+    if(h==="note.com") return ["bi-journal-text","note"];
+    return ["bi-globe2", h||"リンク"];
+  }
+  function linksHtml(c){
+    if(!c.links.length) return "";
+    return `<div class="d-links">`+c.links.map(u=>{
+      const [ic,label]=linkIcon(u);
+      return `<a class="d-link" href="${escapeAttr(u)}" target="_blank" rel="noopener" title="${escapeAttr(label)}" aria-label="${escapeAttr(label)}"><i class="bi ${ic}" aria-hidden="true"></i></a>`;
+    }).join("")+`</div>`;
+  }
+  function likeHtml(c){
+    return `<button type="button" class="like${c.liked?" on":""}" data-like="${escapeAttr(c.id)}" aria-pressed="${c.liked?"true":"false"}" aria-label="いいね">`+
+      `<i class="bi ${c.liked?"bi-heart-fill":"bi-heart"}" aria-hidden="true"></i><span class="like-n">${c.likes||0}</span></button>`;
+  }
+
+  // ================= 事件のカード =================
+  // full=false: トップ「最近の期日」用（タイトル〜掲示板＋「詳細を見る」）
+  // full=true : 事件ページ用（さらに よびかけ・タイムラインと訴訟資料・資料一覧）
+  function caseCardHtml(caseId, full){
+    const c = caseById(caseId);
+    if(!c) return null;
+    const next = nextEvent(caseId);
+    const points=(c.points||[]).map(p=>`<li>${escapeHtml(p)}</li>`).join("");
+    const editCase = me.canWrite ? `<a class="d-edit" data-editcase="${escapeAttr(c.id)}">事件を編集</a>` : "";
+
+    let html = `
+      <div class="card dcard">
+        <div class="d-head">
+          <h2 class="d-title">${escapeHtml(c.name)} ${likeHtml(c)}</h2>
+          ${linksHtml(c)}
+        </div>
+        ${editCase}
+        ${next?`<p class="minih">最近の期日</p><p class="d-body d-next">${escapeHtml(eventLine(next))}${next.open===false?`<span class="round-closed">非公開・要確認</span>`:""}</p>`:""}
+        ${points?`<p class="minih">争点</p><ul class="pts">${points}</ul>`:""}
+        ${c.parties?`<p class="minih">当事者</p><p class="d-body">${escapeHtml(c.parties)}</p>`:""}
+        ${boardHtml(caseId)}`;
+
+    if(!full){
+      html += `<p class="d-more"><a class="pillbtn" href="case?id=${encodeURIComponent(c.id)}">詳細を見る <i class="bi bi-arrow-right" aria-hidden="true"></i></a></p>`;
+    }else{
+      html += callHtml(c) + timelineHtml(caseId) + materialsListHtml(caseId);
+    }
+    html += `</div>`;
+    return html;
+  }
+
+  // ---- よびかけ ----
+  function callHtml(c){
     const credit=[
-      src.host?`呼びかけ：${escapeHtml(src.host)}`:"",
-      src.contact?`連絡先：<a href="mailto:${escapeAttr(src.contact)}">${escapeHtml(src.contact)}</a>`:""
+      c.host?`呼びかけ：${escapeHtml(c.host)}`:"",
+      c.contact?`連絡先：<a href="mailto:${escapeAttr(c.contact)}">${escapeHtml(c.contact)}</a>`:""
     ].filter(Boolean).join("<br>");
-    const roundsHtml = rounds.map(ev=>{
+    if(!c.callText && !c.lede && !credit) return "";
+    return `<p class="minih">よびかけ</p>
+      <div class="lede">${c.lede?`<p>${escapeHtml(c.lede)}</p>`:""}${c.callText?`<p class="call">${escapeHtml(c.callText)}</p>`:""}${credit?`<span class="credit">${credit}</span>`:""}</div>`;
+  }
+
+  // ---- タイムラインと訴訟資料 ----
+  const SIDE_CLASS = { "原告側":"g", "被告側":"k", "裁判所":"j", "その他":"" };
+  function matIcon(m){
+    const u=(m.fileUrl||"").toLowerCase();
+    if(m.mime==="application/pdf" || /\.pdf(\?|#|$)/.test(u)) return "bi-file-earmark-pdf";
+    if(/^image\//.test(m.mime||"") || /\.(png|jpe?g|gif|webp)(\?|#|$)/.test(u)) return "bi-image";
+    return "bi-box-arrow-up-right";
+  }
+  function matTitleHtml(m){
+    const icon = m.fileUrl ? `<i class="bi ${matIcon(m)}" aria-hidden="true"></i>` : "";
+    return m.fileUrl
+      ? `<a class="mat-name has-file" href="${escapeAttr(m.fileUrl)}" target="_blank" rel="noopener">${escapeHtml(m.title)} ${icon}</a>`
+      : `<span class="mat-name">${escapeHtml(m.title)}</span>`;
+  }
+  function sideTag(m){ return m.side ? `<span class="mat-side ${SIDE_CLASS[m.side]||""}">${escapeHtml(m.side)}</span>` : ""; }
+  function matBlockHtml(m){
+    const claims=(m.claims||[]).map(x=>`<li>${escapeHtml(x)}</li>`).join("");
+    return `<div class="mat">
+      <p class="mat-h">${sideTag(m)}${matTitleHtml(m)}${m.kind?`<span class="mat-kind">${escapeHtml(m.kind)}</span>`:""}</p>
+      ${claims?`<ul class="pts mat-claims">${claims}</ul>`:""}
+      ${m.summary?`<p class="mat-sum"><span class="mat-sumh">要約</span>${escapeHtml(m.summary)}</p>`:""}
+    </div>`;
+  }
+  function timelineHtml(caseId){
+    const rounds=caseEvents(caseId);
+    const mats=caseMaterials(caseId);
+    const today=todayStr();
+    const next=nextEvent(caseId);
+    const items=rounds.map(ev=>{
+      const own=mats.filter(m=>m.eventId===ev.id);
+      const state = ev.date<today ? "past" : (next&&ev.id===next.id ? "next" : "future");
+      const expandable = own.length>0;
+      const isOpen = expandable && openNodes.has(ev.id);
+      const place=[ev.court,ev.place].filter(Boolean).join(" ");
       const closed = ev.open===false ? `<span class="round-closed">非公開・要確認</span>` : "";
       const editLink = me.canWrite ? `<a class="round-edit" data-edit="${escapeAttr(ev.id)}">編集</a>` : "";
-      return `<li>${escapeHtml(eventLine(ev))}${closed}${editLink}</li>`;
+      return `<li class="tl-item ${state}${isOpen?" open":""}">
+        <span class="tl-dot" aria-hidden="true"></span>
+        <div class="tl-head${expandable?" tl-click":""}"${expandable?` data-tl="${escapeAttr(ev.id)}" role="button" aria-expanded="${isOpen}"`:""}>
+          <span class="tl-date">${escapeHtml(jpDate(ev.date))}${ev.time?" "+escapeHtml(ev.time):""}</span>
+          <span class="tl-type">${escapeHtml(ev.type||"期日")}</span>
+          <span class="tl-meta">${escapeHtml(place)}${closed}${editLink}</span>
+          ${expandable?`<span class="tl-count">資料${own.length}件 <i class="bi bi-chevron-down" aria-hidden="true"></i></span>`:""}
+        </div>
+        ${isOpen?`<div class="tl-body">${own.map(matBlockHtml).join("")}</div>`:""}
+      </li>`;
     }).join("");
-
-    return `
-      <div class="card dcard">
-        <h2 class="d-title">${escapeHtml(caseName)}</h2>
-        ${src.parties?`<p class="minih">当事者</p><p class="d-body">${escapeHtml(src.parties)}</p>`:""}
-        ${points?`<p class="minih">争点</p><ul class="pts">${points}</ul>`:""}
-        ${(src.lede||credit)?`<p class="lede">${escapeHtml(src.lede)}${credit?`<span class="credit">${credit}</span>`:""}</p>`:""}
-        <p class="minih">期日</p>
-        <ul class="pts rounds">${roundsHtml}</ul>
-        ${me.canWrite?`<p class="qact"><a data-addround="${escapeAttr(caseName)}">＋ この事件に期日を追加</a></p>`:""}
-        ${boardHtml(caseName)}
-      </div>`;
+    // 期日に紐づいていない資料があることを、タイムラインの下で知らせる（一覧で見られる）
+    const loose = mats.filter(m=>!m.eventId).length;
+    return `<p class="minih">タイムラインと訴訟資料</p>
+      ${rounds.length?`<ol class="tl">${items}</ol>`:`<p class="d-body mut">期日はまだ登録されていません。</p>`}
+      ${loose?`<p class="tl-note">期日に紐づかない資料が${loose}件あります（下の一覧にあります）。</p>`:""}
+      ${me.canWrite?`<p class="qact"><a data-addround="${escapeAttr(caseId)}">＋ この事件に期日を追加</a></p>`:""}`;
+  }
+  function materialsListHtml(caseId){
+    const mats=caseMaterials(caseId);
+    const rows=mats.map(m=>{
+      const edit = me.canWrite ? `<a class="round-edit" data-editmat="${escapeAttr(m.id)}">編集</a>` : "";
+      return `<li class="mrow">
+        <span class="mdate">${escapeHtml(dotDate(m.filedOn))||"&nbsp;"}</span>
+        <span class="mmain">${sideTag(m)}${matTitleHtml(m)}${m.kind?`<span class="mat-kind">${escapeHtml(m.kind)}</span>`:""}${edit}</span>
+      </li>`;
+    }).join("");
+    return `<p class="minih">訴訟資料一覧</p>
+      ${rows?`<ul class="mlist">${rows}</ul>`:`<p class="d-body mut">訴訟資料はまだ登録されていません。</p>`}
+      ${me.canWrite?`<p class="qact"><a data-addmat="${escapeAttr(caseId)}">＋ 資料を追加</a></p>`:""}`;
   }
 
   // ---- 行ってきたよ掲示板 ----
@@ -129,11 +264,11 @@ window.CC = (function(){
       `</div>`;
   }
 
-  function boardHtml(caseName){
-    const rounds = caseEvents(caseName);
-    const mine = casePosts(caseName);
+  function boardHtml(caseId){
+    const rounds = caseEvents(caseId);
+    const mine = casePosts(caseId);
     // 投稿できるのは：スパム対策(Turnstile)設定済みのとき＝誰でも／未設定でも運営は可
-    const canPost = me.boardOpen || me.canWrite;
+    const canPost = (me.boardOpen || me.canWrite) && rounds.length>0;
     const items = mine.map(p=>{
       const ev = rounds.find(e=>e.id===p.eventId);
       return bubbleHtml(p, (ev && ev.type) || p.round || "");
@@ -147,10 +282,10 @@ window.CC = (function(){
           ? "まだ報告はありません。傍聴に行かれた方の最初の報告をお待ちしています。"
           : "まだ報告はありません。"}</p>`;
     if(canPost){
-      html += boardFormForCase===caseName
-        ? postFormHtml(caseName)
-        : `<p class="bwrite"><a data-openpost="${escapeAttr(caseName)}">傍聴の報告を書く</a></p>`;
-    }else{
+      html += boardFormForCase===caseId
+        ? postFormHtml(caseId)
+        : `<p class="bwrite"><a data-openpost="${escapeAttr(caseId)}">傍聴の報告を書く</a></p>`;
+    }else if(rounds.length){
       // 一般の投稿はまだ受け付けていない（Turnstile未設定）。運営は編集パスワードで書けるので、その導線だけ出す
       html += `<p class="board-empty">傍聴の報告の投稿には、<a data-unlock="1">パスワード</a>が必要です。</p>`;
     }
@@ -158,8 +293,8 @@ window.CC = (function(){
     return html;
   }
 
-  function postFormHtml(caseName){
-    const rounds = caseEvents(caseName);
+  function postFormHtml(caseId){
+    const rounds = caseEvents(caseId);
     const today = todayStr();
     let defaultIdx = 0;
     rounds.forEach((e,i)=>{ if(e.date<=today) defaultIdx=i; });
@@ -218,7 +353,7 @@ window.CC = (function(){
     }
   }
 
-  async function submitPost(caseName, container){
+  async function submitPost(caseId, container){
     const quote=container.querySelector("#pQuote").value.trim();
     if(!quote){ alert("かぎ括弧の中を入力してください。"); return; }
     const data={
@@ -247,17 +382,29 @@ window.CC = (function(){
     }catch(err){ alert("消せませんでした：" + (err && err.message || err)); }
   }
 
-  // 事件の詳細カードを、指定した入れ物に描く（トップの「最近の期日」／別ページ共通）
-  function renderCaseDetail(container, caseName){
+  // ---- いいね ----
+  async function toggleLike(caseId, btn){
+    const c=caseById(caseId); if(!c) return;
+    btn.disabled=true;
+    try{
+      const r = c.liked ? await apiUnlike(caseId) : await apiLike(caseId);
+      c.likes=r.likes; c.liked=r.liked;
+      if(onChange) onChange();
+    }catch(err){ btn.disabled=false; }
+  }
+
+  // 事件のカードを、指定した入れ物に描く（トップの「最近の期日」／事件ページ共通）
+  function renderCaseDetail(container, caseId, opts){
+    const full = !!(opts && opts.full);
     if(!loaded){
       container.innerHTML = `<div class="card"><p class="empty-msg">読み込んでいます…</p></div>`;
       return;
     }
-    if(!caseName){
+    if(!caseId){
       container.innerHTML = `<div class="card"><p class="empty-msg">これから先の期日は、まだ登録されていません。</p></div>`;
       return;
     }
-    const html = caseDetailHtml(caseName);
+    const html = caseCardHtml(caseId, full);
     if(!html){
       container.innerHTML =
         `<div class="card"><p class="empty-msg">その事件は見つかりませんでした。</p>`+
@@ -265,20 +412,41 @@ window.CC = (function(){
       return;
     }
     container.innerHTML = html;
-    wireCaseDetail(container, caseName);
+    wireCaseDetail(container, caseId, opts);
   }
 
-  function wireCaseDetail(container, caseName){
-    container.querySelectorAll("[data-edit]").forEach(a=>{
-      a.addEventListener("click",()=>openEdit(a.dataset.edit));
+  function wireCaseDetail(container, caseId, opts){
+    const rerender=()=>renderCaseDetail(container, caseId, opts);
+    container.querySelectorAll("[data-like]").forEach(b=>{
+      b.addEventListener("click",()=>toggleLike(b.dataset.like, b));
     });
-    const addRound = container.querySelector("[data-addround]");
-    if(addRound) addRound.addEventListener("click",()=>openAddRound(caseName));
+    container.querySelectorAll("[data-editcase]").forEach(a=>{
+      a.addEventListener("click",()=>openCaseEdit(a.dataset.editcase));
+    });
+    container.querySelectorAll("[data-edit]").forEach(a=>{
+      a.addEventListener("click",(e)=>{ e.stopPropagation(); openEdit(a.dataset.edit); });
+    });
+    container.querySelectorAll("[data-addround]").forEach(a=>{
+      a.addEventListener("click",()=>openAddRound(a.dataset.addround));
+    });
+    container.querySelectorAll("[data-tl]").forEach(h=>{
+      h.addEventListener("click",()=>{
+        const id=h.dataset.tl;
+        if(openNodes.has(id)) openNodes.delete(id); else openNodes.add(id);
+        rerender();
+      });
+    });
+    container.querySelectorAll("[data-addmat]").forEach(a=>{
+      a.addEventListener("click",()=>openMatAdd(a.dataset.addmat));
+    });
+    container.querySelectorAll("[data-editmat]").forEach(a=>{
+      a.addEventListener("click",(e)=>{ e.stopPropagation(); openMatEdit(a.dataset.editmat); });
+    });
     container.querySelectorAll("[data-openpost]").forEach(a=>{
-      a.addEventListener("click",()=>{ boardFormForCase=a.dataset.openpost; renderCaseDetail(container, caseName); });
+      a.addEventListener("click",()=>{ boardFormForCase=a.dataset.openpost; rerender(); });
     });
     container.querySelectorAll("[data-closepost]").forEach(b=>{
-      b.addEventListener("click",()=>{ boardFormForCase=null; tsToken=""; renderCaseDetail(container, caseName); });
+      b.addEventListener("click",()=>{ boardFormForCase=null; tsToken=""; rerender(); });
     });
     container.querySelectorAll("[data-delpost]").forEach(a=>{
       a.addEventListener("click",()=>removePost(a.dataset.delpost));
@@ -292,8 +460,8 @@ window.CC = (function(){
       q.focus();
     }
     const send=container.querySelector("#pSend");
-    if(send) send.addEventListener("click",()=>submitPost(caseName, container));
-    if(boardFormForCase===caseName) mountTurnstile(container);
+    if(send) send.addEventListener("click",()=>submitPost(caseId, container));
+    if(boardFormForCase===caseId) mountTurnstile(container);
   }
 
   // ================= 下部のひっそりしたステータス =================
@@ -302,10 +470,12 @@ window.CC = (function(){
     if(me.canWrite){
       el.innerHTML =
         `編集できます ── この端末は編集ロック解除済みです。`+
-        `<br><a id="stAdd">＋ 期日を追加</a><span class="sep">・</span>`+
+        `<br><a id="stAddCase">＋ 事件を追加</a><span class="sep">・</span>`+
+        `<a id="stAdd">＋ 期日を追加</a><span class="sep">・</span>`+
         `<a id="stLock">ロックする</a><span class="sep">・</span>`+
         `<a id="stExport">バックアップを書き出す</a><span class="sep">・</span>`+
         `<a id="stImport">ファイルから取り込み</a>`;
+      el.querySelector("#stAddCase").addEventListener("click",openCaseAdd);
       el.querySelector("#stAdd").addEventListener("click",()=>openAdd(todayStr()));
       el.querySelector("#stLock").addEventListener("click",lockEditing);
       el.querySelector("#stExport").addEventListener("click",exportData);
@@ -340,32 +510,26 @@ window.CC = (function(){
     if(onChange) onChange();
   }
 
-  // ================= モーダル（追加・編集） =================
+  // ================= モーダル：期日（追加・編集） =================
   // 両ページに同じモーダルのHTMLがある前提で、要素はここで一度だけ取得する。
   const overlay = document.getElementById("overlay");
   const modalTitle = document.getElementById("modalTitle");
   const fCase = document.getElementById("fCase");
-  const fCaseNo = document.getElementById("fCaseNo");
   const fDate = document.getElementById("fDate");
   const fTime = document.getElementById("fTime");
   const fType = document.getElementById("fType");
   const fCourt = document.getElementById("fCourt");
   const fPlace = document.getElementById("fPlace");
-  const fParties = document.getElementById("fParties");
-  const fHost = document.getElementById("fHost");
-  const fContact = document.getElementById("fContact");
-  const fLede = document.getElementById("fLede");
-  const fPoints = document.getElementById("fPoints");
   const fOpen = document.getElementById("fOpen");
   const fLevel = document.getElementById("fLevel");
   const caseList = document.getElementById("caseList");
   const btnSave = document.getElementById("btnSave");
   const btnCancel = document.getElementById("btnCancel");
   const btnDelete = document.getElementById("btnDelete");
-  const formInputs = [fCase,fCaseNo,fDate,fTime,fType,fCourt,fPlace,fParties,fHost,fContact,fLede,fPoints,fOpen,fLevel];
+  const formInputs = [fCase,fDate,fTime,fType,fCourt,fPlace,fOpen,fLevel];
 
   function refreshCaseList(){
-    const names=[...new Set(events.map(e=>e.case))].sort();
+    const names=cases.map(c=>c.name).sort();
     caseList.innerHTML=names.map(n=>`<option value="${escapeAttr(n)}">`).join("");
   }
   function setReadonly(ro){
@@ -373,37 +537,31 @@ window.CC = (function(){
     btnSave.style.display = ro ? "none" : "";
     btnCancel.textContent = ro ? "閉じる" : "キャンセル";
   }
+  function fillEventForm(ev){
+    fCase.value=ev.case||""; fDate.value=ev.date||""; fTime.value=ev.time||"";
+    fType.value=ev.type||""; fCourt.value=ev.court||""; fPlace.value=ev.place||"";
+    fOpen.checked = ev.open!==false; fLevel.value=ev.level||"";
+  }
   function openAdd(dateStr){
     if(!me.canWrite) return;
     editingId=null; modalTitle.textContent="期日を追加"; btnDelete.style.display="none";
     setReadonly(false); refreshCaseList();
-    fCase.value=""; fCaseNo.value=""; fDate.value=dateStr||todayStr(); fTime.value="";
-    fType.value=""; fCourt.value=""; fPlace.value="";
-    fParties.value=""; fHost.value=""; fContact.value="";
-    fLede.value=""; fPoints.value=""; fOpen.checked=true; fLevel.value="";
+    fillEventForm({date:dateStr||todayStr(), open:true});
     if(events.length){
       const recent=[...events].sort((a,b)=>b.date.localeCompare(a.date))[0];
       fCase.value=recent.case; fCourt.value=recent.court||""; fPlace.value=recent.place||"";
     }
     overlay.classList.add("show"); fDate.focus();
   }
-  // 既にある事件に、新しい回を追加する（事件の中身は直近の回から引き継ぐ）
-  function openAddRound(caseName){
+  // 既にある事件に、新しい回を追加する（裁判所・法廷は直近の回から引き継ぐ）
+  function openAddRound(caseId){
     if(!me.canWrite) return;
-    const rounds = caseEvents(caseName);
+    const c=caseById(caseId); if(!c) return;
+    const rounds = caseEvents(caseId);
     const src = rounds[rounds.length-1];
     editingId=null; modalTitle.textContent="期日を追加"; btnDelete.style.display="none";
     setReadonly(false); refreshCaseList();
-    fCase.value=caseName; fCaseNo.value = src ? (src.caseNo||"") : "";
-    fDate.value=""; fTime.value=""; fType.value="";
-    fCourt.value = src ? (src.court||"") : "";
-    fPlace.value = src ? (src.place||"") : "";
-    fParties.value = src ? (src.parties||"") : "";
-    fHost.value = src ? (src.host||"") : "";
-    fContact.value = src ? (src.contact||"") : "";
-    fLede.value = src ? (src.lede||"") : "";
-    fPoints.value = src ? (src.points||[]).join("\n") : "";
-    fOpen.checked = true; fLevel.value = "";
+    fillEventForm({case:c.name, court:src&&src.court, place:src&&src.place, open:true});
     overlay.classList.add("show"); fDate.focus();
   }
   function openEdit(id){
@@ -414,11 +572,7 @@ window.CC = (function(){
     setReadonly(ro);
     btnDelete.style.display = ro ? "none" : "inline-block";
     refreshCaseList();
-    fCase.value=ev.case; fCaseNo.value=ev.caseNo||""; fDate.value=ev.date; fTime.value=ev.time||"";
-    fType.value=ev.type||""; fCourt.value=ev.court||""; fPlace.value=ev.place||"";
-    fParties.value=ev.parties||""; fHost.value=ev.host||""; fContact.value=ev.contact||"";
-    fLede.value=ev.lede||""; fPoints.value=(ev.points||[]).join("\n");
-    fOpen.checked = ev.open!==false; fLevel.value=ev.level||"";
+    fillEventForm(ev);
     overlay.classList.add("show");
   }
   function closeModal(){ overlay.classList.remove("show"); editingId=null; }
@@ -428,12 +582,10 @@ window.CC = (function(){
     const c=fCase.value.trim(), d=fDate.value;
     if(!c){ alert("事件名を入力してください。"); fCase.focus(); return; }
     if(!d){ alert("期日（日付）を入力してください。"); fDate.focus(); return; }
+    const known=caseByName(c);
     const data={
-      case:c, caseNo:fCaseNo.value.trim(), date:d, time:fTime.value,
+      caseId: known ? known.id : "", case:c, date:d, time:fTime.value,
       type:fType.value.trim(), court:fCourt.value.trim(), place:fPlace.value.trim(),
-      parties:fParties.value.trim(), host:fHost.value.trim(), contact:fContact.value.trim(),
-      lede:fLede.value.trim(),
-      points:fPoints.value.split("\n").map(s=>s.trim()).filter(Boolean),
       open:fOpen.checked, level:fLevel.value.trim(),
     };
     btnSave.disabled=true;
@@ -445,6 +597,7 @@ window.CC = (function(){
         const created=await apiCreate(data);
         events.push(created);
       }
+      if(!known) await reloadCases();   // 新しい事件名なら、サーバ側で事件が起こされている
       closeModal();
       if(onChange) onChange();
     }catch(err){ alert(saveErr(err)); }
@@ -452,20 +605,258 @@ window.CC = (function(){
   }
   async function deleteEntry(){
     if(!editingId || !me.canWrite) return;
-    if(!confirm("この期日を削除します。よろしいですか？")) return;
+    if(!confirm("この期日を削除します。この期日への掲示板の報告も一緒に消えます。よろしいですか？")) return;
     btnDelete.disabled=true;
     try{
       await apiDelete(editingId);
       events=events.filter(e=>e.id!==editingId);
+      posts=posts.filter(p=>p.eventId!==editingId);
+      materials.forEach(m=>{ if(m.eventId===editingId) m.eventId=""; });
       closeModal();
       if(onChange) onChange();
     }catch(err){ alert(saveErr(err)); }
     finally{ btnDelete.disabled=false; }
   }
 
+  // ================= モーダル：事件・資料（HTMLはここで作って差し込む） =================
+  const EXTRA_MODALS = `
+<div class="overlay" id="caseOverlay">
+  <div class="modal">
+    <div class="mhead" id="caseModalTitle">事件を追加</div>
+    <div class="mbody">
+      <div class="field">
+        <label>事件名 <span style="color:var(--stamp)">*</span></label>
+        <input type="text" id="cName" placeholder="例）情報公開請求をめぐる訴訟">
+      </div>
+      <div class="two">
+        <div class="field"><label>事件番号</label><input type="text" id="cCaseNo" placeholder="わかれば"></div>
+        <div class="field"><label>当事者</label><input type="text" id="cParties" placeholder="例）原告 ○○　被告 △△"></div>
+      </div>
+      <div class="field"><label>争点（1行に1つ）</label><textarea id="cPoints" placeholder="例）◯◯の事実があったか"></textarea></div>
+      <div class="field"><label>事件の説明（3〜4行）</label><textarea id="cLede" placeholder="どんな裁判か"></textarea></div>
+      <div class="field"><label>よびかけ</label><textarea id="cCall" placeholder="傍聴や支援をお願いする文章（任意）"></textarea></div>
+      <div class="two">
+        <div class="field"><label>呼びかけ団体・お名前</label><input type="text" id="cHost"></div>
+        <div class="field"><label>連絡先（公開してよいもの）</label><input type="text" id="cContact" placeholder="例）メールアドレス"></div>
+      </div>
+      <div class="field">
+        <label>リンク（1行に1つのURL。X・ホームページなど）</label>
+        <textarea id="cLinks" placeholder="https://x.com/..."></textarea>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn-del" id="cDelete" style="display:none;">削除</button>
+      <span class="spacer"></span>
+      <button class="btn-cancel" id="cCancel">キャンセル</button>
+      <button class="btn-save" id="cSave">保存</button>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="matOverlay">
+  <div class="modal">
+    <div class="mhead" id="matModalTitle">資料を追加</div>
+    <div class="mbody">
+      <div class="field">
+        <label>資料名 <span style="color:var(--stamp)">*</span></label>
+        <input type="text" id="mTitle" placeholder="例）訴状、第1準備書面、甲3 ○○">
+      </div>
+      <div class="two">
+        <div class="field"><label>提出者側</label>
+          <select id="mSide"><option value="">（未選択）</option><option>原告側</option><option>被告側</option><option>裁判所</option><option>その他</option></select>
+        </div>
+        <div class="field"><label>種別</label>
+          <select id="mKind"><option value="">（未選択）</option><option>主張書面</option><option>証拠</option><option>判決・決定</option><option>その他</option></select>
+        </div>
+      </div>
+      <div class="two">
+        <div class="field"><label>どの期日の資料か</label><select id="mEvent"></select></div>
+        <div class="field"><label>提出日</label><input type="date" id="mFiledOn"></div>
+      </div>
+      <div class="field">
+        <label>ファイルのURL（任意）</label>
+        <input type="text" id="mUrl" placeholder="例）/docs/sojo.pdf　または https://…">
+        <p class="fnote">PDF を <code>public/docs/</code> に入れて公開すると <code>/docs/ファイル名.pdf</code> で開けます。外部サイトのURLでも可。</p>
+      </div>
+      <div class="field" id="mFileField">
+        <label>ファイルをアップロード（PDF・PNG・JPEG、20MBまで・任意）</label>
+        <input type="file" id="mFile" accept="application/pdf,image/png,image/jpeg">
+        <p class="fnote" id="mFileNow" hidden></p>
+      </div>
+      <div class="field"><label>この書面で主張していること（1行に1つ・任意）</label><textarea id="mClaims" placeholder="例）不開示決定の取消しを求める"></textarea></div>
+      <div class="field"><label>要約（任意）</label><textarea id="mSummary" placeholder="手で書いた要約、またはAIに作らせて確認した要約"></textarea></div>
+    </div>
+    <div class="mfoot">
+      <button class="btn-del" id="mDelete" style="display:none;">削除</button>
+      <span class="spacer"></span>
+      <button class="btn-cancel" id="mCancel">キャンセル</button>
+      <button class="btn-save" id="mSave">保存</button>
+    </div>
+  </div>
+</div>`;
+  document.body.insertAdjacentHTML("beforeend", EXTRA_MODALS);
+  const $ = (id)=>document.getElementById(id);
+  const caseOverlay=$("caseOverlay"), matOverlay=$("matOverlay");
+  const cFields = { name:$("cName"), caseNo:$("cCaseNo"), parties:$("cParties"), points:$("cPoints"),
+                    lede:$("cLede"), callText:$("cCall"), host:$("cHost"), contact:$("cContact"), links:$("cLinks") };
+  const mFields = { title:$("mTitle"), side:$("mSide"), kind:$("mKind"), event:$("mEvent"), filedOn:$("mFiledOn"),
+                    url:$("mUrl"), file:$("mFile"), fileField:$("mFileField"), fileNow:$("mFileNow"),
+                    claims:$("mClaims"), summary:$("mSummary") };
+  let matCaseId = null;
+
+  // ---- 事件 ----
+  function fillCaseForm(c){
+    cFields.name.value=c.name||""; cFields.caseNo.value=c.caseNo||""; cFields.parties.value=c.parties||"";
+    cFields.points.value=(c.points||[]).join("\n"); cFields.lede.value=c.lede||""; cFields.callText.value=c.callText||"";
+    cFields.host.value=c.host||""; cFields.contact.value=c.contact||""; cFields.links.value=(c.links||[]).join("\n");
+  }
+  function openCaseAdd(){
+    if(!me.canWrite) return;
+    editingCaseId=null; $("caseModalTitle").textContent="事件を追加"; $("cDelete").style.display="none";
+    fillCaseForm({});
+    caseOverlay.classList.add("show"); cFields.name.focus();
+  }
+  function openCaseEdit(id){
+    if(!me.canWrite) return;
+    const c=caseById(id); if(!c) return;
+    editingCaseId=id; $("caseModalTitle").textContent="事件を編集"; $("cDelete").style.display="inline-block";
+    fillCaseForm(c);
+    caseOverlay.classList.add("show");
+  }
+  function closeCaseModal(){ caseOverlay.classList.remove("show"); editingCaseId=null; }
+  async function saveCase(){
+    if(!me.canWrite) return;
+    const name=cFields.name.value.trim();
+    if(!name){ alert("事件名を入力してください。"); cFields.name.focus(); return; }
+    const data={
+      name, caseNo:cFields.caseNo.value.trim(), parties:cFields.parties.value.trim(),
+      points:cFields.points.value.split("\n").map(s=>s.trim()).filter(Boolean),
+      lede:cFields.lede.value.trim(), callText:cFields.callText.value.trim(),
+      host:cFields.host.value.trim(), contact:cFields.contact.value.trim(),
+      links:cFields.links.value.split("\n").map(s=>s.trim()).filter(Boolean),
+    };
+    $("cSave").disabled=true;
+    try{
+      if(editingCaseId){
+        const up=await apiUpdateCase(editingCaseId,data);
+        const i=cases.findIndex(c=>c.id===editingCaseId); if(i>=0) cases[i]=up;
+        events.forEach(e=>{ if(e.caseId===up.id) e.case=up.name; });
+      }else{
+        const created=await apiCreateCase(data);
+        cases.push(created);
+      }
+      closeCaseModal();
+      if(onChange) onChange();
+    }catch(err){ alert(saveErr(err)); }
+    finally{ $("cSave").disabled=false; }
+  }
+  async function deleteCase(){
+    if(!editingCaseId || !me.canWrite) return;
+    if(!confirm("この事件を削除します。よろしいですか？（期日や資料が残っていると削除できません）")) return;
+    $("cDelete").disabled=true;
+    try{
+      await apiDeleteCase(editingCaseId);
+      cases=cases.filter(c=>c.id!==editingCaseId);
+      closeCaseModal();
+      if(onChange) onChange();
+    }catch(err){ alert(saveErr(err)); }
+    finally{ $("cDelete").disabled=false; }
+  }
+  $("cSave").addEventListener("click",saveCase);
+  $("cCancel").addEventListener("click",closeCaseModal);
+  $("cDelete").addEventListener("click",deleteCase);
+  caseOverlay.addEventListener("click",(e)=>{ if(e.target===caseOverlay) closeCaseModal(); });
+
+  // ---- 資料 ----
+  function fillMatForm(m, caseId){
+    matCaseId=caseId;
+    const rounds=caseEvents(caseId);
+    mFields.event.innerHTML = `<option value="">（紐づけない）</option>` + rounds.map(e=>
+      `<option value="${escapeAttr(e.id)}"${m.eventId===e.id?" selected":""}>${escapeHtml(e.type||"期日")}　${escapeHtml(e.date)}</option>`).join("");
+    mFields.title.value=m.title||""; mFields.side.value=m.side||""; mFields.kind.value=m.kind||"";
+    mFields.filedOn.value=m.filedOn||""; mFields.url.value=m.url||""; mFields.file.value="";
+    mFields.claims.value=(m.claims||[]).join("\n"); mFields.summary.value=m.summary||"";
+    // アップロード欄は R2 が使えるとき（me.uploads）か、すでに R2 のファイルが付いているときだけ出す
+    const hasR2 = !!(m.fileUrl && m.fileUrl.startsWith("/files/"));
+    mFields.fileField.hidden = !(me.uploads || hasR2);
+    if(hasR2){
+      mFields.fileNow.hidden=false;
+      mFields.fileNow.innerHTML=`いまのファイル：<a href="${escapeAttr(m.fileUrl)}" target="_blank" rel="noopener">${escapeHtml(m.fileName||"ファイル")}</a>`+
+        `　<label class="inl"><input type="checkbox" id="mRemove"> ファイルを外す</label>`;
+    }else{ mFields.fileNow.hidden=true; mFields.fileNow.innerHTML=""; }
+  }
+  function openMatAdd(caseId){
+    if(!me.canWrite) return;
+    editingMatId=null; $("matModalTitle").textContent="資料を追加"; $("mDelete").style.display="none";
+    // 既定の期日＝「最近の期日」（済んだ回があればその最後）
+    const rounds=caseEvents(caseId), today=todayStr();
+    let def=""; rounds.forEach(e=>{ if(e.date<=today) def=e.id; });
+    fillMatForm({eventId:def}, caseId);
+    matOverlay.classList.add("show"); mFields.title.focus();
+  }
+  function openMatEdit(id){
+    if(!me.canWrite) return;
+    const m=materials.find(x=>x.id===id); if(!m) return;
+    editingMatId=id; $("matModalTitle").textContent="資料を編集"; $("mDelete").style.display="inline-block";
+    fillMatForm(m, m.caseId);
+    matOverlay.classList.add("show");
+  }
+  function closeMatModal(){ matOverlay.classList.remove("show"); editingMatId=null; matCaseId=null; }
+  async function saveMat(){
+    if(!me.canWrite || !matCaseId) return;
+    const title=mFields.title.value.trim();
+    if(!title){ alert("資料名を入力してください。"); mFields.title.focus(); return; }
+    const fd=new FormData();
+    fd.append("caseId", matCaseId);
+    fd.append("eventId", mFields.event.value);
+    fd.append("title", title);
+    fd.append("side", mFields.side.value);
+    fd.append("kind", mFields.kind.value);
+    fd.append("filedOn", mFields.filedOn.value);
+    fd.append("url", mFields.url.value.trim());
+    fd.append("claims", mFields.claims.value);
+    fd.append("summary", mFields.summary.value);
+    const f=mFields.file.files[0];
+    if(f){
+      if(f.size>20*1024*1024){ alert("ファイルは20MBまでです。"); return; }
+      fd.append("file", f, f.name);
+    }
+    const rm=$("mRemove"); if(rm && rm.checked) fd.append("removeFile","1");
+    $("mSave").disabled=true;
+    try{
+      if(editingMatId){
+        const up=await apiUpdateMat(editingMatId,fd);
+        const i=materials.findIndex(m=>m.id===editingMatId); if(i>=0) materials[i]=up;
+      }else{
+        const created=await apiCreateMat(fd);
+        materials.push(created);
+        if(created.eventId) openNodes.add(created.eventId);   // 追加した資料が見える節を開いておく
+      }
+      closeMatModal();
+      if(onChange) onChange();
+    }catch(err){ alert(saveErr(err)); }
+    finally{ $("mSave").disabled=false; }
+  }
+  async function deleteMat(){
+    if(!editingMatId || !me.canWrite) return;
+    if(!confirm("この資料を削除します。ファイルも消えます。よろしいですか？")) return;
+    $("mDelete").disabled=true;
+    try{
+      await apiDeleteMat(editingMatId);
+      materials=materials.filter(m=>m.id!==editingMatId);
+      closeMatModal();
+      if(onChange) onChange();
+    }catch(err){ alert(saveErr(err)); }
+    finally{ $("mDelete").disabled=false; }
+  }
+  $("mSave").addEventListener("click",saveMat);
+  $("mCancel").addEventListener("click",closeMatModal);
+  $("mDelete").addEventListener("click",deleteMat);
+  matOverlay.addEventListener("click",(e)=>{ if(e.target===matOverlay) closeMatModal(); });
+
   // ================= バックアップ =================
   function exportData(){
-    const blob=new Blob([JSON.stringify(events,null,2)],{type:"application/json"});
+    const data={ version:3, exportedAt:new Date().toISOString(), cases, events, materials };
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
     const url=URL.createObjectURL(blob);
     const a=document.createElement("a");
     const t=new Date();
@@ -473,21 +864,32 @@ window.CC = (function(){
     a.download=`裁判カレンダー_${t.getFullYear()}${String(t.getMonth()+1).padStart(2,"0")}${String(t.getDate()).padStart(2,"0")}.json`;
     a.click(); URL.revokeObjectURL(url);
   }
+  // 取り込み：v3 形式（{cases, events}）と旧形式（期日の配列。各行に事件の説明が入っている）の両方を受ける。
+  // 資料（materials）はファイル本体を含まないので取り込まない。
   async function importMerge(file){
     if(!me.canWrite){ alert("取り込みには編集権限が必要です。"); return; }
     let data;
     try{ data=JSON.parse(await file.text()); }catch(e){ alert("読み込めませんでした：" + e.message); return; }
-    if(!Array.isArray(data)){ alert("形式が違います（JSON配列ではありません）。"); return; }
-    if(!confirm(`${data.length}件を共有カレンダーに追加します。よろしいですか？`)) return;
+    const inCases = Array.isArray(data) ? [] : (Array.isArray(data.cases) ? data.cases : []);
+    const inEvents = Array.isArray(data) ? data : (Array.isArray(data.events) ? data.events : null);
+    if(!inEvents){ alert("形式が違います。"); return; }
+    if(!confirm(`事件${inCases.length}件・期日${inEvents.length}件を共有カレンダーに追加します。よろしいですか？`)) return;
     let ok=0, ng=0;
-    for(const e of data){
+    for(const c of inCases){
+      if(caseByName(c.name)) continue;
+      try{ cases.push(await apiCreateCase(c)); }catch(err){ if(err.status!==409) ng++; }
+    }
+    for(const e of inEvents){
       try{
+        const known=caseByName(e.case);
         const created=await apiCreate({
-          case:e.case, caseNo:e.caseNo, date:e.date, time:e.time, type:e.type,
-          court:e.court, place:e.place, parties:e.parties, host:e.host, contact:e.contact,
-          lede:e.lede, points:e.points, open:e.open, level:e.level
+          caseId: known?known.id:"", case:e.case, date:e.date, time:e.time, type:e.type,
+          court:e.court, place:e.place, open:e.open, level:e.level,
+          // 旧形式なら事件の説明も一緒に送る（新しい事件を起こすときに使われる）
+          caseNo:e.caseNo, parties:e.parties, host:e.host, contact:e.contact, lede:e.lede, points:e.points,
         });
         events.push(created); ok++;
+        if(!known) await reloadCases();
       }catch(err){ ng++; }
     }
     if(onChange) onChange();
@@ -500,8 +902,16 @@ window.CC = (function(){
   btnDelete.addEventListener("click",deleteEntry);
   overlay.addEventListener("click",(e)=>{ if(e.target===overlay) closeModal(); });
   document.addEventListener("keydown",(e)=>{
-    if(e.key==="Escape"&&overlay.classList.contains("show")) closeModal();
-    if((e.ctrlKey||e.metaKey)&&e.key==="Enter"&&overlay.classList.contains("show")) saveEntry();
+    if(e.key==="Escape"){
+      if(overlay.classList.contains("show")) closeModal();
+      if(caseOverlay.classList.contains("show")) closeCaseModal();
+      if(matOverlay.classList.contains("show")) closeMatModal();
+    }
+    if((e.ctrlKey||e.metaKey)&&e.key==="Enter"){
+      if(overlay.classList.contains("show")) saveEntry();
+      else if(caseOverlay.classList.contains("show")) saveCase();
+      else if(matOverlay.classList.contains("show")) saveMat();
+    }
   });
   const fileInputEl = document.getElementById("fileInput");
   if(fileInputEl){
@@ -511,11 +921,13 @@ window.CC = (function(){
   return {
     WD,
     startOfMonth, ymd, parseYmd, todayStr, byTime, escapeHtml, escapeAttr, cssEsc,
+    get cases(){ return cases; },
     get events(){ return events; },
     get posts(){ return posts; },
+    get materials(){ return materials; },
     get me(){ return me; },
     get loaded(){ return loaded; },
-    caseEvents, casePosts, nearestCase, eventLine,
+    caseById, caseByName, caseEvents, casePosts, caseMaterials, nearestCase, nextEvent, eventLine,
     load, renderCaseDetail, renderStatus, openAdd,
     setOnChange(fn){ onChange = fn; },
   };

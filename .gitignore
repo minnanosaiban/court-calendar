@@ -6,3 +6,6 @@ node_modules/
 # 実運用の値（メール・D1のID等）を含むため公開しない。
 # 公開用のひな形は wrangler.toml.example を参照。
 wrangler.toml
+
+# D1 のバックアップ（本番データを含むので公開しない）
+backup_*.sql

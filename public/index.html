@@ -82,47 +82,17 @@
 <!-- 日付のプレビュー（ホバー／タップで出す） -->
 <div class="daypop" id="dayPop" hidden></div>
 
-<!-- modal -->
+<!-- modal: 期日の追加・編集（事件の説明・争点・よびかけは「事件を編集」から） -->
 <div class="overlay" id="overlay">
   <div class="modal">
     <div class="mhead" id="modalTitle">期日を追加</div>
     <div class="mbody">
-      <p class="msec">事件について</p>
       <div class="field">
         <label>事件名 <span style="color:var(--stamp)">*</span></label>
         <input type="text" id="fCase" list="caseList" placeholder="例）令和7年(ネ)第○○号 損害賠償請求控訴事件">
         <datalist id="caseList"></datalist>
+        <p class="fnote">登録のない事件名を入れると、その名前で新しい事件ができます。当事者・争点などは後から「事件を編集」で入れられます。</p>
       </div>
-      <div class="two">
-        <div class="field">
-          <label>事件番号</label>
-          <input type="text" id="fCaseNo" placeholder="わかれば">
-        </div>
-        <div class="field">
-          <label>当事者</label>
-          <input type="text" id="fParties" placeholder="例）原告 ○○　被告 △△">
-        </div>
-      </div>
-      <div class="two">
-        <div class="field">
-          <label>呼びかけ団体・お名前</label>
-          <input type="text" id="fHost">
-        </div>
-        <div class="field">
-          <label>連絡先（公開してよいもの）</label>
-          <input type="text" id="fContact" placeholder="例）メールアドレス">
-        </div>
-      </div>
-      <div class="field">
-        <label>事件の説明（3〜4行）</label>
-        <textarea id="fLede" placeholder="どんな裁判か"></textarea>
-      </div>
-      <div class="field">
-        <label>争われていること（1行に1つ）</label>
-        <textarea id="fPoints" placeholder="例）◯◯の事実があったか"></textarea>
-      </div>
-
-      <p class="msec">この期日について</p>
       <div class="two">
         <div class="field">
           <label>期日 <span style="color:var(--stamp)">*</span></label>
@@ -201,16 +171,22 @@
 
   // ---- 日付のプレビュー ----
   function popoverHtmlFor(dayEvents){
-    return dayEvents.map(ev=>{
+    const rows=dayEvents.map(ev=>{
       const d=CC.parseYmd(ev.date);
       const dateLine=`${d.getMonth()+1}/${d.getDate()}（${CC.WD[d.getDay()]}） ${ev.time||""}`.trim();
       const place=[ev.court,ev.place].filter(Boolean).join(" ");
-      return `<div class="pop-row" data-case="${CC.escapeAttr(ev.case)}">
+      return `<div class="pop-row" data-case="${CC.escapeAttr(ev.caseId)}">
         <p class="pop-date">${CC.escapeHtml(dateLine)}</p>
         <p class="pop-title">${CC.escapeHtml(ev.case)}</p>
         <p class="pop-meta">${CC.escapeHtml([ev.type,place].filter(Boolean).join(" ／ "))}</p>
       </div>`;
     }).join("");
+    // その日の予定が1件だけなら「詳細へ」を出す（複数件だと行ごとのクリックで振り分けが変わり紛らわしいため）
+    const detail = dayEvents.length===1
+      ? `<a class="pop-detail" data-case="${CC.escapeAttr(dayEvents[0].caseId)}">詳細へ <i class="bi bi-arrow-right" aria-hidden="true"></i></a>`
+      : "";
+    return rows
+      + `<div class="pop-foot">${detail}<button type="button" class="pop-close" aria-label="閉じる">閉じる <i class="bi bi-x-lg" aria-hidden="true"></i></button></div>`;
   }
   function openPopover(cell, dayEvents){
     if(!dayEvents.length) return;
@@ -229,9 +205,12 @@
     if(top+140>window.innerHeight) top=r.top-6-Math.min(220,dayEvents.length*90); // 下が窮屈なら上に出す
     dayPop.style.left=left+"px";
     dayPop.style.top=Math.max(8,top)+"px";
-    dayPop.querySelectorAll("[data-case]").forEach(row=>{
-      row.addEventListener("click",()=>{ location.href="case?case="+encodeURIComponent(row.dataset.case); });
+    dayPop.querySelectorAll(".pop-row[data-case]").forEach(row=>{
+      row.addEventListener("click",()=>{ location.href="case?id="+encodeURIComponent(row.dataset.case); });
     });
+    const detailBtn=dayPop.querySelector(".pop-detail");
+    if(detailBtn) detailBtn.addEventListener("click",()=>{ location.href="case?id="+encodeURIComponent(detailBtn.dataset.case); });
+    dayPop.querySelector(".pop-close").addEventListener("click",closePopoverNow);
   }
   function scheduleClosePopover(){ popCloseTimer=setTimeout(closePopoverNow,150); }
   function closePopoverNow(){
@@ -323,7 +302,7 @@
         `<div class="ut">${CC.escapeHtml(ev.case)}</div>`+
         `<div class="um">${CC.escapeHtml([ev.type,place].filter(Boolean).join(" ／ "))||"&nbsp;"}</div>`;
       item.appendChild(bar); item.appendChild(body);
-      item.addEventListener("click",()=>{ location.href="case?case="+encodeURIComponent(ev.case); });
+      item.addEventListener("click",()=>{ location.href="case?id="+encodeURIComponent(ev.caseId); });
       upcomingBox.appendChild(item);
     }
   }
@@ -332,7 +311,7 @@
     renderCalendars();
     renderUpcoming();
     CC.renderStatus(statusEl);
-    CC.renderCaseDetail(recentBody, CC.nearestCase());
+    CC.renderCaseDetail(recentBody, CC.nearestCase(), {full:false});
   }
   CC.setOnChange(renderAll);
 
@@ -345,9 +324,7 @@
     await CC.load();
     const nc=CC.nearestCase();
     if(nc){
-      const rounds=CC.caseEvents(nc);
-      const upcoming=rounds.filter(e=>e.date>=CC.todayStr());
-      const first=upcoming[0]||rounds[0];
+      const first=CC.nextEvent(nc);
       if(first){ const d=CC.parseYmd(first.date); view=new Date(d.getFullYear(),d.getMonth(),1); }
     }
     renderAll();

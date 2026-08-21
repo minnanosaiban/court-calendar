@@ -12,5 +12,7 @@ export async function onRequestGet({ request, env }) {
     // 掲示板：一般の人が投稿できるのは Turnstile を設定したときだけ（ローカル開発は例外）
     boardOpen: !!env.TURNSTILE_SECRET || localDev,
     turnstileSiteKey: env.TURNSTILE_SITEKEY || "",
+    // 資料のファイルを画面からアップロードできるか（R2 バインドがあるときだけ）
+    uploads: !!env.FILES,
   });
 }

@@ -44,7 +44,28 @@ a{color:inherit}
 .dcard + .dcard{margin-top:12px}
 .d-title{font-family:"Shippori Mincho",serif;font-size:1.22rem;font-weight:600;line-height:1.65}
 .d-body{font-size:.9rem;margin-top:6px}
+.mut{color:var(--mut)}
+/* タイトル行：左にタイトル＋いいね、右に当事者のアカウントリンク */
+.d-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.d-head .d-title{flex:1;min-width:0}
+.d-links{flex:none;display:flex;gap:4px;margin-top:4px}
+.d-link{display:grid;place-content:center;width:32px;height:32px;border-radius:50%;color:var(--mut);font-size:1rem;text-decoration:none}
+.d-link:hover{background:var(--tint);color:var(--ink)}
+/* いいね：タイトルに続けて置く。押すと朱色で塗る */
+.like{display:inline-flex;align-items:center;gap:4px;vertical-align:middle;margin-left:.35em;
+  font-family:"Zen Kaku Gothic New",sans-serif;font-size:.8rem;color:var(--mut);
+  background:none;border:1px solid #e6e4dd;border-radius:999px;padding:2px 10px 2px 8px;cursor:pointer;line-height:1.5}
+.like:hover{border-color:#c9c6bc}
+.like .bi{font-size:.85rem}
+.like.on{color:var(--stamp);border-color:rgba(185,50,38,.35);background:rgba(185,50,38,.06)}
+.like:disabled{opacity:.6;cursor:default}
+.like-n{font-variant-numeric:tabular-nums}
+.d-edit{display:inline-block;margin-top:6px;font-size:.75rem;color:var(--mut);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.d-next{font-family:"Shippori Mincho",serif;font-weight:500}
+.d-more{margin-top:24px;text-align:right}
 .lede{margin-top:22px;background:var(--tint);border-radius:12px;padding:14px 16px;font-size:.9rem}
+.lede p + p{margin-top:10px}
+.lede .call{font-family:"Shippori Mincho",serif}
 /* 説明文の下に、呼びかけ人と連絡先を添える */
 .credit{display:block;color:var(--mut);font-size:.8rem;line-height:1.85;margin-top:10px}
 .credit a{color:var(--mut);text-underline-offset:3px}
@@ -56,6 +77,50 @@ a{color:inherit}
 .rounds li{padding-left:1.2em;text-indent:-1.2em;margin-bottom:6px}
 .round-closed{color:var(--mut);font-size:.8rem;margin-left:.5em}
 .round-edit{color:var(--mut);font-size:.75rem;margin-left:.6em;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+
+/* ---- タイムライン ---- */
+/* 左に縦線と節。済んだ回は塗りつぶし、次回は朱色、これからの回は輪郭だけ。最後の節で線を止める */
+.tl{list-style:none;margin-top:10px;padding-left:0}
+.tl-item{position:relative;padding:0 0 18px 26px}
+.tl-item::before{content:"";position:absolute;left:6px;top:14px;bottom:-4px;width:1.5px;background:#dedbd2}
+.tl-item:last-child::before{display:none}
+.tl-item:last-child{padding-bottom:4px}
+.tl-dot{position:absolute;left:0;top:7px;width:13px;height:13px;border-radius:50%;background:#fff;border:1.5px solid #a9a7a0;box-sizing:border-box}
+.tl-item.past .tl-dot{background:#a9a7a0;border-color:#a9a7a0}
+.tl-item.next .tl-dot{background:var(--stamp);border-color:var(--stamp);box-shadow:0 0 0 3px rgba(185,50,38,.15)}
+.tl-head{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:10px;row-gap:2px;font-size:.9rem;line-height:1.7;border-radius:8px}
+.tl-click{cursor:pointer}
+.tl-click:hover .tl-type{text-decoration:underline;text-underline-offset:4px;text-decoration-color:#c9c6bc}
+.tl-date{color:var(--mut);font-size:.8rem;font-variant-numeric:tabular-nums}
+.tl-type{font-family:"Shippori Mincho",serif;font-weight:600}
+.tl-item.next .tl-type{color:var(--stamp)}
+.tl-meta{color:var(--mut);font-size:.8rem}
+.tl-count{margin-left:auto;color:var(--mut);font-size:.75rem;white-space:nowrap}
+.tl-count .bi{transition:transform .15s}
+.tl-item.open .tl-count .bi{transform:rotate(180deg)}
+.tl-body{margin-top:8px}
+.tl-note{color:var(--mut);font-size:.78rem;margin-top:6px}
+
+/* ---- 訴訟資料（タイムラインの中身／一覧） ---- */
+.mat{background:var(--tint);border-radius:12px;padding:11px 14px;font-size:.88rem}
+.mat + .mat{margin-top:8px}
+.mat-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px}
+.mat-side{font-size:.72rem;font-weight:700;white-space:nowrap}
+.mat-side.g{color:#47705a}
+.mat-side.k{color:#4a5a74}
+.mat-side.j{color:#8a5c46}
+.mat-name{font-weight:500}
+.mat-name.has-file{text-decoration:underline;text-underline-offset:3px;text-decoration-color:#c9c6bc}
+.mat-name .bi{color:var(--stamp);margin-left:.1em}
+.mat-kind{color:var(--mut);font-size:.72rem}
+.mat-claims{margin-top:6px;font-size:.86rem}
+.mat-sum{margin-top:8px;font-size:.84rem;color:var(--ink)}
+.mat-sumh{display:inline-block;font-size:.68rem;letter-spacing:.18em;color:var(--mut);margin-right:.6em}
+.mlist{list-style:none;margin-top:8px;font-size:.88rem}
+.mrow{display:flex;gap:12px;padding:7px 0;border-top:1px solid var(--tint)}
+.mrow:first-child{border-top:none}
+.mdate{flex:none;width:6.2em;color:var(--mut);font-size:.8rem;font-variant-numeric:tabular-nums;padding-top:1px}
+.mmain{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;min-width:0}
 
 /* ---- 行ってきたよ掲示板 ---- */
 /* 生成りの面でくくって独立した「場」に見せる。見出しの「行ってきたよ」は朱印と同じ赤 */
@@ -148,6 +213,13 @@ a{color:inherit}
 .pop-date{font-size:.76rem;color:var(--mut);font-variant-numeric:tabular-nums}
 .pop-title{font-size:.92rem;font-weight:500;margin-top:1px;font-family:"Shippori Mincho",serif}
 .pop-meta{font-size:.78rem;color:var(--mut);margin-top:1px}
+/* プレビュー下の操作行：右下に「詳細へ→」「閉じる×」 */
+.pop-foot{display:flex;justify-content:flex-end;align-items:center;gap:16px;margin-top:2px;padding:8px 10px 4px;border-top:1px solid var(--tint)}
+.pop-detail{font-size:.78rem;color:var(--stamp);background:none;border:none;cursor:pointer;text-decoration:none}
+.pop-detail i{margin-left:.3em}
+.pop-close{font-size:.78rem;color:var(--mut);background:none;border:none;cursor:pointer;padding:2px}
+.pop-close:hover{color:var(--ink)}
+.pop-close i{margin-left:.3em}
 
 /* ---- upcoming ---- */
 .ucard{padding:8px 10px}
@@ -189,6 +261,16 @@ a{color:inherit}
   width:100%;font-family:inherit;font-size:.95rem;color:var(--ink);
   border:1px solid #e6e4dd;border-radius:10px;padding:9px 11px;background:#fff;
 }
+.field select{
+  width:100%;font-family:inherit;font-size:.95rem;color:var(--ink);
+  border:1px solid #e6e4dd;border-radius:10px;padding:9px 11px;background:#fff;
+}
+.field input[type=file]{padding:7px 9px;font-size:.85rem}
+.fnote{color:var(--mut);font-size:.74rem;margin-top:5px;line-height:1.7}
+.fnote a{text-underline-offset:3px}
+.fnote code{font-size:.92em;background:var(--tint);padding:1px 5px;border-radius:4px}
+.fnote .inl{display:inline-flex;align-items:center;gap:4px}
+.fnote .inl input{width:auto}
 .field input:focus,.field textarea:focus{outline:none;border-color:#b9b6ac}
 .field input:disabled,.field textarea:disabled{background:var(--tint);color:var(--ink);opacity:1}
 .field textarea{resize:vertical;min-height:56px}
@@ -209,6 +291,9 @@ a{color:inherit}
   .calcard{padding:20px 16px 16px}
   .dcard{padding:28px 30px 26px}
   .d-title{font-size:1.35rem}
+  .tl-item{padding-left:30px}
+  .tl-item::before{left:7px}
+  .tl-dot{width:15px;height:15px;top:6px}
   .rows{grid-template-columns:6em 1fr}
 }
 @media(min-width:860px){

@@ -12,6 +12,13 @@ binding = "DB"
 database_name = "court-calendar"
 database_id = "YOUR_D1_DATABASE_ID"   # `npx wrangler d1 list` で確認できるID
 
+# 訴訟資料のファイル置き場（R2）。R2 はアカウントで有効化（支払い方法の登録）が要るので、いまは使わず
+# PDF は public/docs/ に置いて deploy し、資料の「ファイルのURL」欄に /docs/ファイル名.pdf を入れる運用。
+# R2 を有効化したら、下の3行のコメントを外して `npm run r2:create` → deploy すれば画面からアップロードできる。
+# [[r2_buckets]]
+# binding = "FILES"
+# bucket_name = "court-calendar-files"
+
 [vars]
 # 第1段階: 書き込みは OWNER_EMAIL のみ。
 # 第2段階に進むときは ALLOW_ALL_WRITES = "true" に変えて再デプロイすれば、

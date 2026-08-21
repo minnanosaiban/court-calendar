@@ -7,28 +7,149 @@ export function json(data, status = 200, extra = {}) {
   });
 }
 
-// DBの1行を、画面が扱う形（case など）に変換
+export function newId(prefix) {
+  return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+// 「1行1項目」のテキスト列。フォームからは配列でも改行区切りの文字列でも受け取り、DBには改行区切りで保存する
+export function linesToText(v) {
+  if (Array.isArray(v)) return v.map((s) => String(s).trim()).filter(Boolean).join("\n");
+  return String(v || "").split("\n").map((s) => s.trim()).filter(Boolean).join("\n");
+}
+export function textToLines(s) {
+  return s ? String(s).split("\n").map((x) => x.trim()).filter(Boolean) : [];
+}
+
+// ---- 事件 ----
+export const CASE_COLS = `c.id, c.name, c.case_no, c.parties, c.points, c.lede, c.call_text,
+                          c.host, c.contact, c.links, c.created_by, c.updated_by, c.updated_at`;
+
+export function rowToCase(r) {
+  return {
+    id: r.id,
+    name: r.name,
+    caseNo: r.case_no || "",
+    parties: r.parties || "",
+    points: textToLines(r.points),
+    lede: r.lede || "",
+    callText: r.call_text || "",
+    host: r.host || "",
+    contact: r.contact || "",
+    links: textToLines(r.links).filter(isHttpUrl),
+    likes: Number(r.likes || 0),
+    liked: !!r.liked,
+    updatedAt: r.updated_at || "",
+  };
+}
+export function isHttpUrl(s) {
+  try { const u = new URL(s); return u.protocol === "https:" || u.protocol === "http:"; }
+  catch { return false; }
+}
+// 事件フォームの入力を、DBに入れる形にそろえる
+export function caseFromBody(body) {
+  return {
+    name: String(body.name || "").trim(),
+    case_no: String(body.caseNo || "").trim(),
+    parties: String(body.parties || "").trim(),
+    points: linesToText(body.points),
+    lede: String(body.lede || "").trim(),
+    call_text: String(body.callText || "").trim(),
+    host: String(body.host || "").trim(),
+    contact: String(body.contact || "").trim(),
+    links: textToLines(linesToText(body.links)).filter(isHttpUrl).join("\n"),
+  };
+}
+
+// ---- 期日 ----
+export const EVENT_COLS = `e.id, e.case_id, e.date, e.time, e.type, e.court, e.place, e.open, e.level,
+                           e.created_by, e.updated_by, e.updated_at, c.name AS case_name`;
+export const EVENT_FROM = `FROM events e JOIN cases c ON c.id = e.case_id`;
+
 export function rowToEvent(r) {
   return {
     id: r.id,
-    case: r.case_name,
-    caseNo: r.case_no || "",
+    caseId: r.case_id,
+    case: r.case_name || "",
     date: r.date,
     time: r.time || "",
     type: r.type || "",
     court: r.court || "",
     place: r.place || "",
-    parties: r.parties || "",
-    host: r.host || "",
-    contact: r.contact || "",
-    lede: r.lede || "",
-    points: r.points ? String(r.points).split("\n").map((s) => s.trim()).filter(Boolean) : [],
     open: r.open === 0 || r.open === false ? false : true,
     level: r.level || "",
-    createdBy: r.created_by || "",
-    updatedBy: r.updated_by || "",
     updatedAt: r.updated_at || "",
   };
+}
+
+// 期日の追加・更新で「事件」を決める。caseId があればそれ、無ければ事件名で探し、無ければ作る。
+// （事件名を入力するだけで新しい事件を起こせるように。事件の説明などは後から「事件を編集」で入れる）
+export async function resolveCaseId(env, body, email) {
+  const caseId = String(body.caseId || "").trim();
+  if (caseId) {
+    const row = await env.DB.prepare(`SELECT id FROM cases WHERE id = ?`).bind(caseId).first();
+    if (row) return row.id;
+  }
+  const name = String(body.case || "").trim();
+  if (!name) return null;
+  const found = await env.DB.prepare(`SELECT id FROM cases WHERE name = ?`).bind(name).first();
+  if (found) return found.id;
+  // 旧形式のバックアップ（期日の行に事件の説明が入っている）を取り込んだときも、その値を活かして事件を作る
+  const c = caseFromBody({ ...body, name });
+  const id = newId("c");
+  const now = new Date().toISOString();
+  await env.DB.prepare(
+    `INSERT INTO cases (id, name, case_no, parties, points, lede, call_text, host, contact, links,
+                        created_by, updated_by, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  ).bind(id, c.name, c.case_no, c.parties, c.points, c.lede, c.call_text, c.host, c.contact, c.links,
+         email, email, now).run();
+  return id;
+}
+
+// ---- 訴訟資料 ----
+export const MATERIAL_SIDES = ["原告側", "被告側", "裁判所", "その他"];
+export const MATERIAL_KINDS = ["主張書面", "証拠", "判決・決定", "その他"];
+export const MATERIAL_MIMES = { "application/pdf": "pdf", "image/png": "png", "image/jpeg": "jpg" };
+export const MATERIAL_MAX_BYTES = 20 * 1024 * 1024;
+
+export const MATERIAL_COLS = `m.id, m.case_id, m.event_id, m.title, m.side, m.kind, m.filed_on,
+                              m.url, m.r2_key, m.file_name, m.file_size, m.mime, m.claims, m.summary,
+                              m.created_at, m.updated_at`;
+
+// 資料の「ファイルのURL」に入れてよい形：https/http の絶対URL、またはこのサイト内の /docs/… （public/docs/ に置いたPDF）
+export function isMaterialUrl(s) {
+  if (!s) return false;
+  if (/^\/docs\/[^\s?#]+$/.test(s)) return true;
+  return isHttpUrl(s);
+}
+
+export function rowToMaterial(r) {
+  return {
+    id: r.id,
+    caseId: r.case_id,
+    eventId: r.event_id || "",
+    title: r.title,
+    side: r.side || "",
+    kind: r.kind || "",
+    filedOn: r.filed_on || "",
+    url: r.url || "",                                   // 手入力のURL（public/docs/ や外部）
+    fileUrl: r.r2_key ? "/files/" + r.r2_key : (r.url || ""),   // 画面が開くリンク（R2 があればそちら）
+    fileName: r.file_name || "",
+    fileSize: Number(r.file_size || 0),
+    mime: r.mime || "",
+    claims: textToLines(r.claims),
+    summary: r.summary || "",
+    createdAt: r.created_at || "",
+  };
+}
+
+// ---- いいね ----
+// 端末ごとの識別子（X-Viewer ヘッダ）をそのまま保存せず、SHA-256 にして持つ
+export async function viewerHash(request) {
+  const v = request.headers.get("X-Viewer") || "";
+  if (!/^[A-Za-z0-9_-]{16,64}$/.test(v)) return null;
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(v));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 // ---- 掲示板 ----
@@ -42,8 +163,9 @@ export function rowToPost(r) {
   return {
     id: r.id,
     eventId: r.event_id,
-    case: r.case_name || "",   // JOIN してきた事件名
-    round: r.type || "",       // JOIN してきた期日の種別（第7回口頭弁論 など）
+    caseId: r.case_id || "",    // JOIN してきた事件ID
+    case: r.case_name || "",    // JOIN してきた事件名
+    round: r.type || "",        // JOIN してきた期日の種別（第7回口頭弁論 など）
     date: r.date || "",
     subject: r.subject,
     quote: r.quote,

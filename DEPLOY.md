@@ -11,30 +11,87 @@
 
 ```
 public/index.html       画面（カレンダー・「最近の期日」・「今後の期日」）
-public/case.html        画面（1つの事件の詳細ページ・?case=事件名 で開く）
+public/case.html        画面（1つの事件の詳細ページ・?id=事件ID で開く。旧リンク ?case=事件名 も可）
 public/style.css        両ページ共通のスタイル
-public/lib.js           両ページ共通のロジック（状態・API呼び出し・モーダル・掲示板）。window.CC として公開
-functions/_common.js    共通処理（認証・権限・JSON・掲示板の投稿可否判定）
-functions/api/me.js          GET  /api/me      ログイン状態と権限・掲示板の受付状況
-functions/api/events.js      GET  /api/events  一覧 / POST  追加
-functions/api/events/[id].js PUT  /api/events/:id 更新 / DELETE 削除
-functions/api/posts.js       GET  /api/posts      掲示板の一覧 / POST 投稿
-functions/api/posts/[id].js  DELETE /api/posts/:id 投稿を消す（運営のみ）
-schema.sql                        D1 のテーブル定義（最新）
-migrate_002_call_for_support.sql  旧スキーマのDBを傍聴の呼びかけ用へ移行する一度きりのマイグレーション（新規作成ならschema.sqlだけでよい）
-migrate_003_board.sql             行ってきたよ掲示板の posts テーブルを追加する一度きりのマイグレーション
-seed_demo.sql                     動作確認用の架空データ（本番投入済み・消し方はファイル冒頭のコメント参照）
-wrangler.toml           設定（D1 バインド・環境変数）
+public/lib.js           両ページ共通のロジック（状態・API呼び出し・モーダル・掲示板・タイムライン・資料）。window.CC として公開
+functions/_common.js    共通処理（認証・権限・JSON・行→画面の変換・掲示板の投稿可否判定）
+functions/api/me.js               GET  /api/me           ログイン状態と権限・掲示板の受付状況
+functions/api/cases.js            GET  /api/cases        事件の一覧（いいね数つき） / POST 追加
+functions/api/cases/[id].js       PUT  /api/cases/:id    更新 / DELETE 削除（期日・資料が残っていると不可）
+functions/api/cases/[id]/like.js  POST /api/cases/:id/like いいね / DELETE 取り消し（ログイン不要・端末ごとに1回）
+functions/api/events.js           GET  /api/events       期日の一覧 / POST 追加（知らない事件名なら事件も作る）
+functions/api/events/[id].js      PUT  /api/events/:id   更新 / DELETE 削除（投稿も消え、資料の紐づけは外れる）
+functions/api/materials.js        GET  /api/materials    訴訟資料の一覧 / POST 追加（multipart・ファイル任意）
+functions/api/materials/[id].js   PUT  /api/materials/:id 更新（ファイル差し替え・取り外し可） / DELETE 削除
+functions/api/posts.js            GET  /api/posts        掲示板の一覧 / POST 投稿
+functions/api/posts/[id].js       DELETE /api/posts/:id  投稿を消す（運営のみ）
+functions/files/[[path]].js       GET  /files/<key>      R2 に置いた資料ファイルを配信（誰でも閲覧可）
+schema.sql                        D1 のテーブル定義（最新・v3）
+migrate_002_call_for_support.sql  （過去）旧スキーマのDBを傍聴の呼びかけ用へ移行
+migrate_003_board.sql             （過去）行ってきたよ掲示板の posts テーブルを追加
+migrate_004_cases.sql             事件（cases）を分離し、訴訟資料（materials）・いいね（likes）を追加する一度きりのマイグレーション
+seed_demo.sql                     動作確認用の架空データ（v3 形式・消し方はファイル冒頭のコメント参照）
+wrangler.toml           設定（D1・R2 バインド・環境変数）
 ```
 
-### events テーブルの列（2026-08-20〜）
+### v3：事件・訴訟資料・いいね（2026-08-21〜）
+
+CALL4 のように「事件」を中心に据えた。事件に属するもの（当事者・争点・説明・よびかけ・リンク）は `cases` に1回だけ持ち、
+期日（`events`）は `case_id` で事件にぶら下がる。訴訟資料（`materials`）は目録を D1、ファイル本体を R2 に置く。
+
+- `cases`：`name`（事件名・一意）`case_no` `parties` `points`（争点・改行区切り）`lede`（説明）`call_text`（よびかけ）`host` `contact` `links`（URL・改行区切り。X などはドメインでアイコンを出し分け）
+- `events`：`case_id` `date` `time` `type` `court` `place` `open` `level`（事件の説明の列は落とした）
+- `materials`：`case_id` `event_id`（任意＝タイムラインの節にぶら下がる）`title` `side`（原告側/被告側/裁判所/その他）`kind`（主張書面/証拠/判決・決定/その他）`filed_on` `r2_key` `file_name` `file_size` `mime` `claims`（箇条書き・任意）`summary`（要約・手入力・任意）
+- `likes`：`(case_id, viewer)` が主キー。`viewer` は端末が持つ乱数（`X-Viewer` ヘッダ）の SHA-256。同じ端末から何度押しても1件
+
+画面の並び（トップの「最近の期日」カードと事件ページの上半分は同じ）：
+
+1. タイトル ＋ ♡いいね（右上に当事者のアカウントリンク）
+2. 最近の期日（これからの最初の回。全部済んでいれば最後の回）
+3. 争点
+4. 当事者
+5. 行ってきたよ掲示板
+6. トップはここで「詳細を見る →」。事件ページはさらに
+7. よびかけ（説明文＋よびかけ文＋呼びかけ人・連絡先）
+8. タイムラインと訴訟資料（済んだ回は●、次回は朱色、これからは◯。資料がある節はクリックで開き、資料名→箇条書き→要約）
+9. 訴訟資料一覧（提出日順）
+
+**資料のファイルの置き場（2026-08-21 時点：R2 は未使用）**
+
+R2 はアカウントでの有効化に支払い方法（カード）の登録が要るため、いまは使っていない（`wrangler.toml` の `[[r2_buckets]]` はコメントアウト）。
+PDF は次のように置く：
+
+1. `public/docs/` に PDF を入れる（ファイル名は半角英数が無難。例 `joho_sojo.pdf`）
+2. `deploy.bat` で公開 → `https://court-calendar-6q8.pages.dev/docs/joho_sojo.pdf` で開ける
+3. 事件ページの「＋ 資料を追加」で、**ファイルのURL** 欄に `/docs/joho_sojo.pdf` と入れる（外部サイトの `https://…` でも可）
+
+R2 を有効化したら：ダッシュボードで R2 を有効化 → `wrangler.toml` のコメントを外す → `npm run r2:create` → deploy。
+これだけで資料モーダルに「ファイルをアップロード」欄が出る（`/api/me` の `uploads` が true になる）。`/docs/` 方式の資料もそのまま使える。
+
+**既存のDBを v3 へ移す**（本番は必ずバックアップを取ってから。`events` の行は消えず、事件の説明は直近の回の値で `cases` に写される）：
+
+```
+npx wrangler d1 export court-calendar --remote --output backup_before_004.sql
+npx wrangler d1 execute court-calendar --remote --file migrate_004_cases.sql
+```
+
+**v3 を本番に出す順番**（新しいコードは新しいテーブルを前提にするので、DBを先に移す）：
+
+1. `npm run db:backup:remote`（バックアップ）
+2. `npm run db:cases:remote`（マイグレーション 004）
+3. `deploy.bat`（デプロイ＋GitHub へ push）
+
+資料の登録は編集パスワードを知っている人だけ。ファイル無しの「目録だけ」の登録もできる。
+`/docs/…` も `/files/…` も誰でも開ける（公開サイトなので、公開してよい書面だけを置くこと）。
+
+### （過去）events テーブルの列（2026-08-20〜21）
 
 1期日=1行のまま、傍聴の呼びかけに必要な列に整理した。
 
 - 追加：`case_no`（事件番号）`court`（裁判所）`parties`（当事者）`host`（呼びかけ団体）`contact`（連絡先）`lede`（事件の説明）`points`（争われていること・改行区切り）`open`（1=誰でも傍聴できる／0=非公開・要確認）`level`（見どころタグ）
 - 削除：`note`（「この日のみどころ・メモ」は廃止）
 
-### 画面構成（2026-08-20〜）
+### （過去）画面構成（2026-08-20〜21）
 
 - `index.html`：上から「最近の期日」（直近に期日がある**事件**の詳細に固定）→「カレンダー」（PCは2か月・スマホは1か月）→「今後の期日」→ 最下部に控えめな編集リンク
 - `case.html`：1つの事件の詳細を独立したページで表示。事件の説明・争点・**その事件の全ての回**（期日）・行ってきたよ掲示板・（編集権限があれば）編集リンク

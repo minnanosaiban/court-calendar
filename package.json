@@ -12,7 +12,11 @@
     "db:board:remote": "wrangler d1 execute court-calendar --remote --file migrate_003_board.sql",
     "db:seed:local": "wrangler d1 execute court-calendar --local --file seed_sample.sql",
     "dev": "wrangler pages dev public",
-    "deploy": "wrangler pages deploy"
+    "deploy": "wrangler pages deploy",
+    "db:cases:local": "wrangler d1 execute court-calendar --local --file migrate_004_cases.sql",
+    "db:cases:remote": "wrangler d1 execute court-calendar --remote --file migrate_004_cases.sql",
+    "db:backup:remote": "wrangler d1 export court-calendar --remote --output backup_remote.sql",
+    "r2:create": "wrangler r2 bucket create court-calendar-files"
   },
   "devDependencies": {
     "wrangler": "^4.105.0"
