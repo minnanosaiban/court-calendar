@@ -193,7 +193,7 @@ a{color:inherit}
 .bhead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
 .btitle{font-family:"Shippori Mincho",serif;font-size:.98rem;font-weight:600}
 .bt-red{color:var(--stamp)}
-.bt-bang{display:inline-block;transform:rotate(-14deg)}
+.bt-bang{display:inline-block;color:var(--stamp);transform:rotate(-14deg)}
 .bcount{font-size:.75rem;color:var(--mut)}
 /* 報告は吹き出しで「声」として並べる */
 .bubble{background:#fff;border-radius:14px;padding:11px 14px;margin-top:10px;position:relative;font-size:.9rem}
