@@ -71,7 +71,7 @@ a{color:inherit}
 .d-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
 .d-head .d-title{flex:1;min-width:0}
 .d-links{flex:none;display:flex;gap:4px;margin-top:4px}
-.d-link{display:grid;place-content:center;width:32px;height:32px;border-radius:50%;color:var(--mut);font-size:1rem;text-decoration:none}
+.d-link{display:grid;place-content:center;width:32px;height:32px;border-radius:50%;color:var(--mut);font-size:1.3rem;text-decoration:none}
 .d-link:hover{background:var(--tint);color:var(--ink)}
 /* いいね：タイトルに続けて置く。押すと朱色で塗る */
 .like{display:inline-flex;align-items:center;gap:4px;vertical-align:middle;margin-left:.35em;
@@ -90,11 +90,6 @@ a{color:inherit}
   color:var(--mut);font-size:.9rem;text-decoration:none;background:none;border:none;cursor:pointer;font-family:inherit}
 .share a:hover,.share button:hover{background:var(--tint);color:var(--ink)}
 .share button.copied{color:#2f7d4f}
-/* 終結した裁判（裁判アーカイブ）の帯 */
-.archived{display:flex;align-items:flex-start;gap:10px;margin-top:14px;background:var(--tint);
-  border-radius:12px;padding:11px 14px;font-size:.84rem;line-height:1.8}
-.archived .bi{color:var(--mut);margin-top:.3em;flex:none}
-.archived b{font-family:"Shippori Mincho",serif;color:var(--ink);font-weight:600}
 .d-next{font-family:"Shippori Mincho",serif;font-weight:500}
 .d-more{margin-top:24px;text-align:right}
 .lede{margin-top:22px;background:var(--tint);border-radius:12px;padding:14px 16px;font-size:.9rem}
@@ -282,7 +277,7 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
   padding:9px 16px;box-shadow:0 1px 2px rgba(0,0,0,.06)}
 .search input{flex:1;border:none;font-family:inherit;font-size:.95rem;color:var(--ink);background:transparent;outline:none}
 .search .bi{color:var(--mut)}
-/* 進行中／裁判アーカイブ の切り替え */
+/* 進行中／終結 の切り替え */
 .tabs{display:flex;gap:22px;margin:20px 4px 0;font-size:.88rem;color:var(--mut);border-bottom:1px solid var(--tint)}
 .tabs span{padding-bottom:9px;cursor:pointer;border-bottom:2px solid transparent}
 .tabs span.on{color:var(--ink);font-weight:500;border-bottom-color:var(--ink)}

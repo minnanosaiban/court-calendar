@@ -124,7 +124,7 @@
   const clistEl=document.getElementById("clist");
   const statusEl=document.getElementById("status");
   let activeTag = new URLSearchParams(location.search).get("tag") || "";
-  let activeStatus = "open";   // "open"=進行中 / "archived"=裁判アーカイブ
+  let activeStatus = "open";   // "open"=進行中 / "archived"=終結
 
   function allTagsWithCount(){
     const m=new Map();
@@ -168,7 +168,7 @@
     const archN=base.filter(c=>c.archivedAt).length;
     statusTabs.innerHTML = `
       <span class="${activeStatus==="open"?"on":""}" data-statusf="open">進行中 ${openN}</span>
-      <span class="${activeStatus==="archived"?"on":""}" data-statusf="archived">裁判アーカイブ ${archN}</span>`;
+      <span class="${activeStatus==="archived"?"on":""}" data-statusf="archived">終結 ${archN}</span>`;
     statusTabs.querySelectorAll("[data-statusf]").forEach(s=>{
       s.addEventListener("click",()=>{ activeStatus=s.dataset.statusf; renderAll(); });
     });

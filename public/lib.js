@@ -163,10 +163,10 @@ window.CC = (function(){
   }
 
   // ---- リンクのアイコン（URLのドメインで決める） ----
-  // X（Twitter）だけはFont Awesomeの角丸四角ロゴにして、シェアボタンのbi-twitter-x（素のXマーク）と見分けがつくようにする
+  // シェアボタンも同じ bi-twitter-x を使うため、当事者リンク側はCSSでアイコンを大きくして見分ける（.d-link）
   function linkIcon(url){
     let h=""; try{ h=new URL(url).hostname.replace(/^www\./,""); }catch(e){}
-    if(h==="x.com"||h==="twitter.com") return ["fa-brands fa-square-x-twitter","X"];
+    if(h==="x.com"||h==="twitter.com") return ["bi bi-twitter-x","X"];
     if(h.endsWith("instagram.com")) return ["bi bi-instagram","Instagram"];
     if(h.endsWith("youtube.com")||h==="youtu.be") return ["bi bi-youtube","YouTube"];
     if(h.endsWith("facebook.com")) return ["bi bi-facebook","Facebook"];
@@ -192,12 +192,6 @@ window.CC = (function(){
       link ? `<a class="tag" href="cases?tag=${encodeURIComponent(t)}">${escapeHtml(t)}</a>`
            : `<span class="tag">${escapeHtml(t)}</span>`
     ).join("")+`</div>`;
-  }
-  // 終結した裁判（裁判アーカイブ）の帯
-  function archivedHtml(c){
-    if(!c.archivedAt) return "";
-    const when=[jpDate(c.archivedAt), c.closeType].filter(Boolean).join("　");
-    return `<div class="archived"><i class="bi bi-archive" aria-hidden="true"></i><span>この裁判は <b>${escapeHtml(when)}</b> で終結しました。${c.result?escapeHtml(c.result):""}</span></div>`;
   }
   // シェア（事件ページのみ）：X・LINE はリンクを新しいタブで開くだけ、リンクをコピーだけJSが要る
   function shareHtml(c){
@@ -297,7 +291,6 @@ window.CC = (function(){
         </div>
         ${tagsHtml(c)}
         ${full ? shareHtml(c) : ""}
-        ${archivedHtml(c)}
         ${editCase}
         ${next?`<p class="minih">最近の期日</p><p class="d-body d-next">${escapeHtml(eventLine(next))}${next.open===false?`<span class="round-closed">非公開・要確認</span>`:""}</p>`:""}
         ${points?`<p class="minih">争点</p><ul class="pts">${points}</ul>`:""}
@@ -333,17 +326,15 @@ window.CC = (function(){
     return "bi-box-arrow-up-right";
   }
   function sideTag(m){ return m.side ? `<span class="mat-side ${SIDE_CLASS[m.side]||""}">${escapeHtml(m.side)}</span>` : ""; }
-  // PDF・本文・要約の3つのボタン。無いものはグレーのまま押せない（「この資料には無い」ことが分かるように）
+  // PDF・テキスト・要約の3つのボタン。無いものはグレーのまま押せない（「この資料には無い」ことが分かるように）
   function matButtonsHtml(m){
-    // ファイル本体（R2/PDF/画像）か、外部サイトへのリンクかでラベル・アイコンを出し分ける
     const icon = matIcon(m);
-    const label = icon==="bi-box-arrow-up-right" ? "資料" : "PDF";
     const pdf = m.fileUrl
-      ? `<a class="btn pdf" href="${escapeAttr(m.fileUrl)}" target="_blank" rel="noopener"><i class="bi ${icon}" aria-hidden="true"></i>${label}</a>`
+      ? `<a class="btn pdf" href="${escapeAttr(m.fileUrl)}" target="_blank" rel="noopener"><i class="bi ${icon}" aria-hidden="true"></i>PDF</a>`
       : `<span class="btn off"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>PDF</span>`;
     const body = m.body
-      ? `<a class="btn" href="doc?id=${encodeURIComponent(m.id)}" target="_blank" rel="noopener"><i class="bi bi-file-earmark-text" aria-hidden="true"></i>本文</a>`
-      : `<span class="btn off"><i class="bi bi-file-earmark-text" aria-hidden="true"></i>本文</span>`;
+      ? `<a class="btn" href="doc?id=${encodeURIComponent(m.id)}" target="_blank" rel="noopener"><i class="bi bi-file-earmark-text" aria-hidden="true"></i>テキスト</a>`
+      : `<span class="btn off"><i class="bi bi-file-earmark-text" aria-hidden="true"></i>テキスト</span>`;
     const sum = m.summary
       ? `<button type="button" class="btn${openSummaries.has(m.id)?" on":""}" data-sumtoggle="${escapeAttr(m.id)}"><i class="bi bi-stars" aria-hidden="true"></i>要約</button>`
       : `<span class="btn off"><i class="bi bi-stars" aria-hidden="true"></i>要約</span>`;
@@ -686,8 +677,7 @@ window.CC = (function(){
       });
     }else{
       el.innerHTML =
-        `どなたでも閲覧できる公開カレンダーです。掲載内容は呼びかけ人から提供された情報にもとづきます。`+
-        `<br>期日の追加・編集には、<a id="stUnlock">パスワード</a>が必要です。`;
+        `期日の追加・編集には、<a id="stUnlock">パスワード</a>が必要です。`;
       el.querySelector("#stUnlock").addEventListener("click",unlockEditing);
     }
   }
@@ -855,7 +845,7 @@ window.CC = (function(){
         <label>タグ（1行に1つ・任意）</label>
         <textarea id="cTags" placeholder="例）情報公開、行政"></textarea>
       </div>
-      <p class="msec">終結（裁判アーカイブ・終結した事件のみ入れる）</p>
+      <p class="msec">終結（終結した事件のみ入れる）</p>
       <div class="two">
         <div class="field"><label>終結日</label><input type="date" id="cArchivedAt"></div>
         <div class="field"><label>終結の種類</label><input type="text" id="cCloseType" placeholder="例）判決、和解、取下げ"></div>
