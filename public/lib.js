@@ -441,7 +441,7 @@ window.CC = (function(){
       return bubbleHtml(p, (ev && ev.type) || p.round || "");
     }).join("");
     let html=`<div class="bpanel">`+
-      `<div class="bhead"><span class="btitle"><span class="bt-red">行ってきたよ</span>掲示板</span>`+
+      `<div class="bhead"><span class="btitle">傍聴に<span class="bt-red">行ってきたよ</span><span class="bt-bang">！</span>掲示板</span>`+
       (mine.length?`<span class="bcount">${mine.length}件の報告</span>`:"")+
       `</div>`;
     html += items
@@ -451,7 +451,7 @@ window.CC = (function(){
     if(canPost){
       html += boardFormForCase===caseId
         ? postFormHtml(caseId)
-        : `<p class="bwrite"><a data-openpost="${escapeAttr(caseId)}">傍聴の報告を書く</a></p>`;
+        : `<p class="bwrite"><a data-openpost="${escapeAttr(caseId)}"><i class="bi bi-chat-left-text" aria-hidden="true"></i> 傍聴の報告を書く</a></p>`;
     }else if(rounds.length){
       // 一般の投稿はまだ受け付けていない（Turnstile未設定）。運営は編集パスワードで書けるので、その導線だけ出す
       html += `<p class="board-empty">傍聴の報告の投稿には、<a data-unlock="1">パスワード</a>が必要です。</p>`;

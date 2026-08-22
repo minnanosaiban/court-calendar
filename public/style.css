@@ -32,6 +32,7 @@ a{color:inherit}
 .masthead h1{font-family:"Shippori Mincho",serif;font-size:1.55rem;font-weight:700;letter-spacing:.05em;line-height:1.4}
 .masthead p{font-size:.8rem;color:var(--mut);letter-spacing:.02em;margin-top:2px}
 .backlink{display:inline-block;margin:22px 4px 0;font-size:.8rem;color:var(--mut);text-decoration:underline;text-underline-offset:3px}
+.backsep{display:inline-block;margin:22px 2px 0;font-size:.8rem;color:var(--mut)}
 
 /* ---- section label ---- */
 .sech{font-size:.7rem;letter-spacing:.26em;color:var(--mut);margin:52px 4px 12px}
@@ -192,6 +193,7 @@ a{color:inherit}
 .bhead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
 .btitle{font-family:"Shippori Mincho",serif;font-size:.98rem;font-weight:600}
 .bt-red{color:var(--stamp)}
+.bt-bang{display:inline-block;transform:rotate(-14deg)}
 .bcount{font-size:.75rem;color:var(--mut)}
 /* 報告は吹き出しで「声」として並べる */
 .bubble{background:#fff;border-radius:14px;padding:11px 14px;margin-top:10px;position:relative;font-size:.9rem}
@@ -208,7 +210,7 @@ a{color:inherit}
 .bwrite{margin-top:12px}
 .bwrite a{display:inline-block;background:#fff;border-radius:999px;padding:7px 18px;
   font-size:.82rem;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.06)}
-.bwrite a::before{content:"✎ ";color:var(--stamp)}
+.bwrite a .bi{color:var(--stamp)}
 .pform{margin-top:12px;background:#fff;border-radius:12px;padding:14px 16px}
 .pform .field{margin-bottom:11px}
 .pform .field label{display:block;font-size:.74rem;color:var(--mut);margin-bottom:4px}
@@ -286,8 +288,6 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .clist{display:grid;gap:12px;margin-top:16px}
 .ccard{display:flex;gap:16px;padding:14px 16px 14px 14px;cursor:pointer}
 .ccard:hover{box-shadow:0 2px 12px rgba(0,0,0,.07)}
-.thumb{flex:none;width:96px;height:72px;border-radius:10px;object-fit:cover;background:var(--tint)}
-.thumb.none{display:grid;place-content:center;color:var(--faint);font-size:1.4rem}
 .cbody{min-width:0;flex:1}
 .ctitle{font-family:"Shippori Mincho",serif;font-size:1.02rem;font-weight:600;line-height:1.55}
 .cnext{font-size:.8rem;color:var(--mut);margin-top:4px;font-variant-numeric:tabular-nums}

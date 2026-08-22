@@ -23,7 +23,7 @@
     </div>
   </header>
 
-  <a class="backlink" href="index.html"><i class="bi bi-arrow-left" aria-hidden="true"></i> カレンダーに戻る</a>
+  <a class="backlink" href="index.html"><i class="bi bi-arrow-left" aria-hidden="true"></i> ホームに戻る</a>
 
   <section aria-labelledby="search-h" style="margin-top:28px">
     <p class="sech" id="search-h">事件をさがす</p>
@@ -143,19 +143,12 @@
       a.addEventListener("click",(e)=>{ e.preventDefault(); activeTag=a.dataset.tagf; renderTagFilters(); renderTabs(); renderList(); });
     });
   }
-  function caseThumb(c){
-    const imgs=CC.caseImages(c.id);
-    return imgs.length
-      ? `<img class="thumb" src="${CC.escapeAttr(imgs[0].url)}" alt="">`
-      : `<div class="thumb none"><i class="bi bi-image" aria-hidden="true"></i></div>`;
-  }
   function rowHtml(c){
     const next = CC.nextEvent(c.id);
     const nextLine = c.archivedAt
       ? `終結：${CC.escapeHtml(c.archivedAt.replace(/-/g,"."))}${c.closeType?"　"+CC.escapeHtml(c.closeType):""}`
       : (next?`<b>次回</b>${CC.escapeHtml(CC.eventLine(next))}`:"まだ期日の登録がありません");
     return `<div class="card ccard" data-open="${CC.escapeAttr(c.id)}" role="link" tabindex="0">
-      ${caseThumb(c)}
       <div class="cbody">
         <div class="ctitle">${CC.escapeHtml(c.name)}</div>
         <div class="cnext">${nextLine}</div>
