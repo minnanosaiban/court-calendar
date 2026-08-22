@@ -95,7 +95,7 @@ a{color:inherit}
 .share button.copied{color:#2f7d4f}
 .d-next{font-family:"Shippori Mincho",serif;font-weight:500}
 .d-more{margin-top:24px;text-align:right}
-.lede{margin-top:22px;background:var(--tint);border-radius:4px 12px 12px 4px;border-left:4px solid var(--stamp);padding:14px 16px;font-size:.9rem}
+.lede{margin-top:22px;background:var(--card);border-radius:4px 12px 12px 4px;border-left:4px solid var(--stamp);padding:14px 16px;font-size:.9rem}
 .lede-title{font-family:"Shippori Mincho",serif;font-size:.98rem;font-weight:600}
 .lede p + p{margin-top:10px}
 .lede .call{font-family:"Shippori Mincho",serif}
