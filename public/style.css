@@ -51,13 +51,16 @@ a{color:inherit}
 .dcard + .dcard{margin-top:12px}
 
 /* ---- 写真ギャラリー（事件ページの最上部だけ） ---- */
-.gal{position:relative;margin:-24px -22px 22px;border-radius:20px 20px 0 0;overflow:hidden;background:var(--tint);aspect-ratio:16/9}
+/* 写真が地(--card)と同系色（白背景の説明カードなど）でも輪郭が沈まないよう、枠線でなくうっすら内側に影を落とす */
+.gal{position:relative;margin:-24px -22px 22px;border-radius:20px 20px 0 0;overflow:hidden;background:var(--tint);aspect-ratio:16/9;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.05), inset 0 1px 10px rgba(0,0,0,.05)}
 .gal-track{display:flex;height:100%;transition:transform .6s cubic-bezier(.4,0,.2,1)}
 .gal-item{flex:0 0 100%;position:relative;display:block}
 .gal-item img{width:100%;height:100%;object-fit:cover;display:block;background:var(--tint)}
 .gal-cap{position:absolute;left:0;right:0;bottom:0;padding:26px 16px 10px;font-size:.76rem;letter-spacing:.02em;
   background:linear-gradient(transparent,rgba(0,0,0,.55));color:#fff}
-.gal-dots{position:absolute;right:12px;bottom:10px;display:flex;gap:6px}
+/* キャプション帯（.gal-cap）が無い写真でも見えるよう、ドット自体に小さな黒地を持たせる（帯任せにしない） */
+.gal-dots{position:absolute;right:8px;bottom:8px;display:flex;gap:6px;padding:5px 7px;border-radius:999px;background:rgba(0,0,0,.32)}
 .gal-dots button{width:6px;height:6px;padding:0;border-radius:50%;border:none;background:rgba(255,255,255,.5);cursor:pointer}
 .gal-dots button.on{background:#fff}
 /* 写真の管理（編集権限があるときだけ）：ギャラリーの下に小さな一覧 */
@@ -329,6 +332,7 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 /* ---- footer ---- */
 .site-footer{margin-top:44px;color:var(--mut);font-size:.78rem;line-height:1.9}
 .site-footer a{color:var(--mut);text-decoration:underline;text-underline-offset:3px}
+.site-footer .sep{margin:0 .5em;color:#d5d3cc;text-decoration:none}
 .site-footer .disc{margin-top:8px}
 
 /* ---- modal ---- */

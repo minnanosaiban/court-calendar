@@ -1339,6 +1339,7 @@ window.CC = (function(){
         const created=await apiCreate({
           caseId: known.id, case:e.case, date:e.date, time:e.time, type:e.type,
           court:e.court, place:e.place, open:e.open, level:e.level,
+          plaintiffArgument:e.plaintiffArgument, defendantArgument:e.defendantArgument,
         });
         events.push(created); ok++;
       }catch(err){ ng++; }
