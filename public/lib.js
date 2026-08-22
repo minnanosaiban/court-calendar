@@ -254,7 +254,7 @@ window.CC = (function(){
     if(!c) return null;
     const next = nextEvent(caseId);
     const points=(c.points||[]).map(p=>`<li>${escapeHtml(p)}</li>`).join("");
-    const editCase = me.canWrite ? `<a class="d-edit" data-editcase="${escapeAttr(c.id)}">事件を編集</a>` : "";
+    const editCase = me.canWrite ? `<a class="d-edit" data-editcase="${escapeAttr(c.id)}">事件情報を編集</a>` : "";
 
     let html = `
       <div class="card dcard">
@@ -275,7 +275,7 @@ window.CC = (function(){
     if(!full){
       html += `<p class="d-more"><a class="pillbtn" href="case?id=${encodeURIComponent(c.id)}">詳細を見る <i class="bi bi-arrow-right" aria-hidden="true"></i></a></p>`;
     }else{
-      const editCaseQact = me.canWrite ? `<p class="qact"><a data-editcase="${escapeAttr(c.id)}">＋ 事件を編集</a></p>` : "";
+      const editCaseQact = me.canWrite ? `<p class="qact"><a data-editcase="${escapeAttr(c.id)}">＋ 事件情報を追加</a></p>` : "";
       html += callHtml(c) + pressHtml(c) + editCaseQact + timelineHtml(caseId) + materialsListHtml(caseId);
     }
     html += `</div>`;
@@ -370,7 +370,7 @@ window.CC = (function(){
     }).join("");
     return `<p class="minih">タイムラインと訴訟資料</p>
       ${rounds.length?`<ol class="tl">${items}</ol>`:`<p class="d-body mut">期日はまだ登録されていません。</p>`}
-      ${me.canWrite?`<p class="qact"><a data-addround="${escapeAttr(caseId)}">＋ この事件に期日を追加</a></p>`:""}`;
+      ${me.canWrite?`<p class="qact"><a data-addround="${escapeAttr(caseId)}">＋ 期日を追加</a></p>`:""}`;
   }
   function materialsListHtml(caseId){
     const mats=caseMaterials(caseId);
@@ -650,19 +650,24 @@ window.CC = (function(){
   }
 
   // ================= 下部のひっそりしたステータス =================
-  function renderStatus(el){
+  function renderStatus(el, opts){
+    opts = opts || {};
     if(!loaded){ el.innerHTML=""; return; }
     if(me.canWrite){
+      const caseActions = opts.hideCaseActions ? "" :
+        `<a id="stAddCase">＋ 事件を追加</a><span class="sep">・</span>`+
+        `<a id="stAdd">＋ 期日を追加</a><span class="sep">・</span>`;
       el.innerHTML =
         `編集できます ── この端末は編集ロック解除済みです。`+
-        `<br><a id="stAddCase">＋ 事件を追加</a><span class="sep">・</span>`+
-        `<a id="stAdd">＋ 期日を追加</a><span class="sep">・</span>`+
+        `<br>${caseActions}`+
         `<a id="stLock">ロックする</a>`+
         `<br><span class="status-sub">バックアップ（複数件をまとめて登録・復元するとき用）：`+
         `<a id="stExport">書き出す</a><span class="sep">・</span>`+
         `<a id="stImport">ファイルから取り込む</a></span>`;
-      el.querySelector("#stAddCase").addEventListener("click",openCaseAdd);
-      el.querySelector("#stAdd").addEventListener("click",()=>openAdd(todayStr()));
+      if(!opts.hideCaseActions){
+        el.querySelector("#stAddCase").addEventListener("click",openCaseAdd);
+        el.querySelector("#stAdd").addEventListener("click",()=>openAdd(todayStr()));
+      }
       el.querySelector("#stLock").addEventListener("click",lockEditing);
       el.querySelector("#stExport").addEventListener("click",exportData);
       el.querySelector("#stImport").addEventListener("click",()=>{
@@ -695,8 +700,219 @@ window.CC = (function(){
     if(onChange) onChange();
   }
 
-  // ================= モーダル：期日（追加・編集） =================
-  // 両ページに同じモーダルのHTMLがある前提で、要素はここで一度だけ取得する。
+  // ================= モーダル：写真・事件情報・期日・資料は1つの窓（タブ切替）。HTMLはここで作って先に差し込む =================
+  const EXTRA_MODALS = `
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="tabs" id="ceTabs" hidden>
+      <span data-cetab="img">写真</span>
+      <span data-cetab="info">事件情報</span>
+      <span data-cetab="round">期日</span>
+      <span data-cetab="mat">資料</span>
+    </div>
+
+    <div class="cepanel" data-panel="round">
+      <div class="mhead" id="modalTitle">期日を追加</div>
+      <div class="mbody">
+        <div class="field">
+          <label>事件名 <span style="color:var(--stamp)">*</span></label>
+          <input type="text" id="fCase" list="caseList" placeholder="例）令和7年(ネ)第○○号 損害賠償請求控訴事件">
+          <datalist id="caseList"></datalist>
+          <p class="fnote">事件名は候補（一覧）から選んでください。まだ登録されていない事件は、先に「＋ 事件を追加」で事件そのものを登録してから、期日を追加できます。</p>
+        </div>
+        <div class="two">
+          <div class="field">
+            <label>期日 <span style="color:var(--stamp)">*</span></label>
+            <input type="date" id="fDate">
+          </div>
+          <div class="field">
+            <label>時刻</label>
+            <input type="time" id="fTime">
+          </div>
+        </div>
+        <div class="two">
+          <div class="field">
+            <label>種別</label>
+            <input type="text" id="fType" list="typeList" placeholder="例）第3回口頭弁論">
+            <datalist id="typeList">
+              <option value="口頭弁論">
+              <option value="弁論準備">
+              <option value="進行協議">
+              <option value="和解">
+              <option value="尋問">
+              <option value="当事者尋問">
+              <option value="判決言渡">
+              <option value="控訴審 第1回">
+              <option value="提出期限（書面）">
+            </datalist>
+          </div>
+          <div class="field">
+            <label>見どころタグ</label>
+            <input type="text" id="fLevel" placeholder="例）はじめて向け・見ごたえあり">
+          </div>
+        </div>
+        <div class="two">
+          <div class="field">
+            <label>裁判所</label>
+            <input type="text" id="fCourt" placeholder="例）東京地方裁判所">
+          </div>
+          <div class="field">
+            <label>法廷</label>
+            <input type="text" id="fPlace" placeholder="例）610号法廷">
+          </div>
+        </div>
+        <p class="msec">この回の主張の要約（1行に1つ・任意）</p>
+        <div class="field">
+          <label>原告の主張</label>
+          <textarea id="fPlaintiff" placeholder="例）不開示決定の取消しを求める"></textarea>
+        </div>
+        <div class="field">
+          <label>被告の主張</label>
+          <textarea id="fDefendant" placeholder="例）該当する文書は保有していない"></textarea>
+        </div>
+        <div class="field">
+          <label class="check"><input type="checkbox" id="fOpen" checked> だれでも傍聴できます（チェックを外すと「非公開・要確認」）</label>
+        </div>
+      </div>
+      <div class="mfoot">
+        <button class="btn-del" id="btnDelete" style="display:none;">削除</button>
+        <span class="spacer"></span>
+        <button class="btn-cancel" id="btnCancel">キャンセル</button>
+        <button class="btn-save" id="btnSave">保存</button>
+      </div>
+    </div>
+
+    <div class="cepanel" data-panel="mat" hidden>
+      <div class="mhead" id="matModalTitle">資料を追加</div>
+      <div class="mbody">
+        <div class="field">
+          <label>資料名 <span style="color:var(--stamp)">*</span></label>
+          <input type="text" id="mTitle" placeholder="例）訴状、第1準備書面、甲3 ○○">
+        </div>
+        <div class="two">
+          <div class="field"><label>提出者側</label>
+            <select id="mSide"><option value="">（未選択）</option><option>原告側</option><option>被告側</option><option>裁判所</option><option>その他</option></select>
+          </div>
+          <div class="field"><label>種別</label>
+            <select id="mKind"><option value="">（未選択）</option><option>主張書面</option><option>証拠</option><option>判決・決定</option><option>その他</option></select>
+          </div>
+        </div>
+        <div class="two">
+          <div class="field"><label>どの期日の資料か</label><select id="mEvent"></select></div>
+          <div class="field"><label>提出日</label><input type="date" id="mFiledOn"></div>
+        </div>
+        <div class="field">
+          <label>ファイルのURL（任意）</label>
+          <input type="text" id="mUrl" placeholder="例）/docs/sojo.pdf　または https://…">
+          <p class="fnote">PDF を <code>public/docs/</code> に入れて公開すると <code>/docs/ファイル名.pdf</code> で開けます。外部サイトのURLでも可。</p>
+        </div>
+        <div class="field" id="mFileField">
+          <label>ファイルをアップロード（PDF・PNG・JPEG、20MBまで・任意）</label>
+          <input type="file" id="mFile" accept="application/pdf,image/png,image/jpeg">
+          <p class="fnote" id="mFileNow" hidden></p>
+        </div>
+        <div class="field"><label>この書面で主張していること（1行に1つ・任意）</label><textarea id="mClaims" placeholder="例）不開示決定の取消しを求める"></textarea></div>
+        <div class="field">
+          <label>本文（Markdownを貼り付け・任意）</label>
+          <textarea id="mBody" placeholder="書面の本文をそのまま貼り付けられます（見出し・箇条書き・**強調**などが使えます）" style="min-height:120px"></textarea>
+          <p class="fnote">「本文」ボタンから読めるページになります。原本はPDFなので、本文は補助（検索されやすくする・要点を読みやすくする）目的です。</p>
+        </div>
+        <div class="field"><label>要約（任意）</label><textarea id="mSummary" placeholder="手で書いた要約、またはAIに作らせて確認した要約"></textarea></div>
+      </div>
+      <div class="mfoot">
+        <button class="btn-del" id="mDelete" style="display:none;">削除</button>
+        <span class="spacer"></span>
+        <button class="btn-cancel" id="mCancel">キャンセル</button>
+        <button class="btn-save" id="mSave">保存</button>
+      </div>
+    </div>
+
+    <div class="cepanel" data-panel="img" hidden>
+      <div class="mhead" id="imgModalTitle">写真を追加</div>
+      <div class="mbody">
+        <div class="field">
+          <label>写真ファイル <span id="iFileReq" style="color:var(--stamp)">*</span></label>
+          <input type="file" id="iFile" accept="image/jpeg,image/png,image/webp">
+          <p class="fnote" id="iFileNow" hidden></p>
+          <p class="fnote">JPEG・PNG・WebP、12MBまで。証拠写真は人の顔・氏名・住所が写り込んでいないか確認してから登録してください。</p>
+        </div>
+        <div class="field"><label>説明（1行・任意）</label><input type="text" id="iCaption" placeholder="例）提訴後の記者会見にて"></div>
+      </div>
+      <div class="mfoot">
+        <button class="btn-del" id="iDelete" style="display:none;">削除</button>
+        <span class="spacer"></span>
+        <button class="btn-cancel" id="iCancel">キャンセル</button>
+        <button class="btn-save" id="iSave">保存</button>
+      </div>
+    </div>
+
+    <div class="cepanel" data-panel="info" hidden>
+      <div class="mhead" id="caseModalTitle">事件を追加</div>
+      <div class="mbody">
+        <div class="field">
+          <label>事件名 <span style="color:var(--stamp)">*</span></label>
+          <input type="text" id="cName" placeholder="例）情報公開請求をめぐる訴訟">
+        </div>
+        <div class="two">
+          <div class="field"><label>事件番号</label><input type="text" id="cCaseNo" placeholder="わかれば"></div>
+          <div class="field"><label>当事者</label><input type="text" id="cParties" placeholder="例）原告 ○○　被告 △△"></div>
+        </div>
+        <div class="field"><label>裁判官（任意）</label><input type="text" id="cJudge" placeholder="例）○○ ○○"></div>
+        <div class="field"><label>争点（1行に1つ）</label><textarea id="cPoints" placeholder="例）◯◯の事実があったか"></textarea></div>
+        <div class="field"><label>事件の説明（3〜4行）</label><textarea id="cLede" placeholder="どんな裁判か"></textarea></div>
+        <div class="field"><label>よびかけ</label><textarea id="cCall" placeholder="傍聴や支援をお願いする文章（任意）"></textarea></div>
+        <div class="two">
+          <div class="field"><label>呼びかけ団体・お名前</label><input type="text" id="cHost"></div>
+          <div class="field"><label>連絡先（公開してよいもの）</label><input type="text" id="cContact" placeholder="例）メールアドレス"></div>
+        </div>
+        <div class="field">
+          <label>報道・掲載（1行に1つ・任意）</label>
+          <textarea id="cPress" placeholder="例）〇〇新聞で報道されました https://...&#10;労働判例ジャーナル2025.10 No.163に掲載&#10;裁判所への手続きにより特別保存（永久保存）となっています"></textarea>
+        </div>
+        <div class="field">
+          <label>リンク（1行に1つのURL。X・ホームページなど）</label>
+          <textarea id="cLinks" placeholder="https://x.com/..."></textarea>
+        </div>
+        <div class="field">
+          <label>タグ（1行に1つ・任意）</label>
+          <textarea id="cTags" placeholder="例）情報公開、行政"></textarea>
+        </div>
+        <p class="msec">終結（終結した事件のみ入れる）</p>
+        <div class="two">
+          <div class="field"><label>終結日</label><input type="date" id="cArchivedAt"></div>
+          <div class="field"><label>終結の種類</label><input type="text" id="cCloseType" placeholder="例）判決、和解、取下げ"></div>
+        </div>
+        <div class="field">
+          <label>結果（1〜2行・任意）</label>
+          <textarea id="cResult" placeholder="例）原告の請求を一部認容（請求額の約6割）。控訴せず確定。"></textarea>
+        </div>
+      </div>
+      <div class="mfoot">
+        <button class="btn-del" id="cDelete" style="display:none;">削除</button>
+        <span class="spacer"></span>
+        <button class="btn-cancel" id="cCancel">キャンセル</button>
+        <button class="btn-save" id="cSave">保存</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="sumOverlay">
+  <div class="modal sum-modal">
+    <div class="mhead" id="sumModalTitle"></div>
+    <div class="mbody">
+      <p class="msec">AIによる要約</p>
+      <p class="sum-text" id="sumModalText"></p>
+    </div>
+    <div class="mfoot">
+      <span class="spacer"></span>
+      <button class="btn-cancel" id="sumClose">閉じる</button>
+    </div>
+  </div>
+</div>`;
+  document.body.insertAdjacentHTML("beforeend", EXTRA_MODALS);
+
+  // ================= モーダル：写真・事件情報・期日・資料（1つの窓をタブで切り替える） =================
+  // 4つとも lib.js が生成するモーダル（EXTRA_MODALS）の中にある。要素はここで一度だけ取得する。
   const overlay = document.getElementById("overlay");
   const modalTitle = document.getElementById("modalTitle");
   const fCase = document.getElementById("fCase");
@@ -714,6 +930,32 @@ window.CC = (function(){
   const btnCancel = document.getElementById("btnCancel");
   const btnDelete = document.getElementById("btnDelete");
   const formInputs = [fCase,fDate,fTime,fType,fCourt,fPlace,fOpen,fLevel,fPlaintiff,fDefendant];
+
+  // ---- タブ（写真／事件情報／期日／資料）。既存の事件を対象に開いたときだけ表示する ----
+  const ceTabs = document.getElementById("ceTabs");
+  let ceCaseId = null;
+  let ceActiveTab = "round";
+  function ceShowTabs(show){ ceTabs.hidden = !show; }
+  function ceSwitchTo(tab){
+    ceActiveTab = tab;
+    document.querySelectorAll(".cepanel").forEach(p=>{ p.hidden = (p.dataset.panel !== tab); });
+    ceTabs.querySelectorAll("[data-cetab]").forEach(s=>{ s.classList.toggle("on", s.dataset.cetab===tab); });
+  }
+  ceTabs.querySelectorAll("[data-cetab]").forEach(s=>{
+    s.addEventListener("click",()=>{
+      const id=ceCaseId; if(!id) return;
+      const tab=s.dataset.cetab;
+      if(tab==="round") openAddRound(id);
+      else if(tab==="mat") openMatAdd(id);
+      else if(tab==="img") openImgAdd(id);
+      else if(tab==="info") openCaseEdit(id);
+    });
+  });
+  function closeCaseEditModal(){
+    overlay.classList.remove("show");
+    editingId=null; editingCaseId=null; editingMatId=null; matCaseId=null; editingImgId=null; imgCaseId=null;
+    ceCaseId=null;
+  }
 
   function refreshCaseList(){
     const names=cases.map(c=>c.name).sort();
@@ -740,6 +982,7 @@ window.CC = (function(){
       const recent=[...events].sort((a,b)=>b.date.localeCompare(a.date))[0];
       fCase.value=recent.case; fCourt.value=recent.court||""; fPlace.value=recent.place||"";
     }
+    ceCaseId=null; ceShowTabs(false); ceSwitchTo("round");
     overlay.classList.add("show"); fDate.focus();
   }
   // 既にある事件に、新しい回を追加する（裁判所・法廷は直近の回から引き継ぐ）
@@ -751,6 +994,7 @@ window.CC = (function(){
     editingId=null; modalTitle.textContent="期日を追加"; btnDelete.style.display="none";
     setReadonly(false); refreshCaseList();
     fillEventForm({case:c.name, court:src&&src.court, place:src&&src.place, open:true});
+    ceCaseId=c.id; ceShowTabs(true); ceSwitchTo("round");
     overlay.classList.add("show"); fDate.focus();
   }
   function openEdit(id){
@@ -762,9 +1006,9 @@ window.CC = (function(){
     btnDelete.style.display = ro ? "none" : "inline-block";
     refreshCaseList();
     fillEventForm(ev);
+    ceCaseId=ev.caseId||null; ceShowTabs(!!ev.caseId); ceSwitchTo("round");
     overlay.classList.add("show");
   }
-  function closeModal(){ overlay.classList.remove("show"); editingId=null; }
 
   async function saveEntry(){
     if(!me.canWrite) return;
@@ -794,7 +1038,7 @@ window.CC = (function(){
         const created=await apiCreate(data);
         events.push(created);
       }
-      closeModal();
+      closeCaseEditModal();
       if(onChange) onChange();
     }catch(err){ alert(saveErr(err)); }
     finally{ btnSave.disabled=false; }
@@ -808,146 +1052,13 @@ window.CC = (function(){
       events=events.filter(e=>e.id!==editingId);
       posts=posts.filter(p=>p.eventId!==editingId);
       materials.forEach(m=>{ if(m.eventId===editingId) m.eventId=""; });
-      closeModal();
+      closeCaseEditModal();
       if(onChange) onChange();
     }catch(err){ alert(saveErr(err)); }
     finally{ btnDelete.disabled=false; }
   }
 
-  // ================= モーダル：事件・資料（HTMLはここで作って差し込む） =================
-  const EXTRA_MODALS = `
-<div class="overlay" id="caseOverlay">
-  <div class="modal">
-    <div class="mhead" id="caseModalTitle">事件を追加</div>
-    <div class="mbody">
-      <div class="field">
-        <label>事件名 <span style="color:var(--stamp)">*</span></label>
-        <input type="text" id="cName" placeholder="例）情報公開請求をめぐる訴訟">
-      </div>
-      <div class="two">
-        <div class="field"><label>事件番号</label><input type="text" id="cCaseNo" placeholder="わかれば"></div>
-        <div class="field"><label>当事者</label><input type="text" id="cParties" placeholder="例）原告 ○○　被告 △△"></div>
-      </div>
-      <div class="field"><label>裁判官（任意）</label><input type="text" id="cJudge" placeholder="例）○○ ○○"></div>
-      <div class="field"><label>争点（1行に1つ）</label><textarea id="cPoints" placeholder="例）◯◯の事実があったか"></textarea></div>
-      <div class="field"><label>事件の説明（3〜4行）</label><textarea id="cLede" placeholder="どんな裁判か"></textarea></div>
-      <div class="field"><label>よびかけ</label><textarea id="cCall" placeholder="傍聴や支援をお願いする文章（任意）"></textarea></div>
-      <div class="two">
-        <div class="field"><label>呼びかけ団体・お名前</label><input type="text" id="cHost"></div>
-        <div class="field"><label>連絡先（公開してよいもの）</label><input type="text" id="cContact" placeholder="例）メールアドレス"></div>
-      </div>
-      <div class="field">
-        <label>報道・掲載（1行に1つ・任意）</label>
-        <textarea id="cPress" placeholder="例）〇〇新聞で報道されました https://...&#10;労働判例ジャーナル2025.10 No.163に掲載&#10;裁判所への手続きにより特別保存（永久保存）となっています"></textarea>
-      </div>
-      <div class="field">
-        <label>リンク（1行に1つのURL。X・ホームページなど）</label>
-        <textarea id="cLinks" placeholder="https://x.com/..."></textarea>
-      </div>
-      <div class="field">
-        <label>タグ（1行に1つ・任意）</label>
-        <textarea id="cTags" placeholder="例）情報公開、行政"></textarea>
-      </div>
-      <p class="msec">終結（終結した事件のみ入れる）</p>
-      <div class="two">
-        <div class="field"><label>終結日</label><input type="date" id="cArchivedAt"></div>
-        <div class="field"><label>終結の種類</label><input type="text" id="cCloseType" placeholder="例）判決、和解、取下げ"></div>
-      </div>
-      <div class="field">
-        <label>結果（1〜2行・任意）</label>
-        <textarea id="cResult" placeholder="例）原告の請求を一部認容（請求額の約6割）。控訴せず確定。"></textarea>
-      </div>
-    </div>
-    <div class="mfoot">
-      <button class="btn-del" id="cDelete" style="display:none;">削除</button>
-      <span class="spacer"></span>
-      <button class="btn-cancel" id="cCancel">キャンセル</button>
-      <button class="btn-save" id="cSave">保存</button>
-    </div>
-  </div>
-</div>
-<div class="overlay" id="matOverlay">
-  <div class="modal">
-    <div class="mhead" id="matModalTitle">資料を追加</div>
-    <div class="mbody">
-      <div class="field">
-        <label>資料名 <span style="color:var(--stamp)">*</span></label>
-        <input type="text" id="mTitle" placeholder="例）訴状、第1準備書面、甲3 ○○">
-      </div>
-      <div class="two">
-        <div class="field"><label>提出者側</label>
-          <select id="mSide"><option value="">（未選択）</option><option>原告側</option><option>被告側</option><option>裁判所</option><option>その他</option></select>
-        </div>
-        <div class="field"><label>種別</label>
-          <select id="mKind"><option value="">（未選択）</option><option>主張書面</option><option>証拠</option><option>判決・決定</option><option>その他</option></select>
-        </div>
-      </div>
-      <div class="two">
-        <div class="field"><label>どの期日の資料か</label><select id="mEvent"></select></div>
-        <div class="field"><label>提出日</label><input type="date" id="mFiledOn"></div>
-      </div>
-      <div class="field">
-        <label>ファイルのURL（任意）</label>
-        <input type="text" id="mUrl" placeholder="例）/docs/sojo.pdf　または https://…">
-        <p class="fnote">PDF を <code>public/docs/</code> に入れて公開すると <code>/docs/ファイル名.pdf</code> で開けます。外部サイトのURLでも可。</p>
-      </div>
-      <div class="field" id="mFileField">
-        <label>ファイルをアップロード（PDF・PNG・JPEG、20MBまで・任意）</label>
-        <input type="file" id="mFile" accept="application/pdf,image/png,image/jpeg">
-        <p class="fnote" id="mFileNow" hidden></p>
-      </div>
-      <div class="field"><label>この書面で主張していること（1行に1つ・任意）</label><textarea id="mClaims" placeholder="例）不開示決定の取消しを求める"></textarea></div>
-      <div class="field">
-        <label>本文（Markdownを貼り付け・任意）</label>
-        <textarea id="mBody" placeholder="書面の本文をそのまま貼り付けられます（見出し・箇条書き・**強調**などが使えます）" style="min-height:120px"></textarea>
-        <p class="fnote">「本文」ボタンから読めるページになります。原本はPDFなので、本文は補助（検索されやすくする・要点を読みやすくする）目的です。</p>
-      </div>
-      <div class="field"><label>要約（任意）</label><textarea id="mSummary" placeholder="手で書いた要約、またはAIに作らせて確認した要約"></textarea></div>
-    </div>
-    <div class="mfoot">
-      <button class="btn-del" id="mDelete" style="display:none;">削除</button>
-      <span class="spacer"></span>
-      <button class="btn-cancel" id="mCancel">キャンセル</button>
-      <button class="btn-save" id="mSave">保存</button>
-    </div>
-  </div>
-</div>
-<div class="overlay" id="imgOverlay">
-  <div class="modal">
-    <div class="mhead" id="imgModalTitle">写真を追加</div>
-    <div class="mbody">
-      <div class="field">
-        <label>写真ファイル <span id="iFileReq" style="color:var(--stamp)">*</span></label>
-        <input type="file" id="iFile" accept="image/jpeg,image/png,image/webp">
-        <p class="fnote" id="iFileNow" hidden></p>
-        <p class="fnote">JPEG・PNG・WebP、12MBまで。証拠写真は人の顔・氏名・住所が写り込んでいないか確認してから登録してください。</p>
-      </div>
-      <div class="field"><label>説明（1行・任意）</label><input type="text" id="iCaption" placeholder="例）提訴後の記者会見にて"></div>
-    </div>
-    <div class="mfoot">
-      <button class="btn-del" id="iDelete" style="display:none;">削除</button>
-      <span class="spacer"></span>
-      <button class="btn-cancel" id="iCancel">キャンセル</button>
-      <button class="btn-save" id="iSave">保存</button>
-    </div>
-  </div>
-</div>
-<div class="overlay" id="sumOverlay">
-  <div class="modal sum-modal">
-    <div class="mhead" id="sumModalTitle"></div>
-    <div class="mbody">
-      <p class="msec">AIによる要約</p>
-      <p class="sum-text" id="sumModalText"></p>
-    </div>
-    <div class="mfoot">
-      <span class="spacer"></span>
-      <button class="btn-cancel" id="sumClose">閉じる</button>
-    </div>
-  </div>
-</div>`;
-  document.body.insertAdjacentHTML("beforeend", EXTRA_MODALS);
   const $ = (id)=>document.getElementById(id);
-  const caseOverlay=$("caseOverlay"), matOverlay=$("matOverlay");
   const cFields = { name:$("cName"), caseNo:$("cCaseNo"), parties:$("cParties"), judge:$("cJudge"), points:$("cPoints"),
                     lede:$("cLede"), callText:$("cCall"), host:$("cHost"), contact:$("cContact"), press:$("cPress"), links:$("cLinks"),
                     tags:$("cTags"), archivedAt:$("cArchivedAt"), closeType:$("cCloseType"), result:$("cResult") };
@@ -970,16 +1081,17 @@ window.CC = (function(){
     if(!me.canWrite) return;
     editingCaseId=null; $("caseModalTitle").textContent="事件を追加"; $("cDelete").style.display="none";
     fillCaseForm({});
-    caseOverlay.classList.add("show"); cFields.name.focus();
+    ceCaseId=null; ceShowTabs(false); ceSwitchTo("info");
+    overlay.classList.add("show"); cFields.name.focus();
   }
   function openCaseEdit(id){
     if(!me.canWrite) return;
     const c=caseById(id); if(!c) return;
-    editingCaseId=id; $("caseModalTitle").textContent="事件を編集"; $("cDelete").style.display="inline-block";
+    editingCaseId=id; $("caseModalTitle").textContent="事件情報を編集"; $("cDelete").style.display="inline-block";
     fillCaseForm(c);
-    caseOverlay.classList.add("show");
+    ceCaseId=c.id; ceShowTabs(true); ceSwitchTo("info");
+    overlay.classList.add("show");
   }
-  function closeCaseModal(){ caseOverlay.classList.remove("show"); editingCaseId=null; }
   async function saveCase(){
     if(!me.canWrite) return;
     const name=cFields.name.value.trim();
@@ -1004,7 +1116,7 @@ window.CC = (function(){
         const created=await apiCreateCase(data);
         cases.push(created);
       }
-      closeCaseModal();
+      closeCaseEditModal();
       if(onChange) onChange();
     }catch(err){ alert(saveErr(err)); }
     finally{ $("cSave").disabled=false; }
@@ -1016,15 +1128,14 @@ window.CC = (function(){
     try{
       await apiDeleteCase(editingCaseId);
       cases=cases.filter(c=>c.id!==editingCaseId);
-      closeCaseModal();
+      closeCaseEditModal();
       if(onChange) onChange();
     }catch(err){ alert(saveErr(err)); }
     finally{ $("cDelete").disabled=false; }
   }
   $("cSave").addEventListener("click",saveCase);
-  $("cCancel").addEventListener("click",closeCaseModal);
+  $("cCancel").addEventListener("click",closeCaseEditModal);
   $("cDelete").addEventListener("click",deleteCase);
-  caseOverlay.addEventListener("click",(e)=>{ if(e.target===caseOverlay) closeCaseModal(); });
 
   // ---- 資料 ----
   function fillMatForm(m, caseId){
@@ -1051,16 +1162,17 @@ window.CC = (function(){
     const rounds=caseEvents(caseId), today=todayStr();
     let def=""; rounds.forEach(e=>{ if(e.date<=today) def=e.id; });
     fillMatForm({eventId:def}, caseId);
-    matOverlay.classList.add("show"); mFields.title.focus();
+    ceCaseId=caseId; ceShowTabs(true); ceSwitchTo("mat");
+    overlay.classList.add("show"); mFields.title.focus();
   }
   function openMatEdit(id){
     if(!me.canWrite) return;
     const m=materials.find(x=>x.id===id); if(!m) return;
     editingMatId=id; $("matModalTitle").textContent="資料を編集"; $("mDelete").style.display="inline-block";
     fillMatForm(m, m.caseId);
-    matOverlay.classList.add("show");
+    ceCaseId=m.caseId; ceShowTabs(true); ceSwitchTo("mat");
+    overlay.classList.add("show");
   }
-  function closeMatModal(){ matOverlay.classList.remove("show"); editingMatId=null; matCaseId=null; }
   async function saveMat(){
     if(!me.canWrite || !matCaseId) return;
     const title=mFields.title.value.trim();
@@ -1092,7 +1204,7 @@ window.CC = (function(){
         materials.push(created);
         if(created.eventId) openNodes.add(created.eventId);   // 追加した資料が見える節を開いておく
       }
-      closeMatModal();
+      closeCaseEditModal();
       if(onChange) onChange();
     }catch(err){ alert(saveErr(err)); }
     finally{ $("mSave").disabled=false; }
@@ -1104,18 +1216,16 @@ window.CC = (function(){
     try{
       await apiDeleteMat(editingMatId);
       materials=materials.filter(m=>m.id!==editingMatId);
-      closeMatModal();
+      closeCaseEditModal();
       if(onChange) onChange();
     }catch(err){ alert(saveErr(err)); }
     finally{ $("mDelete").disabled=false; }
   }
   $("mSave").addEventListener("click",saveMat);
-  $("mCancel").addEventListener("click",closeMatModal);
+  $("mCancel").addEventListener("click",closeCaseEditModal);
   $("mDelete").addEventListener("click",deleteMat);
-  matOverlay.addEventListener("click",(e)=>{ if(e.target===matOverlay) closeMatModal(); });
 
   // ---- 写真 ----
-  const imgOverlay=$("imgOverlay");
   const iFields = { file:$("iFile"), fileNow:$("iFileNow"), fileReq:$("iFileReq"), caption:$("iCaption") };
   let imgCaseId = null;
 
@@ -1123,7 +1233,8 @@ window.CC = (function(){
     if(!me.canWrite) return;
     editingImgId=null; imgCaseId=caseId; $("imgModalTitle").textContent="写真を追加"; $("iDelete").style.display="none";
     iFields.file.value=""; iFields.caption.value=""; iFields.fileNow.hidden=true; iFields.fileReq.style.display="";
-    imgOverlay.classList.add("show"); iFields.file.focus();
+    ceCaseId=caseId; ceShowTabs(true); ceSwitchTo("img");
+    overlay.classList.add("show"); iFields.file.focus();
   }
   function openImgEdit(id){
     if(!me.canWrite) return;
@@ -1133,9 +1244,9 @@ window.CC = (function(){
     iFields.fileNow.hidden=false;
     iFields.fileNow.innerHTML=`いまの写真：<img src="${escapeAttr(im.url)}" alt="" style="width:64px;height:46px;object-fit:cover;border-radius:6px;vertical-align:middle;margin-left:6px">`+
       `　ファイルを選ぶと差し替わります。`;
-    imgOverlay.classList.add("show");
+    ceCaseId=im.caseId; ceShowTabs(true); ceSwitchTo("img");
+    overlay.classList.add("show");
   }
-  function closeImgModal(){ imgOverlay.classList.remove("show"); editingImgId=null; imgCaseId=null; }
   async function saveImg(){
     if(!me.canWrite || !imgCaseId) return;
     const f=iFields.file.files[0];
@@ -1154,7 +1265,7 @@ window.CC = (function(){
         const created=await apiCreateImage(fd);
         images.push(created);
       }
-      closeImgModal();
+      closeCaseEditModal();
       if(onChange) onChange();
     }catch(err){ alert(saveErr(err)); }
     finally{ $("iSave").disabled=false; }
@@ -1166,15 +1277,14 @@ window.CC = (function(){
     try{
       await apiDeleteImage(editingImgId);
       images=images.filter(x=>x.id!==editingImgId);
-      closeImgModal();
+      closeCaseEditModal();
       if(onChange) onChange();
     }catch(err){ alert(saveErr(err)); }
     finally{ $("iDelete").disabled=false; }
   }
   $("iSave").addEventListener("click",saveImg);
-  $("iCancel").addEventListener("click",closeImgModal);
+  $("iCancel").addEventListener("click",closeCaseEditModal);
   $("iDelete").addEventListener("click",deleteImg);
-  imgOverlay.addEventListener("click",(e)=>{ if(e.target===imgOverlay) closeImgModal(); });
 
   // ---- 要約（ポップアップで開く。編集はできない・閲覧専用） ----
   const sumOverlay=$("sumOverlay");
@@ -1239,22 +1349,21 @@ window.CC = (function(){
 
   // ---- モーダルの配線（両ページ共通） ----
   btnSave.addEventListener("click",saveEntry);
-  btnCancel.addEventListener("click",closeModal);
+  btnCancel.addEventListener("click",closeCaseEditModal);
   btnDelete.addEventListener("click",deleteEntry);
-  overlay.addEventListener("click",(e)=>{ if(e.target===overlay) closeModal(); });
+  overlay.addEventListener("click",(e)=>{ if(e.target===overlay) closeCaseEditModal(); });
   document.addEventListener("keydown",(e)=>{
     if(e.key==="Escape"){
-      if(overlay.classList.contains("show")) closeModal();
-      if(caseOverlay.classList.contains("show")) closeCaseModal();
-      if(matOverlay.classList.contains("show")) closeMatModal();
-      if(imgOverlay.classList.contains("show")) closeImgModal();
+      if(overlay.classList.contains("show")) closeCaseEditModal();
       if(sumOverlay.classList.contains("show")) closeSummaryModal();
     }
     if((e.ctrlKey||e.metaKey)&&e.key==="Enter"){
-      if(overlay.classList.contains("show")) saveEntry();
-      else if(caseOverlay.classList.contains("show")) saveCase();
-      else if(matOverlay.classList.contains("show")) saveMat();
-      else if(imgOverlay.classList.contains("show")) saveImg();
+      if(overlay.classList.contains("show")){
+        if(ceActiveTab==="round") saveEntry();
+        else if(ceActiveTab==="info") saveCase();
+        else if(ceActiveTab==="mat") saveMat();
+        else if(ceActiveTab==="img") saveImg();
+      }
     }
   });
   const fileInputEl = document.getElementById("fileInput");
