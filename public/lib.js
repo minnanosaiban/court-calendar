@@ -224,8 +224,12 @@ window.CC = (function(){
       track.style.transform = `translateX(-${idx*100}%)`;
       dots.forEach((d,j)=>d.classList.toggle("on", j===idx));
     }
-    function start(){ stop(); timer=setInterval(()=>show(idx+1),4500); }
-    function stop(){ if(timer) clearInterval(timer); timer=null; }
+    // 最初の1回だけ早めに送って「動くカードだ」と伝わるようにする（開いた直後は静止して見えるため）。2回目以降は通常の間隔
+    function start(){
+      stop();
+      timer=setTimeout(()=>{ show(idx+1); timer=setInterval(()=>show(idx+1),4500); }, 1500);
+    }
+    function stop(){ if(timer){ clearTimeout(timer); clearInterval(timer); } timer=null; }
     dots.forEach(d=>d.addEventListener("click",(e)=>{ e.preventDefault(); show(Number(d.dataset.dot)); start(); }));
     gal.addEventListener("mouseenter",stop);
     gal.addEventListener("mouseleave",start);
