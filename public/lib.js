@@ -314,8 +314,7 @@ window.CC = (function(){
       c.contact?`連絡先：<a href="mailto:${escapeAttr(c.contact)}">${escapeHtml(c.contact)}</a>`:""
     ].filter(Boolean).join("<br>");
     if(!c.callText && !c.lede && !credit) return "";
-    return `<p class="minih">よびかけ</p>
-      <div class="lede">${c.lede?`<p>${escapeHtml(c.lede)}</p>`:""}${c.callText?`<p class="call">${escapeHtml(c.callText)}</p>`:""}${credit?`<span class="credit">${credit}</span>`:""}</div>`;
+    return `<div class="lede"><p class="lede-title">よびかけ</p>${c.lede?`<p>${escapeHtml(c.lede)}</p>`:""}${c.callText?`<p class="call">${escapeHtml(c.callText)}</p>`:""}${credit?`<span class="credit">${credit}</span>`:""}</div>`;
   }
 
   // ---- タイムラインと訴訟資料 ----
@@ -387,11 +386,8 @@ window.CC = (function(){
         ${isOpen?`<div class="tl-body">${argsHtml(ev)}${own.map(matBlockHtml).join("")}</div>`:""}
       </li>`;
     }).join("");
-    // 期日に紐づいていない資料があることを、タイムラインの下で知らせる（一覧で見られる）
-    const loose = mats.filter(m=>!m.eventId).length;
     return `<p class="minih">タイムラインと訴訟資料</p>
       ${rounds.length?`<ol class="tl">${items}</ol>`:`<p class="d-body mut">期日はまだ登録されていません。</p>`}
-      ${loose?`<p class="tl-note">期日に紐づかない資料が${loose}件あります（下の一覧にあります）。</p>`:""}
       ${me.canWrite?`<p class="qact"><a data-addround="${escapeAttr(caseId)}">＋ この事件に期日を追加</a></p>`:""}`;
   }
   function materialsListHtml(caseId){
