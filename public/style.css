@@ -146,7 +146,7 @@ a{color:inherit}
 .mat-side.g{color:#47705a}
 .mat-side.k{color:#4a5a74}
 .mat-side.j{color:#8a5c46}
-.mat-name{font-weight:500}
+.mat-name{font-weight:500;font-size:.8rem}
 .mat-claims{margin-top:6px;font-size:.86rem}
 .mlist{list-style:none;margin-top:8px;font-size:.88rem}
 .mrow{display:flex;gap:12px;padding:7px 0;border-top:1px solid var(--tint)}
