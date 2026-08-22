@@ -657,7 +657,6 @@ window.CC = (function(){
         `編集できます ── この端末は編集ロック解除済みです。`+
         `<br><a id="stAddCase">＋ 事件を追加</a><span class="sep">・</span>`+
         `<a id="stAdd">＋ 期日を追加</a><span class="sep">・</span>`+
-        `<a href="manage.html">事件を管理する</a><span class="sep">・</span>`+
         `<a id="stLock">ロックする</a>`+
         `<br><span class="status-sub">バックアップ（複数件をまとめて登録・復元するとき用）：`+
         `<a id="stExport">書き出す</a><span class="sep">・</span>`+
@@ -1275,7 +1274,7 @@ window.CC = (function(){
     get loaded(){ return loaded; },
     caseById, caseByName, caseEvents, casePosts, caseMaterials, caseImages, nearestCase, nextEvent, eventLine,
     likeHtml, toggleLike, isArchived,
-    load, renderCaseDetail, renderStatus, openAdd, apiCreate,
+    load, renderCaseDetail, renderStatus, openAdd,
     setOnChange(fn){ onChange = fn; },
   };
 })();

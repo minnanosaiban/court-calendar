@@ -256,16 +256,6 @@ a{color:inherit}
 .leg i{display:inline-block;width:15px;height:3px;border-radius:2px;background:var(--stamp);margin-right:7px;vertical-align:4px}
 .leg i.o{background:none;box-shadow:inset 0 0 0 1.5px #a9a7a0}
 .hint{color:var(--mut);font-size:.8rem;margin:6px 8px 22px}
-/* ---- 事件の管理ページ（manage.html） ---- */
-.mgcheck{list-style:none;display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-.mgcheck li{font-size:.78rem;padding:4px 12px;border-radius:999px;background:var(--tint);color:var(--mut)}
-.mgcheck li.ok{color:#2f7d4f}
-.mgcheck li.ok::before{content:"✓ "}
-.mgcheck li.ng::before{content:"− "}
-.mgbulk{margin-top:22px}
-.mgbulk textarea{width:100%;min-height:88px;font-family:inherit;font-size:.86rem;line-height:1.7;
-  border:1px solid #e6e4dd;border-radius:9px;padding:9px 11px;background:#fff;resize:vertical}
-.mgbulk textarea:focus{outline:none;border-color:#b9b6ac}
 .jumplink{margin:14px 0 0}
 .pillbtn{display:inline-block;background:var(--card);border-radius:999px;padding:8px 20px;margin:0 10px 8px 0;
   font-size:.82rem;color:var(--ink);text-decoration:none;box-shadow:0 1px 2px rgba(0,0,0,.06)}
