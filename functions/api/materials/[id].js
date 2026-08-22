@@ -27,20 +27,20 @@ export async function onRequestPut({ request, env, params }) {
   if (r2) {
     await env.DB.prepare(
       `UPDATE materials
-          SET case_id=?, event_id=?, title=?, side=?, kind=?, filed_on=?, url=?, claims=?, body=?, summary=?,
+          SET case_id=?, event_id=?, title=?, side=?, filed_on=?, url=?, claims=?, body=?, summary=?,
               r2_key=?, file_name=?, file_size=?, mime=?, updated_by=?, updated_at=?
         WHERE id=?`
-    ).bind(f.case_id, f.event_id, f.title, f.side, f.kind, f.filed_on, f.url, f.claims, f.body, f.summary,
+    ).bind(f.case_id, f.event_id, f.title, f.side, f.filed_on, f.url, f.claims, f.body, f.summary,
            r2.key, r2.name, r2.size, r2.mime, id.email, now, mid).run();
     // 古いファイルは DB を更新してから消す（途中で失敗しても目録が壊れないように）
     if (cur.r2_key && cur.r2_key !== r2.key && env.FILES) await env.FILES.delete(cur.r2_key).catch(() => {});
   } else {
     await env.DB.prepare(
       `UPDATE materials
-          SET case_id=?, event_id=?, title=?, side=?, kind=?, filed_on=?, url=?, claims=?, body=?, summary=?,
+          SET case_id=?, event_id=?, title=?, side=?, filed_on=?, url=?, claims=?, body=?, summary=?,
               updated_by=?, updated_at=?
         WHERE id=?`
-    ).bind(f.case_id, f.event_id, f.title, f.side, f.kind, f.filed_on, f.url, f.claims, f.body, f.summary,
+    ).bind(f.case_id, f.event_id, f.title, f.side, f.filed_on, f.url, f.claims, f.body, f.summary,
            id.email, now, mid).run();
   }
 

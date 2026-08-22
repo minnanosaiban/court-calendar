@@ -53,7 +53,6 @@ CREATE TABLE IF NOT EXISTS materials (
   event_id    TEXT,            -- どの期日に出された書面か（任意。タイムラインの節にぶら下がる）
   title       TEXT NOT NULL,   -- 訴状、第1準備書面、甲1 ○○ など
   side        TEXT,            -- 原告側 / 被告側 / 裁判所 / その他
-  kind        TEXT,            -- 主張書面 / 証拠 / 判決・決定 / その他
   filed_on    TEXT,            -- 提出日 YYYY-MM-DD（任意）
   url         TEXT,            -- ファイルのURL（public/docs/ に置いたPDF や 外部サイト。任意）
   r2_key      TEXT,            -- R2 のオブジェクトキー（R2 を使うとき。ファイル無しなら NULL）

@@ -21,7 +21,6 @@ window.CC = (function(){
   let editingMatId = null;       // 編集中の資料
   let editingImgId = null;       // 編集中の写真
   let boardFormForCase = null;   // 投稿フォームを開いている事件ID
-  let openNodes = new Set();     // タイムラインで開いている節（期日ID）
   let tsToken = "";
   let tsScriptPromise = null;
   let onChange = null;           // ページ側が登録する「データが変わったら呼ぶ」コールバック
@@ -335,7 +334,7 @@ window.CC = (function(){
   function matBlockHtml(m){
     const claims=(m.claims||[]).map(x=>`<li>${escapeHtml(x)}</li>`).join("");
     return `<div class="mat">
-      <p class="mat-h">${sideTag(m)}<span class="mat-name">${escapeHtml(m.title)}</span>${m.kind?`<span class="mat-kind">${escapeHtml(m.kind)}</span>`:""}</p>
+      <p class="mat-name">${escapeHtml(m.title)}</p>
       ${matButtonsHtml(m)}
       ${claims?`<ul class="pts mat-claims">${claims}</ul>`:""}
     </div>`;
@@ -360,20 +359,17 @@ window.CC = (function(){
       const hasArgs = (ev.plaintiffArgument&&ev.plaintiffArgument.length) || (ev.defendantArgument&&ev.defendantArgument.length);
       const state = ev.date<today ? "past" : (next&&ev.id===next.id ? "next" : "future");
       const expandable = own.length>0 || hasArgs;
-      const isOpen = expandable && openNodes.has(ev.id);
       const place=[ev.court,ev.place].filter(Boolean).join(" ");
       const closed = ev.open===false ? `<span class="round-closed">非公開・要確認</span>` : "";
       const editLink = me.canWrite ? `<a class="round-edit" data-edit="${escapeAttr(ev.id)}">編集</a>` : "";
-      const countLabel = own.length>0 ? `資料${own.length}件` : "詳細";
-      return `<li class="tl-item ${state}${isOpen?" open":""}">
+      return `<li class="tl-item ${state}">
         <span class="tl-dot" aria-hidden="true"></span>
-        <div class="tl-head${expandable?" tl-click":""}"${expandable?` data-tl="${escapeAttr(ev.id)}" role="button" aria-expanded="${isOpen}"`:""}>
+        <div class="tl-head">
           <span class="tl-date">${escapeHtml(jpDate(ev.date))}${ev.time?" "+escapeHtml(ev.time):""}</span>
           <span class="tl-type">${escapeHtml(ev.type||"期日")}</span>
           <span class="tl-meta">${escapeHtml(place)}${closed}${editLink}</span>
-          ${expandable?`<span class="tl-count">${countLabel} <i class="bi bi-chevron-down" aria-hidden="true"></i></span>`:""}
         </div>
-        ${isOpen?`<div class="tl-body">${argsHtml(ev)}${own.map(matBlockHtml).join("")}</div>`:""}
+        ${expandable?`<div class="tl-body">${argsHtml(ev)}${own.map(matBlockHtml).join("")}</div>`:""}
       </li>`;
     }).join("");
     return `<p class="minih">タイムラインと訴訟資料</p>
@@ -386,7 +382,7 @@ window.CC = (function(){
       const edit = me.canWrite ? `<a class="round-edit" data-editmat="${escapeAttr(m.id)}">編集</a>` : "";
       return `<li class="mrow">
         ${m.filedOn?`<span class="mdate">${escapeHtml(dotDate(m.filedOn))}</span>`:""}
-        <span class="mmain">${sideTag(m)}<span class="mat-name">${escapeHtml(m.title)}</span>${m.kind?`<span class="mat-kind">${escapeHtml(m.kind)}</span>`:""}${matButtonsHtml(m)}${edit}</span>
+        <span class="mmain">${sideTag(m)}<span class="mat-name">${escapeHtml(m.title)}</span>${matButtonsHtml(m)}${edit}</span>
       </li>`;
     }).join("");
     return `<p class="minih">訴訟資料一覧</p>
@@ -586,13 +582,6 @@ window.CC = (function(){
     container.querySelectorAll("[data-addround]").forEach(a=>{
       a.addEventListener("click",()=>openAddRound(a.dataset.addround));
     });
-    container.querySelectorAll("[data-tl]").forEach(h=>{
-      h.addEventListener("click",()=>{
-        const id=h.dataset.tl;
-        if(openNodes.has(id)) openNodes.delete(id); else openNodes.add(id);
-        rerender();
-      });
-    });
     container.querySelectorAll("[data-sumopen]").forEach(b=>{
       b.addEventListener("click",(e)=>{
         e.stopPropagation();
@@ -791,13 +780,8 @@ window.CC = (function(){
           <label>資料名 <span style="color:var(--stamp)">*</span></label>
           <input type="text" id="mTitle" placeholder="例）訴状、第1準備書面、甲3 ○○">
         </div>
-        <div class="two">
-          <div class="field"><label>提出者側</label>
-            <select id="mSide"><option value="">（未選択）</option><option>原告側</option><option>被告側</option><option>裁判所</option><option>その他</option></select>
-          </div>
-          <div class="field"><label>種別</label>
-            <select id="mKind"><option value="">（未選択）</option><option>主張書面</option><option>証拠</option><option>判決・決定</option><option>その他</option></select>
-          </div>
+        <div class="field"><label>提出者側</label>
+          <select id="mSide"><option value="">（未選択）</option><option>原告側</option><option>被告側</option><option>裁判所</option><option>その他</option></select>
         </div>
         <div class="two">
           <div class="field"><label>どの期日の資料か</label><select id="mEvent"></select></div>
@@ -1055,7 +1039,7 @@ window.CC = (function(){
   const cFields = { name:$("cName"), parties:$("cParties"), judge:$("cJudge"), points:$("cPoints"),
                     callText:$("cCall"), host:$("cHost"), contact:$("cContact"), press:$("cPress"), links:$("cLinks"),
                     tags:$("cTags"), archivedAt:$("cArchivedAt"), closeType:$("cCloseType") };
-  const mFields = { title:$("mTitle"), side:$("mSide"), kind:$("mKind"), event:$("mEvent"), filedOn:$("mFiledOn"),
+  const mFields = { title:$("mTitle"), side:$("mSide"), event:$("mEvent"), filedOn:$("mFiledOn"),
                     url:$("mUrl"), file:$("mFile"), fileField:$("mFileField"), fileNow:$("mFileNow"),
                     claims:$("mClaims"), body:$("mBody"), summary:$("mSummary") };
   let matCaseId = null;
@@ -1136,7 +1120,7 @@ window.CC = (function(){
     const rounds=caseEvents(caseId);
     mFields.event.innerHTML = `<option value="">（紐づけない）</option>` + rounds.map(e=>
       `<option value="${escapeAttr(e.id)}"${m.eventId===e.id?" selected":""}>${escapeHtml(e.type||"期日")}　${escapeHtml(e.date)}</option>`).join("");
-    mFields.title.value=m.title||""; mFields.side.value=m.side||""; mFields.kind.value=m.kind||"";
+    mFields.title.value=m.title||""; mFields.side.value=m.side||"";
     mFields.filedOn.value=m.filedOn||""; mFields.url.value=m.url||""; mFields.file.value="";
     mFields.claims.value=(m.claims||[]).join("\n"); mFields.body.value=m.body||""; mFields.summary.value=m.summary||"";
     // アップロード欄は R2 が使えるとき（me.uploads）か、すでに R2 のファイルが付いているときだけ出す
@@ -1175,7 +1159,6 @@ window.CC = (function(){
     fd.append("eventId", mFields.event.value);
     fd.append("title", title);
     fd.append("side", mFields.side.value);
-    fd.append("kind", mFields.kind.value);
     fd.append("filedOn", mFields.filedOn.value);
     fd.append("url", mFields.url.value.trim());
     fd.append("claims", mFields.claims.value);
@@ -1195,7 +1178,6 @@ window.CC = (function(){
       }else{
         const created=await apiCreateMat(fd);
         materials.push(created);
-        if(created.eventId) openNodes.add(created.eventId);   // 追加した資料が見える節を開いておく
       }
       closeCaseEditModal();
       if(onChange) onChange();

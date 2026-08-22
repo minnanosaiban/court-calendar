@@ -133,27 +133,20 @@ a{color:inherit}
 .tl-item.past .tl-dot{background:#a9a7a0;border-color:#a9a7a0}
 .tl-item.next .tl-dot{background:var(--stamp);border-color:var(--stamp);box-shadow:0 0 0 3px rgba(185,50,38,.15)}
 .tl-head{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:10px;row-gap:2px;font-size:.9rem;line-height:1.7;border-radius:8px}
-.tl-click{cursor:pointer}
-.tl-click:hover .tl-type{text-decoration:underline;text-underline-offset:4px;text-decoration-color:#c9c6bc}
 .tl-date{color:var(--mut);font-size:.8rem;font-variant-numeric:tabular-nums}
 .tl-type{font-family:"Shippori Mincho",serif;font-weight:600}
 .tl-item.next .tl-type{color:var(--stamp)}
 .tl-meta{color:var(--mut);font-size:.8rem}
-.tl-count{margin-left:auto;color:var(--mut);font-size:.75rem;white-space:nowrap}
-.tl-count .bi{transition:transform .15s}
-.tl-item.open .tl-count .bi{transform:rotate(180deg)}
 .tl-body{margin-top:8px}
 
 /* ---- 訴訟資料（タイムラインの中身／一覧） ---- */
-.mat{background:var(--tint);border-radius:12px;padding:11px 14px;font-size:.88rem}
-.mat + .mat{margin-top:8px}
-.mat-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px}
+.mat{font-size:.88rem}
+.mat + .mat{margin-top:14px}
 .mat-side{font-size:.72rem;font-weight:700;white-space:nowrap}
 .mat-side.g{color:#47705a}
 .mat-side.k{color:#4a5a74}
 .mat-side.j{color:#8a5c46}
 .mat-name{font-weight:500}
-.mat-kind{color:var(--mut);font-size:.72rem}
 .mat-claims{margin-top:6px;font-size:.86rem}
 .mlist{list-style:none;margin-top:8px;font-size:.88rem}
 .mrow{display:flex;gap:12px;padding:7px 0;border-top:1px solid var(--tint)}

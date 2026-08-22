@@ -1,6 +1,6 @@
 import {
   json, newId, rowToMaterial, linesToText, MATERIAL_COLS, isMaterialUrl,
-  MATERIAL_SIDES, MATERIAL_KINDS, MATERIAL_MIMES, MATERIAL_MAX_BYTES,
+  MATERIAL_SIDES, MATERIAL_MIMES, MATERIAL_MAX_BYTES,
   getIdentity, authorizeWrite, putFile,
 } from "../_common.js";
 export { putFile };
@@ -38,9 +38,7 @@ export async function readMaterialForm(request, env) {
     if (!ev) return { error: "その期日が見つかりません" };
   }
   const side = get("side");
-  const kind = get("kind");
   if (side && !MATERIAL_SIDES.includes(side)) return { error: "提出者側の値が不正です" };
-  if (kind && !MATERIAL_KINDS.includes(kind)) return { error: "種別の値が不正です" };
   const filedOn = get("filedOn");
   if (filedOn && !/^\d{4}-\d{2}-\d{2}$/.test(filedOn)) return { error: "提出日の形式が不正です" };
   const url = get("url");
@@ -53,7 +51,7 @@ export async function readMaterialForm(request, env) {
     case_id: caseId,
     event_id: eventId || null,
     title,
-    side, kind,
+    side,
     filed_on: filedOn || null,
     url: url || null,
     claims: linesToText(get("claims")),
@@ -90,11 +88,11 @@ export async function onRequestPost({ request, env }) {
   }
   const f = r.fields;
   await env.DB.prepare(
-    `INSERT INTO materials (id, case_id, event_id, title, side, kind, filed_on, url,
+    `INSERT INTO materials (id, case_id, event_id, title, side, filed_on, url,
                             r2_key, file_name, file_size, mime, claims, body, summary,
                             hidden, created_by, updated_by, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)`
-  ).bind(mid, f.case_id, f.event_id, f.title, f.side, f.kind, f.filed_on, f.url,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)`
+  ).bind(mid, f.case_id, f.event_id, f.title, f.side, f.filed_on, f.url,
          r2.key, r2.name, r2.size, r2.mime, f.claims, f.body, f.summary,
          id.email, id.email, now, now).run();
 

@@ -110,11 +110,10 @@ export async function resolveCaseId(env, body, email) {
 
 // ---- 訴訟資料 ----
 export const MATERIAL_SIDES = ["原告側", "被告側", "裁判所", "その他"];
-export const MATERIAL_KINDS = ["主張書面", "証拠", "判決・決定", "その他"];
 export const MATERIAL_MIMES = { "application/pdf": "pdf", "image/png": "png", "image/jpeg": "jpg" };
 export const MATERIAL_MAX_BYTES = 20 * 1024 * 1024;
 
-export const MATERIAL_COLS = `m.id, m.case_id, m.event_id, m.title, m.side, m.kind, m.filed_on,
+export const MATERIAL_COLS = `m.id, m.case_id, m.event_id, m.title, m.side, m.filed_on,
                               m.url, m.r2_key, m.file_name, m.file_size, m.mime, m.claims, m.body, m.summary,
                               m.created_at, m.updated_at`;
 
@@ -132,7 +131,6 @@ export function rowToMaterial(r) {
     eventId: r.event_id || "",
     title: r.title,
     side: r.side || "",
-    kind: r.kind || "",
     filedOn: r.filed_on || "",
     url: r.url || "",                                   // 手入力のURL（public/docs/ や外部）
     fileUrl: r.r2_key ? "/files/" + r.r2_key : (r.url || ""),   // 画面が開くリンク（R2 があればそちら）
