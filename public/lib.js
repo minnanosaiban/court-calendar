@@ -163,20 +163,21 @@ window.CC = (function(){
   }
 
   // ---- リンクのアイコン（URLのドメインで決める） ----
+  // X（Twitter）だけはFont Awesomeの角丸四角ロゴにして、シェアボタンのbi-twitter-x（素のXマーク）と見分けがつくようにする
   function linkIcon(url){
     let h=""; try{ h=new URL(url).hostname.replace(/^www\./,""); }catch(e){}
-    if(h==="x.com"||h==="twitter.com") return ["bi-twitter-x","X"];
-    if(h.endsWith("instagram.com")) return ["bi-instagram","Instagram"];
-    if(h.endsWith("youtube.com")||h==="youtu.be") return ["bi-youtube","YouTube"];
-    if(h.endsWith("facebook.com")) return ["bi-facebook","Facebook"];
-    if(h==="note.com") return ["bi-journal-text","note"];
-    return ["bi-globe2", h||"リンク"];
+    if(h==="x.com"||h==="twitter.com") return ["fa-brands fa-square-x-twitter","X"];
+    if(h.endsWith("instagram.com")) return ["bi bi-instagram","Instagram"];
+    if(h.endsWith("youtube.com")||h==="youtu.be") return ["bi bi-youtube","YouTube"];
+    if(h.endsWith("facebook.com")) return ["bi bi-facebook","Facebook"];
+    if(h==="note.com") return ["bi bi-journal-text","note"];
+    return ["bi bi-globe2", h||"リンク"];
   }
   function linksHtml(c){
     if(!c.links.length) return "";
     return `<div class="d-links">`+c.links.map(u=>{
-      const [ic,label]=linkIcon(u);
-      return `<a class="d-link" href="${escapeAttr(u)}" target="_blank" rel="noopener" title="${escapeAttr(label)}" aria-label="${escapeAttr(label)}"><i class="bi ${ic}" aria-hidden="true"></i></a>`;
+      const [cls,label]=linkIcon(u);
+      return `<a class="d-link" href="${escapeAttr(u)}" target="_blank" rel="noopener" title="${escapeAttr(label)}" aria-label="${escapeAttr(label)}"><i class="${cls}" aria-hidden="true"></i></a>`;
     }).join("")+`</div>`;
   }
   function likeHtml(c){

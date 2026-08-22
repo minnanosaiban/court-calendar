@@ -30,9 +30,10 @@ a{color:inherit}
   font-family:"Shippori Mincho",serif;font-weight:700;font-size:17px;line-height:1.1;
   letter-spacing:.04em;text-align:center;transform:rotate(-4deg)}
 .masthead h1{font-family:"Shippori Mincho",serif;font-size:1.55rem;font-weight:700;letter-spacing:.05em;line-height:1.4}
+.masthead h1 a{color:inherit;text-decoration:none}
+.masthead h1 a:hover{opacity:.75}
 .masthead p{font-size:.8rem;color:var(--mut);letter-spacing:.02em;margin-top:2px}
 .backlink{display:inline-block;margin:22px 4px 0;font-size:.8rem;color:var(--mut);text-decoration:underline;text-underline-offset:3px}
-.backsep{display:inline-block;margin:22px 2px 0;font-size:.8rem;color:var(--mut)}
 
 /* ---- section label ---- */
 .sech{font-size:.7rem;letter-spacing:.26em;color:var(--mut);margin:52px 4px 12px}
@@ -301,16 +302,15 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .daypop{position:fixed;z-index:60;background:var(--card);border-radius:14px;
   box-shadow:0 14px 40px rgba(0,0,0,.2);padding:6px}
 .daypop[hidden]{display:none}
-.pop-row{padding:10px 12px;border-radius:10px;cursor:pointer}
+.pop-row{position:relative;padding:10px 30px 10px 12px;border-radius:10px;cursor:pointer}
 .pop-row:hover{background:var(--tint)}
 .pop-row + .pop-row{margin-top:2px;border-top:1px solid var(--tint);padding-top:12px}
+.pop-arrow{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--stamp);font-size:.85rem}
 .pop-date{font-size:.76rem;color:var(--mut);font-variant-numeric:tabular-nums}
 .pop-title{font-size:.92rem;font-weight:500;margin-top:1px;font-family:"Shippori Mincho",serif}
 .pop-meta{font-size:.78rem;color:var(--mut);margin-top:1px}
-/* プレビュー下の操作行：右下に「詳細へ→」「閉じる×」 */
+/* プレビュー下の操作行：右下に「閉じる×」 */
 .pop-foot{display:flex;justify-content:flex-end;align-items:center;gap:16px;margin-top:2px;padding:8px 10px 4px;border-top:1px solid var(--tint)}
-.pop-detail{font-size:.78rem;color:var(--stamp);background:none;border:none;cursor:pointer;text-decoration:none}
-.pop-detail i{margin-left:.3em}
 .pop-close{font-size:.78rem;color:var(--mut);background:none;border:none;cursor:pointer;padding:2px}
 .pop-close:hover{color:var(--ink)}
 .pop-close i{margin-left:.3em}
