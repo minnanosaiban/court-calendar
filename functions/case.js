@@ -24,15 +24,15 @@ export async function onRequestGet({ request, env }) {
   ).bind(c.id).first();
   const imageUrl = img ? new URL("/files/" + img.r2_key, request.url).toString() : "";
 
-  const title = `${c.name} ｜ みんなの裁判`;
-  const description = (c.call_text || "行けない日も、法廷のいまがわかる。裁判の期日と、傍聴に行った人の報告を、ひとつのカレンダーに。").slice(0, 140);
+  const title = `${c.name} ｜ 応援傍聴ナビ`;
+  const description = (c.call_text || "傍聴席に、ひとり増える。それだけで法廷は変わる。").slice(0, 140);
 
   const extraTags = [
     `<meta property="og:title" content="${escAttr(title)}">`,
     `<meta property="og:description" content="${escAttr(description)}">`,
     `<meta property="og:type" content="article">`,
     `<meta property="og:url" content="${escAttr(request.url)}">`,
-    `<meta property="og:site_name" content="みんなの裁判">`,
+    `<meta property="og:site_name" content="応援傍聴ナビ">`,
     imageUrl ? `<meta property="og:image" content="${escAttr(imageUrl)}">` : "",
     `<meta name="twitter:card" content="${imageUrl ? "summary_large_image" : "summary"}">`,
   ].filter(Boolean).join("\n");

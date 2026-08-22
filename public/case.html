@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>事件の詳細 ｜ みんなの裁判</title>
-<meta name="description" content="行けない日も、法廷のいまがわかる。裁判の期日と、傍聴に行った人の報告を、ひとつのカレンダーに。">
+<title>事件の詳細 ｜ 応援傍聴ナビ</title>
+<meta name="description" content="傍聴席に、ひとり増える。それだけで法廷は変わる。">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23f2e4c9'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,8 +17,8 @@
   <header class="masthead">
     <div class="stamp" aria-hidden="true">傍聴</div>
     <div>
-      <h1><a href="index.html">みんなの裁判</a></h1>
-      <p>行けない日も、法廷のいまがわかる。裁判の期日と、傍聴に行った人の報告を、ひとつのカレンダーに</p>
+      <h1><a href="index.html">応援傍聴ナビ</a></h1>
+      <p>傍聴席に、ひとり増える。それだけで法廷は変わる</p>
     </div>
   </header>
 
@@ -57,7 +57,7 @@
     CC.renderCaseDetail(caseBody, caseId || legacyName, {full:true});
     CC.renderStatus(statusEl, {hideCaseActions:true});
     const c=CC.caseById(caseId);
-    if(c) document.title = c.name + " ｜ みんなの裁判";
+    if(c) document.title = c.name + " ｜ 応援傍聴ナビ";
   }
   CC.setOnChange(renderAll);
 
