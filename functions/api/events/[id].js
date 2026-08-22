@@ -15,7 +15,7 @@ export async function onRequestPut({ request, env, params }) {
   const date = String(body.date || "").trim();
   if (!date) return json({ error: "期日は必須です" }, 400);
   const caseId = await resolveCaseId(env, body, id.email);
-  if (!caseId) return json({ error: "事件名は必須です" }, 400);
+  if (!caseId) return json({ error: "その事件はまだ登録されていません。先に「事件を追加」で事件を登録してください。" }, 400);
 
   const res = await env.DB.prepare(
     `UPDATE events

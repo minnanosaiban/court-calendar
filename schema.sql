@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS cases (
   call_text   TEXT,                 -- よびかけ（傍聴・支援のお願い）
   host        TEXT,                 -- 呼びかけている団体・お名前
   contact     TEXT,                 -- 連絡先（公開してよいものだけ）
+  press       TEXT,                 -- 報道・掲載（新聞・ニュース・判例誌掲載、特別保存の指定など。1行1項目、改行区切り・任意）
   links       TEXT,                 -- 当事者のアカウント等のURL（1行1つ、改行区切り）
   tags        TEXT,                 -- タグ（1行1つ、改行区切り・任意）
   archived_at TEXT,                 -- 終結日 YYYY-MM-DD（あれば「裁判アーカイブ」扱い・任意）

@@ -22,7 +22,7 @@ export function textToLines(s) {
 
 // ---- 事件 ----
 export const CASE_COLS = `c.id, c.name, c.case_no, c.parties, c.judge, c.points, c.lede, c.call_text,
-                          c.host, c.contact, c.links, c.tags, c.archived_at, c.close_type, c.result,
+                          c.host, c.contact, c.press, c.links, c.tags, c.archived_at, c.close_type, c.result,
                           c.created_by, c.updated_by, c.updated_at`;
 
 export function rowToCase(r) {
@@ -37,6 +37,7 @@ export function rowToCase(r) {
     callText: r.call_text || "",
     host: r.host || "",
     contact: r.contact || "",
+    press: textToLines(r.press),
     links: textToLines(r.links).filter(isHttpUrl),
     tags: textToLines(r.tags),
     archivedAt: r.archived_at || "",
@@ -63,6 +64,7 @@ export function caseFromBody(body) {
     call_text: String(body.callText || "").trim(),
     host: String(body.host || "").trim(),
     contact: String(body.contact || "").trim(),
+    press: linesToText(body.press),
     links: textToLines(linesToText(body.links)).filter(isHttpUrl).join("\n"),
     tags: linesToText(body.tags),
     archived_at: isYmd(body.archivedAt) ? body.archivedAt : null,
@@ -98,8 +100,9 @@ export function rowToEvent(r) {
   };
 }
 
-// 期日の追加・更新で「事件」を決める。caseId があればそれ、無ければ事件名で探し、無ければ作る。
-// （事件名を入力するだけで新しい事件を起こせるように。事件の説明などは後から「事件を編集」で入れる）
+// 期日の追加・更新で「事件」を決める。caseId があればそれ、無ければ事件名で探す。
+// 見つからない場合は null（事件が先に登録されていないと期日は追加できない＝誤字での事件乱立を防ぐ）。
+// 旧形式のバックアップ取り込みなど、事件を自動で起こしたい場合は呼び出し側で明示的に事件を作ってから渡すこと。
 export async function resolveCaseId(env, body, email) {
   const caseId = String(body.caseId || "").trim();
   if (caseId) {
@@ -109,18 +112,7 @@ export async function resolveCaseId(env, body, email) {
   const name = String(body.case || "").trim();
   if (!name) return null;
   const found = await env.DB.prepare(`SELECT id FROM cases WHERE name = ?`).bind(name).first();
-  if (found) return found.id;
-  // 旧形式のバックアップ（期日の行に事件の説明が入っている）を取り込んだときも、その値を活かして事件を作る
-  const c = caseFromBody({ ...body, name });
-  const id = newId("c");
-  const now = new Date().toISOString();
-  await env.DB.prepare(
-    `INSERT INTO cases (id, name, case_no, parties, points, lede, call_text, host, contact, links,
-                        created_by, updated_by, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-  ).bind(id, c.name, c.case_no, c.parties, c.points, c.lede, c.call_text, c.host, c.contact, c.links,
-         email, email, now).run();
-  return id;
+  return found ? found.id : null;
 }
 
 // ---- 訴訟資料 ----

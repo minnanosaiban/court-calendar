@@ -48,7 +48,7 @@ wrangler.toml           設定（D1・R2 バインド・環境変数）
 CALL4 のように「事件」を中心に据えた。事件に属するもの（当事者・争点・説明・よびかけ・リンク）は `cases` に1回だけ持ち、
 期日（`events`）は `case_id` で事件にぶら下がる。訴訟資料（`materials`）は目録を D1、ファイル本体を R2 に置く。
 
-- `cases`：`name`（事件名・一意）`case_no` `parties` `judge`（裁判官・任意）`points`（争点・改行区切り）`lede`（説明）`call_text`（よびかけ）`host` `contact` `links`（URL・改行区切り。X などはドメインでアイコンを出し分け）
+- `cases`：`name`（事件名・一意）`case_no` `parties` `judge`（裁判官・任意）`points`（争点・改行区切り）`lede`（説明）`call_text`（よびかけ）`host` `contact` `press`（報道・掲載、改行区切り・任意。行内に`https://`があれば自動でリンク化）`links`（URL・改行区切り。X などはドメインでアイコンを出し分け）
 - `events`：`case_id` `date` `time` `type` `court` `place` `open` `level`（事件の説明の列は落とした）
 - `materials`：`case_id` `event_id`（任意＝タイムラインの節にぶら下がる）`title` `side`（原告側/被告側/裁判所/その他）`kind`（主張書面/証拠/判決・決定/その他）`filed_on` `r2_key` `file_name` `file_size` `mime` `claims`（箇条書き・任意）`summary`（要約・手入力・任意）
 - `likes`：`(case_id, viewer)` が主キー。`viewer` は端末が持つ乱数（`X-Viewer` ヘッダ）の SHA-256。同じ端末から何度押しても1件

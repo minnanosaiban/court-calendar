@@ -12,7 +12,7 @@ export async function onRequestGet({ env }) {
 }
 
 // 追加（書き込み権限が必要）。
-// 事件は caseId か事件名（case）で指定する。知らない事件名なら、その名前で事件を新しく起こす。
+// 事件は caseId か事件名（case）で指定する。あらかじめ登録されている事件でなければ追加できない。
 export async function onRequestPost({ request, env }) {
   const id = await getIdentity(request, env);
   if (!authorizeWrite(request, env, id)) return json({ error: "forbidden" }, 403);
@@ -23,7 +23,7 @@ export async function onRequestPost({ request, env }) {
   const date = String(body.date || "").trim();
   if (!date) return json({ error: "期日は必須です" }, 400);
   const caseId = await resolveCaseId(env, body, id.email);
-  if (!caseId) return json({ error: "事件名は必須です" }, 400);
+  if (!caseId) return json({ error: "その事件はまだ登録されていません。先に「事件を追加」で事件を登録してください。" }, 400);
 
   const ev = {
     id: body.id ? String(body.id) : newId("e"),

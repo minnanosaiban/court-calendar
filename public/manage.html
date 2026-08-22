@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>事件をさがす ｜ みんなの裁判</title>
-<meta name="description" content="行けない日も、法廷のいまがわかる。裁判の期日と、傍聴に行った人の報告を、ひとつのカレンダーに。">
+<title>事件を管理 ｜ みんなの裁判</title>
+<meta name="description" content="事件を検索して、登録状況の確認・期日のまとめ登録ができる編集者用ページ。">
+<meta name="robots" content="noindex">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23f2e4c9'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,12 +24,28 @@
     </div>
   </header>
 
-  <section aria-labelledby="search-h" style="margin-top:28px">
-    <p class="sech" id="search-h">事件をさがす</p>
-    <div class="search"><i class="bi bi-search" aria-hidden="true"></i><input type="text" id="q" placeholder="事件名で検索" aria-label="事件名で検索"></div>
-    <div class="tags" id="tagFilters" style="margin-top:14px"></div>
-    <div class="tabs" id="statusTabs"></div>
-    <div class="clist" id="clist"></div>
+  <a class="backlink" href="index.html"><i class="bi bi-arrow-left" aria-hidden="true"></i> ホームに戻る</a>
+
+  <section style="margin-top:28px">
+    <p class="home-title">事件を登録・管理する</p>
+    <p class="hint">事件名で検索して選ぶと、その事件の登録状況・期日・訴訟資料をまとめて確認・編集できます。新しい事件そのものを登録するときは、下の「＋ 事件を追加」から。</p>
+    <div class="search"><i class="bi bi-search" aria-hidden="true"></i><input type="text" id="mgSearch" placeholder="事件名で検索" aria-label="事件名で検索"></div>
+    <div class="clist" id="mgResults" style="margin-top:12px"></div>
+  </section>
+
+  <section id="mgDetailSec" style="margin-top:28px" hidden>
+    <p class="minih">登録状況</p>
+    <ul class="mgcheck" id="mgCheck"></ul>
+
+    <div id="caseBody" style="margin-top:14px"></div>
+
+    <div class="card dcard mgbulk" id="mgBulkCard">
+      <p class="lede-title">期日をまとめて追加</p>
+      <p class="hint" style="margin:2px 0 10px">1行に1期日、カンマ区切りで「日付, 種別, 裁判所, 法廷」の順に入力します（裁判所・法廷は省略可）。</p>
+      <textarea id="mgBulkText" rows="4" placeholder="2026-09-10, 第4回口頭弁論, サンプル地方裁判所, 101号法廷&#10;2026-10-15, 判決言渡, サンプル地方裁判所"></textarea>
+      <p class="qact" style="margin-top:10px"><a id="mgBulkAdd">＋ まとめて追加</a></p>
+      <p class="fnote" id="mgBulkResult"></p>
+    </div>
   </section>
 
   <p class="status" id="status"></p>
@@ -40,7 +57,7 @@
   </footer>
 </div>
 
-<!-- modal: 期日の追加・編集（このページでは使わないが、lib.js が要素を前提にしているため置いておく） -->
+<!-- modal: 期日の追加・編集（case.html と同じもの。タイムラインの「編集」から開く） -->
 <div class="overlay" id="overlay">
   <div class="modal">
     <div class="mhead" id="modalTitle">期日を追加</div>
@@ -118,88 +135,91 @@
 <script>
 (function(){
   "use strict";
-  const qEl=document.getElementById("q");
-  const tagFilters=document.getElementById("tagFilters");
-  const statusTabs=document.getElementById("statusTabs");
-  const clistEl=document.getElementById("clist");
+  const searchEl=document.getElementById("mgSearch");
+  const resultsEl=document.getElementById("mgResults");
+  const detailSec=document.getElementById("mgDetailSec");
+  const checkEl=document.getElementById("mgCheck");
+  const caseBody=document.getElementById("caseBody");
+  const bulkCard=document.getElementById("mgBulkCard");
+  const bulkText=document.getElementById("mgBulkText");
+  const bulkResult=document.getElementById("mgBulkResult");
   const statusEl=document.getElementById("status");
-  let activeTag = new URLSearchParams(location.search).get("tag") || "";
-  let activeStatus = "open";   // "open"=進行中 / "archived"=終結
 
-  function allTagsWithCount(){
-    const m=new Map();
-    CC.cases.forEach(c=>(c.tags||[]).forEach(t=>m.set(t,(m.get(t)||0)+1)));
-    return [...m.entries()].sort((a,b)=> b[1]-a[1] || a[0].localeCompare(b[0],"ja"));
+  const qs = new URLSearchParams(location.search);
+  let caseId = qs.get("id") || "";
+
+  // ---- 登録状況チェック ----
+  const CHECK_ITEMS = [
+    ["事件番号", c=>!!c.caseNo],
+    ["当事者", c=>!!c.parties],
+    ["裁判官", c=>!!c.judge],
+    ["争点", c=>c.points.length>0],
+    ["事件の説明", c=>!!c.lede],
+    ["よびかけ", c=>!!c.callText],
+    ["呼びかけ団体・連絡先", c=>!!(c.host||c.contact)],
+    ["報道・掲載", c=>c.press.length>0],
+    ["リンク", c=>c.links.length>0],
+    ["タグ", c=>c.tags.length>0],
+    ["期日", c=>CC.caseEvents(c.id).length>0],
+    ["訴訟資料", c=>CC.caseMaterials(c.id).length>0],
+    ["写真", c=>CC.caseImages(c.id).length>0],
+  ];
+  function renderCheck(c){
+    checkEl.innerHTML = CHECK_ITEMS.map(([label,test])=>{
+      const ok = test(c);
+      return `<li class="${ok?"ok":"ng"}">${CC.escapeHtml(label)}</li>`;
+    }).join("");
   }
-  function renderTagFilters(){
-    const tags=allTagsWithCount();
-    if(!tags.length){ tagFilters.innerHTML=""; return; }
-    let html = `<a class="tag${!activeTag?" on":""}" data-tagf="">すべて</a>`;
-    html += tags.map(([t])=>`<a class="tag${activeTag===t?" on":""}" data-tagf="${CC.escapeAttr(t)}">${CC.escapeHtml(t)}</a>`).join("");
-    tagFilters.innerHTML = html;
-    tagFilters.querySelectorAll("[data-tagf]").forEach(a=>{
-      a.addEventListener("click",(e)=>{ e.preventDefault(); activeTag=a.dataset.tagf; renderTagFilters(); renderTabs(); renderList(); });
+
+  // ---- 検索結果 ----
+  function renderResults(){
+    const q = searchEl.value.trim();
+    if(!q){ resultsEl.innerHTML=""; return; }
+    const hits = CC.cases.filter(c=>c.name.includes(q)).slice(0,20);
+    resultsEl.innerHTML = hits.length
+      ? hits.map(c=>`<div class="card ccard" data-pick="${CC.escapeAttr(c.id)}" role="link" tabindex="0" style="cursor:pointer">
+          <div class="cbody"><div class="ctitle">${CC.escapeHtml(c.name)}</div></div>
+        </div>`).join("")
+      : `<p class="d-body mut">「${CC.escapeHtml(q)}」に一致する事件が見つかりません。名前が正しければ、下の「事件を追加」から新規登録できます。</p>`;
+    resultsEl.querySelectorAll("[data-pick]").forEach(el=>{
+      el.addEventListener("click",()=>{ location.href = "manage.html?id="+encodeURIComponent(el.dataset.pick); });
     });
   }
-  function rowHtml(c){
-    const next = CC.nextEvent(c.id);
-    const nextLine = c.archivedAt
-      ? `終結：${CC.escapeHtml(c.archivedAt.replace(/-/g,"."))}${c.closeType?"　"+CC.escapeHtml(c.closeType):""}`
-      : (next?`<b>次回</b>${CC.escapeHtml(CC.eventLine(next))}`:"まだ期日の登録がありません");
-    return `<div class="card ccard" data-open="${CC.escapeAttr(c.id)}" role="link" tabindex="0">
-      <div class="cbody">
-        <div class="ctitle">${CC.escapeHtml(c.name)}</div>
-        <div class="cnext">${nextLine}</div>
-        <div class="cfoot">
-          <div class="tags">${(c.tags||[]).map(t=>`<span class="tag">${CC.escapeHtml(t)}</span>`).join("")}</div>
-          <span class="clike"><i class="bi bi-heart-fill" aria-hidden="true"></i>${c.likes||0}</span>
-        </div>
-      </div>
-    </div>`;
-  }
-  // 検索・タグだけを反映した候補（タブの件数表示に使う。ステータスでは絞らない）
-  function filteredBase(){
-    const q=qEl.value.trim().toLowerCase();
-    return CC.cases.filter(c=> (!q || c.name.toLowerCase().includes(q)) && (!activeTag || (c.tags||[]).includes(activeTag)));
-  }
-  function renderTabs(){
-    const base=filteredBase();
-    const openN=base.filter(c=>!c.archivedAt).length;
-    const archN=base.filter(c=>c.archivedAt).length;
-    statusTabs.innerHTML = `
-      <span class="${activeStatus==="open"?"on":""}" data-statusf="open">進行中 ${openN}</span>
-      <span class="${activeStatus==="archived"?"on":""}" data-statusf="archived">終結 ${archN}</span>`;
-    statusTabs.querySelectorAll("[data-statusf]").forEach(s=>{
-      s.addEventListener("click",()=>{ activeStatus=s.dataset.statusf; renderAll(); });
-    });
-  }
-  function renderList(){
-    if(!CC.loaded){ clistEl.innerHTML=`<p class="empty-msg">読み込んでいます…</p>`; return; }
-    const list=filteredBase()
-      .filter(c=> activeStatus==="archived" ? !!c.archivedAt : !c.archivedAt)
-      .sort((a,b)=>{
-        if(activeStatus==="archived") return (b.archivedAt||"").localeCompare(a.archivedAt||"");
-        const na=CC.nextEvent(a.id), nb=CC.nextEvent(b.id);
-        if(na && nb) return na.date===nb.date ? 0 : (na.date<nb.date?-1:1);
-        if(na) return -1;
-        if(nb) return 1;
-        return a.name.localeCompare(b.name,"ja");
-      });
-    clistEl.innerHTML = list.length ? list.map(rowHtml).join("") : `<p class="empty-msg">見つかりませんでした。</p>`;
-    clistEl.querySelectorAll("[data-open]").forEach(el=>{
-      const go=()=>{ location.href="case?id="+encodeURIComponent(el.dataset.open); };
-      el.addEventListener("click",go);
-      el.addEventListener("keydown",(e)=>{ if(e.key==="Enter") go(); });
-    });
-  }
+  searchEl.addEventListener("input", renderResults);
+
+  // ---- まとめて期日を追加 ----
+  bulkText.addEventListener("keydown",(e)=>{
+    if((e.ctrlKey||e.metaKey)&&e.key==="Enter") document.getElementById("mgBulkAdd").click();
+  });
+  document.getElementById("mgBulkAdd").addEventListener("click", async ()=>{
+    if(!CC.me.canWrite || !caseId) return;
+    const lines = bulkText.value.split("\n").map(l=>l.trim()).filter(Boolean);
+    if(!lines.length) return;
+    let ok=0, ng=0;
+    for(const line of lines){
+      const [date,type,court,place] = line.split(/[,、]/).map(s=>(s||"").trim());
+      if(!date){ ng++; continue; }
+      try{
+        await CC.apiCreate({ caseId, date, time:"", type:type||"", court:court||"", place:place||"", open:true, level:"" });
+        ok++;
+      }catch(err){ ng++; }
+    }
+    bulkResult.textContent = `追加：${ok}件${ng?`／読み取れなかった行：${ng}件`:""}`;
+    if(ok>0){ bulkText.value=""; await CC.load(); renderAll(); }
+  });
+
   function renderAll(){
-    renderTagFilters();
-    renderTabs();
-    renderList();
     CC.renderStatus(statusEl);
+    if(!caseId){ detailSec.hidden=true; return; }
+    const c = CC.caseById(caseId);
+    if(!c){ detailSec.hidden=true; return; }
+    detailSec.hidden=false;
+    renderCheck(c);
+    CC.renderCaseDetail(caseBody, caseId, {full:true});
+    bulkCard.style.display = CC.me.canWrite ? "" : "none";
+    document.title = c.name + "（管理） ｜ みんなの裁判";
   }
   CC.setOnChange(renderAll);
-  qEl.addEventListener("input", ()=>{ renderTabs(); renderList(); });
 
   (async function init(){
     renderAll();

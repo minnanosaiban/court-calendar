@@ -43,6 +43,10 @@ window.CC = (function(){
   function byDate(a,b){ return a.date===b.date ? byTime(a,b) : a.date.localeCompare(b.date); }
   function escapeHtml(s){ return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
   function escapeAttr(s){ return String(s||"").replace(/"/g,"&quot;"); }
+  // 1行のテキストに https://... が含まれていればリンクにする（必ず先にエスケープしてから当てはめる）
+  function linkify(s){
+    return escapeHtml(s).replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+  }
   function cssEsc(s){ return String(s).replace(/"/g,'\\"'); }
   function jpDate(s){ const d=parseYmd(s); return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${WD[d.getDay()]}）`; }
   function dotDate(s){ return s ? s.replace(/-/g,".") : ""; }
@@ -272,7 +276,7 @@ window.CC = (function(){
       html += `<p class="d-more"><a class="pillbtn" href="case?id=${encodeURIComponent(c.id)}">詳細を見る <i class="bi bi-arrow-right" aria-hidden="true"></i></a></p>`;
     }else{
       const editCaseQact = me.canWrite ? `<p class="qact"><a data-editcase="${escapeAttr(c.id)}">＋ 事件を編集</a></p>` : "";
-      html += callHtml(c) + editCaseQact + timelineHtml(caseId) + materialsListHtml(caseId);
+      html += callHtml(c) + pressHtml(c) + editCaseQact + timelineHtml(caseId) + materialsListHtml(caseId);
     }
     html += `</div>`;
     return html;
@@ -286,6 +290,13 @@ window.CC = (function(){
     ].filter(Boolean).join("<br>");
     if(!c.callText && !c.lede && !credit) return "";
     return `<div class="lede"><p class="lede-title">よびかけ</p>${c.lede?`<p>${escapeHtml(c.lede)}</p>`:""}${c.callText?`<p class="call">${escapeHtml(c.callText)}</p>`:""}${credit?`<span class="credit">${credit}</span>`:""}</div>`;
+  }
+
+  // ---- 報道・掲載（新聞・ニュース・判例誌への掲載、特別保存の指定など。1行1項目、URLがあれば自動でリンクにする） ----
+  function pressHtml(c){
+    if(!c.press || !c.press.length) return "";
+    const items = c.press.map(line=>`<li>${linkify(line)}</li>`).join("");
+    return `<p class="minih">報道・掲載</p><ul class="pts">${items}</ul>`;
   }
 
   // ---- タイムラインと訴訟資料 ----
@@ -646,9 +657,11 @@ window.CC = (function(){
         `編集できます ── この端末は編集ロック解除済みです。`+
         `<br><a id="stAddCase">＋ 事件を追加</a><span class="sep">・</span>`+
         `<a id="stAdd">＋ 期日を追加</a><span class="sep">・</span>`+
-        `<a id="stLock">ロックする</a><span class="sep">・</span>`+
-        `<a id="stExport">バックアップを書き出す</a><span class="sep">・</span>`+
-        `<a id="stImport">ファイルから取り込み</a>`;
+        `<a href="manage.html">事件を管理する</a><span class="sep">・</span>`+
+        `<a id="stLock">ロックする</a>`+
+        `<br><span class="status-sub">バックアップ（複数件をまとめて登録・復元するとき用）：`+
+        `<a id="stExport">書き出す</a><span class="sep">・</span>`+
+        `<a id="stImport">ファイルから取り込む</a></span>`;
       el.querySelector("#stAddCase").addEventListener("click",openCaseAdd);
       el.querySelector("#stAdd").addEventListener("click",()=>openAdd(todayStr()));
       el.querySelector("#stLock").addEventListener("click",lockEditing);
@@ -760,8 +773,14 @@ window.CC = (function(){
     if(!c){ alert("事件名を入力してください。"); fCase.focus(); return; }
     if(!d){ alert("期日（日付）を入力してください。"); fDate.focus(); return; }
     const known=caseByName(c);
+    // 事件が先に登録されていないと期日は追加できない（誤字での事件乱立を防ぐため）
+    if(!known){
+      alert(`「${c}」という事件はまだ登録されていません。先に「＋ 事件を追加」でこの事件を登録してから、期日を追加してください。`);
+      fCase.focus();
+      return;
+    }
     const data={
-      caseId: known ? known.id : "", case:c, date:d, time:fTime.value,
+      caseId: known.id, case:c, date:d, time:fTime.value,
       type:fType.value.trim(), court:fCourt.value.trim(), place:fPlace.value.trim(),
       open:fOpen.checked, level:fLevel.value.trim(),
       plaintiffArgument:fPlaintiff.value.split("\n").map(s=>s.trim()).filter(Boolean),
@@ -776,7 +795,6 @@ window.CC = (function(){
         const created=await apiCreate(data);
         events.push(created);
       }
-      if(!known) await reloadCases();   // 新しい事件名なら、サーバ側で事件が起こされている
       closeModal();
       if(onChange) onChange();
     }catch(err){ alert(saveErr(err)); }
@@ -818,6 +836,10 @@ window.CC = (function(){
       <div class="two">
         <div class="field"><label>呼びかけ団体・お名前</label><input type="text" id="cHost"></div>
         <div class="field"><label>連絡先（公開してよいもの）</label><input type="text" id="cContact" placeholder="例）メールアドレス"></div>
+      </div>
+      <div class="field">
+        <label>報道・掲載（1行に1つ・任意）</label>
+        <textarea id="cPress" placeholder="例）〇〇新聞で報道されました https://...&#10;労働判例ジャーナル2025.10 No.163に掲載&#10;裁判所への手続きにより特別保存（永久保存）となっています"></textarea>
       </div>
       <div class="field">
         <label>リンク（1行に1つのURL。X・ホームページなど）</label>
@@ -928,7 +950,7 @@ window.CC = (function(){
   const $ = (id)=>document.getElementById(id);
   const caseOverlay=$("caseOverlay"), matOverlay=$("matOverlay");
   const cFields = { name:$("cName"), caseNo:$("cCaseNo"), parties:$("cParties"), judge:$("cJudge"), points:$("cPoints"),
-                    lede:$("cLede"), callText:$("cCall"), host:$("cHost"), contact:$("cContact"), links:$("cLinks"),
+                    lede:$("cLede"), callText:$("cCall"), host:$("cHost"), contact:$("cContact"), press:$("cPress"), links:$("cLinks"),
                     tags:$("cTags"), archivedAt:$("cArchivedAt"), closeType:$("cCloseType"), result:$("cResult") };
   const mFields = { title:$("mTitle"), side:$("mSide"), kind:$("mKind"), event:$("mEvent"), filedOn:$("mFiledOn"),
                     url:$("mUrl"), file:$("mFile"), fileField:$("mFileField"), fileNow:$("mFileNow"),
@@ -940,7 +962,8 @@ window.CC = (function(){
     cFields.name.value=c.name||""; cFields.caseNo.value=c.caseNo||""; cFields.parties.value=c.parties||"";
     cFields.judge.value=c.judge||"";
     cFields.points.value=(c.points||[]).join("\n"); cFields.lede.value=c.lede||""; cFields.callText.value=c.callText||"";
-    cFields.host.value=c.host||""; cFields.contact.value=c.contact||""; cFields.links.value=(c.links||[]).join("\n");
+    cFields.host.value=c.host||""; cFields.contact.value=c.contact||""; cFields.press.value=(c.press||[]).join("\n");
+    cFields.links.value=(c.links||[]).join("\n");
     cFields.tags.value=(c.tags||[]).join("\n");
     cFields.archivedAt.value=c.archivedAt||""; cFields.closeType.value=c.closeType||""; cFields.result.value=c.result||"";
   }
@@ -967,6 +990,7 @@ window.CC = (function(){
       points:cFields.points.value.split("\n").map(s=>s.trim()).filter(Boolean),
       lede:cFields.lede.value.trim(), callText:cFields.callText.value.trim(),
       host:cFields.host.value.trim(), contact:cFields.contact.value.trim(),
+      press:cFields.press.value.split("\n").map(s=>s.trim()).filter(Boolean),
       links:cFields.links.value.split("\n").map(s=>s.trim()).filter(Boolean),
       tags:cFields.tags.value.split("\n").map(s=>s.trim()).filter(Boolean),
       archivedAt:cFields.archivedAt.value, closeType:cFields.closeType.value.trim(), result:cFields.result.value.trim(),
@@ -1193,15 +1217,21 @@ window.CC = (function(){
     }
     for(const e of inEvents){
       try{
-        const known=caseByName(e.case);
+        let known=caseByName(e.case);
+        if(!known){
+          if(!e.case){ ng++; continue; }
+          // 旧形式（期日の行に事件の説明が埋め込まれている）：取り込みのときだけ、その内容で事件を先に作る。
+          // 普段の「＋期日を追加」では事件の自動作成はしない（誤字で事件が乱立するのを防ぐため）。
+          known = await apiCreateCase({
+            name:e.case, caseNo:e.caseNo, parties:e.parties, host:e.host, contact:e.contact, lede:e.lede, points:e.points,
+          });
+          cases.push(known);
+        }
         const created=await apiCreate({
-          caseId: known?known.id:"", case:e.case, date:e.date, time:e.time, type:e.type,
+          caseId: known.id, case:e.case, date:e.date, time:e.time, type:e.type,
           court:e.court, place:e.place, open:e.open, level:e.level,
-          // 旧形式なら事件の説明も一緒に送る（新しい事件を起こすときに使われる）
-          caseNo:e.caseNo, parties:e.parties, host:e.host, contact:e.contact, lede:e.lede, points:e.points,
         });
         events.push(created); ok++;
-        if(!known) await reloadCases();
       }catch(err){ ng++; }
     }
     if(onChange) onChange();
@@ -1245,7 +1275,7 @@ window.CC = (function(){
     get loaded(){ return loaded; },
     caseById, caseByName, caseEvents, casePosts, caseMaterials, caseImages, nearestCase, nextEvent, eventLine,
     likeHtml, toggleLike, isArchived,
-    load, renderCaseDetail, renderStatus, openAdd,
+    load, renderCaseDetail, renderStatus, openAdd, apiCreate,
     setOnChange(fn){ onChange = fn; },
   };
 })();
