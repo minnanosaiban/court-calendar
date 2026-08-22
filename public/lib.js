@@ -259,9 +259,9 @@ window.CC = (function(){
     let html = `
       <div class="card dcard">
         ${full ? galleryHtml(caseId) : ""}
+        ${linksHtml(c)}
         <div class="d-head">
           <h2 class="d-title">${escapeHtml(c.name)} ${likeHtml(c)}</h2>
-          ${linksHtml(c)}
         </div>
         ${tagsHtml(c)}
         ${full ? shareHtml(c) : ""}
@@ -288,8 +288,12 @@ window.CC = (function(){
       c.host?`呼びかけ：${escapeHtml(c.host)}`:"",
       c.contact?`連絡先：<a href="mailto:${escapeAttr(c.contact)}">${escapeHtml(c.contact)}</a>`:""
     ].filter(Boolean).join("<br>");
-    if(!c.callText && !c.lede && !credit) return "";
-    return `<div class="lede"><p class="lede-title">よびかけ</p>${c.lede?`<p>${escapeHtml(c.lede)}</p>`:""}${c.callText?`<p class="call">${escapeHtml(c.callText)}</p>`:""}${credit?`<span class="credit">${credit}</span>`:""}</div>`;
+    if(!c.callText && !credit) return "";
+    // 空行区切りを段落として分ける（旧「事件の説明」欄との統合で、1つの欄に複数段落が入るようになったため）
+    const paras = c.callText
+      ? c.callText.split(/\n{2,}/).map(p=>p.trim()).filter(Boolean).map(p=>`<p class="call">${escapeHtml(p)}</p>`).join("")
+      : "";
+    return `<div class="lede"><p class="lede-title">よびかけ</p>${paras}${credit?`<span class="credit">${credit}</span>`:""}</div>`;
   }
 
   // ---- 報道・掲載（新聞・ニュース・判例誌への掲載、特別保存の指定など。1行1項目、URLがあれば自動でリンクにする） ----
@@ -847,11 +851,10 @@ window.CC = (function(){
           <label>事件名 <span style="color:var(--stamp)">*</span></label>
           <input type="text" id="cName" placeholder="例）情報公開請求をめぐる訴訟">
         </div>
-        <div class="field"><label>当事者</label><input type="text" id="cParties" placeholder="例）原告 ○○　被告 △△"></div>
+        <div class="field"><label>当事者</label><input type="text" id="cParties" placeholder="例）原告 従業員 ／ 被告 〇〇株式会社"></div>
         <div class="field"><label>裁判官（任意）</label><input type="text" id="cJudge" placeholder="例）○○ ○○"></div>
         <div class="field"><label>争点（1行に1つ）</label><textarea id="cPoints" placeholder="例）◯◯の事実があったか"></textarea></div>
-        <div class="field"><label>事件の説明（3〜4行）</label><textarea id="cLede" placeholder="どんな裁判か"></textarea></div>
-        <div class="field"><label>よびかけ</label><textarea id="cCall" placeholder="傍聴や支援をお願いする文章（任意）"></textarea></div>
+        <div class="field"><label>よびかけ</label><textarea id="cCall" placeholder="どんな裁判か、傍聴や支援をお願いする文章など（空行を挟むと段落を分けられます）"></textarea></div>
         <div class="two">
           <div class="field"><label>呼びかけ団体・お名前</label><input type="text" id="cHost" placeholder="例）A社従業員"></div>
           <div class="field"><label>連絡先（公開してよいもの）</label><input type="text" id="cContact" placeholder="例）メールアドレス"></div>
@@ -1046,7 +1049,7 @@ window.CC = (function(){
 
   const $ = (id)=>document.getElementById(id);
   const cFields = { name:$("cName"), parties:$("cParties"), judge:$("cJudge"), points:$("cPoints"),
-                    lede:$("cLede"), callText:$("cCall"), host:$("cHost"), contact:$("cContact"), press:$("cPress"), links:$("cLinks"),
+                    callText:$("cCall"), host:$("cHost"), contact:$("cContact"), press:$("cPress"), links:$("cLinks"),
                     tags:$("cTags"), archivedAt:$("cArchivedAt"), closeType:$("cCloseType") };
   const mFields = { title:$("mTitle"), side:$("mSide"), kind:$("mKind"), event:$("mEvent"), filedOn:$("mFiledOn"),
                     url:$("mUrl"), file:$("mFile"), fileField:$("mFileField"), fileNow:$("mFileNow"),
@@ -1057,7 +1060,7 @@ window.CC = (function(){
   function fillCaseForm(c){
     cFields.name.value=c.name||""; cFields.parties.value=c.parties||"";
     cFields.judge.value=c.judge||"";
-    cFields.points.value=(c.points||[]).join("\n"); cFields.lede.value=c.lede||""; cFields.callText.value=c.callText||"";
+    cFields.points.value=(c.points||[]).join("\n"); cFields.callText.value=c.callText||"";
     cFields.host.value=c.host||""; cFields.contact.value=c.contact||""; cFields.press.value=(c.press||[]).join("\n");
     cFields.links.value=(c.links||[]).join("\n");
     cFields.tags.value=(c.tags||[]).join("\n");
@@ -1085,7 +1088,7 @@ window.CC = (function(){
     const data={
       name, parties:cFields.parties.value.trim(), judge:cFields.judge.value.trim(),
       points:cFields.points.value.split("\n").map(s=>s.trim()).filter(Boolean),
-      lede:cFields.lede.value.trim(), callText:cFields.callText.value.trim(),
+      callText:cFields.callText.value.trim(),
       host:cFields.host.value.trim(), contact:cFields.contact.value.trim(),
       press:cFields.press.value.split("\n").map(s=>s.trim()).filter(Boolean),
       links:cFields.links.value.split("\n").map(s=>s.trim()).filter(Boolean),
@@ -1318,7 +1321,7 @@ window.CC = (function(){
           // 旧形式（期日の行に事件の説明が埋め込まれている）：取り込みのときだけ、その内容で事件を先に作る。
           // 普段の「＋期日を追加」では事件の自動作成はしない（誤字で事件が乱立するのを防ぐため）。
           known = await apiCreateCase({
-            name:e.case, parties:e.parties, host:e.host, contact:e.contact, lede:e.lede, points:e.points,
+            name:e.case, parties:e.parties, host:e.host, contact:e.contact, callText:e.lede, points:e.points,
           });
           cases.push(known);
         }

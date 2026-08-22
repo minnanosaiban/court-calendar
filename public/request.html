@@ -38,10 +38,9 @@
       <label>事件名 <span style="color:var(--stamp)">*</span></label>
       <input type="text" id="rName" placeholder="例）情報公開請求をめぐる訴訟">
     </div>
-    <div class="field"><label>当事者</label><input type="text" id="rParties" placeholder="例）原告 〇〇　被告 △△"></div>
+    <div class="field"><label>当事者</label><input type="text" id="rParties" placeholder="例）原告 従業員 ／ 被告 〇〇株式会社"></div>
     <div class="field"><label>裁判官（分かれば）</label><input type="text" id="rJudge" placeholder="例）〇〇 〇〇"></div>
     <div class="field"><label>争点（1行に1つ）</label><textarea id="rPoints" placeholder="例）〇〇の事実があったか"></textarea></div>
-    <div class="field"><label>事件の説明（3〜4行程度。どんな裁判か）</label><textarea id="rLede"></textarea></div>
     <div class="field"><label>タグ（分かれば・1行に1つ）</label><textarea id="rTags" placeholder="例）労働&#10;パワハラ"></textarea></div>
 
     <p class="msec">終結（終結した事件のみ・任意）</p>
@@ -51,7 +50,7 @@
     </div>
 
     <p class="msec">よびかけ（任意）</p>
-    <div class="field"><label>よびかけ文</label><textarea id="rCall" placeholder="傍聴や支援をお願いする文章（任意）"></textarea></div>
+    <div class="field"><label>よびかけ文</label><textarea id="rCall" placeholder="どんな裁判か、傍聴や支援をお願いする文章など（空行を挟むと段落を分けられます）"></textarea></div>
     <div class="two">
       <div class="field"><label>呼びかけ団体・お名前</label><input type="text" id="rHost" placeholder="例）A社従業員"></div>
       <div class="field"><label>連絡先（公開してよいもの）</label><input type="text" id="rContact" placeholder="例）メールアドレス"></div>
@@ -114,7 +113,7 @@
 
     const caseObj = {
       name, parties: val("rParties"), judge: val("rJudge"),
-      points: lines("rPoints"), lede: val("rLede"), callText: val("rCall"),
+      points: lines("rPoints"), callText: val("rCall"),
       host: val("rHost"), contact: val("rContact"),
       press: lines("rPress"), tags: lines("rTags"),
       archivedAt: val("rArchivedAt"), closeType: val("rCloseType"),

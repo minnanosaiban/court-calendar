@@ -15,8 +15,8 @@ export async function onRequestGet({ request, env }) {
   if (!assetRes.ok || (!id && !legacyName)) return assetRes;
 
   const c = id
-    ? await env.DB.prepare(`SELECT id, name, lede FROM cases WHERE id = ?`).bind(id).first()
-    : await env.DB.prepare(`SELECT id, name, lede FROM cases WHERE name = ?`).bind(legacyName).first();
+    ? await env.DB.prepare(`SELECT id, name, call_text FROM cases WHERE id = ?`).bind(id).first()
+    : await env.DB.prepare(`SELECT id, name, call_text FROM cases WHERE name = ?`).bind(legacyName).first();
   if (!c) return assetRes;
 
   const img = await env.DB.prepare(
@@ -25,7 +25,7 @@ export async function onRequestGet({ request, env }) {
   const imageUrl = img ? new URL("/files/" + img.r2_key, request.url).toString() : "";
 
   const title = `${c.name} ｜ みんなの裁判`;
-  const description = (c.lede || "行けない日も、法廷のいまがわかる。裁判の期日と、傍聴に行った人の報告を、ひとつのカレンダーに。").slice(0, 140);
+  const description = (c.call_text || "行けない日も、法廷のいまがわかる。裁判の期日と、傍聴に行った人の報告を、ひとつのカレンダーに。").slice(0, 140);
 
   const extraTags = [
     `<meta property="og:title" content="${escAttr(title)}">`,

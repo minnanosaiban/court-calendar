@@ -40,6 +40,7 @@ migrate_007_tags.sql              事件のタグ（cases.tags）列を追加す
 migrate_008_archive.sql           事件の終結（archived_at/close_type/result）列を追加する一度きりのマイグレーション
 migrate_012_judge.sql             事件の裁判官（cases.judge・任意）列を追加する一度きりのマイグレーション
 migrate_015_drop_unused_fields.sql 画面のどこにも表示されていなかった cases.case_no/result・events.level 列を削除する一度きりのマイグレーション
+migrate_016_merge_lede_into_calltext.sql 事件の説明（cases.lede）をよびかけ（cases.call_text）に統合し、lede 列を削除する一度きりのマイグレーション
 seed_demo.sql                     動作確認用の架空データ（v3 形式・消し方はファイル冒頭のコメント参照）
 wrangler.toml           設定（D1・R2 バインド・環境変数）
 ```
@@ -49,7 +50,7 @@ wrangler.toml           設定（D1・R2 バインド・環境変数）
 CALL4 のように「事件」を中心に据えた。事件に属するもの（当事者・争点・説明・よびかけ・リンク）は `cases` に1回だけ持ち、
 期日（`events`）は `case_id` で事件にぶら下がる。訴訟資料（`materials`）は目録を D1、ファイル本体を R2 に置く。
 
-- `cases`：`name`（事件名・一意）`parties` `judge`（裁判官・任意）`points`（争点・改行区切り）`lede`（説明）`call_text`（よびかけ）`host` `contact` `press`（報道・掲載、改行区切り・任意。行内に`https://`があれば自動でリンク化）`links`（URL・改行区切り。X などはドメインでアイコンを出し分け）
+- `cases`：`name`（事件名・一意）`parties` `judge`（裁判官・任意）`points`（争点・改行区切り）`call_text`（よびかけ。事件の説明も含む自由記述・空行区切りで複数段落可）`host` `contact` `press`（報道・掲載、改行区切り・任意。行内に`https://`があれば自動でリンク化）`links`（URL・改行区切り。X などはドメインでアイコンを出し分け）
 - `events`：`case_id` `date` `time` `type` `court` `place` `open`（事件の説明の列は落とした）
 - `materials`：`case_id` `event_id`（任意＝タイムラインの節にぶら下がる）`title` `side`（原告側/被告側/裁判所/その他）`kind`（主張書面/証拠/判決・決定/その他）`filed_on` `r2_key` `file_name` `file_size` `mime` `claims`（箇条書き・任意）`summary`（要約・手入力・任意）
 - `likes`：`(case_id, viewer)` が主キー。`viewer` は端末が持つ乱数（`X-Viewer` ヘッダ）の SHA-256。同じ端末から何度押しても1件
@@ -158,6 +159,16 @@ X などでシェアしたときに正しいカード（タイトル・説明・
 
 - 削除：`cases.case_no`（事件番号）`cases.result`（結果）`events.level`（見どころタグ）
 - 残す：`cases.archived_at`・`cases.close_type`（終結日・終結の種類）は `cases.html` の「終結」一覧に表示されているため据え置き
+
+### v4：事件の説明をよびかけに統合（2026-08-22）
+
+`cases.lede`（事件の説明）は、よびかけ欄（`call_text`）のすぐ上に並べて表示するだけで、独立した使い道が無かったため統合（`migrate_016_merge_lede_into_calltext.sql`）。
+本番データは4件とも `lede` に本文があり `call_text` は空だったため、マイグレーションで `lede` の内容を `call_text` へコピー（両方に内容がある場合は空行区切りで連結）してから `lede` 列を削除。
+
+- 事件モーダルの「事件の説明」欄を廃止し、「よびかけ」欄1つに統合（プレースホルダで「どんな裁判か、傍聴や支援をお願いする文章など」と案内）
+- 表示側（`callHtml`）は `call_text` を空行区切りで段落に分けて表示するよう変更（統合後は1つの欄に複数段落が入りうるため）
+- `functions/case.js`（OGP・Twitterカードの説明文の元）も `lede` → `call_text` に変更
+- 旧形式（バックアップJSON）の取り込みでは、引き続き `lede` キーを受け付け、新規事件作成時に `call_text` へマップする（後方互換）
 
 ### （過去）events テーブルの列（2026-08-20〜21）
 

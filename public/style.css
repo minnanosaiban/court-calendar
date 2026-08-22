@@ -77,13 +77,14 @@ a{color:inherit}
 .d-title{font-family:"Shippori Mincho",serif;font-size:1.22rem;font-weight:600;line-height:1.65}
 .d-body{font-size:.9rem;margin-top:6px}
 .mut{color:var(--mut)}
-/* タイトル行：左にタイトル＋いいね、右に当事者のアカウントリンク */
+/* タイトル行 */
 .d-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
-/* 写真ギャラリー・写真管理欄のすぐ下にタイトル行が来るときだけ、他の見出し(.minih)と同じ26pxをあける */
-.gal + .d-head, .imgmanage + .d-head{margin-top:26px}
+/* 写真ギャラリー・写真管理欄のすぐ下にタイトル行（または当事者のアカウントリンク）が来るときだけ、他の見出し(.minih)と同じ26pxをあける */
+.gal + .d-head, .imgmanage + .d-head, .gal + .d-links, .imgmanage + .d-links{margin-top:26px}
 .d-head .d-title{flex:1;min-width:0}
-.d-links{flex:none;display:flex;gap:4px;margin-top:4px}
-.d-link{display:grid;place-content:center;width:32px;height:32px;border-radius:50%;color:var(--mut);font-size:1.3rem;text-decoration:none}
+/* 当事者のアカウントリンク（X・ホームページなど）はタイトルの上に置く */
+.d-links{display:flex;gap:4px;margin-bottom:6px}
+.d-link{display:grid;place-content:center;width:32px;height:32px;border-radius:50%;color:var(--faint);font-size:1.3rem;text-decoration:none}
 .d-link:hover{color:var(--ink)}
 /* いいね：タイトルに続けて置く。押すと朱色で塗る */
 .like{display:inline-flex;align-items:center;gap:4px;vertical-align:middle;margin-left:.35em;
@@ -99,7 +100,7 @@ a{color:inherit}
 .share{display:flex;gap:2px;align-items:center;margin-top:10px}
 .share-lab{font-size:.7rem;color:var(--mut);letter-spacing:.1em;margin-right:6px}
 .share a,.share button{display:grid;place-content:center;width:30px;height:30px;border-radius:50%;
-  color:var(--mut);font-size:.9rem;text-decoration:none;background:none;border:none;cursor:pointer;font-family:inherit}
+  color:var(--faint);font-size:.9rem;text-decoration:none;background:none;border:none;cursor:pointer;font-family:inherit}
 .share a:hover,.share button:hover{color:var(--ink)}
 .share button.copied{color:#2f7d4f}
 .d-next{font-family:"Shippori Mincho",serif;font-weight:500}
