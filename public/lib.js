@@ -22,7 +22,6 @@ window.CC = (function(){
   let editingImgId = null;       // 編集中の写真
   let boardFormForCase = null;   // 投稿フォームを開いている事件ID
   let openNodes = new Set();     // タイムラインで開いている節（期日ID）
-  let openSummaries = new Set(); // 開いている「要約」ボタン（資料ID）
   let tsToken = "";
   let tsScriptPromise = null;
   let onChange = null;           // ページ側が登録する「データが変わったら呼ぶ」コールバック
@@ -48,35 +47,6 @@ window.CC = (function(){
   function jpDate(s){ const d=parseYmd(s); return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${WD[d.getDay()]}）`; }
   function dotDate(s){ return s ? s.replace(/-/g,".") : ""; }
 
-  // ---- 資料の本文（Markdown）を、簡単な安全なHTMLに変換 ----
-  // まず全体をエスケープしてから記法を当てはめるので、貼り付けた本文に生のHTMLが混ざっても実行されない。
-  function inlineMd(s){
-    let t = escapeHtml(s);
-    t = t.replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>");
-    t = t.replace(/(^|[^*])\*([^*]+)\*(?!\*)/g,"$1<em>$2</em>");
-    t = t.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
-    return t;
-  }
-  function mdToHtml(src){
-    const blocks = String(src||"").replace(/\r\n/g,"\n").trim().split(/\n{2,}/);
-    return blocks.map(block=>{
-      const lines = block.split("\n").map(l=>l.replace(/\s+$/,""));
-      if(lines.length===1){
-        const h = lines[0].match(/^(#{1,3})\s+(.*)$/);
-        if(h){ const lv=h[1].length+2; return `<h${lv}>${inlineMd(h[2])}</h${lv}>`; }
-      }
-      if(lines.every(l=>/^[-・]\s+/.test(l))){
-        return `<ul>${lines.map(l=>`<li>${inlineMd(l.replace(/^[-・]\s+/,""))}</li>`).join("")}</ul>`;
-      }
-      if(lines.every(l=>/^\d+[.)]\s+/.test(l))){
-        return `<ol>${lines.map(l=>`<li>${inlineMd(l.replace(/^\d+[.)]\s+/,""))}</li>`).join("")}</ol>`;
-      }
-      if(lines.every(l=>/^>\s?/.test(l))){
-        return `<blockquote><p>${lines.map(l=>inlineMd(l.replace(/^>\s?/,""))).join("<br>")}</p></blockquote>`;
-      }
-      return `<p>${lines.map(inlineMd).join("<br>")}</p>`;
-    }).join("\n");
-  }
 
   // ================= API =================
   async function api(method, path, body, extra){
@@ -291,7 +261,7 @@ window.CC = (function(){
         </div>
         ${tagsHtml(c)}
         ${full ? shareHtml(c) : ""}
-        ${editCase}
+        ${!full ? editCase : ""}
         ${next?`<p class="minih">最近の期日</p><p class="d-body d-next">${escapeHtml(eventLine(next))}${next.open===false?`<span class="round-closed">非公開・要確認</span>`:""}</p>`:""}
         ${points?`<p class="minih">争点</p><ul class="pts">${points}</ul>`:""}
         ${c.parties?`<p class="minih">当事者</p><p class="d-body">${escapeHtml(c.parties)}</p>`:""}
@@ -301,7 +271,8 @@ window.CC = (function(){
     if(!full){
       html += `<p class="d-more"><a class="pillbtn" href="case?id=${encodeURIComponent(c.id)}">詳細を見る <i class="bi bi-arrow-right" aria-hidden="true"></i></a></p>`;
     }else{
-      html += callHtml(c) + timelineHtml(caseId) + materialsListHtml(caseId);
+      const editCaseQact = me.canWrite ? `<p class="qact"><a data-editcase="${escapeAttr(c.id)}">＋ 事件を編集</a></p>` : "";
+      html += callHtml(c) + editCaseQact + timelineHtml(caseId) + materialsListHtml(caseId);
     }
     html += `</div>`;
     return html;
@@ -332,22 +303,22 @@ window.CC = (function(){
     const pdf = m.fileUrl
       ? `<a class="btn pdf" href="${escapeAttr(m.fileUrl)}" target="_blank" rel="noopener"><i class="bi ${icon}" aria-hidden="true"></i>PDF</a>`
       : `<span class="btn off"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>PDF</span>`;
+    // 本文はページを開かず、その場でクリップボードにコピーする（再利用・AIへの貼り付け用）
     const body = m.body
-      ? `<a class="btn" href="doc?id=${encodeURIComponent(m.id)}" target="_blank" rel="noopener"><i class="bi bi-file-earmark-text" aria-hidden="true"></i>テキスト</a>`
-      : `<span class="btn off"><i class="bi bi-file-earmark-text" aria-hidden="true"></i>テキスト</span>`;
+      ? `<button type="button" class="btn" data-copybody="${escapeAttr(m.id)}"><i class="bi bi-clipboard" aria-hidden="true"></i>テキスト</button>`
+      : `<span class="btn off"><i class="bi bi-clipboard" aria-hidden="true"></i>テキスト</span>`;
+    // 要約はその場で展開せず、ポップアップ（モーダル）で開く
     const sum = m.summary
-      ? `<button type="button" class="btn${openSummaries.has(m.id)?" on":""}" data-sumtoggle="${escapeAttr(m.id)}"><i class="bi bi-stars" aria-hidden="true"></i>要約</button>`
+      ? `<button type="button" class="btn" data-sumopen="${escapeAttr(m.id)}"><i class="bi bi-stars" aria-hidden="true"></i>要約</button>`
       : `<span class="btn off"><i class="bi bi-stars" aria-hidden="true"></i>要約</span>`;
     return `<span class="btns">${pdf}${body}${sum}</span>`;
   }
   function matBlockHtml(m){
     const claims=(m.claims||[]).map(x=>`<li>${escapeHtml(x)}</li>`).join("");
-    const showSum = m.summary && openSummaries.has(m.id);
     return `<div class="mat">
       <p class="mat-h">${sideTag(m)}<span class="mat-name">${escapeHtml(m.title)}</span>${m.kind?`<span class="mat-kind">${escapeHtml(m.kind)}</span>`:""}</p>
       ${matButtonsHtml(m)}
       ${claims?`<ul class="pts mat-claims">${claims}</ul>`:""}
-      ${showSum?`<p class="mat-sum"><span class="mat-sumh">要約</span>${escapeHtml(m.summary)}</p>`:""}
     </div>`;
   }
   // 期日ごとの「原告の主張／被告の主張」（3行程度の箇条書き）
@@ -394,11 +365,9 @@ window.CC = (function(){
     const mats=caseMaterials(caseId);
     const rows=mats.map(m=>{
       const edit = me.canWrite ? `<a class="round-edit" data-editmat="${escapeAttr(m.id)}">編集</a>` : "";
-      const showSum = m.summary && openSummaries.has(m.id);
       return `<li class="mrow">
         ${m.filedOn?`<span class="mdate">${escapeHtml(dotDate(m.filedOn))}</span>`:""}
-        <span class="mmain">${sideTag(m)}<span class="mat-name">${escapeHtml(m.title)}</span>${m.kind?`<span class="mat-kind">${escapeHtml(m.kind)}</span>`:""}${matButtonsHtml(m)}${edit}
-        ${showSum?`<span class="mat-sum"><span class="mat-sumh">要約</span>${escapeHtml(m.summary)}</span>`:""}</span>
+        <span class="mmain">${sideTag(m)}<span class="mat-name">${escapeHtml(m.title)}</span>${m.kind?`<span class="mat-kind">${escapeHtml(m.kind)}</span>`:""}${matButtonsHtml(m)}${edit}</span>
       </li>`;
     }).join("");
     return `<p class="minih">訴訟資料一覧</p>
@@ -605,12 +574,10 @@ window.CC = (function(){
         rerender();
       });
     });
-    container.querySelectorAll("[data-sumtoggle]").forEach(b=>{
+    container.querySelectorAll("[data-sumopen]").forEach(b=>{
       b.addEventListener("click",(e)=>{
         e.stopPropagation();
-        const id=b.dataset.sumtoggle;
-        if(openSummaries.has(id)) openSummaries.delete(id); else openSummaries.add(id);
-        rerender();
+        openSummaryModal(b.dataset.sumopen);
       });
     });
     container.querySelectorAll("[data-copylink]").forEach(b=>{
@@ -623,6 +590,23 @@ window.CC = (function(){
           setTimeout(()=>{ b.innerHTML=orig; b.classList.remove("copied"); },1500);
         }catch(err){
           alert("コピーできませんでした。アドレス欄からコピーしてください。");
+        }
+      });
+    });
+    container.querySelectorAll("[data-copybody]").forEach(b=>{
+      b.addEventListener("click",async ()=>{
+        const m = materialById(b.dataset.copybody); if(!m) return;
+        const c = caseById(m.caseId);
+        const meta = [c?c.name:"", [m.side,m.kind].filter(Boolean).join("・"), m.title].filter(Boolean).join("／");
+        const text = meta ? `${meta}\n\n${m.body}` : m.body;
+        try{
+          await navigator.clipboard.writeText(text);
+          const orig=b.innerHTML;
+          b.innerHTML=`<i class="bi bi-check2" aria-hidden="true"></i>コピーしました`;
+          b.classList.add("copied");
+          setTimeout(()=>{ b.innerHTML=orig; b.classList.remove("copied"); },1500);
+        }catch(err){
+          alert("コピーできませんでした。");
         }
       });
     });
@@ -926,6 +910,19 @@ window.CC = (function(){
       <button class="btn-save" id="iSave">保存</button>
     </div>
   </div>
+</div>
+<div class="overlay" id="sumOverlay">
+  <div class="modal sum-modal">
+    <div class="mhead" id="sumModalTitle"></div>
+    <div class="mbody">
+      <p class="msec">AIによる要約</p>
+      <p class="sum-text" id="sumModalText"></p>
+    </div>
+    <div class="mfoot">
+      <span class="spacer"></span>
+      <button class="btn-cancel" id="sumClose">閉じる</button>
+    </div>
+  </div>
 </div>`;
   document.body.insertAdjacentHTML("beforeend", EXTRA_MODALS);
   const $ = (id)=>document.getElementById(id);
@@ -1156,6 +1153,18 @@ window.CC = (function(){
   $("iDelete").addEventListener("click",deleteImg);
   imgOverlay.addEventListener("click",(e)=>{ if(e.target===imgOverlay) closeImgModal(); });
 
+  // ---- 要約（ポップアップで開く。編集はできない・閲覧専用） ----
+  const sumOverlay=$("sumOverlay");
+  function openSummaryModal(id){
+    const m = materialById(id); if(!m || !m.summary) return;
+    $("sumModalTitle").textContent = m.title;
+    $("sumModalText").textContent = m.summary;
+    sumOverlay.classList.add("show");
+  }
+  function closeSummaryModal(){ sumOverlay.classList.remove("show"); }
+  $("sumClose").addEventListener("click",closeSummaryModal);
+  sumOverlay.addEventListener("click",(e)=>{ if(e.target===sumOverlay) closeSummaryModal(); });
+
   // ================= バックアップ =================
   function exportData(){
     const data={ version:3, exportedAt:new Date().toISOString(), cases, events, materials, images };
@@ -1210,6 +1219,7 @@ window.CC = (function(){
       if(caseOverlay.classList.contains("show")) closeCaseModal();
       if(matOverlay.classList.contains("show")) closeMatModal();
       if(imgOverlay.classList.contains("show")) closeImgModal();
+      if(sumOverlay.classList.contains("show")) closeSummaryModal();
     }
     if((e.ctrlKey||e.metaKey)&&e.key==="Enter"){
       if(overlay.classList.contains("show")) saveEntry();
@@ -1233,8 +1243,8 @@ window.CC = (function(){
     get images(){ return images; },
     get me(){ return me; },
     get loaded(){ return loaded; },
-    caseById, caseByName, caseEvents, casePosts, caseMaterials, caseImages, materialById, nearestCase, nextEvent, eventLine,
-    mdToHtml, likeHtml, toggleLike, isArchived,
+    caseById, caseByName, caseEvents, casePosts, caseMaterials, caseImages, nearestCase, nextEvent, eventLine,
+    likeHtml, toggleLike, isArchived,
     load, renderCaseDetail, renderStatus, openAdd,
     setOnChange(fn){ onChange = fn; },
   };

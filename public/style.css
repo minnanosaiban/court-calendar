@@ -72,6 +72,8 @@ a{color:inherit}
 .mut{color:var(--mut)}
 /* タイトル行：左にタイトル＋いいね、右に当事者のアカウントリンク */
 .d-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+/* 写真ギャラリー・写真管理欄のすぐ下にタイトル行が来るときだけ、他の見出し(.minih)と同じ26pxをあける */
+.gal + .d-head, .imgmanage + .d-head{margin-top:26px}
 .d-head .d-title{flex:1;min-width:0}
 .d-links{flex:none;display:flex;gap:4px;margin-top:4px}
 .d-link{display:grid;place-content:center;width:32px;height:32px;border-radius:50%;color:var(--mut);font-size:1.3rem;text-decoration:none}
@@ -100,17 +102,6 @@ a{color:inherit}
 .lede p + p{margin-top:10px}
 .lede .call{font-family:"Shippori Mincho",serif}
 
-/* ---- 資料の本文（Markdownを変換したもの・doc.html） ---- */
-.doc-body{margin-top:22px;font-size:.94rem;line-height:1.9}
-.doc-body h2,.doc-body h3,.doc-body h4{font-family:"Shippori Mincho",serif;font-weight:600;margin:1.6em 0 .5em}
-.doc-body h2:first-child,.doc-body h3:first-child,.doc-body h4:first-child{margin-top:0}
-.doc-body p{margin-top:1em}
-.doc-body p:first-child{margin-top:0}
-.doc-body ul,.doc-body ol{margin:1em 0 1em 1.4em}
-.doc-body li{margin-top:.3em}
-.doc-body blockquote{margin:1em 0;padding:.2em 1em;border-left:3px solid var(--tint);color:var(--mut)}
-.doc-body a{text-underline-offset:3px}
-.doc-body strong{font-weight:700}
 /* 説明文の下に、呼びかけ人と連絡先を添える */
 .credit{display:block;color:var(--mut);font-size:.8rem;line-height:1.85;margin-top:10px}
 .credit a{color:var(--mut);text-underline-offset:3px}
@@ -156,8 +147,6 @@ a{color:inherit}
 .mat-name{font-weight:500}
 .mat-kind{color:var(--mut);font-size:.72rem}
 .mat-claims{margin-top:6px;font-size:.86rem}
-.mat-sum{display:block;margin-top:8px;font-size:.84rem;color:var(--ink);flex-basis:100%}
-.mat-sumh{display:inline-block;font-size:.68rem;letter-spacing:.18em;color:var(--mut);margin-right:.6em}
 .mlist{list-style:none;margin-top:8px;font-size:.88rem}
 .mrow{display:flex;gap:12px;padding:7px 0;border-top:1px solid var(--tint)}
 .mrow:first-child{border-top:none}
@@ -174,6 +163,8 @@ a{color:inherit}
 .btn.off{opacity:.4;cursor:default;background:none}
 .btn.on{background:var(--ink);color:#fff;border-color:var(--ink)}
 .btn.on .bi{color:#fff}
+.btn.copied{color:#2f7d4f;border-color:#2f7d4f}
+.btn.copied .bi{color:#2f7d4f}
 .mat .btns{margin-top:8px}
 /* 原告/被告の主張（タイムラインの節の中、資料の上） */
 .args{display:grid;gap:10px;margin-top:10px}
@@ -345,6 +336,8 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .modal .mbody{padding:14px 24px 4px}
 .msec{font-size:.66rem;letter-spacing:.22em;color:var(--mut);margin:20px 0 10px}
 .msec:first-child{margin-top:0}
+.sum-modal{max-width:560px}
+.sum-text{font-size:.92rem;line-height:1.9;white-space:pre-wrap}
 .field{margin-bottom:13px}
 .field label{display:block;font-size:.76rem;color:var(--mut);margin-bottom:4px}
 .field .check{display:flex;align-items:center;gap:8px;font-size:.88rem;color:var(--ink)}
