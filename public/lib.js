@@ -730,26 +730,20 @@ window.CC = (function(){
             <input type="time" id="fTime">
           </div>
         </div>
-        <div class="two">
-          <div class="field">
-            <label>種別</label>
-            <input type="text" id="fType" list="typeList" placeholder="例）第3回口頭弁論">
-            <datalist id="typeList">
-              <option value="口頭弁論">
-              <option value="弁論準備">
-              <option value="進行協議">
-              <option value="和解">
-              <option value="尋問">
-              <option value="当事者尋問">
-              <option value="判決言渡">
-              <option value="控訴審 第1回">
-              <option value="提出期限（書面）">
-            </datalist>
-          </div>
-          <div class="field">
-            <label>見どころタグ</label>
-            <input type="text" id="fLevel" placeholder="例）はじめて向け・見ごたえあり">
-          </div>
+        <div class="field">
+          <label>種別</label>
+          <input type="text" id="fType" list="typeList" placeholder="例）第3回口頭弁論">
+          <datalist id="typeList">
+            <option value="口頭弁論">
+            <option value="弁論準備">
+            <option value="進行協議">
+            <option value="和解">
+            <option value="尋問">
+            <option value="当事者尋問">
+            <option value="判決言渡">
+            <option value="控訴審 第1回">
+            <option value="提出期限（書面）">
+          </datalist>
         </div>
         <div class="two">
           <div class="field">
@@ -853,16 +847,13 @@ window.CC = (function(){
           <label>事件名 <span style="color:var(--stamp)">*</span></label>
           <input type="text" id="cName" placeholder="例）情報公開請求をめぐる訴訟">
         </div>
-        <div class="two">
-          <div class="field"><label>事件番号</label><input type="text" id="cCaseNo" placeholder="わかれば"></div>
-          <div class="field"><label>当事者</label><input type="text" id="cParties" placeholder="例）原告 ○○　被告 △△"></div>
-        </div>
+        <div class="field"><label>当事者</label><input type="text" id="cParties" placeholder="例）原告 ○○　被告 △△"></div>
         <div class="field"><label>裁判官（任意）</label><input type="text" id="cJudge" placeholder="例）○○ ○○"></div>
         <div class="field"><label>争点（1行に1つ）</label><textarea id="cPoints" placeholder="例）◯◯の事実があったか"></textarea></div>
         <div class="field"><label>事件の説明（3〜4行）</label><textarea id="cLede" placeholder="どんな裁判か"></textarea></div>
         <div class="field"><label>よびかけ</label><textarea id="cCall" placeholder="傍聴や支援をお願いする文章（任意）"></textarea></div>
         <div class="two">
-          <div class="field"><label>呼びかけ団体・お名前</label><input type="text" id="cHost"></div>
+          <div class="field"><label>呼びかけ団体・お名前</label><input type="text" id="cHost" placeholder="例）A社従業員"></div>
           <div class="field"><label>連絡先（公開してよいもの）</label><input type="text" id="cContact" placeholder="例）メールアドレス"></div>
         </div>
         <div class="field">
@@ -881,10 +872,6 @@ window.CC = (function(){
         <div class="two">
           <div class="field"><label>終結日</label><input type="date" id="cArchivedAt"></div>
           <div class="field"><label>終結の種類</label><input type="text" id="cCloseType" placeholder="例）判決、和解、取下げ"></div>
-        </div>
-        <div class="field">
-          <label>結果（1〜2行・任意）</label>
-          <textarea id="cResult" placeholder="例）原告の請求を一部認容（請求額の約6割）。控訴せず確定。"></textarea>
         </div>
       </div>
       <div class="mfoot">
@@ -922,14 +909,13 @@ window.CC = (function(){
   const fCourt = document.getElementById("fCourt");
   const fPlace = document.getElementById("fPlace");
   const fOpen = document.getElementById("fOpen");
-  const fLevel = document.getElementById("fLevel");
   const fPlaintiff = document.getElementById("fPlaintiff");
   const fDefendant = document.getElementById("fDefendant");
   const caseList = document.getElementById("caseList");
   const btnSave = document.getElementById("btnSave");
   const btnCancel = document.getElementById("btnCancel");
   const btnDelete = document.getElementById("btnDelete");
-  const formInputs = [fCase,fDate,fTime,fType,fCourt,fPlace,fOpen,fLevel,fPlaintiff,fDefendant];
+  const formInputs = [fCase,fDate,fTime,fType,fCourt,fPlace,fOpen,fPlaintiff,fDefendant];
 
   // ---- タブ（写真／事件情報／期日／資料）。既存の事件を対象に開いたときだけ表示する ----
   const ceTabs = document.getElementById("ceTabs");
@@ -969,7 +955,7 @@ window.CC = (function(){
   function fillEventForm(ev){
     fCase.value=ev.case||""; fDate.value=ev.date||""; fTime.value=ev.time||"";
     fType.value=ev.type||""; fCourt.value=ev.court||""; fPlace.value=ev.place||"";
-    fOpen.checked = ev.open!==false; fLevel.value=ev.level||"";
+    fOpen.checked = ev.open!==false;
     fPlaintiff.value=(ev.plaintiffArgument||[]).join("\n");
     fDefendant.value=(ev.defendantArgument||[]).join("\n");
   }
@@ -1025,7 +1011,7 @@ window.CC = (function(){
     const data={
       caseId: known.id, case:c, date:d, time:fTime.value,
       type:fType.value.trim(), court:fCourt.value.trim(), place:fPlace.value.trim(),
-      open:fOpen.checked, level:fLevel.value.trim(),
+      open:fOpen.checked,
       plaintiffArgument:fPlaintiff.value.split("\n").map(s=>s.trim()).filter(Boolean),
       defendantArgument:fDefendant.value.split("\n").map(s=>s.trim()).filter(Boolean),
     };
@@ -1059,9 +1045,9 @@ window.CC = (function(){
   }
 
   const $ = (id)=>document.getElementById(id);
-  const cFields = { name:$("cName"), caseNo:$("cCaseNo"), parties:$("cParties"), judge:$("cJudge"), points:$("cPoints"),
+  const cFields = { name:$("cName"), parties:$("cParties"), judge:$("cJudge"), points:$("cPoints"),
                     lede:$("cLede"), callText:$("cCall"), host:$("cHost"), contact:$("cContact"), press:$("cPress"), links:$("cLinks"),
-                    tags:$("cTags"), archivedAt:$("cArchivedAt"), closeType:$("cCloseType"), result:$("cResult") };
+                    tags:$("cTags"), archivedAt:$("cArchivedAt"), closeType:$("cCloseType") };
   const mFields = { title:$("mTitle"), side:$("mSide"), kind:$("mKind"), event:$("mEvent"), filedOn:$("mFiledOn"),
                     url:$("mUrl"), file:$("mFile"), fileField:$("mFileField"), fileNow:$("mFileNow"),
                     claims:$("mClaims"), body:$("mBody"), summary:$("mSummary") };
@@ -1069,13 +1055,13 @@ window.CC = (function(){
 
   // ---- 事件 ----
   function fillCaseForm(c){
-    cFields.name.value=c.name||""; cFields.caseNo.value=c.caseNo||""; cFields.parties.value=c.parties||"";
+    cFields.name.value=c.name||""; cFields.parties.value=c.parties||"";
     cFields.judge.value=c.judge||"";
     cFields.points.value=(c.points||[]).join("\n"); cFields.lede.value=c.lede||""; cFields.callText.value=c.callText||"";
     cFields.host.value=c.host||""; cFields.contact.value=c.contact||""; cFields.press.value=(c.press||[]).join("\n");
     cFields.links.value=(c.links||[]).join("\n");
     cFields.tags.value=(c.tags||[]).join("\n");
-    cFields.archivedAt.value=c.archivedAt||""; cFields.closeType.value=c.closeType||""; cFields.result.value=c.result||"";
+    cFields.archivedAt.value=c.archivedAt||""; cFields.closeType.value=c.closeType||"";
   }
   function openCaseAdd(){
     if(!me.canWrite) return;
@@ -1097,14 +1083,14 @@ window.CC = (function(){
     const name=cFields.name.value.trim();
     if(!name){ alert("事件名を入力してください。"); cFields.name.focus(); return; }
     const data={
-      name, caseNo:cFields.caseNo.value.trim(), parties:cFields.parties.value.trim(), judge:cFields.judge.value.trim(),
+      name, parties:cFields.parties.value.trim(), judge:cFields.judge.value.trim(),
       points:cFields.points.value.split("\n").map(s=>s.trim()).filter(Boolean),
       lede:cFields.lede.value.trim(), callText:cFields.callText.value.trim(),
       host:cFields.host.value.trim(), contact:cFields.contact.value.trim(),
       press:cFields.press.value.split("\n").map(s=>s.trim()).filter(Boolean),
       links:cFields.links.value.split("\n").map(s=>s.trim()).filter(Boolean),
       tags:cFields.tags.value.split("\n").map(s=>s.trim()).filter(Boolean),
-      archivedAt:cFields.archivedAt.value, closeType:cFields.closeType.value.trim(), result:cFields.result.value.trim(),
+      archivedAt:cFields.archivedAt.value, closeType:cFields.closeType.value.trim(),
     };
     $("cSave").disabled=true;
     try{
@@ -1332,13 +1318,13 @@ window.CC = (function(){
           // 旧形式（期日の行に事件の説明が埋め込まれている）：取り込みのときだけ、その内容で事件を先に作る。
           // 普段の「＋期日を追加」では事件の自動作成はしない（誤字で事件が乱立するのを防ぐため）。
           known = await apiCreateCase({
-            name:e.case, caseNo:e.caseNo, parties:e.parties, host:e.host, contact:e.contact, lede:e.lede, points:e.points,
+            name:e.case, parties:e.parties, host:e.host, contact:e.contact, lede:e.lede, points:e.points,
           });
           cases.push(known);
         }
         const created=await apiCreate({
           caseId: known.id, case:e.case, date:e.date, time:e.time, type:e.type,
-          court:e.court, place:e.place, open:e.open, level:e.level,
+          court:e.court, place:e.place, open:e.open,
           plaintiffArgument:e.plaintiffArgument, defendantArgument:e.defendantArgument,
         });
         events.push(created); ok++;

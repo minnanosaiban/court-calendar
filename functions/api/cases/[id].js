@@ -17,12 +17,12 @@ export async function onRequestPut({ request, env, params }) {
 
   const res = await env.DB.prepare(
     `UPDATE cases
-        SET name=?, case_no=?, parties=?, judge=?, points=?, lede=?, call_text=?, host=?, contact=?, press=?, links=?, tags=?,
-            archived_at=?, close_type=?, result=?,
+        SET name=?, parties=?, judge=?, points=?, lede=?, call_text=?, host=?, contact=?, press=?, links=?, tags=?,
+            archived_at=?, close_type=?,
             updated_by=?, updated_at=?
       WHERE id=?`
-  ).bind(c.name, c.case_no, c.parties, c.judge, c.points, c.lede, c.call_text, c.host, c.contact, c.press, c.links, c.tags,
-         c.archived_at, c.close_type, c.result,
+  ).bind(c.name, c.parties, c.judge, c.points, c.lede, c.call_text, c.host, c.contact, c.press, c.links, c.tags,
+         c.archived_at, c.close_type,
          id.email, new Date().toISOString(), cid).run();
   if (!res.meta || res.meta.changes === 0) return json({ error: "not found" }, 404);
 

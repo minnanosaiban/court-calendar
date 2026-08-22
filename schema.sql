@@ -10,7 +10,6 @@
 CREATE TABLE IF NOT EXISTS cases (
   id          TEXT PRIMARY KEY,
   name        TEXT NOT NULL UNIQUE, -- 事件名（画面のタイトル）
-  case_no     TEXT,                 -- 事件番号（わかれば）
   parties     TEXT,                 -- 当事者
   judge       TEXT,                 -- 裁判官（任意）
   points      TEXT,                 -- 争点（1行1項目、改行区切り）
@@ -23,7 +22,6 @@ CREATE TABLE IF NOT EXISTS cases (
   tags        TEXT,                 -- タグ（1行1つ、改行区切り・任意）
   archived_at TEXT,                 -- 終結日 YYYY-MM-DD（あれば「裁判アーカイブ」扱い・任意）
   close_type  TEXT,                 -- 終結の種類（判決／和解／取下げ など・任意）
-  result      TEXT,                 -- 結果（1〜2行・任意）
   created_by  TEXT,
   updated_by  TEXT,
   updated_at  TEXT                  -- ISO8601
@@ -39,7 +37,6 @@ CREATE TABLE IF NOT EXISTS events (
   court       TEXT,            -- 裁判所名
   place       TEXT,            -- 法廷
   open        INTEGER NOT NULL DEFAULT 1, -- 1=誰でも傍聴できる／0=非公開・要確認
-  level       TEXT,            -- 見どころタグ（はじめて向け、報道あり など）
   plaintiff_argument TEXT,     -- この回で原告が主張したこと（1行1項目、改行区切り・任意）
   defendant_argument TEXT,     -- この回で被告が主張したこと（1行1項目、改行区切り・任意）
   created_by  TEXT,

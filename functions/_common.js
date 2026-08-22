@@ -21,15 +21,14 @@ export function textToLines(s) {
 }
 
 // ---- 事件 ----
-export const CASE_COLS = `c.id, c.name, c.case_no, c.parties, c.judge, c.points, c.lede, c.call_text,
-                          c.host, c.contact, c.press, c.links, c.tags, c.archived_at, c.close_type, c.result,
+export const CASE_COLS = `c.id, c.name, c.parties, c.judge, c.points, c.lede, c.call_text,
+                          c.host, c.contact, c.press, c.links, c.tags, c.archived_at, c.close_type,
                           c.created_by, c.updated_by, c.updated_at`;
 
 export function rowToCase(r) {
   return {
     id: r.id,
     name: r.name,
-    caseNo: r.case_no || "",
     parties: r.parties || "",
     judge: r.judge || "",
     points: textToLines(r.points),
@@ -42,7 +41,6 @@ export function rowToCase(r) {
     tags: textToLines(r.tags),
     archivedAt: r.archived_at || "",
     closeType: r.close_type || "",
-    result: r.result || "",
     likes: Number(r.likes || 0),
     liked: !!r.liked,
     updatedAt: r.updated_at || "",
@@ -56,7 +54,6 @@ export function isHttpUrl(s) {
 export function caseFromBody(body) {
   return {
     name: String(body.name || "").trim(),
-    case_no: String(body.caseNo || "").trim(),
     parties: String(body.parties || "").trim(),
     judge: String(body.judge || "").trim(),
     points: linesToText(body.points),
@@ -69,7 +66,6 @@ export function caseFromBody(body) {
     tags: linesToText(body.tags),
     archived_at: isYmd(body.archivedAt) ? body.archivedAt : null,
     close_type: String(body.closeType || "").trim(),
-    result: String(body.result || "").trim(),
   };
 }
 export function isYmd(s) {
@@ -77,7 +73,7 @@ export function isYmd(s) {
 }
 
 // ---- 期日 ----
-export const EVENT_COLS = `e.id, e.case_id, e.date, e.time, e.type, e.court, e.place, e.open, e.level,
+export const EVENT_COLS = `e.id, e.case_id, e.date, e.time, e.type, e.court, e.place, e.open,
                            e.plaintiff_argument, e.defendant_argument,
                            e.created_by, e.updated_by, e.updated_at, c.name AS case_name`;
 export const EVENT_FROM = `FROM events e JOIN cases c ON c.id = e.case_id`;
@@ -93,7 +89,6 @@ export function rowToEvent(r) {
     court: r.court || "",
     place: r.place || "",
     open: r.open === 0 || r.open === false ? false : true,
-    level: r.level || "",
     plaintiffArgument: textToLines(r.plaintiff_argument),
     defendantArgument: textToLines(r.defendant_argument),
     updatedAt: r.updated_at || "",
