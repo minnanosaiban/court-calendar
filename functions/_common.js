@@ -21,7 +21,7 @@ export function textToLines(s) {
 }
 
 // ---- 事件 ----
-export const CASE_COLS = `c.id, c.name, c.case_no, c.parties, c.points, c.lede, c.call_text,
+export const CASE_COLS = `c.id, c.name, c.case_no, c.parties, c.judge, c.points, c.lede, c.call_text,
                           c.host, c.contact, c.links, c.tags, c.archived_at, c.close_type, c.result,
                           c.created_by, c.updated_by, c.updated_at`;
 
@@ -31,6 +31,7 @@ export function rowToCase(r) {
     name: r.name,
     caseNo: r.case_no || "",
     parties: r.parties || "",
+    judge: r.judge || "",
     points: textToLines(r.points),
     lede: r.lede || "",
     callText: r.call_text || "",
@@ -56,6 +57,7 @@ export function caseFromBody(body) {
     name: String(body.name || "").trim(),
     case_no: String(body.caseNo || "").trim(),
     parties: String(body.parties || "").trim(),
+    judge: String(body.judge || "").trim(),
     points: linesToText(body.points),
     lede: String(body.lede || "").trim(),
     call_text: String(body.callText || "").trim(),

@@ -35,11 +35,11 @@ export async function onRequestPost({ request, env }) {
   const cid = newId("c");
   const now = new Date().toISOString();
   await env.DB.prepare(
-    `INSERT INTO cases (id, name, case_no, parties, points, lede, call_text, host, contact, links, tags,
+    `INSERT INTO cases (id, name, case_no, parties, judge, points, lede, call_text, host, contact, links, tags,
                         archived_at, close_type, result,
                         created_by, updated_by, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-  ).bind(cid, c.name, c.case_no, c.parties, c.points, c.lede, c.call_text, c.host, c.contact, c.links, c.tags,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  ).bind(cid, c.name, c.case_no, c.parties, c.judge, c.points, c.lede, c.call_text, c.host, c.contact, c.links, c.tags,
          c.archived_at, c.close_type, c.result,
          id.email, id.email, now).run();
 

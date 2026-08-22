@@ -37,6 +37,9 @@ a{color:inherit}
 
 /* ---- section label ---- */
 .sech{font-size:.7rem;letter-spacing:.26em;color:var(--mut);margin:52px 4px 12px}
+/* ホームの呼びかけ見出し。事件名(.d-title)より一段大きくして、見出しの上位だと分かるようにする */
+.home-title{font-family:"Shippori Mincho",serif;font-size:1.3rem;font-weight:700;letter-spacing:.03em;margin:52px 4px 2px}
+.home-title + .sech{margin-top:4px}
 
 /* ---- cards ---- */
 .card{background:var(--card);border-radius:20px}
@@ -72,7 +75,7 @@ a{color:inherit}
 .d-head .d-title{flex:1;min-width:0}
 .d-links{flex:none;display:flex;gap:4px;margin-top:4px}
 .d-link{display:grid;place-content:center;width:32px;height:32px;border-radius:50%;color:var(--mut);font-size:1.3rem;text-decoration:none}
-.d-link:hover{background:var(--tint);color:var(--ink)}
+.d-link:hover{color:var(--ink)}
 /* いいね：タイトルに続けて置く。押すと朱色で塗る */
 .like{display:inline-flex;align-items:center;gap:4px;vertical-align:middle;margin-left:.35em;
   font-family:"Zen Kaku Gothic New",sans-serif;font-size:.8rem;color:var(--mut);
@@ -88,11 +91,11 @@ a{color:inherit}
 .share-lab{font-size:.7rem;color:var(--mut);letter-spacing:.1em;margin-right:6px}
 .share a,.share button{display:grid;place-content:center;width:30px;height:30px;border-radius:50%;
   color:var(--mut);font-size:.9rem;text-decoration:none;background:none;border:none;cursor:pointer;font-family:inherit}
-.share a:hover,.share button:hover{background:var(--tint);color:var(--ink)}
+.share a:hover,.share button:hover{color:var(--ink)}
 .share button.copied{color:#2f7d4f}
 .d-next{font-family:"Shippori Mincho",serif;font-weight:500}
 .d-more{margin-top:24px;text-align:right}
-.lede{margin-top:22px;background:var(--tint);border-radius:12px;padding:14px 16px;font-size:.9rem}
+.lede{margin-top:22px;background:var(--tint);border-radius:4px 12px 12px 4px;border-left:4px solid var(--stamp);padding:14px 16px;font-size:.9rem}
 .lede p + p{margin-top:10px}
 .lede .call{font-family:"Shippori Mincho",serif}
 

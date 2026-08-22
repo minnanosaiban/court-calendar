@@ -295,6 +295,7 @@ window.CC = (function(){
         ${next?`<p class="minih">最近の期日</p><p class="d-body d-next">${escapeHtml(eventLine(next))}${next.open===false?`<span class="round-closed">非公開・要確認</span>`:""}</p>`:""}
         ${points?`<p class="minih">争点</p><ul class="pts">${points}</ul>`:""}
         ${c.parties?`<p class="minih">当事者</p><p class="d-body">${escapeHtml(c.parties)}</p>`:""}
+        ${c.judge?`<p class="minih">裁判官</p><p class="d-body">${escapeHtml(c.judge)}</p>`:""}
         ${boardHtml(caseId)}`;
 
     if(!full){
@@ -399,7 +400,7 @@ window.CC = (function(){
       const edit = me.canWrite ? `<a class="round-edit" data-editmat="${escapeAttr(m.id)}">編集</a>` : "";
       const showSum = m.summary && openSummaries.has(m.id);
       return `<li class="mrow">
-        <span class="mdate">${escapeHtml(dotDate(m.filedOn))||"&nbsp;"}</span>
+        ${m.filedOn?`<span class="mdate">${escapeHtml(dotDate(m.filedOn))}</span>`:""}
         <span class="mmain">${sideTag(m)}<span class="mat-name">${escapeHtml(m.title)}</span>${m.kind?`<span class="mat-kind">${escapeHtml(m.kind)}</span>`:""}${matButtonsHtml(m)}${edit}
         ${showSum?`<span class="mat-sum"><span class="mat-sumh">要約</span>${escapeHtml(m.summary)}</span>`:""}</span>
       </li>`;
@@ -830,6 +831,7 @@ window.CC = (function(){
         <div class="field"><label>事件番号</label><input type="text" id="cCaseNo" placeholder="わかれば"></div>
         <div class="field"><label>当事者</label><input type="text" id="cParties" placeholder="例）原告 ○○　被告 △△"></div>
       </div>
+      <div class="field"><label>裁判官（任意）</label><input type="text" id="cJudge" placeholder="例）○○ ○○"></div>
       <div class="field"><label>争点（1行に1つ）</label><textarea id="cPoints" placeholder="例）◯◯の事実があったか"></textarea></div>
       <div class="field"><label>事件の説明（3〜4行）</label><textarea id="cLede" placeholder="どんな裁判か"></textarea></div>
       <div class="field"><label>よびかけ</label><textarea id="cCall" placeholder="傍聴や支援をお願いする文章（任意）"></textarea></div>
@@ -932,7 +934,7 @@ window.CC = (function(){
   document.body.insertAdjacentHTML("beforeend", EXTRA_MODALS);
   const $ = (id)=>document.getElementById(id);
   const caseOverlay=$("caseOverlay"), matOverlay=$("matOverlay");
-  const cFields = { name:$("cName"), caseNo:$("cCaseNo"), parties:$("cParties"), points:$("cPoints"),
+  const cFields = { name:$("cName"), caseNo:$("cCaseNo"), parties:$("cParties"), judge:$("cJudge"), points:$("cPoints"),
                     lede:$("cLede"), callText:$("cCall"), host:$("cHost"), contact:$("cContact"), links:$("cLinks"),
                     tags:$("cTags"), archivedAt:$("cArchivedAt"), closeType:$("cCloseType"), result:$("cResult") };
   const mFields = { title:$("mTitle"), side:$("mSide"), kind:$("mKind"), event:$("mEvent"), filedOn:$("mFiledOn"),
@@ -943,6 +945,7 @@ window.CC = (function(){
   // ---- 事件 ----
   function fillCaseForm(c){
     cFields.name.value=c.name||""; cFields.caseNo.value=c.caseNo||""; cFields.parties.value=c.parties||"";
+    cFields.judge.value=c.judge||"";
     cFields.points.value=(c.points||[]).join("\n"); cFields.lede.value=c.lede||""; cFields.callText.value=c.callText||"";
     cFields.host.value=c.host||""; cFields.contact.value=c.contact||""; cFields.links.value=(c.links||[]).join("\n");
     cFields.tags.value=(c.tags||[]).join("\n");
@@ -967,7 +970,7 @@ window.CC = (function(){
     const name=cFields.name.value.trim();
     if(!name){ alert("事件名を入力してください。"); cFields.name.focus(); return; }
     const data={
-      name, caseNo:cFields.caseNo.value.trim(), parties:cFields.parties.value.trim(),
+      name, caseNo:cFields.caseNo.value.trim(), parties:cFields.parties.value.trim(), judge:cFields.judge.value.trim(),
       points:cFields.points.value.split("\n").map(s=>s.trim()).filter(Boolean),
       lede:cFields.lede.value.trim(), callText:cFields.callText.value.trim(),
       host:cFields.host.value.trim(), contact:cFields.contact.value.trim(),

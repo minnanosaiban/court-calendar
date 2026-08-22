@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS cases (
   name        TEXT NOT NULL UNIQUE, -- 事件名（画面のタイトル）
   case_no     TEXT,                 -- 事件番号（わかれば）
   parties     TEXT,                 -- 当事者
+  judge       TEXT,                 -- 裁判官（任意）
   points      TEXT,                 -- 争点（1行1項目、改行区切り）
   lede        TEXT,                 -- 事件の説明（3〜4行）
   call_text   TEXT,                 -- よびかけ（傍聴・支援のお願い）
