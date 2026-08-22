@@ -51,9 +51,11 @@ a{color:inherit}
 .dcard + .dcard{margin-top:12px}
 
 /* ---- 写真ギャラリー（事件ページの最上部だけ） ---- */
-/* 写真が地(--card)と同系色（白背景の説明カードなど）でも輪郭が沈まないよう、枠線でなくうっすら内側に影を落とす */
-.gal{position:relative;margin:-24px -22px 22px;border-radius:20px 20px 0 0;overflow:hidden;background:var(--tint);aspect-ratio:16/9;
-  box-shadow:inset 0 0 0 1px rgba(0,0,0,.05), inset 0 1px 10px rgba(0,0,0,.05)}
+.gal{position:relative;margin:-24px -22px 22px;border-radius:20px 20px 0 0;overflow:hidden;background:var(--tint);aspect-ratio:16/9}
+/* 写真が地(--card)と同系色（白背景の説明カードなど）でも輪郭が沈まないよう、枠線でなくうっすら内側に影を落とす。
+   .gal自体のbox-shadowだと写真(img)が同じ大きさで上に重なって隠してしまうため、写真の上に乗る透明な層に影を持たせる */
+.gal::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.06), inset 0 1px 10px rgba(0,0,0,.06)}
 .gal-track{display:flex;height:100%;transition:transform .6s cubic-bezier(.4,0,.2,1)}
 .gal-item{flex:0 0 100%;position:relative;display:block}
 .gal-item img{width:100%;height:100%;object-fit:cover;display:block;background:var(--tint)}
