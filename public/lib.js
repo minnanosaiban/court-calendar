@@ -135,23 +135,21 @@ window.CC = (function(){
     return [ev.type, place, `${jpDate(ev.date)}${ev.time||""}`].filter(Boolean).join("　");
   }
 
-  // ---- リンクのアイコン（URLのドメインで決める） ----
-  // シェアボタンも同じ bi-twitter-x を使うため、当事者リンク側はCSSでアイコンを大きくして見分ける（.d-link）
-  function linkIcon(url){
+  // ---- 当事者のリンク（URLのドメインで見出しを決める。当事者のすぐ下に文字で出す） ----
+  function linkLabel(url){
     let h=""; try{ h=new URL(url).hostname.replace(/^www\./,""); }catch(e){}
-    if(h==="x.com"||h==="twitter.com") return ["bi bi-twitter-x","X"];
-    if(h.endsWith("instagram.com")) return ["bi bi-instagram","Instagram"];
-    if(h.endsWith("youtube.com")||h==="youtu.be") return ["bi bi-youtube","YouTube"];
-    if(h.endsWith("facebook.com")) return ["bi bi-facebook","Facebook"];
-    if(h==="note.com") return ["bi bi-journal-text","note"];
-    return ["bi bi-globe2", h||"リンク"];
+    if(h==="x.com"||h==="twitter.com") return "Xアカウント";
+    if(h.endsWith("instagram.com")) return "Instagramアカウント";
+    if(h.endsWith("youtube.com")||h==="youtu.be") return "YouTubeチャンネル";
+    if(h.endsWith("facebook.com")) return "Facebookページ";
+    if(h==="note.com") return "note";
+    return "ウェブサイト";
   }
-  function linksHtml(c){
+  function partyLinksHtml(c){
     if(!c.links.length) return "";
-    return `<div class="d-links">`+c.links.map(u=>{
-      const [cls,label]=linkIcon(u);
-      return `<a class="d-link" href="${escapeAttr(u)}" target="_blank" rel="noopener" title="${escapeAttr(label)}" aria-label="${escapeAttr(label)}"><i class="${cls}" aria-hidden="true"></i></a>`;
-    }).join("")+`</div>`;
+    return c.links.map(u=>
+      `<p class="d-body"><a href="${escapeAttr(u)}" target="_blank" rel="noopener">${escapeHtml(linkLabel(u))}↗</a></p>`
+    ).join("");
   }
   function likeHtml(c){
     return `<button type="button" class="like${c.liked?" on":""}" data-like="${escapeAttr(c.id)}" aria-pressed="${c.liked?"true":"false"}" aria-label="いいね">`+
@@ -273,7 +271,6 @@ window.CC = (function(){
     let html = `
       <div class="card dcard">
         ${full ? galleryHtml(caseId) : ""}
-        ${linksHtml(c)}
         <div class="d-head">
           <h2 class="d-title">${escapeHtml(c.name)} ${likeHtml(c)}</h2>
         </div>
@@ -281,7 +278,7 @@ window.CC = (function(){
         ${full ? shareHtml(c) : ""}
         ${next?`<p class="minih">最近の期日</p><p class="d-body d-next">${escapeHtml(eventLine(next))}${next.open===false?`<span class="round-closed">非公開・要確認</span>`:""}</p>`:""}
         ${points?`<p class="minih">争点</p><ul class="pts">${points}</ul>`:""}
-        ${c.parties?`<p class="minih">当事者</p><p class="d-body">${escapeHtml(c.parties)}</p>`:""}
+        ${(c.parties||c.links.length)?`<p class="minih">当事者</p>${c.parties?`<p class="d-body">${escapeHtml(c.parties)}</p>`:""}${partyLinksHtml(c)}`:""}
         ${c.caseNo?`<p class="minih">事件番号</p><p class="d-body">${escapeHtml(c.caseNo)}</p>`:""}
         ${c.judge?`<p class="minih">裁判官</p><p class="d-body">${escapeHtml(c.judge)}</p>`:""}
         ${boardHtml(caseId)}`;

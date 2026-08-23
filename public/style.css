@@ -79,13 +79,9 @@ a{color:inherit}
 .mut{color:var(--mut)}
 /* タイトル行 */
 .d-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
-/* 写真ギャラリー・写真管理欄のすぐ下にタイトル行（または当事者のアカウントリンク）が来るときだけ、他の見出し(.minih)と同じ26pxをあける */
-.gal + .d-head, .imgmanage + .d-head, .gal + .d-links, .imgmanage + .d-links{margin-top:26px}
+/* 写真ギャラリー・写真管理欄のすぐ下にタイトル行が来るときは、他の見出し(.minih)の26pxより広めにあける（画像に詰まって見えるため） */
+.gal + .d-head, .imgmanage + .d-head{margin-top:40px}
 .d-head .d-title{flex:1;min-width:0}
-/* 当事者のアカウントリンク（X・ホームページなど）はタイトルの上に置く */
-.d-links{display:flex;gap:4px;margin-bottom:6px}
-.d-link{display:grid;place-content:center;width:32px;height:32px;border-radius:50%;color:var(--faint);font-size:1.3rem;text-decoration:none}
-.d-link:hover{color:var(--ink)}
 /* いいね：タイトルに続けて置く。押すと朱色で塗る */
 .like{display:inline-flex;align-items:center;gap:4px;vertical-align:middle;margin-left:.35em;
   font-family:"Zen Kaku Gothic New",sans-serif;font-size:.8rem;color:var(--mut);
@@ -142,6 +138,8 @@ a{color:inherit}
 /* ---- 訴訟資料（タイムラインの中身／一覧） ---- */
 .mat{font-size:.88rem}
 .mat + .mat{margin-top:14px}
+/* 原告/被告の主張（.args）のすぐ下に資料が来るときも、資料どうしと同じだけあける（無いと箱にくっついて見える） */
+.args + .mat{margin-top:16px}
 .mat-side{font-size:.72rem;font-weight:700;white-space:nowrap}
 .mat-side.g{color:#47705a}
 .mat-side.k{color:#4a5a74}
