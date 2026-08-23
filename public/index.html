@@ -110,7 +110,9 @@
 
   let view = CC.startOfMonth(new Date());
   let popCloseTimer=null;
-  const canHover = window.matchMedia && window.matchMedia("(hover: hover)").matches;
+  let popOpenedAt=0;   // プレビューを開いた時刻。開いた直後は、開いた指がそのまま予定行や閉じるボタンに触れてしまう
+                        // （スマホの「タップ＝ホバー相当＋クリック」挙動）ことがあるため、その"貫通クリック"は無視する
+  const canHover = window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
   // 案内文は操作方法に合わせる（PC=カーソル／スマホ=タップ）
   document.getElementById("calHint").textContent = canHover
@@ -141,6 +143,7 @@
     cell.classList.add("previewing");
     dayPop.innerHTML = popoverHtmlFor(dayEvents);
     dayPop.hidden=false;
+    popOpenedAt=Date.now();
     const r=cell.getBoundingClientRect();
     const pw=Math.min(280, window.innerWidth-24);
     dayPop.style.width=pw+"px";
@@ -151,10 +154,18 @@
     if(top+140>window.innerHeight) top=r.top-6-Math.min(220,dayEvents.length*90); // 下が窮屈なら上に出す
     dayPop.style.left=left+"px";
     dayPop.style.top=Math.max(8,top)+"px";
+    // 開いた直後（スマホでタップした指がそのまま乗っている間）のクリックは、開くための1回のタップが
+    // そのまま貫通してしまったものとみなして無視する。それより後のクリックだけ本当の操作として扱う
     dayPop.querySelectorAll(".pop-row[data-case]").forEach(row=>{
-      row.addEventListener("click",()=>{ location.href="case?id="+encodeURIComponent(row.dataset.case); });
+      row.addEventListener("click",()=>{
+        if(Date.now()-popOpenedAt<400) return;
+        location.href="case?id="+encodeURIComponent(row.dataset.case);
+      });
     });
-    dayPop.querySelector(".pop-close").addEventListener("click",closePopoverNow);
+    dayPop.querySelector(".pop-close").addEventListener("click",()=>{
+      if(Date.now()-popOpenedAt<400) return;
+      closePopoverNow();
+    });
   }
   function scheduleClosePopover(){ popCloseTimer=setTimeout(closePopoverNow,150); }
   function closePopoverNow(){
