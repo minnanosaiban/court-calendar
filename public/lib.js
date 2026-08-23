@@ -882,11 +882,7 @@ window.CC = (function(){
         <div class="field"><label>当事者</label><input type="text" id="cParties" placeholder="例）原告 従業員 ／ 被告 〇〇株式会社"></div>
         <div class="field"><label>裁判官</label><input type="text" id="cJudge" placeholder="例）○○ ○○"></div>
         <div class="field"><label>争点（複数の場合は改行、1行に1つ）</label><textarea id="cPoints" placeholder="例）◯◯の事実があったか"></textarea></div>
-        <div class="field"><label>よびかけ</label><textarea id="cCall" placeholder="どんな裁判か、傍聴や支援をお願いする文章など（空行を挟むと段落を分けられます）"></textarea></div>
-        <div class="two">
-          <div class="field"><label>呼びかけ団体・お名前</label><input type="text" id="cHost" placeholder="例）A社従業員"></div>
-          <div class="field"><label>連絡先（公開してよいもの）</label><input type="text" id="cContact" placeholder="例）メールアドレス"></div>
-        </div>
+        <div class="field"><label>裁判について</label><textarea id="cCall" placeholder="どんな裁判か、傍聴や支援をお願いする文章など（空行を挟むと段落を分けられます）"></textarea></div>
         <div class="field">
           <label>報道・掲載（複数の場合は改行、1行に1つ）</label>
           <textarea id="cPress" placeholder="例）〇〇新聞で報道されました https://...&#10;労働判例ジャーナル2025.10 No.163に掲載&#10;裁判所への手続きにより特別保存（永久保存）となっています"></textarea>
@@ -1082,8 +1078,11 @@ window.CC = (function(){
 
   const $ = (id)=>document.getElementById(id);
   const cFields = { name:$("cName"), caseNo:$("cCaseNo"), parties:$("cParties"), judge:$("cJudge"), points:$("cPoints"),
-                    callText:$("cCall"), host:$("cHost"), contact:$("cContact"), press:$("cPress"), links:$("cLinks"),
+                    callText:$("cCall"), press:$("cPress"), links:$("cLinks"),
                     tags:$("cTags"), related:$("cRelated"), archivedAt:$("cArchivedAt"), closeType:$("cCloseType") };
+  // 呼びかけ団体・連絡先は入力欄を廃止したが、既存データは保持する（保存のたびに空で上書きしないよう、
+  // 編集を開いたときの値をここに覚えておいて、保存時にそのまま送り返す）
+  let editingCaseHost="", editingCaseContact="";
   const mFields = { title:$("mTitle"), side:$("mSide"), event:$("mEvent"), filedOn:$("mFiledOn"),
                     url:$("mUrl"), file:$("mFile"), fileField:$("mFileField"), fileNow:$("mFileNow"),
                     claims:$("mClaims"), body:$("mBody"), summary:$("mSummary") };
@@ -1094,7 +1093,8 @@ window.CC = (function(){
     cFields.name.value=c.name||""; cFields.caseNo.value=c.caseNo||""; cFields.parties.value=c.parties||"";
     cFields.judge.value=c.judge||"";
     cFields.points.value=(c.points||[]).join("\n"); cFields.callText.value=c.callText||"";
-    cFields.host.value=c.host||""; cFields.contact.value=c.contact||""; cFields.press.value=(c.press||[]).join("\n");
+    editingCaseHost=c.host||""; editingCaseContact=c.contact||"";
+    cFields.press.value=(c.press||[]).join("\n");
     cFields.links.value=(c.links||[]).join("\n");
     cFields.tags.value=(c.tags||[]).join("\n");
     // 関連裁判はIDで持つが、入力欄には事件名で表示する（見つからないIDは消えている事件なので無視）
@@ -1139,7 +1139,7 @@ window.CC = (function(){
       name, caseNo:cFields.caseNo.value.trim(), parties:cFields.parties.value.trim(), judge:cFields.judge.value.trim(),
       points:cFields.points.value.split("\n").map(s=>s.trim()).filter(Boolean),
       callText:cFields.callText.value.trim(),
-      host:cFields.host.value.trim(), contact:cFields.contact.value.trim(),
+      host:editingCaseHost, contact:editingCaseContact,
       press:cFields.press.value.split("\n").map(s=>s.trim()).filter(Boolean),
       links:cFields.links.value.split("\n").map(s=>s.trim()).filter(Boolean),
       tags:cFields.tags.value.split("\n").map(s=>s.trim()).filter(Boolean),
