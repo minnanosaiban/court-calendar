@@ -31,7 +31,7 @@ a{color:inherit}
   display:grid;place-content:center;color:var(--stamp);
   font-family:"Shippori Mincho",serif;font-weight:700;font-size:17px;line-height:1.1;
   letter-spacing:.04em;text-align:center;transform:rotate(-4deg)}
-.masthead h1{font-family:"Shippori Mincho",serif;font-size:1.55rem;font-weight:700;letter-spacing:.05em;line-height:1.4}
+.masthead h1{font-family:"Shippori Mincho",serif;font-size:1.8rem;font-weight:700;letter-spacing:.05em;line-height:1.4}
 .masthead h1 a{color:inherit;text-decoration:none}
 .masthead h1 a:hover{opacity:.75}
 .masthead p{font-size:.8rem;color:var(--mut);letter-spacing:.02em;margin-top:2px}
@@ -40,7 +40,7 @@ a{color:inherit}
 /* ---- section label ---- */
 .sech{font-size:.7rem;letter-spacing:.26em;color:var(--mut);margin:52px 4px 12px}
 /* ホームの呼びかけ見出し。事件名(.d-title)より一段大きくして、見出しの上位だと分かるようにする */
-.home-title{font-family:"Shippori Mincho",serif;font-size:1.3rem;font-weight:700;letter-spacing:.03em;margin:52px 4px 2px}
+.home-title{font-family:"Shippori Mincho",serif;font-size:1.6rem;font-weight:700;letter-spacing:.03em;margin:52px 4px 2px}
 .home-title + .sech{margin-top:4px}
 
 /* ---- cards ---- */
@@ -83,7 +83,7 @@ a{color:inherit}
 .imgrow .icap{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--mut)}
 .imgrow .iacts{display:flex;gap:10px;flex:none}
 .imgrow .iacts a{font-size:.74rem;color:var(--edit);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
-.d-title{font-family:"Shippori Mincho",serif;font-size:1.22rem;font-weight:600;line-height:1.65}
+.d-title{font-family:"Shippori Mincho",serif;font-size:1.6rem;font-weight:600;line-height:1.4}
 .d-body{font-size:.9rem;margin-top:6px}
 .mut{color:var(--mut)}
 /* タイトル行 */
@@ -109,7 +109,7 @@ a{color:inherit}
 .d-next{font-family:"Shippori Mincho",serif;font-weight:500;font-size:1.02rem;line-height:1.75}
 .d-more{margin-top:24px;text-align:right}
 .lede{margin-top:22px;background:var(--card);border-radius:4px 12px 12px 4px;border-left:4px solid var(--stamp);padding:14px 16px;font-size:.9rem}
-.lede-title{font-family:"Shippori Mincho",serif;font-size:.98rem;font-weight:600}
+.lede-title{font-family:"Shippori Mincho",serif;font-size:1.2rem;font-weight:600}
 .lede p + p{margin-top:10px}
 .lede .call{font-family:"Shippori Mincho",serif}
 .minih{font-size:.68rem;letter-spacing:.22em;color:var(--mut);margin-top:26px}
@@ -190,13 +190,14 @@ a{color:inherit}
 .arg li::before{content:"・";color:var(--faint)}
 
 /* ---- 行ってきたよ掲示板 ---- */
-/* 生成りの面でくくって独立した「場」に見せる。見出しの「行ってきたよ」は朱印と同じ赤 */
+/* うっすら朱色の面でくくって独立した「場」に見せる（カレンダーの「期日がある日」と同じ色 .cell.has）。
+   見出しの「行ってきたよ」は朱印と同じ赤 */
 /* 掲示板はこのサイトの主役。事件本体の箱（dcard）の外に出して独立した箱にし（箱の中に箱を解消）、
    他のセクションより広い余白と大きめの見出しをとる。既定（写真が無いとき＝先頭）は上だけ角丸、
    写真の直後（.gal-card + .bpanel）に来るときは写真側の上で丸まっているので四角のまま */
-.bpanel{margin-top:0;margin-bottom:0;background:#f4f1e8;border-radius:20px 20px 0 0;padding:20px 18px 18px}
+.bpanel{margin-top:0;margin-bottom:0;background:rgba(185,50,38,.055);border-radius:20px 20px 0 0;padding:20px 18px 18px}
 .bhead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-.btitle{font-family:"Shippori Mincho",serif;font-size:1.22rem;font-weight:600}
+.btitle{font-family:"Shippori Mincho",serif;font-size:1.6rem;font-weight:600;line-height:1.4}
 .bt-red{color:var(--stamp)}
 .bt-bang{display:inline-block;color:var(--stamp);transform:rotate(-14deg)}
 .bcount{font-size:.75rem;color:var(--mut)}
@@ -296,7 +297,7 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .ccard{display:flex;gap:16px;padding:14px 16px 14px 14px;cursor:pointer}
 .ccard:hover{box-shadow:0 2px 12px rgba(0,0,0,.07)}
 .cbody{min-width:0;flex:1}
-.ctitle{font-family:"Shippori Mincho",serif;font-size:1.02rem;font-weight:600;line-height:1.55}
+.ctitle{font-family:"Shippori Mincho",serif;font-size:1.2rem;font-weight:600;line-height:1.5}
 .cnext{font-size:.8rem;color:var(--mut);margin-top:4px;font-variant-numeric:tabular-nums}
 .cnext b{color:var(--stamp);font-weight:600;margin-right:.4em}
 .cfoot{display:flex;align-items:center;gap:10px;margin-top:8px}
@@ -313,7 +314,7 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .pop-row + .pop-row{margin-top:2px;border-top:1px solid var(--tint);padding-top:12px}
 .pop-arrow{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--stamp);font-size:.85rem}
 .pop-date{font-size:.76rem;color:var(--mut);font-variant-numeric:tabular-nums}
-.pop-title{font-size:.92rem;font-weight:500;margin-top:1px;font-family:"Shippori Mincho",serif}
+.pop-title{font-size:1.2rem;font-weight:500;margin-top:1px;font-family:"Shippori Mincho",serif}
 .pop-meta{font-size:.78rem;color:var(--mut);margin-top:1px}
 /* プレビュー下の操作行：右下に「閉じる×」 */
 .pop-foot{display:flex;justify-content:flex-end;align-items:center;gap:16px;margin-top:2px;padding:8px 10px 4px;border-top:1px solid var(--tint)}
@@ -353,7 +354,7 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .modal{background:var(--card);border-radius:20px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,.22);max-height:92vh;overflow:auto}
 .modal .tabs{margin:18px 24px 0}
 .modal .tabs[hidden]{display:none}
-.modal .mhead{padding:22px 24px 4px;font-family:"Shippori Mincho",serif;font-size:1.1rem;font-weight:600}
+.modal .mhead{padding:22px 24px 4px;font-family:"Shippori Mincho",serif;font-size:1.2rem;font-weight:600}
 .modal .mbody{padding:14px 24px 4px}
 .msec{font-size:.66rem;letter-spacing:.22em;color:var(--mut);margin:20px 0 10px}
 .msec:first-child{margin-top:0}
@@ -391,13 +392,12 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 
 @media(min-width:560px){
   .wrap{padding:48px 24px 88px}
-  .masthead h1{font-size:1.8rem}
   .cell{padding:11px 0 8px}
   .cell .n{width:30px;height:30px;font-size:.88rem}
   .calcard{padding:20px 16px 16px}
   .dcard{padding:28px 30px 26px}
+  .gal-card{padding:28px 30px 22px}
   .gal{margin:-28px -30px 22px}
-  .d-title{font-size:1.35rem}
   .tl-item{padding-left:30px}
   .tl-item::before{left:7px}
   .tl-dot{width:15px;height:15px;top:6px}
