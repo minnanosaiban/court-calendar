@@ -145,11 +145,20 @@ window.CC = (function(){
     if(h==="note.com") return "note";
     return "ウェブサイト";
   }
-  function partyLinksHtml(c){
-    if(!c.links.length) return "";
-    return c.links.map(u=>
-      `<p class="d-body"><a href="${escapeAttr(u)}" target="_blank" rel="noopener">${escapeHtml(linkLabel(u))}</a> <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></p>`
-    ).join("");
+  // ---- ファクトシート（当事者・事件番号・裁判官を1つの定義リストにまとめる。値がある行だけ出す） ----
+  function factsHtml(c){
+    const links = c.links.length
+      ? `<div class="facts-links">${c.links.map(u=>
+          `<span class="plink"><a href="${escapeAttr(u)}" target="_blank" rel="noopener">${escapeHtml(linkLabel(u))}</a> <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></span>`
+        ).join("")}</div>`
+      : "";
+    const rows = [
+      (c.parties||c.links.length) ? ["当事者", `${c.parties?escapeHtml(c.parties):""}${links}`] : null,
+      c.caseNo ? ["事件番号", escapeHtml(c.caseNo)] : null,
+      c.judge  ? ["裁判官", escapeHtml(c.judge)] : null,
+    ].filter(Boolean);
+    if(!rows.length) return "";
+    return `<dl class="facts">${rows.map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl>`;
   }
   function likeHtml(c){
     return `<button type="button" class="like${c.liked?" on":""}" data-like="${escapeAttr(c.id)}" aria-pressed="${c.liked?"true":"false"}" aria-label="いいね">`+
@@ -278,16 +287,15 @@ window.CC = (function(){
         ${full ? shareHtml(c) : ""}
         ${next?`<p class="minih">最近の期日</p><p class="d-body d-next">${escapeHtml(eventLine(next))}${next.open===false?`<span class="round-closed">非公開・要確認</span>`:""}</p>`:""}
         ${points?`<p class="minih">争点</p><ul class="pts">${points}</ul>`:""}
-        ${(c.parties||c.links.length)?`<p class="minih">当事者</p>${c.parties?`<p class="d-body">${escapeHtml(c.parties)}</p>`:""}${partyLinksHtml(c)}`:""}
-        ${c.caseNo?`<p class="minih">事件番号</p><p class="d-body">${escapeHtml(c.caseNo)}</p>`:""}
-        ${c.judge?`<p class="minih">裁判官</p><p class="d-body">${escapeHtml(c.judge)}</p>`:""}
+        ${factsHtml(c)}
         ${boardHtml(caseId)}`;
 
     if(!full){
       html += `<p class="d-more"><a class="pillbtn" href="case?id=${encodeURIComponent(c.id)}">詳細を見る <i class="bi bi-arrow-right" aria-hidden="true"></i></a></p>`;
     }else{
       const editCaseQact = me.canWrite ? `<p class="qact"><a data-editcase="${escapeAttr(c.id)}">＋ 事件情報を編集</a></p>` : "";
-      html += callHtml(c) + pressHtml(c) + editCaseQact + relatedCasesHtml(c) + timelineHtml(caseId) + materialsListHtml(caseId);
+      // 上（期日・争点・当事者・掲示板）とここから先の「記録」を、見出し1つで区切る（罫線ではなく余白＋見出しで）
+      html += `<p class="secbreak">この裁判の記録</p>` + callHtml(c) + pressHtml(c) + editCaseQact + relatedCasesHtml(c) + timelineHtml(caseId) + materialsListHtml(caseId);
     }
     html += `</div>`;
     return html;
@@ -322,7 +330,6 @@ window.CC = (function(){
     if(/^image\//.test(m.mime||"") || /\.(png|jpe?g|gif|webp)(\?|#|$)/.test(u)) return "bi-image";
     return "bi-box-arrow-up-right";
   }
-  function sideTag(m){ return m.side ? `<span class="mat-side ${SIDE_CLASS[m.side]||""}">${escapeHtml(m.side)}</span>` : ""; }
   // PDF・テキスト・要約の3つのボタン。無いものはグレーのまま押せない（「この資料には無い」ことが分かるように）
   function matButtonsHtml(m){
     const icon = matIcon(m);
@@ -384,17 +391,35 @@ window.CC = (function(){
       ${rounds.length?`<ol class="tl">${items}</ol>`:`<p class="d-body mut">期日はまだ登録されていません。</p>`}
       ${me.canWrite?`<p class="qact"><a data-addround="${escapeAttr(caseId)}">＋ 期日を編集</a></p>`:""}`;
   }
+  function matRowHtml(m){
+    const edit = me.canWrite ? `<a class="round-edit" data-editmat="${escapeAttr(m.id)}">編集</a>` : "";
+    return `<li class="mrow">
+      ${m.filedOn?`<span class="mdate">${escapeHtml(dotDate(m.filedOn))}</span>`:""}
+      <span class="mmain"><span class="mat-name">${escapeHtml(m.title)}</span>${matButtonsHtml(m)}${edit}</span>
+    </li>`;
+  }
+  // 訴訟資料一覧：提出者側ごとに見出しで束ねる（初出の順。側が空のものは「その他」にまとめる）。
+  // 全件が側なしなら、旧来どおり見出し無しの1本の並びにする
   function materialsListHtml(caseId){
     const mats=caseMaterials(caseId);
-    const rows=mats.map(m=>{
-      const edit = me.canWrite ? `<a class="round-edit" data-editmat="${escapeAttr(m.id)}">編集</a>` : "";
-      return `<li class="mrow">
-        ${m.filedOn?`<span class="mdate">${escapeHtml(dotDate(m.filedOn))}</span>`:""}
-        <span class="mmain">${sideTag(m)}<span class="mat-name">${escapeHtml(m.title)}</span>${matButtonsHtml(m)}${edit}</span>
-      </li>`;
-    }).join("");
+    let body;
+    if(!mats.length){
+      body = `<p class="d-body mut">訴訟資料はまだ登録されていません。</p>`;
+    }else if(mats.every(m=>!m.side)){
+      body = `<ul class="mlist">${mats.map(matRowHtml).join("")}</ul>`;
+    }else{
+      const order=[], groups={};
+      mats.forEach(m=>{
+        const side=m.side||"その他";
+        if(!groups[side]){ groups[side]=[]; order.push(side); }
+        groups[side].push(m);
+      });
+      body = order.map(side=>
+        `<p class="mside-h ${SIDE_CLASS[side]||""}">${escapeHtml(side)}</p><ul class="mlist">${groups[side].map(matRowHtml).join("")}</ul>`
+      ).join("");
+    }
     return `<p class="minih">訴訟資料一覧</p>
-      ${rows?`<ul class="mlist">${rows}</ul>`:`<p class="d-body mut">訴訟資料はまだ登録されていません。</p>`}
+      ${body}
       ${me.canWrite?`<p class="qact"><a data-addmat="${escapeAttr(caseId)}">＋ 資料を編集</a></p>`:""}`;
   }
 

@@ -99,17 +99,26 @@ a{color:inherit}
   color:var(--faint);font-size:.9rem;text-decoration:none;background:none;border:none;cursor:pointer;font-family:inherit}
 .share a:hover,.share button:hover{color:var(--ink)}
 .share button.copied{color:#2f7d4f}
-.d-next{font-family:"Shippori Mincho",serif;font-weight:500}
+.d-next{font-family:"Shippori Mincho",serif;font-weight:500;font-size:1.02rem;line-height:1.75}
 .d-more{margin-top:24px;text-align:right}
 .lede{margin-top:22px;background:var(--card);border-radius:4px 12px 12px 4px;border-left:4px solid var(--stamp);padding:14px 16px;font-size:.9rem}
 .lede-title{font-family:"Shippori Mincho",serif;font-size:.98rem;font-weight:600}
 .lede p + p{margin-top:10px}
 .lede .call{font-family:"Shippori Mincho",serif}
+/* 上半分（期日・争点・当事者・掲示板）と、この裁判の記録（よびかけ以下）を余白と見出しだけで区切る。罫線は使わない（罫線より余白の方針） */
+.secbreak{margin-top:52px;font-family:"Shippori Mincho",serif;font-size:1rem;font-weight:600;letter-spacing:.12em;color:var(--ink)}
+.secbreak + .lede{margin-top:16px}
 
 /* 説明文の下に、呼びかけ人と連絡先を添える */
 .credit{display:block;color:var(--mut);font-size:.8rem;line-height:1.85;margin-top:10px}
 .credit a{color:var(--mut);text-underline-offset:3px}
 .minih{font-size:.68rem;letter-spacing:.22em;color:var(--mut);margin-top:26px}
+/* ファクトシート：当事者・事件番号・裁判官を1つの定義リストにまとめる（旧・見出し3つ＋本文3つの構成を統合） */
+.facts{display:grid;grid-template-columns:max-content 1fr;column-gap:16px;row-gap:8px;margin-top:10px;font-size:.9rem;line-height:1.7}
+.facts dt{color:var(--mut);font-size:.7rem;letter-spacing:.18em;padding-top:4px;white-space:nowrap}
+.facts dd{margin:0;min-width:0}
+.facts-links{margin-top:2px}
+.facts .plink{display:inline-block;margin-right:12px;font-size:.84rem}
 .pts{list-style:none;margin-top:6px;font-size:.9rem}
 .pts li{padding-left:1.2em;text-indent:-1.2em;margin-bottom:3px}
 .pts li::before{content:"・";color:var(--faint)}
@@ -140,14 +149,16 @@ a{color:inherit}
 .mat + .mat{margin-top:14px}
 /* 原告/被告の主張（.args）のすぐ下に資料が来るときも、資料どうしと同じだけあける（無いと箱にくっついて見える） */
 .args + .mat{margin-top:16px}
-.mat-side{font-size:.72rem;font-weight:700;white-space:nowrap}
-.mat-side.g{color:#47705a}
-.mat-side.k{color:#4a5a74}
-.mat-side.j{color:#8a5c46}
 .mat-name{font-weight:500;font-size:.8rem}
 .mat-claims{margin-top:6px;font-size:.86rem}
 .mlist{list-style:none;margin-top:8px;font-size:.88rem}
-.mrow{display:flex;gap:12px;padding:7px 0;border-top:1px solid var(--tint)}
+/* 訴訟資料一覧を提出者側ごとに束ねる見出し（色は .arg h4 と同じ組） */
+.mside-h{margin:18px 0 2px;font-size:.72rem;font-weight:700;letter-spacing:.14em}
+.mside-h.g{color:#47705a}
+.mside-h.k{color:#4a5a74}
+.mside-h.j{color:#8a5c46}
+.mside-h + .mlist{margin-top:0}
+.mrow{display:flex;gap:12px;padding:6px 0;border-top:1px solid var(--tint)}
 .mrow:first-child{border-top:none}
 .mdate{flex:none;width:6.2em;color:var(--mut);font-size:.8rem;font-variant-numeric:tabular-nums;padding-top:1px}
 .mmain{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;min-width:0}
@@ -178,9 +189,10 @@ a{color:inherit}
 
 /* ---- 行ってきたよ掲示板 ---- */
 /* 生成りの面でくくって独立した「場」に見せる。見出しの「行ってきたよ」は朱印と同じ赤 */
-.bpanel{margin-top:26px;background:#f4f1e8;border-radius:14px;padding:16px 16px 14px}
+/* 掲示板はこのサイトの主役なので、他のセクションより広い余白と大きめの見出しをとる */
+.bpanel{margin-top:34px;background:#f4f1e8;border-radius:14px;padding:20px 18px 18px}
 .bhead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-.btitle{font-family:"Shippori Mincho",serif;font-size:.98rem;font-weight:600}
+.btitle{font-family:"Shippori Mincho",serif;font-size:1.14rem;font-weight:600}
 .bt-red{color:var(--stamp)}
 .bt-bang{display:inline-block;color:var(--stamp);transform:rotate(-14deg)}
 .bcount{font-size:.75rem;color:var(--mut)}
