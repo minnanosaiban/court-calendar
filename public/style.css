@@ -147,16 +147,9 @@ a{color:inherit}
 .cl-level{color:var(--mut)}
 .facts .plink{display:inline-block;margin-right:6px;font-size:.86rem;color:var(--faint);vertical-align:-1px;text-decoration:none}
 .facts .plink:hover{color:var(--ink)}
-/* 印は文字（・）ではなく丸ドットにする。「・」は字形の左右に余白（サイドベアリング）があり、
-   .court-line の「地裁」等（余白がほぼ無い）と並べると視覚的に少し右にずれて見えるため。
-   ドットは vertical-align:middle でテキストと同じ行内に流し、行の高さ全体（行間込み）ではなく
-   文字そのものの高さを基準に位置を合わせる（grid の align-self:center だと行間の分だけ高く浮いて見えた） */
 .pts{list-style:none;margin-top:8px;font-size:.9rem}
-.pts li{padding-left:1em;margin-bottom:3px}
-/* margin-right は calc(1em - 5px) にして「ドット幅+余白」を padding-left(1em) と
-   正確に一致させる。折り返した2行目（padding-leftだけで決まる）の頭とそろえるため */
-.pts li::before{content:"";display:inline-block;width:5px;height:5px;border-radius:50%;
-  background:var(--faint);vertical-align:middle;margin-left:-1em;margin-right:calc(1em - 5px)}
+.pts li{padding-left:1.2em;text-indent:-1.2em;margin-bottom:3px}
+.pts li::before{content:"・";color:var(--faint)}
 /* 期日（この事件の全回）: 争点と同じ見た目のリストを流用 */
 .rounds li{padding-left:1.2em;text-indent:-1.2em;margin-bottom:6px}
 .round-closed{color:var(--mut);font-size:.8rem;margin-left:.5em}
