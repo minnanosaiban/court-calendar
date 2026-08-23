@@ -113,11 +113,20 @@ window.CC = (function(){
   function caseMaterials(caseId){ return materials.filter(m=>m.caseId===caseId); }
   function materialById(id){ return materials.find(m=>m.id===id) || null; }
   function caseImages(caseId){ return images.filter(im=>im.caseId===caseId).sort((a,b)=>a.sortOrder-b.sortOrder); }
-  // 直近に期日がある事件（トップの「最近の期日」・カレンダーの初期表示月に使う）
+  // 次の期日がいちばん近い事件（カレンダーの初期表示月に使う）
   function nearestCase(){
     const today=todayStr();
     const list=events.filter(e=>e.date>=today && !isArchived(e.caseId)).sort(byDate);
     return list[0] ? list[0].caseId : null;
+  }
+  // 最近開廷された（今日までにいちばん新しく期日があった）事件（トップ「応援ピックアップ」用）。
+  // 「傍聴に行ってきたよ！掲示板」は行った"あと"に書く場所なので、これから開かれる事件ではなく
+  // 実際に開廷があった事件を選ぶ。まだどの事件も開廷していない（全事件が未来の期日のみ）ときは
+  // nearestCase() にフォールバックする
+  function pickupCase(){
+    const today=todayStr();
+    const list=events.filter(e=>e.date<=today && !isArchived(e.caseId)).sort(byDate);
+    return list.length ? list[list.length-1].caseId : nearestCase();
   }
   function isArchived(caseId){
     const c=caseById(caseId);
@@ -1483,7 +1492,7 @@ window.CC = (function(){
     get images(){ return images; },
     get me(){ return me; },
     get loaded(){ return loaded; },
-    caseById, caseByName, caseEvents, casePosts, caseMaterials, caseImages, nearestCase, nextEvent, eventLine,
+    caseById, caseByName, caseEvents, casePosts, caseMaterials, caseImages, nearestCase, pickupCase, nextEvent, eventLine,
     likeHtml, toggleLike, isArchived,
     load, renderCaseDetail, renderStatus, openAdd,
     setOnChange(fn){ onChange = fn; },

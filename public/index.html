@@ -32,11 +32,13 @@
     </div>
   </header>
 
-  <!-- 最近の期日：直近に期日がある事件の詳細を、常にここに固定表示する。
-       「傍聴に行ってきたよ！掲示板」が先頭に来るため、見出し（傍聴に行って応援しよう！／最近の期日）は無くした -->
-  <section>
+  <!-- 応援ピックアップ：複数ある事件のうち、最近開廷された（傍聴の報告が書けるはずの）1件を自動で選んで
+       常にここに固定表示する。選び方は pickupCase()（CC.pickupCase）参照 -->
+  <section aria-labelledby="pickup-h">
     <p class="jumplink"><a class="pillbtn" href="#cal-h">期日カレンダーを見る <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
       <a class="pillbtn" href="cases.html">事件をさがす <i class="bi bi-arrow-right" aria-hidden="true"></i></a></p>
+    <p class="home-title" id="pickup-h">応援ピックアップ</p>
+    <p class="hint">最近開廷された事件です。ほかの事件は「事件をさがす」から見られます。</p>
     <div id="recentBody"></div>
   </section>
 
@@ -267,7 +269,7 @@
     renderCalendars();
     renderUpcoming();
     CC.renderStatus(statusEl, {hideWhenUnlocked:true});
-    CC.renderCaseDetail(recentBody, CC.nearestCase(), {full:false});
+    CC.renderCaseDetail(recentBody, CC.pickupCase(), {full:false});
   }
   CC.setOnChange(renderAll);
 
