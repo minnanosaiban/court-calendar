@@ -147,9 +147,12 @@ a{color:inherit}
 .cl-level{color:var(--mut)}
 .facts .plink{display:inline-block;margin-right:6px;font-size:.86rem;color:var(--faint);vertical-align:-1px;text-decoration:none}
 .facts .plink:hover{color:var(--ink)}
+/* 印は文字（・）ではなく丸ドットにする。「・」は字形の左右に余白（サイドベアリング）があり、
+   .court-line の「地裁」等（余白がほぼ無い）と並べると視覚的に少し右にずれて見えるため。
+   .court-line と同じグリッド配置にして、印の位置を文字の字形に依存させない */
 .pts{list-style:none;margin-top:8px;font-size:.9rem}
-.pts li{padding-left:1.2em;text-indent:-1.2em;margin-bottom:3px}
-.pts li::before{content:"・";color:var(--faint)}
+.pts li{display:grid;grid-template-columns:1em 1fr;column-gap:.35em;margin-bottom:3px}
+.pts li::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--faint);align-self:center}
 /* 期日（この事件の全回）: 争点と同じ見た目のリストを流用 */
 .rounds li{padding-left:1.2em;text-indent:-1.2em;margin-bottom:6px}
 .round-closed{color:var(--mut);font-size:.8rem;margin-left:.5em}

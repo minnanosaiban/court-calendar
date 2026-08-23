@@ -39,11 +39,8 @@
       <label>事件名 <span style="color:var(--stamp)">*</span></label>
       <input type="text" id="rName" placeholder="例）情報公開請求をめぐる訴訟">
     </div>
-    <div class="field">
-      <label>事件番号（複数の場合は改行、1行に1つ）</label>
-      <textarea id="rCaseNo" placeholder="例）令和6年（ワ）第1234号"></textarea>
-      <p class="fnote">地裁→高裁など番号が変わる場合は「地裁　令和6年（ワ）第12345号」「高裁　令和7年（ネ）第6789号」のように行を分けて書けます（裁判官欄と同じ書き方）。</p>
-    </div>
+    <div class="field"><label>タグ（複数の場合は改行、1行に1つ）</label><textarea id="rTags" placeholder="例）労働&#10;パワハラ"></textarea></div>
+    <div class="field"><label>争点（複数の場合は改行、1行に1つ）</label><textarea id="rPoints" placeholder="例）〇〇の事実があったか"></textarea></div>
     <div class="two">
       <div class="field"><label>原告名</label><input type="text" id="rPlaintiff" placeholder="例）従業員"></div>
       <div class="field"><label>被告名</label><input type="text" id="rDefendant" placeholder="例）〇〇株式会社"></div>
@@ -53,22 +50,25 @@
       <textarea id="rJudge" placeholder="例）〇〇 〇〇裁判官"></textarea>
       <p class="fnote">地裁→高裁など審級が変わる場合は「地裁　〇〇 〇〇裁判官」「高裁　〇〇 〇〇裁判官」のように行を分けて書けます（事件番号欄と同じ書き方）。</p>
     </div>
-    <div class="field"><label>争点（複数の場合は改行、1行に1つ）</label><textarea id="rPoints" placeholder="例）〇〇の事実があったか"></textarea></div>
-    <div class="field"><label>タグ（複数の場合は改行、1行に1つ）</label><textarea id="rTags" placeholder="例）労働&#10;パワハラ"></textarea></div>
-
-    <p class="msec">終結（終結した事件のみ）</p>
-    <div class="two">
-      <div class="field"><label>終結日</label><input type="date" id="rArchivedAt"></div>
-      <div class="field"><label>終結の種類</label><input type="text" id="rCloseType" placeholder="例）判決、和解、取下げ"></div>
-    </div>
-
-    <p class="msec">裁判について</p>
-    <div class="field"><label>裁判について</label><textarea id="rCall" placeholder="どんな裁判か、傍聴や支援をお願いする文章など（空行を挟むと段落を分けられます）"></textarea></div>
 
     <p class="msec">報道・掲載</p>
     <div class="field">
       <label>複数の場合は改行、1行に1つ（URLがあれば含めてください）</label>
       <textarea id="rPress" placeholder="例）〇〇新聞で報道されました https://..."></textarea>
+    </div>
+    <div class="field">
+      <label>事件番号（複数の場合は改行、1行に1つ）</label>
+      <textarea id="rCaseNo" placeholder="例）令和6年（ワ）第1234号"></textarea>
+      <p class="fnote">地裁→高裁など番号が変わる場合は「地裁　令和6年（ワ）第12345号」「高裁　令和7年（ネ）第6789号」のように行を分けて書けます（裁判官欄と同じ書き方）。</p>
+    </div>
+
+    <p class="msec">裁判について</p>
+    <div class="field"><label>裁判について</label><textarea id="rCall" placeholder="どんな裁判か、傍聴や支援をお願いする文章など（空行を挟むと段落を分けられます）"></textarea></div>
+
+    <p class="msec">終結（終結した事件のみ）</p>
+    <div class="two">
+      <div class="field"><label>終結日</label><input type="date" id="rArchivedAt"></div>
+      <div class="field"><label>終結の種類</label><input type="text" id="rCloseType" placeholder="例）判決、和解、取下げ"></div>
     </div>
 
     <p class="msec">直近の期日</p>
@@ -84,8 +84,8 @@
     <div class="field">
       <label class="check"><input type="checkbox" id="rOpen" checked> だれでも傍聴できます（チェックを外すと「非公開・要確認」）</label>
     </div>
-    <div class="field"><label>この回の原告の主張（複数の場合は改行、1行に1つ）</label><textarea id="rPlaintiff"></textarea></div>
-    <div class="field"><label>この回の被告の主張（複数の場合は改行、1行に1つ）</label><textarea id="rDefendant"></textarea></div>
+    <div class="field"><label>この回の原告の主張（複数の場合は改行、1行に1つ）</label><textarea id="rEvPlaintiff"></textarea></div>
+    <div class="field"><label>この回の被告の主張（複数の場合は改行、1行に1つ）</label><textarea id="rEvDefendant"></textarea></div>
 
     <p class="msec">資料・写真について</p>
     <p class="d-body mut">
@@ -134,7 +134,7 @@
         case: name, date, time: val("rTime"), type: val("rType"),
         court: val("rCourt"), place: val("rPlace"),
         open: document.getElementById("rOpen").checked,
-        plaintiffArgument: lines("rPlaintiff"), defendantArgument: lines("rDefendant"),
+        plaintiffArgument: lines("rEvPlaintiff"), defendantArgument: lines("rEvDefendant"),
       });
     }
 
