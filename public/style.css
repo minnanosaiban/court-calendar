@@ -294,13 +294,13 @@ a{color:inherit}
 /* ヘッダーと掲示板の間に置く案内ボタンの帯。上下に同じだけ余白をとって「帯」として独立させる
    （掲示板パネル側に margin を足すと、事件ページで写真カードとの継ぎ目に隙間ができてしまう） */
 .jumplink{margin:24px 0 32px}
-/* .bwrite a（報告を書く）と同じ枠線ピルのイメージ。ただし主役の朱色ではなく、
-   .btn と同じ控えめなグレー枠にする（サイトの主操作ではないので目立たせすぎない） */
+/* .bwrite a（報告を書く）・.btn と同じ枠線ピルのイメージ・同じ寸法にそろえる。
+   色だけ主役の朱色ではなく、.btn と同じ控えめなグレー枠にする（サイトの主操作ではないため） */
 .pillbtn{display:inline-flex;align-items:center;background:none;border:1px solid #e6e4dd;
-  border-radius:999px;padding:8px 20px;margin:0 8px 8px 0;
-  font-size:.8rem;color:var(--ink);text-decoration:none}
+  border-radius:999px;padding:4px 12px;margin:0 8px 8px 0;
+  font-size:.7rem;color:var(--ink);text-decoration:none;line-height:1.5}
 .pillbtn:hover{border-color:#c9c6bc}
-.pillbtn i{color:var(--stamp);margin-left:.4em}
+.pillbtn i{color:var(--stamp);margin-left:.4em;line-height:1}
 
 /* ---- タグ（事件詳細の下・「事件をさがす」の絞り込みと各行） ---- */
 .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
