@@ -112,8 +112,8 @@ a{color:inherit}
 .facts dd{margin:0;min-width:0}
 /* 報道・掲載／事件番号は参照情報として「裁判について」の後ろにまとめる。他の見出し(.minih)と同じだけ間をあける */
 .facts-lower{margin-top:26px}
-.facts-links{margin-top:2px}
-.facts .plink{display:inline-block;margin-right:10px;font-size:1.05rem;color:var(--faint);vertical-align:-2px;text-decoration:none}
+.facts-links{display:inline;margin-left:8px}
+.facts .plink{display:inline-block;margin-right:6px;font-size:.86rem;color:var(--faint);vertical-align:-1px;text-decoration:none}
 .facts .plink:hover{color:var(--ink)}
 .pts{list-style:none;margin-top:6px;font-size:.9rem}
 .pts li{padding-left:1.2em;text-indent:-1.2em;margin-bottom:3px}
