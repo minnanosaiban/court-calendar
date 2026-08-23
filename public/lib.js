@@ -135,22 +135,23 @@ window.CC = (function(){
     return [ev.type, place, `${jpDate(ev.date)}${ev.time||""}`].filter(Boolean).join("　");
   }
 
-  // ---- 当事者のリンク（URLのドメインで見出しを決める。当事者のすぐ下に文字で出す） ----
-  function linkLabel(url){
+  // ---- 当事者のリンク（URLのドメインでアイコンを決める。当事者のすぐ下にアイコンで出す） ----
+  function linkIcon(url){
     let h=""; try{ h=new URL(url).hostname.replace(/^www\./,""); }catch(e){}
-    if(h==="x.com"||h==="twitter.com") return "Xアカウント";
-    if(h.endsWith("instagram.com")) return "Instagramアカウント";
-    if(h.endsWith("youtube.com")||h==="youtu.be") return "YouTubeチャンネル";
-    if(h.endsWith("facebook.com")) return "Facebookページ";
-    if(h==="note.com") return "note";
-    return "ウェブサイト";
+    if(h==="x.com"||h==="twitter.com") return ["bi-twitter-x","X"];
+    if(h.endsWith("instagram.com")) return ["bi-instagram","Instagram"];
+    if(h.endsWith("youtube.com")||h==="youtu.be") return ["bi-youtube","YouTube"];
+    if(h.endsWith("facebook.com")) return ["bi-facebook","Facebook"];
+    if(h==="note.com") return ["bi-journal-text","note"];
+    return ["bi-globe2", "ウェブサイト"];
   }
   // 原告のリンク（原告のみ。被告側の欄は defendantLinks を渡す）
   function partyLinksHtml(links){
     if(!links.length) return "";
-    return `<div class="facts-links">${links.map(u=>
-      `<span class="plink"><a href="${escapeAttr(u)}" target="_blank" rel="noopener">${escapeHtml(linkLabel(u))}</a> <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></span>`
-    ).join("")}</div>`;
+    return `<div class="facts-links">${links.map(u=>{
+      const [cls,label]=linkIcon(u);
+      return `<a class="plink" href="${escapeAttr(u)}" target="_blank" rel="noopener" title="${escapeAttr(label)}" aria-label="${escapeAttr(label)}"><i class="bi ${cls}" aria-hidden="true"></i></a>`;
+    }).join("")}</div>`;
   }
   // ---- 裁判官・事件番号：「地裁　○○ ／ 高裁　○○・△△」の書き方（審級ごとに／、同じ審級の複数人は・）を
   // 解析して1件ずつ改行して出す。この書き方をしていない単純な1件は、そのまま1行で返す ----
@@ -292,7 +293,7 @@ window.CC = (function(){
 
     // 上段のファクトシート：最近の期日・手続・争点・原告・被告・裁判官（値がある行だけ出す）
     const nextRow = next
-      ? factRow("最近の期日",
+      ? factRow("期日",
           `<div>${escapeHtml(jpDate(next.date))}${next.time?" "+escapeHtml(next.time):""}${next.open===false?`<span class="round-closed">非公開・要確認</span>`:""}</div>`+
           ([next.court,next.place].filter(Boolean).length?`<div>${escapeHtml([next.court,next.place].filter(Boolean).join(" "))}</div>`:"")
         ) + factRow("手続", next.type?escapeHtml(next.type):"")
@@ -318,7 +319,7 @@ window.CC = (function(){
       html += `<p class="d-more"><a class="pillbtn" href="case?id=${encodeURIComponent(c.id)}">詳細を見る <i class="bi bi-arrow-right" aria-hidden="true"></i></a></p>`;
     }else{
       // 下段のファクトシート：報道・掲載、事件番号（参照情報なので裁判についての後ろにまとめる）
-      const pressRow = factRow("報道・掲載", c.press.length?`<ul class="pts">${c.press.map(line=>`<li>${linkify(line)}</li>`).join("")}</ul>`:"");
+      const pressRow = factRow("掲載", c.press.length?`<ul class="pts">${c.press.map(line=>`<li>${linkify(line)}</li>`).join("")}</ul>`:"");
       const caseNoRow = factRow("事件番号", c.caseNo?courtLinesHtml(c.caseNo,""):"");
       const facts2 = pressRow+caseNoRow;
       const editCaseQact = me.canWrite ? `<p class="qact"><a data-editcase="${escapeAttr(c.id)}">＋ 事件情報を編集</a></p>` : "";
@@ -349,12 +350,12 @@ window.CC = (function(){
   function matButtonsHtml(m){
     const icon = matIcon(m);
     const pdf = m.fileUrl
-      ? `<a class="btn pdf" href="${escapeAttr(m.fileUrl)}" target="_blank" rel="noopener"><i class="bi ${icon}" aria-hidden="true"></i>PDF</a>`
-      : `<span class="btn off"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>PDF</span>`;
-    // 本文はページを開かず、その場でクリップボードにコピーする（再利用・AIへの貼り付け用）
+      ? `<a class="btn pdf" href="${escapeAttr(m.fileUrl)}" target="_blank" rel="noopener"><i class="bi ${icon}" aria-hidden="true"></i>.pdf</a>`
+      : `<span class="btn off"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>.pdf</span>`;
+    // 本文はページを開かず、その場でクリップボードにコピーする（再利用・AIへの貼り付け用。中身はMarkdownを貼り付けたもの）
     const body = m.body
-      ? `<button type="button" class="btn" data-copybody="${escapeAttr(m.id)}"><i class="bi bi-clipboard" aria-hidden="true"></i>テキスト</button>`
-      : `<span class="btn off"><i class="bi bi-clipboard" aria-hidden="true"></i>テキスト</span>`;
+      ? `<button type="button" class="btn" data-copybody="${escapeAttr(m.id)}"><i class="bi bi-clipboard" aria-hidden="true"></i>.md</button>`
+      : `<span class="btn off"><i class="bi bi-clipboard" aria-hidden="true"></i>.md</span>`;
     // 要約はその場で展開せず、ポップアップ（モーダル）で開く
     const sum = m.summary
       ? `<button type="button" class="btn" data-sumopen="${escapeAttr(m.id)}"><i class="bi bi-stars" aria-hidden="true"></i>要約</button>`
@@ -364,8 +365,7 @@ window.CC = (function(){
   function matBlockHtml(m){
     const claims=(m.claims||[]).map(x=>`<li>${escapeHtml(x)}</li>`).join("");
     return `<div class="mat">
-      <p class="mat-name">${escapeHtml(m.title)}</p>
-      ${matButtonsHtml(m)}
+      <span class="mmain"><span class="mat-name">${escapeHtml(m.title)}</span>${matButtonsHtml(m)}</span>
       ${claims?`<ul class="pts mat-claims">${claims}</ul>`:""}
     </div>`;
   }

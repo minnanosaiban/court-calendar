@@ -113,7 +113,8 @@ a{color:inherit}
 /* 報道・掲載／事件番号は参照情報として「裁判について」の後ろにまとめる。他の見出し(.minih)と同じだけ間をあける */
 .facts-lower{margin-top:26px}
 .facts-links{margin-top:2px}
-.facts .plink{display:inline-block;margin-right:12px;font-size:.84rem}
+.facts .plink{display:inline-block;margin-right:10px;font-size:1.05rem;color:var(--faint);vertical-align:-2px;text-decoration:none}
+.facts .plink:hover{color:var(--ink)}
 .pts{list-style:none;margin-top:6px;font-size:.9rem}
 .pts li{padding-left:1.2em;text-indent:-1.2em;margin-bottom:3px}
 .pts li::before{content:"・";color:var(--faint)}
@@ -170,7 +171,6 @@ a{color:inherit}
 .btn.on .bi{color:#fff}
 .btn.copied{color:#2f7d4f;border-color:#2f7d4f}
 .btn.copied .bi{color:#2f7d4f}
-.mat .btns{margin-top:8px}
 /* 原告/被告の主張（タイムラインの節の中、資料の上） */
 .args{display:grid;gap:10px;margin-top:10px}
 @media(min-width:560px){.args{grid-template-columns:1fr 1fr}}
