@@ -263,7 +263,7 @@ window.CC = (function(){
 
   // ================= 事件のカード =================
   // full=false: トップ「最近の期日」用（タイトル〜掲示板＋「詳細を見る」）
-  // full=true : 事件ページ用（さらに よびかけ・タイムラインと訴訟資料・資料一覧）
+  // full=true : 事件ページ用（さらに よびかけ・関連裁判・タイムラインと訴訟資料・資料一覧）
   function caseCardHtml(caseId, full){
     const c = caseById(caseId);
     if(!c) return null;
@@ -286,14 +286,13 @@ window.CC = (function(){
         ${c.parties?`<p class="minih">当事者</p><p class="d-body">${escapeHtml(c.parties)}</p>`:""}
         ${c.caseNo?`<p class="minih">事件番号</p><p class="d-body">${escapeHtml(c.caseNo)}</p>`:""}
         ${c.judge?`<p class="minih">裁判官</p><p class="d-body">${escapeHtml(c.judge)}</p>`:""}
-        ${relatedCasesHtml(c)}
         ${boardHtml(caseId)}`;
 
     if(!full){
       html += `<p class="d-more"><a class="pillbtn" href="case?id=${encodeURIComponent(c.id)}">詳細を見る <i class="bi bi-arrow-right" aria-hidden="true"></i></a></p>`;
     }else{
       const editCaseQact = me.canWrite ? `<p class="qact"><a data-editcase="${escapeAttr(c.id)}">＋ 事件情報を追加</a></p>` : "";
-      html += callHtml(c) + pressHtml(c) + editCaseQact + timelineHtml(caseId) + materialsListHtml(caseId);
+      html += callHtml(c) + pressHtml(c) + editCaseQact + relatedCasesHtml(c) + timelineHtml(caseId) + materialsListHtml(caseId);
     }
     html += `</div>`;
     return html;
