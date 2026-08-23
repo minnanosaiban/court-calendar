@@ -148,6 +148,10 @@ a{color:inherit}
 .facts .plink{display:inline-block;margin-right:6px;font-size:.86rem;color:var(--faint);vertical-align:-1px;text-decoration:none}
 .facts .plink:hover{color:var(--ink)}
 .pts{list-style:none;margin-top:8px;font-size:.9rem}
+/* ファクトシート内（争点・掲載）では、.pts自身のmargin-topが dt の位置合わせ用padding-topと
+   二重にかかり、他の行（.court-lineや素のテキスト）よりラベルとの間が8px広くなって
+   斜めにずれて見えていた。ファクトシートの中でだけ打ち消す */
+.facts dd .pts{margin-top:0}
 .pts li{padding-left:1.2em;text-indent:-1.2em;margin-bottom:3px}
 .pts li::before{content:"・";color:var(--faint)}
 /* 期日（この事件の全回）: 争点と同じ見た目のリストを流用 */
