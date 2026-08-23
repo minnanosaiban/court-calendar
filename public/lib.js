@@ -849,7 +849,7 @@ window.CC = (function(){
         </div>
         <div class="field">
           <label>事件番号（任意）</label>
-          <input type="text" id="cCaseNo" placeholder="例）令和8年（ワ）第761号">
+          <input type="text" id="cCaseNo" placeholder="例）令和6年（ワ）第1234号">
           <p class="fnote">地裁→高裁など番号が変わる場合は「地裁　令和6年（ワ）第12345号／高裁　令和7年（ネ）第6789号」のように1つの欄にまとめて書けます（裁判官欄と同じ書き方）。</p>
         </div>
         <div class="field"><label>当事者</label><input type="text" id="cParties" placeholder="例）原告 従業員 ／ 被告 〇〇株式会社"></div>
@@ -874,7 +874,7 @@ window.CC = (function(){
         </div>
         <div class="field">
           <label>関連裁判（1行に1つの事件名・任意）</label>
-          <textarea id="cRelated" list="caseList" placeholder="例）槇野圭 vs 山下浩二"></textarea>
+          <textarea id="cRelated" list="caseList" placeholder="例）情報公開請求をめぐる訴訟"></textarea>
           <p class="fnote">同じ事実に関連する別争点の訴訟など。サイトに登録済みの事件名だけ指定できます（このサイト内の事件へのリンクになります）。どちらか一方に登録すれば、両方の事件ページに表示されます。</p>
         </div>
         <p class="msec">終結（終結した事件のみ入れる）</p>

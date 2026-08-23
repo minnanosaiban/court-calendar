@@ -10,7 +10,7 @@
 CREATE TABLE IF NOT EXISTS cases (
   id          TEXT PRIMARY KEY,
   name        TEXT NOT NULL UNIQUE, -- 事件名（画面のタイトル）
-  case_no     TEXT,                 -- 事件番号（例：令和8年（ワ）第761号・任意）
+  case_no     TEXT,                 -- 事件番号（例：令和6年（ワ）第1234号・任意）
   parties     TEXT,                 -- 当事者
   judge       TEXT,                 -- 裁判官（任意）
   points      TEXT,                 -- 争点（1行1項目、改行区切り）

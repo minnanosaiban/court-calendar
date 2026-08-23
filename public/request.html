@@ -30,7 +30,7 @@
     <p class="d-body mut">
       「応援傍聴ナビ」への掲載をご希望の方は、分かる範囲で下の欄にご記入のうえ「事件データを作成してダウンロード」を押してください。
       できあがったデータファイルを、訴状や準備書面（PDF）・写真などがあれば一緒に添えて、運営者までメールでお送りください。
-      ＊は必須項目です。
+      事件名（＊）以外はすべて任意です。分かる範囲でご記入ください。
     </p>
 
     <p class="msec">事件について</p>
@@ -38,32 +38,32 @@
       <label>事件名 <span style="color:var(--stamp)">*</span></label>
       <input type="text" id="rName" placeholder="例）情報公開請求をめぐる訴訟">
     </div>
-    <div class="field"><label>事件番号（分かれば）</label><input type="text" id="rCaseNo" placeholder="例）令和8年（ワ）第761号"></div>
+    <div class="field"><label>事件番号</label><input type="text" id="rCaseNo" placeholder="例）令和6年（ワ）第1234号"></div>
     <div class="field"><label>当事者</label><input type="text" id="rParties" placeholder="例）原告 従業員 ／ 被告 〇〇株式会社"></div>
-    <div class="field"><label>裁判官（分かれば）</label><input type="text" id="rJudge" placeholder="例）〇〇 〇〇"></div>
-    <div class="field"><label>争点（1行に1つ）</label><textarea id="rPoints" placeholder="例）〇〇の事実があったか"></textarea></div>
-    <div class="field"><label>タグ（分かれば・1行に1つ）</label><textarea id="rTags" placeholder="例）労働&#10;パワハラ"></textarea></div>
+    <div class="field"><label>裁判官</label><input type="text" id="rJudge" placeholder="例）〇〇 〇〇"></div>
+    <div class="field"><label>争点（複数の場合は改行、1行に1つ）</label><textarea id="rPoints" placeholder="例）〇〇の事実があったか"></textarea></div>
+    <div class="field"><label>タグ（複数の場合は改行、1行に1つ）</label><textarea id="rTags" placeholder="例）労働&#10;パワハラ"></textarea></div>
 
-    <p class="msec">終結（終結した事件のみ・任意）</p>
+    <p class="msec">終結（終結した事件のみ）</p>
     <div class="two">
       <div class="field"><label>終結日</label><input type="date" id="rArchivedAt"></div>
       <div class="field"><label>終結の種類</label><input type="text" id="rCloseType" placeholder="例）判決、和解、取下げ"></div>
     </div>
 
-    <p class="msec">よびかけ（任意）</p>
+    <p class="msec">よびかけ</p>
     <div class="field"><label>よびかけ文</label><textarea id="rCall" placeholder="どんな裁判か、傍聴や支援をお願いする文章など（空行を挟むと段落を分けられます）"></textarea></div>
     <div class="two">
       <div class="field"><label>呼びかけ団体・お名前</label><input type="text" id="rHost" placeholder="例）A社従業員"></div>
       <div class="field"><label>連絡先（公開してよいもの）</label><input type="text" id="rContact" placeholder="例）メールアドレス"></div>
     </div>
 
-    <p class="msec">報道・掲載（あれば・任意）</p>
+    <p class="msec">報道・掲載</p>
     <div class="field">
-      <label>1行に1つ（URLがあれば含めてください）</label>
+      <label>複数の場合は改行、1行に1つ（URLがあれば含めてください）</label>
       <textarea id="rPress" placeholder="例）〇〇新聞で報道されました https://..."></textarea>
     </div>
 
-    <p class="msec">直近の期日（分かれば・任意）</p>
+    <p class="msec">直近の期日</p>
     <div class="two">
       <div class="field"><label>期日（日付）</label><input type="date" id="rDate"></div>
       <div class="field"><label>時刻</label><input type="time" id="rTime"></div>
@@ -76,8 +76,8 @@
     <div class="field">
       <label class="check"><input type="checkbox" id="rOpen" checked> だれでも傍聴できます（チェックを外すと「非公開・要確認」）</label>
     </div>
-    <div class="field"><label>この回の原告の主張（1行に1つ・任意）</label><textarea id="rPlaintiff"></textarea></div>
-    <div class="field"><label>この回の被告の主張（1行に1つ・任意）</label><textarea id="rDefendant"></textarea></div>
+    <div class="field"><label>この回の原告の主張（複数の場合は改行、1行に1つ）</label><textarea id="rPlaintiff"></textarea></div>
+    <div class="field"><label>この回の被告の主張（複数の場合は改行、1行に1つ）</label><textarea id="rDefendant"></textarea></div>
 
     <p class="msec">資料・写真について</p>
     <p class="d-body mut">
