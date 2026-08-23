@@ -51,12 +51,8 @@
       <div class="field"><label>終結の種類</label><input type="text" id="rCloseType" placeholder="例）判決、和解、取下げ"></div>
     </div>
 
-    <p class="msec">よびかけ</p>
-    <div class="field"><label>よびかけ文</label><textarea id="rCall" placeholder="どんな裁判か、傍聴や支援をお願いする文章など（空行を挟むと段落を分けられます）"></textarea></div>
-    <div class="two">
-      <div class="field"><label>呼びかけ団体・お名前</label><input type="text" id="rHost" placeholder="例）A社従業員"></div>
-      <div class="field"><label>連絡先（公開してよいもの）</label><input type="text" id="rContact" placeholder="例）メールアドレス"></div>
-    </div>
+    <p class="msec">裁判について</p>
+    <div class="field"><label>裁判について</label><textarea id="rCall" placeholder="どんな裁判か、傍聴や支援をお願いする文章など（空行を挟むと段落を分けられます）"></textarea></div>
 
     <p class="msec">報道・掲載</p>
     <div class="field">
@@ -116,7 +112,6 @@
     const caseObj = {
       name, caseNo: val("rCaseNo"), parties: val("rParties"), judge: val("rJudge"),
       points: lines("rPoints"), callText: val("rCall"),
-      host: val("rHost"), contact: val("rContact"),
       press: lines("rPress"), tags: lines("rTags"),
       archivedAt: val("rArchivedAt"), closeType: val("rCloseType"),
     };
