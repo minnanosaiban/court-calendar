@@ -293,14 +293,16 @@ window.CC = (function(){
 
   // ================= 事件のカード =================
   // full=false: トップ「最近の期日」用（タイトル〜掲示板＋「詳細を見る」）
-  // full=true : 事件ページ用（さらに よびかけ・関連裁判・タイムラインと訴訟資料・資料一覧）
+  // full=true : 事件ページ用（さらに よびかけ・関連裁判・タイムライン・訴訟資料一覧）
   function caseCardHtml(caseId, full){
     const c = caseById(caseId);
     if(!c) return null;
     const next = nextEvent(caseId);
     const points=(c.points||[]).map(p=>`<li>${escapeHtml(p)}</li>`).join("");
 
-    // 上段のファクトシート：最近の期日・手続・争点・原告・被告・裁判官（値がある行だけ出す）
+    // ファクトシート：最近の期日・手続・争点・原告・被告・裁判官・掲載・事件番号（値がある行だけ出す）。
+    // 掲載・事件番号は参照情報なので、事件ページ（full=true）でだけ末尾に続ける（トップの
+    // ピックアップカードでは出さない）
     const nextRow = next
       ? factRow("期日",
           `<div>${escapeHtml(jpDate(next.date))}${next.time?" "+escapeHtml(next.time):""}${next.open===false?`<span class="round-closed">非公開・要確認</span>`:""}</div>`+
@@ -311,13 +313,15 @@ window.CC = (function(){
     const plaintiffRow = factRow("原告", (c.plaintiffName?escapeHtml(c.plaintiffName):"")+partyLinksHtml(c.plaintiffLinks));
     const defendantRow = factRow("被告", (c.defendantName?escapeHtml(c.defendantName):"")+partyLinksHtml(c.defendantLinks));
     const judgeRow = factRow("裁判官", c.judge?courtLinesHtml(c.judge,"裁判官"):"");
-    const facts1 = nextRow+pointsRow+plaintiffRow+defendantRow+judgeRow;
+    const pressRow = full ? factRow("掲載", c.press.length?`<ul class="pts">${c.press.map(line=>`<li>${linkify(line)}</li>`).join("")}</ul>`:"") : "";
+    const caseNoRow = full ? factRow("事件番号", c.caseNo?courtLinesHtml(c.caseNo,""):"") : "";
+    const facts1 = nextRow+pointsRow+plaintiffRow+defendantRow+judgeRow+pressRow+caseNoRow;
 
     // 写真・掲示板・事件本体（dcard）は、1つの塊として続けて出す（箱の中に箱、を解消するため）。
     // 継ぎ目は角丸にせず、塊の外側（写真の上／事件本体の下）だけ角丸にする（詳しくは style.css）
     const galHtml = full ? galleryHtml(caseId) : "";
     const galCard = galHtml ? `<div class="card gal-card">${galHtml}</div>` : "";
-    let html = galCard + boardHtml(caseId) + `
+    let html = galCard + boardHtml(caseId, full) + `
       <div class="card dcard">
         <div class="d-head">
           <h2 class="d-title">${escapeHtml(c.name)} ${likeHtml(c)}</h2>
@@ -329,12 +333,8 @@ window.CC = (function(){
     if(!full){
       html += `<p class="d-more"><a class="pillbtn" href="case?id=${encodeURIComponent(c.id)}">事件詳細を見る <i class="bi bi-arrow-right" aria-hidden="true"></i></a></p>`;
     }else{
-      // 下段のファクトシート：報道・掲載、事件番号（参照情報なので裁判についての後ろにまとめる）
-      const pressRow = factRow("掲載", c.press.length?`<ul class="pts">${c.press.map(line=>`<li>${linkify(line)}</li>`).join("")}</ul>`:"");
-      const caseNoRow = factRow("事件番号", c.caseNo?courtLinesHtml(c.caseNo,""):"");
-      const facts2 = pressRow+caseNoRow;
       const editCaseQact = me.canWrite ? `<p class="qact"><a data-editcase="${escapeAttr(c.id)}">＋ 事件情報を編集</a></p>` : "";
-      html += callHtml(c) + (facts2?`<dl class="facts facts-lower">${facts2}</dl>`:"") + editCaseQact + relatedCasesHtml(c) + timelineHtml(caseId) + materialsListHtml(caseId);
+      html += callHtml(c) + editCaseQact + relatedCasesHtml(c) + timelineHtml(caseId) + materialsListHtml(caseId);
     }
     html += `</div>`;
     return html;
@@ -413,7 +413,7 @@ window.CC = (function(){
         ${expandable?`<div class="tl-body">${argsHtml(ev)}${own.map(matBlockHtml).join("")}</div>`:""}
       </li>`;
     }).join("");
-    return `<p class="minih">タイムラインと訴訟資料</p>
+    return `<p class="subhead">タイムライン</p>
       ${rounds.length?`<ol class="tl">${items}</ol>`:`<p class="d-body mut">期日はまだ登録されていません。</p>`}
       ${me.canWrite?`<p class="qact"><a data-addround="${escapeAttr(caseId)}">＋ 期日を編集</a></p>`:""}`;
   }
@@ -444,7 +444,7 @@ window.CC = (function(){
         `<p class="mside-h ${SIDE_CLASS[side]||""}">${escapeHtml(side)}</p><ul class="mlist">${groups[side].map(matRowHtml).join("")}</ul>`
       ).join("");
     }
-    return `<p class="minih">訴訟資料一覧</p>
+    return `<p class="subhead">訴訟資料一覧</p>
       ${body}
       ${me.canWrite?`<p class="qact"><a data-addmat="${escapeAttr(caseId)}">＋ 資料を編集</a></p>`:""}`;
   }
@@ -467,7 +467,7 @@ window.CC = (function(){
   function writeBtnHtml(caseId){
     return `<a data-openpost="${escapeAttr(caseId)}"><i class="bi bi-chat-left-text" aria-hidden="true"></i>報告を書く</a>`;
   }
-  function boardHtml(caseId){
+  function boardHtml(caseId, full){
     const c = caseById(caseId);
     const rounds = caseEvents(caseId);
     const mine = casePosts(caseId);
@@ -483,8 +483,13 @@ window.CC = (function(){
       `<div class="bhead"><span class="btitle"><span class="bt-red">傍聴に行ってきたよ</span><span class="bt-bang">！</span>掲示板</span>`+
       (mine.length?`<span class="bcount">${mine.length}件の報告</span>`:"")+
       `</div>`+
-      // 掲示板だけが独立した箱になったので、どの事件の掲示板かが分かるよう事件名といいねを添える
-      (c?`<p class="d-title board-name">${likeHtml(c)} ${escapeHtml(c.name)}</p>`:"")+
+      // 掲示板だけが独立した箱になったので、どの事件の掲示板かが分かるよう事件名といいねを添える。
+      // 事件名は事件ページへのリンクにする（下線などの装飾はしない）。ただし事件ページ自身では
+      // 自分へのリンクになってしまうので、そこだけは素のテキストのまま
+      (c?`<p class="d-title board-name">${likeHtml(c)} ${full
+          ? escapeHtml(c.name)
+          : `<a class="board-name-link" href="case?id=${encodeURIComponent(c.id)}">${escapeHtml(c.name)}</a>`
+        }</p>`:"")+
       // 左上（ハートの下）にも書き込みボタンを置く。長い報告一覧を下までスクロールしなくても書き始められる
       (showWriteBtn?`<p class="bwrite bwrite-top">${writeBtnHtml(caseId)}</p>`:"");
     html += items

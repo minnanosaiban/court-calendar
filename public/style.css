@@ -108,6 +108,11 @@ a{color:inherit}
 .like.on{color:var(--stamp);border-color:rgba(185,50,38,.35);background:rgba(185,50,38,.06)}
 .like:disabled{opacity:.6;cursor:default}
 .like-n{font-variant-numeric:tabular-nums}
+/* 掲示板の中の事件名(.board-name、.9rem)に添えるいいねは、地の文の大きさに合わせて一段小さくする
+   （既定の.like は1.6remの事件名の隣に置く前提のサイズなので、そのままだと大きすぎる）。
+   上下のpaddingは「報告を書く」(.bwrite a)と同じ4pxにして、高さをそろえる */
+.board-name .like{font-size:.7rem;padding:4px 10px 4px 7px}
+.board-name .like .bi{font-size:.75rem}
 .d-edit{display:inline-block;margin-top:8px;font-size:.8rem;color:var(--edit);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 /* シェア（X・LINE・リンクをコピー） */
 .share{display:flex;gap:2px;align-items:center;margin-top:12px}
@@ -123,12 +128,15 @@ a{color:inherit}
 .lede p + p{margin-top:12px}
 .lede .call{font-family:"Shippori Mincho",serif}
 .minih{font-size:.7rem;letter-spacing:.22em;color:var(--mut);margin-top:24px}
-/* ファクトシート：当事者・事件番号・裁判官を1つの定義リストにまとめる（旧・見出し3つ＋本文3つの構成を統合） */
+/* 節見出し(1.2rem)。タイムライン・訴訟資料一覧など、事件ページ内の大きめの区切り見出しに使う。
+   .lede-title と同じ字形・サイズ（節見出しの型スケール） */
+.subhead{font-family:"Shippori Mincho",serif;font-size:1.2rem;font-weight:600;margin-top:24px}
+/* ファクトシート：期日・手続・争点・原告・被告・裁判官・掲載・事件番号を1つの定義リストにまとめる
+   （旧・見出し3つ＋本文3つの構成を統合。掲載・事件番号は2026-08-24に「裁判について」の後ろの
+   別シートから、この1本にまとめ直した） */
 .facts{display:grid;grid-template-columns:max-content 1fr;column-gap:16px;row-gap:8px;margin-top:12px;font-size:.9rem;line-height:1.7}
 .facts dt{color:var(--mut);font-size:.7rem;letter-spacing:.18em;padding-top:4px;white-space:nowrap}
 .facts dd{margin:0;min-width:0}
-/* 報道・掲載／事件番号は参照情報として「裁判について」の後ろにまとめる。他の見出し(.minih)と同じだけ間をあける */
-.facts-lower{margin-top:24px}
 .facts-links{display:inline;margin-left:8px}
 .facts .plink{display:inline-block;margin-right:6px;font-size:.86rem;color:var(--faint);vertical-align:-1px;text-decoration:none}
 .facts .plink:hover{color:var(--ink)}
@@ -216,6 +224,8 @@ a{color:inherit}
 .bcount{font-size:.8rem;color:var(--mut)}
 /* 掲示板の中に置く事件名（どの事件の掲示板か分かるように） */
 .board-name{font-size:.9rem;margin-top:12px}
+/* 下線などの装飾はしない。色は地の文（.board-name）をそのまま継承する（a{color:inherit}が既定で効く） */
+.board-name-link{text-decoration:none}
 /* 報告は吹き出しで「声」として並べる */
 .bubble{background:#fff;border-radius:12px;padding:12px 16px;margin-top:12px;position:relative;font-size:.9rem}
 .bubble::before{content:"";position:absolute;left:-6px;top:16px;
