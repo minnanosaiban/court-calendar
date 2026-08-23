@@ -204,8 +204,15 @@ window.CC = (function(){
   function iconHtml(c, size){
     const cls = "cicon cicon-"+(size||"sm");
     if(c.icon) return `<img class="${cls}" src="${escapeAttr(c.icon)}" alt="">`;
-    const ch = (c.name||"").trim().slice(0,1) || "？";
+    const ch = placeholderChar(c.name);
     return `<span class="${cls} cicon-ph" aria-hidden="true">${escapeHtml(ch)}</span>`;
+  }
+  // 仮アイコンに使う頭文字。「【サンプル】」「【控訴審】」のような先頭の囲みは、どの事件でも同じ文字になって
+  // 見分けの役に立たないので読み飛ばし、囲みの後ろの頭文字を拾う（囲みだけで中身が無い名前は元の頭文字に戻す）
+  function placeholderChar(name){
+    const n=(name||"").trim();
+    const stripped=n.replace(/^[【\[（(「『][^】\]）)」』]*[】\]）)」』]\s*/, "");
+    return (stripped || n).slice(0,1) || "？";
   }
   // 事件のタグ。事件ページ等ではリンク（cases.html の絞り込みへ）、一覧ページの各行では非リンクの札として使う
   function tagsHtml(c, opts){
