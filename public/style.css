@@ -227,11 +227,16 @@ a{color:inherit}
 .bubble .del{color:var(--mut);font-size:.8rem;margin-left:.5em;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .board-empty{color:var(--mut);font-size:.9rem;margin-top:12px}
 .board-empty a{color:var(--ink);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+/* 右下（既定の位置）。左上にも同じボタンを .bwrite-top で重ねて置く（book/boardHtml参照） */
 .bwrite{margin-top:12px;text-align:right}
-/* 「詳細を見る」(.pillbtn)と同じ大きさ・位置にそろえる */
-.bwrite a{display:inline-block;background:#fff;border-radius:999px;padding:8px 20px;
-  font-size:.8rem;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.06)}
-.bwrite a .bi{color:var(--stamp)}
+.bwrite-top{text-align:left}
+/* 掲示板の主役は白い吹き出しなので、ボタンには塗り・影を持たせず枠線だけにして競合を避ける。
+   寸法は .btn（.pdf/.md/要約ボタン）と同じにそろえ、色だけ朱色にする */
+.bwrite a{display:inline-flex;align-items:center;gap:4px;background:none;
+  border:1px solid rgba(185,50,38,.35);border-radius:999px;padding:4px 12px;
+  font-size:.7rem;color:var(--stamp);cursor:pointer;line-height:1.5}
+.bwrite a:hover{border-color:rgba(185,50,38,.6)}
+.bwrite a .bi{font-size:.8rem;line-height:1;color:var(--stamp)}
 .pform{margin-top:12px;background:#fff;border-radius:12px;padding:16px}
 .pform .field{margin-bottom:12px}
 .pform .field label{display:block;font-size:.7rem;color:var(--mut);margin-bottom:4px}
@@ -289,8 +294,12 @@ a{color:inherit}
 /* ヘッダーと掲示板の間に置く案内ボタンの帯。上下に同じだけ余白をとって「帯」として独立させる
    （掲示板パネル側に margin を足すと、事件ページで写真カードとの継ぎ目に隙間ができてしまう） */
 .jumplink{margin:24px 0 32px}
-.pillbtn{display:inline-block;background:var(--card);border-radius:999px;padding:8px 20px;margin:0 8px 8px 0;
-  font-size:.8rem;color:var(--ink);text-decoration:none;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+/* .bwrite a（報告を書く）と同じ枠線ピルのイメージ。ただし主役の朱色ではなく、
+   .btn と同じ控えめなグレー枠にする（サイトの主操作ではないので目立たせすぎない） */
+.pillbtn{display:inline-flex;align-items:center;background:none;border:1px solid #e6e4dd;
+  border-radius:999px;padding:8px 20px;margin:0 8px 8px 0;
+  font-size:.8rem;color:var(--ink);text-decoration:none}
+.pillbtn:hover{border-color:#c9c6bc}
 .pillbtn i{color:var(--stamp);margin-left:.4em}
 
 /* ---- タグ（事件詳細の下・「事件をさがす」の絞り込みと各行） ---- */

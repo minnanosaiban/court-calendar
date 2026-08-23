@@ -318,7 +318,7 @@ window.CC = (function(){
         ${facts1?`<dl class="facts">${facts1}</dl>`:""}`;
 
     if(!full){
-      html += `<p class="d-more"><a class="pillbtn" href="case?id=${encodeURIComponent(c.id)}">詳細を見る <i class="bi bi-arrow-right" aria-hidden="true"></i></a></p>`;
+      html += `<p class="d-more"><a class="pillbtn" href="case?id=${encodeURIComponent(c.id)}">事件詳細を見る <i class="bi bi-arrow-right" aria-hidden="true"></i></a></p>`;
     }else{
       // 下段のファクトシート：報道・掲載、事件番号（参照情報なので裁判についての後ろにまとめる）
       const pressRow = factRow("掲載", c.press.length?`<ul class="pts">${c.press.map(line=>`<li>${linkify(line)}</li>`).join("")}</ul>`:"");
@@ -454,12 +454,18 @@ window.CC = (function(){
       `</div>`;
   }
 
+  // 「報告を書く」ボタン（左上・右下の2か所で使い回す。見出しが「掲示板」なので「傍聴の」は省く）
+  function writeBtnHtml(caseId){
+    return `<a data-openpost="${escapeAttr(caseId)}"><i class="bi bi-chat-left-text" aria-hidden="true"></i>報告を書く</a>`;
+  }
   function boardHtml(caseId){
     const c = caseById(caseId);
     const rounds = caseEvents(caseId);
     const mine = casePosts(caseId);
     // 投稿できるのは：スパム対策(Turnstile)設定済みのとき＝誰でも／未設定でも運営は可
     const canPost = (me.boardOpen || me.canWrite) && rounds.length>0;
+    // フォームを開いている間は、左上・右下どちらのボタンも隠す（フォーム自体は右下の位置に出る）
+    const showWriteBtn = canPost && boardFormForCase!==caseId;
     const items = mine.map(p=>{
       const ev = rounds.find(e=>e.id===p.eventId);
       return bubbleHtml(p, (ev && ev.type) || p.round || "");
@@ -469,7 +475,9 @@ window.CC = (function(){
       (mine.length?`<span class="bcount">${mine.length}件の報告</span>`:"")+
       `</div>`+
       // 掲示板だけが独立した箱になったので、どの事件の掲示板かが分かるよう事件名といいねを添える
-      (c?`<p class="d-title board-name">${likeHtml(c)} ${escapeHtml(c.name)}</p>`:"");
+      (c?`<p class="d-title board-name">${likeHtml(c)} ${escapeHtml(c.name)}</p>`:"")+
+      // 左上（ハートの下）にも書き込みボタンを置く。長い報告一覧を下までスクロールしなくても書き始められる
+      (showWriteBtn?`<p class="bwrite bwrite-top">${writeBtnHtml(caseId)}</p>`:"");
     html += items
       || `<p class="board-empty">${canPost
           ? "まだ報告はありません。傍聴に行かれた方の最初の報告をお待ちしています。"
@@ -477,7 +485,7 @@ window.CC = (function(){
     if(canPost){
       html += boardFormForCase===caseId
         ? postFormHtml(caseId)
-        : `<p class="bwrite"><a data-openpost="${escapeAttr(caseId)}"><i class="bi bi-chat-left-text" aria-hidden="true"></i> 傍聴の報告を書く</a></p>`;
+        : `<p class="bwrite">${writeBtnHtml(caseId)}</p>`;
     }else if(rounds.length){
       // 一般の投稿はまだ受け付けていない（Turnstile未設定）。運営は編集パスワードで書けるので、その導線だけ出す
       html += `<p class="board-empty">傍聴の報告の投稿には、<a data-unlock="1">パスワード</a>が必要です。</p>`;
