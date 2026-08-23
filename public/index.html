@@ -126,11 +126,17 @@
       const d=CC.parseYmd(ev.date);
       const dateLine=`${d.getMonth()+1}/${d.getDate()}（${CC.WD[d.getDay()]}） ${ev.time||""}`.trim();
       const place=[ev.court,ev.place].filter(Boolean).join(" ");
+      const c=CC.caseById(ev.caseId);
       return `<div class="pop-row" data-case="${CC.escapeAttr(ev.caseId)}">
         <i class="bi bi-chevron-right pop-arrow" aria-hidden="true"></i>
-        <p class="pop-date">${CC.escapeHtml(dateLine)}</p>
-        <p class="pop-title">${CC.escapeHtml(ev.case)}</p>
-        <p class="pop-meta">${CC.escapeHtml([ev.type,place].filter(Boolean).join(" ／ "))}</p>
+        <div class="pop-main">
+          ${c?CC.iconHtml(c,"sm"):""}
+          <div class="pop-text">
+            <p class="pop-date">${CC.escapeHtml(dateLine)}</p>
+            <p class="pop-title">${CC.escapeHtml(ev.case)}</p>
+            <p class="pop-meta">${CC.escapeHtml([ev.type,place].filter(Boolean).join(" ／ "))}</p>
+          </div>
+        </div>
       </div>`;
     }).join("");
     // 件数によらず、行ごとに矢印をつけて「クリックでその事件の詳細へ」と分かるようにする
@@ -259,7 +265,10 @@
         `<div class="ud"><b>${d.getMonth()+1}/${d.getDate()}</b>（${CC.WD[d.getDay()]}）${ev.time?" "+ev.time:""}</div>`+
         `<div class="ut">${CC.escapeHtml(ev.case)}</div>`+
         `<div class="um">${CC.escapeHtml([ev.type,place].filter(Boolean).join(" ／ "))||"&nbsp;"}</div>`;
-      item.appendChild(bar); item.appendChild(body);
+      item.appendChild(bar);
+      const c=CC.caseById(ev.caseId);
+      if(c) item.insertAdjacentHTML("beforeend", CC.iconHtml(c,"sm"));
+      item.appendChild(body);
       item.addEventListener("click",()=>{ location.href="case?id="+encodeURIComponent(ev.caseId); });
       upcomingBox.appendChild(item);
     }

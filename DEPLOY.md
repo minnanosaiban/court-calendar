@@ -20,6 +20,7 @@ functions/api/me.js               GET  /api/me           ログイン状態と�
 functions/api/cases.js            GET  /api/cases        事件の一覧（いいね数つき） / POST 追加
 functions/api/cases/[id].js       PUT  /api/cases/:id    更新 / DELETE 削除（期日・資料が残っていると不可）
 functions/api/cases/[id]/like.js  POST /api/cases/:id/like いいね / DELETE 取り消し（ログイン不要・端末ごとに1回）
+functions/api/cases/[id]/icon.js  PUT  /api/cases/:id/icon アイコン画像の登録・差し替え（multipart・ファイル必須） / DELETE 削除
 functions/api/events.js           GET  /api/events       期日の一覧 / POST 追加（知らない事件名なら事件も作る）
 functions/api/events/[id].js      PUT  /api/events/:id   更新 / DELETE 削除（投稿も消え、資料の紐づけは外れる）
 functions/api/materials.js        GET  /api/materials    訴訟資料の一覧 / POST 追加（multipart・ファイル任意）
@@ -28,7 +29,7 @@ functions/api/images.js           GET  /api/images        事件の写真の一�
 functions/api/images/[id].js      PUT  /api/images/:id    更新（説明・並び順・ファイル差し替え） / DELETE 削除
 functions/api/posts.js            GET  /api/posts        掲示板の一覧 / POST 投稿
 functions/api/posts/[id].js       DELETE /api/posts/:id  投稿を消す（運営のみ）
-functions/files/[[path]].js       GET  /files/<key>      R2 に置いたファイル（資料・写真）を配信（誰でも閲覧可）
+functions/files/[[path]].js       GET  /files/<key>      R2 に置いたファイル（資料・写真・アイコン）を配信（誰でも閲覧可）
 functions/case.js                 GET  /case              事件詳細ページの配信。?id=… のときだけ <head> のOGPタグを書き換える
 schema.sql                        D1 のテーブル定義（最新）
 migrate_002_call_for_support.sql  （過去）旧スキーマのDBを傍聴の呼びかけ用へ移行
@@ -44,6 +45,7 @@ migrate_016_merge_lede_into_calltext.sql 事件の説明（cases.lede）をよ�
 migrate_017_drop_materials_kind.sql 画面のどこにも表示されていなかった materials.kind（種別）列を削除する一度きりのマイグレーション
 migrate_018_case_no_and_related.sql 事件番号（cases.case_no）と関連裁判（cases.related_case_ids）を追加する一度きりのマイグレーション
 migrate_019_split_parties_links.sql 当事者（cases.parties）を原告名・被告名に、リンク（cases.links）を原告・被告それぞれのリンクに分離する一度きりのマイグレーション
+migrate_020_case_icon.sql         事件のアイコン（cases.icon_r2_key）列を追加する一度きりのマイグレーション
 seed_demo.sql                     動作確認用の架空データ（v3 形式・消し方はファイル冒頭のコメント参照）
 wrangler.toml           設定（D1・R2 バインド・環境変数）
 ```
@@ -252,6 +254,25 @@ DBスキーマの変更なし。
 - 事件モーダル・掲載依頼フォーム（`request.html`）の裁判官／事件番号欄を`<input>`から`<textarea>`に変更
 - 本番のENEOS事件データを新方式に移行（`judge`/`case_no`とも、／区切りを改行区切りに、裁判官名には
   「裁判官」を直接追記）
+
+### v4：事件アイコン（2026-08-24）
+
+`cases` に `icon_r2_key`（アイコン画像のR2キー・任意）を追加。旧スキーマのDBを更新する場合は
+`migrate_020_case_icon.sql` を実行すること。Twitterのアバターのように、一覧やカレンダーで事件をひと目で
+見分けられるようにする狙い。
+
+- 写真（`case_images`）とは別枠。事件につき1枚だけで、差し替えは新しいファイルをアップロードするだけ
+  （古いR2オブジェクトは自動で消す）。専用エンドポイント `/api/cases/:id/icon`（PUT=登録・差し替え、
+  ファイル必須／DELETE=削除）を新設。形式・上限はJPEG・PNG・WebP・5MBまで（写真より低い上限。
+  アイコンは小さく表示するため）
+- 表示箇所：事件をさがす（`cases.html`）の一覧行、カレンダーのポップオーバー、トップの「今後の期日」、
+  事件名の見出し（応援ピックアップ・事件ページ共通の `caseCardHtml`）。未登録の事件は、名前の頭文字を
+  丸い札にした仮アイコン（`.cicon-ph`）で代わりを出す（`CC.iconHtml(c, size)`、size は sm/md/lg）
+- 形は円形（角丸スケールの `50%`）。写真のサムネイル（角丸8pxの四角、`.imgrow .ithumb`）と見た目で
+  区別した
+- 編集は「事件情報を編集」モーダルの先頭に専用欄を追加。他の項目と違い、ファイルを選ぶ／「アイコンを外す」
+  を押すとその場ですぐ反映する（＝モーダル全体の「保存」ボタンを待たない。写真の並び替えボタンと同じ考え方。
+  新規の事件を追加する画面ではこの欄自体を隠す＝先に事件を保存してIDを確定させてから登録する）
 
 ### （過去）events テーブルの列（2026-08-20〜21）
 

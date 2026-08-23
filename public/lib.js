@@ -72,6 +72,8 @@ window.CC = (function(){
   const apiCreateCase  = (d)=> api("POST","/api/cases", d);
   const apiUpdateCase  = (id,d)=> api("PUT","/api/cases/"+encodeURIComponent(id), d);
   const apiDeleteCase  = (id)=> api("DELETE","/api/cases/"+encodeURIComponent(id));
+  const apiUpdateCaseIcon = (id,fd)=> api("PUT","/api/cases/"+encodeURIComponent(id)+"/icon", fd);
+  const apiDeleteCaseIcon = (id)=> api("DELETE","/api/cases/"+encodeURIComponent(id)+"/icon");
   const apiLike        = (id)=> api("POST","/api/cases/"+encodeURIComponent(id)+"/like");
   const apiUnlike      = (id)=> api("DELETE","/api/cases/"+encodeURIComponent(id)+"/like");
   const apiList        = ()=> api("GET","/api/events");
@@ -196,6 +198,14 @@ window.CC = (function(){
     if(!rel.length) return "";
     const items=rel.map(r=>`<li><a href="case?id=${encodeURIComponent(r.id)}">${escapeHtml(r.name)}</a></li>`).join("");
     return `<p class="minih">関連裁判</p><ul class="pts">${items}</ul>`;
+  }
+  // 事件のアイコン（Twitterのアバターのように、一覧やカレンダーで事件を見分けるための小さな画像）。
+  // 未登録なら、事件名の頭文字を丸い札で代わりに出す。size は "sm"（一覧の行・popover）／"md"（事件をさがすの行）／"lg"（事件名の見出し・編集モーダル）
+  function iconHtml(c, size){
+    const cls = "cicon cicon-"+(size||"sm");
+    if(c.icon) return `<img class="${cls}" src="${escapeAttr(c.icon)}" alt="">`;
+    const ch = (c.name||"").trim().slice(0,1) || "？";
+    return `<span class="${cls} cicon-ph" aria-hidden="true">${escapeHtml(ch)}</span>`;
   }
   // 事件のタグ。事件ページ等ではリンク（cases.html の絞り込みへ）、一覧ページの各行では非リンクの札として使う
   function tagsHtml(c, opts){
@@ -322,6 +332,7 @@ window.CC = (function(){
     let html = galCard + boardHtml(caseId, full) + `
       <div class="card dcard">
         <div class="d-head">
+          ${iconHtml(c,"lg")}
           <h2 class="d-title">${escapeHtml(c.name)} ${likeHtml(c)}</h2>
         </div>
         ${tagsHtml(c)}
@@ -917,6 +928,15 @@ window.CC = (function(){
           <li>事件名（＊）以外はすべて任意です。分かる範囲でご記入ください。</li>
           <li>複数行入力する欄は、右下をドラッグすると縦に広げられます。</li>
         </ul>
+        <div class="field" id="cIconField" hidden>
+          <label>アイコン</label>
+          <div class="cicon-row">
+            <span id="cIconPreview"></span>
+            <input type="file" id="cIconFile" accept="image/jpeg,image/png,image/webp">
+          </div>
+          <p class="fnote" id="cIconStatus" hidden></p>
+          <p class="fnote">JPEG・PNG・WebP、5MBまで。正方形に近い画像がきれいに表示されます。選ぶとすぐに反映されます（この欄だけ「保存」を待ちません）。<a id="cIconRemove" class="cicon-remove" hidden>アイコンを外す</a></p>
+        </div>
         <div class="field">
           <label>事件名 <span style="color:var(--stamp)">*</span></label>
           <input type="text" id="cName" placeholder="例）情報公開請求をめぐる訴訟">
@@ -1140,6 +1160,8 @@ window.CC = (function(){
   const cFields = { name:$("cName"), caseNo:$("cCaseNo"), plaintiff:$("cPlaintiff"), defendant:$("cDefendant"), judge:$("cJudge"), points:$("cPoints"),
                     callText:$("cCall"), press:$("cPress"), plaintiffLinks:$("cPlaintiffLinks"), defendantLinks:$("cDefendantLinks"),
                     tags:$("cTags"), related:$("cRelated"), archivedAt:$("cArchivedAt"), closeType:$("cCloseType") };
+  const cIconField=$("cIconField"), cIconPreview=$("cIconPreview"), cIconFile=$("cIconFile"),
+        cIconRemove=$("cIconRemove"), cIconStatus=$("cIconStatus");
   // 呼びかけ団体・連絡先は入力欄を廃止したが、既存データは保持する（保存のたびに空で上書きしないよう、
   // 編集を開いたときの値をここに覚えておいて、保存時にそのまま送り返す）
   let editingCaseHost="", editingCaseContact="";
@@ -1163,10 +1185,16 @@ window.CC = (function(){
     cFields.related.value=(c.relatedCaseIds||[]).map(id=>caseById(id)).filter(Boolean).map(r=>r.name).join("\n");
     cFields.archivedAt.value=c.archivedAt||""; cFields.closeType.value=c.closeType||"";
   }
+  // アイコン欄は既存の事件を編集しているときだけ出す（写真・資料と同じく、事件IDが無いと登録先が無いため）
+  function renderCIconPreview(c){
+    cIconPreview.innerHTML = iconHtml(c, "lg");
+    cIconRemove.hidden = !c.icon;
+  }
   function openCaseAdd(){
     if(!me.canWrite) return;
     editingCaseId=null; $("caseModalTitle").textContent="事件を追加"; $("cDelete").style.display="none";
     fillCaseForm({});
+    cIconField.hidden=true; cIconFile.value=""; cIconStatus.hidden=true;
     ceCaseId=null; ceShowTabs(false); ceSwitchTo("info");
     overlay.classList.add("show"); cFields.name.focus();
   }
@@ -1175,6 +1203,7 @@ window.CC = (function(){
     const c=caseById(id); if(!c) return;
     editingCaseId=id; $("caseModalTitle").textContent="事件情報を編集"; $("cDelete").style.display="inline-block";
     fillCaseForm(c);
+    cIconField.hidden=false; cIconFile.value=""; cIconStatus.hidden=true; renderCIconPreview(c);
     ceCaseId=c.id; ceShowTabs(true); ceSwitchTo("info");
     overlay.classList.add("show");
   }
@@ -1241,6 +1270,35 @@ window.CC = (function(){
   $("cSave").addEventListener("click",saveCase);
   $("cCancel").addEventListener("click",closeCaseEditModal);
   $("cDelete").addEventListener("click",deleteCase);
+
+  // アイコンは選ぶ／外すとその場ですぐ反映する（他の欄と違い「保存」ボタンを待たない。写真の並び替えと同じ考え方）
+  cIconFile.addEventListener("change",async ()=>{
+    const f=cIconFile.files[0];
+    if(!f || !editingCaseId) return;
+    if(f.size>5*1024*1024){ alert("アイコンは5MBまでです。"); cIconFile.value=""; return; }
+    const fd=new FormData(); fd.append("file", f, f.name);
+    cIconStatus.hidden=false; cIconStatus.textContent="アップロード中…";
+    try{
+      const up=await apiUpdateCaseIcon(editingCaseId,fd);
+      const i=cases.findIndex(x=>x.id===editingCaseId); if(i>=0) cases[i]=up;
+      renderCIconPreview(up);
+      cIconStatus.textContent="アイコンを更新しました。";
+      if(onChange) onChange();
+    }catch(err){ cIconStatus.textContent="アップロードできませんでした：" + (err && err.message || err); }
+    finally{ cIconFile.value=""; }
+  });
+  cIconRemove.addEventListener("click",async ()=>{
+    if(!editingCaseId) return;
+    if(!confirm("アイコンを外します。よろしいですか？")) return;
+    cIconStatus.hidden=false; cIconStatus.textContent="外しています…";
+    try{
+      const up=await apiDeleteCaseIcon(editingCaseId);
+      const i=cases.findIndex(x=>x.id===editingCaseId); if(i>=0) cases[i]=up;
+      renderCIconPreview(up);
+      cIconStatus.textContent="アイコンを外しました。";
+      if(onChange) onChange();
+    }catch(err){ cIconStatus.textContent="外せませんでした：" + (err && err.message || err); }
+  });
 
   // ---- 資料 ----
   function fillMatForm(m, caseId){
@@ -1496,7 +1554,7 @@ window.CC = (function(){
     get me(){ return me; },
     get loaded(){ return loaded; },
     caseById, caseByName, caseEvents, casePosts, caseMaterials, caseImages, nearestCase, pickupCase, nextEvent, eventLine, jpDate,
-    likeHtml, toggleLike, isArchived,
+    likeHtml, toggleLike, isArchived, iconHtml,
     load, renderCaseDetail, renderStatus, openAdd,
     setOnChange(fn){ onChange = fn; },
   };

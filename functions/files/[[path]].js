@@ -1,10 +1,10 @@
 // R2 に置いたファイル配信：/files/<R2のキー> → R2 から読み出して返す（誰でも閲覧可）。
-// m/ = 訴訟資料、i/ = 事件の写真。ブラウザ内で開く（inline）。
+// m/ = 訴訟資料、i/ = 事件の写真、ic/ = 事件のアイコン。ブラウザ内で開く（inline）。
 // 元のファイル名は customMetadata.name に入れてあるので、保存時の名前に使う。
 export async function onRequestGet({ env, params }) {
   if (!env.FILES) return new Response("not configured", { status: 500 });
   const key = (params.path || []).join("/");
-  if (!key.startsWith("m/") && !key.startsWith("i/")) return new Response("not found", { status: 404 });
+  if (!key.startsWith("m/") && !key.startsWith("i/") && !key.startsWith("ic/")) return new Response("not found", { status: 404 });
 
   const obj = await env.FILES.get(key);
   if (!obj) return new Response("not found", { status: 404 });

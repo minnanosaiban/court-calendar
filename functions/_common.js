@@ -21,7 +21,7 @@ export function textToLines(s) {
 }
 
 // ---- 事件 ----
-export const CASE_COLS = `c.id, c.name, c.case_no, c.plaintiff_name, c.defendant_name, c.judge, c.points, c.call_text,
+export const CASE_COLS = `c.id, c.name, c.icon_r2_key, c.case_no, c.plaintiff_name, c.defendant_name, c.judge, c.points, c.call_text,
                           c.host, c.contact, c.press, c.plaintiff_links, c.defendant_links, c.tags, c.related_case_ids, c.archived_at, c.close_type,
                           c.created_by, c.updated_by, c.updated_at`;
 
@@ -29,6 +29,7 @@ export function rowToCase(r) {
   return {
     id: r.id,
     name: r.name,
+    icon: r.icon_r2_key ? "/files/" + r.icon_r2_key : "",
     caseNo: r.case_no || "",
     plaintiffName: r.plaintiff_name || "",
     defendantName: r.defendant_name || "",
@@ -165,6 +166,9 @@ export async function putFile(env, prefix, itemId, file) {
 // ---- 事件の写真 ----
 export const IMAGE_MIMES = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
 export const IMAGE_MAX_BYTES = 12 * 1024 * 1024;
+
+// ---- 事件のアイコン（1件だけ。形式は写真と同じ IMAGE_MIMES を流用、上限だけ小さくする） ----
+export const ICON_MAX_BYTES = 5 * 1024 * 1024;
 
 export const IMAGE_COLS = `i.id, i.case_id, i.r2_key, i.file_name, i.file_size, i.mime,
                            i.caption, i.sort_order, i.created_at`;

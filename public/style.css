@@ -96,6 +96,14 @@ a{color:inherit}
 .imgrow .icap{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--mut)}
 .imgrow .iacts{display:flex;gap:12px;flex:none}
 .imgrow .iacts a{font-size:.8rem;color:var(--edit);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+/* 事件アイコン（Twitterのアバターのように、一覧やカレンダーで事件を見分けるための小さな画像）。
+   未登録なら .cicon-ph（頭文字の丸い札）で代わりを出す。サイズは3種：sm=一覧の行・popover／md=事件をさがすの行／lg=事件名の見出し・編集モーダル */
+.cicon{border-radius:50%;object-fit:cover;flex:none;align-self:center;background:var(--tint)}
+.cicon-ph{border-radius:50%;flex:none;align-self:center;background:var(--tint);color:var(--mut);
+  display:grid;place-content:center;font-family:"Shippori Mincho",serif;font-weight:600}
+.cicon-sm{width:28px;height:28px;font-size:.8rem}
+.cicon-md{width:44px;height:44px;font-size:1.1rem}
+.cicon-lg{width:56px;height:56px;font-size:1.3rem}
 .d-title{font-family:"Shippori Mincho",serif;font-size:1.6rem;font-weight:600;line-height:1.4}
 .d-body{font-size:.9rem;margin-top:8px}
 .mut{color:var(--mut)}
@@ -364,6 +372,8 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .pop-row:hover{background:var(--tint)}
 .pop-row + .pop-row{margin-top:4px;border-top:1px solid var(--tint);padding-top:12px}
 .pop-arrow{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--stamp);font-size:.85rem}
+.pop-main{display:flex;gap:10px;align-items:flex-start}
+.pop-text{min-width:0;flex:1}
 .pop-date{font-size:.8rem;color:var(--mut);font-variant-numeric:tabular-nums}
 .pop-title{font-size:.9rem;font-weight:500;margin-top:1px;font-family:"Shippori Mincho",serif}
 .pop-meta{font-size:.8rem;color:var(--mut);margin-top:1px}
@@ -423,6 +433,10 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
   border:1px solid #e6e4dd;border-radius:12px;padding:8px 12px;background:#fff;
 }
 .field input[type=file]{font-size:.8rem}
+/* 事件情報モーダルのアイコン欄：現在のアイコン（丸い札）＋ファイル選択を横に並べる */
+.cicon-row{display:flex;align-items:center;gap:12px}
+.cicon-row input[type=file]{flex:1;min-width:0}
+.cicon-remove{color:var(--edit);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .fnote{color:var(--mut);font-size:.8rem;margin-top:4px;line-height:1.7}
 .fnote a{text-underline-offset:3px}
 .fnote code{font-size:.92em;background:var(--tint);padding:1px 4px;border-radius:4px}

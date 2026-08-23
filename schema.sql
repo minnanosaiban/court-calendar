@@ -10,6 +10,7 @@
 CREATE TABLE IF NOT EXISTS cases (
   id          TEXT PRIMARY KEY,
   name        TEXT NOT NULL UNIQUE, -- 事件名（画面のタイトル）
+  icon_r2_key TEXT,                 -- アイコン画像（正方形推奨）のR2オブジェクトキー。一覧・カレンダー等で事件を見分けるための小さな画像（任意。/api/cases/:id/icon で登録・削除）
   case_no     TEXT,                 -- 事件番号（例：令和6年（ワ）第1234号・任意）
   plaintiff_name TEXT,              -- 原告名（任意）
   defendant_name TEXT,              -- 被告名（任意）
