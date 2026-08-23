@@ -843,37 +843,41 @@ window.CC = (function(){
     <div class="cepanel" data-panel="info" hidden>
       <div class="mhead" id="caseModalTitle">事件を追加</div>
       <div class="mbody">
+        <ul class="pts mut">
+          <li>事件名（＊）以外はすべて任意です。分かる範囲でご記入ください。</li>
+          <li>複数行入力する欄は、右下をドラッグすると縦に広げられます。</li>
+        </ul>
         <div class="field">
           <label>事件名 <span style="color:var(--stamp)">*</span></label>
           <input type="text" id="cName" placeholder="例）情報公開請求をめぐる訴訟">
         </div>
         <div class="field">
-          <label>事件番号（任意）</label>
+          <label>事件番号</label>
           <input type="text" id="cCaseNo" placeholder="例）令和6年（ワ）第1234号">
           <p class="fnote">地裁→高裁など番号が変わる場合は「地裁　令和6年（ワ）第12345号／高裁　令和7年（ネ）第6789号」のように1つの欄にまとめて書けます（裁判官欄と同じ書き方）。</p>
         </div>
         <div class="field"><label>当事者</label><input type="text" id="cParties" placeholder="例）原告 従業員 ／ 被告 〇〇株式会社"></div>
-        <div class="field"><label>裁判官（任意）</label><input type="text" id="cJudge" placeholder="例）○○ ○○"></div>
-        <div class="field"><label>争点（1行に1つ）</label><textarea id="cPoints" placeholder="例）◯◯の事実があったか"></textarea></div>
+        <div class="field"><label>裁判官</label><input type="text" id="cJudge" placeholder="例）○○ ○○"></div>
+        <div class="field"><label>争点（複数の場合は改行、1行に1つ）</label><textarea id="cPoints" placeholder="例）◯◯の事実があったか"></textarea></div>
         <div class="field"><label>よびかけ</label><textarea id="cCall" placeholder="どんな裁判か、傍聴や支援をお願いする文章など（空行を挟むと段落を分けられます）"></textarea></div>
         <div class="two">
           <div class="field"><label>呼びかけ団体・お名前</label><input type="text" id="cHost" placeholder="例）A社従業員"></div>
           <div class="field"><label>連絡先（公開してよいもの）</label><input type="text" id="cContact" placeholder="例）メールアドレス"></div>
         </div>
         <div class="field">
-          <label>報道・掲載（1行に1つ・任意）</label>
+          <label>報道・掲載（複数の場合は改行、1行に1つ）</label>
           <textarea id="cPress" placeholder="例）〇〇新聞で報道されました https://...&#10;労働判例ジャーナル2025.10 No.163に掲載&#10;裁判所への手続きにより特別保存（永久保存）となっています"></textarea>
         </div>
         <div class="field">
-          <label>リンク（1行に1つのURL。X・ホームページなど）</label>
+          <label>リンク（複数の場合は改行、1行に1つのURL。X・ホームページなど）</label>
           <textarea id="cLinks" placeholder="https://x.com/..."></textarea>
         </div>
         <div class="field">
-          <label>タグ（1行に1つ・任意）</label>
+          <label>タグ（複数の場合は改行、1行に1つ）</label>
           <textarea id="cTags" placeholder="例）情報公開、行政"></textarea>
         </div>
         <div class="field">
-          <label>関連裁判（1行に1つの事件名・任意）</label>
+          <label>関連裁判（複数の場合は改行、1行に1つの事件名）</label>
           <textarea id="cRelated" list="caseList" placeholder="例）情報公開請求をめぐる訴訟"></textarea>
           <p class="fnote">同じ事実に関連する別争点の訴訟など。サイトに登録済みの事件名だけ指定できます（このサイト内の事件へのリンクになります）。どちらか一方に登録すれば、両方の事件ページに表示されます。</p>
         </div>
