@@ -304,10 +304,12 @@ window.CC = (function(){
     const judgeRow = factRow("裁判官", c.judge?courtLinesHtml(c.judge,"裁判官"):"");
     const facts1 = nextRow+pointsRow+plaintiffRow+defendantRow+judgeRow;
 
-    // 掲示板は事件本体の箱（dcard）の外に出し、独立した箱にする（箱の中に箱、を解消するため）
-    let html = boardHtml(caseId) + `
+    // 写真・掲示板・事件本体（dcard）は、1つの塊として続けて出す（箱の中に箱、を解消するため）。
+    // 継ぎ目は角丸にせず、塊の外側（写真の上／事件本体の下）だけ角丸にする（詳しくは style.css）
+    const galHtml = full ? galleryHtml(caseId) : "";
+    const galCard = galHtml ? `<div class="card gal-card">${galHtml}</div>` : "";
+    let html = galCard + boardHtml(caseId) + `
       <div class="card dcard">
-        ${full ? galleryHtml(caseId) : ""}
         <div class="d-head">
           <h2 class="d-title">${escapeHtml(c.name)} ${likeHtml(c)}</h2>
         </div>

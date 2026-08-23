@@ -46,6 +46,15 @@ a{color:inherit}
 /* ---- cards ---- */
 .card{background:var(--card);border-radius:20px}
 
+/* ---- 写真・掲示板・事件本体は「ひとつの塊」として続けて出す（事件ページ／トップの最近の期日カード共通）。
+   隙間を空けず、継ぎ目（写真の下・掲示板・事件本体の上）は角丸にしない。塊の外側（写真の上・事件本体の下）だけ丸める ---- */
+.gal-card{padding:24px 22px 22px;margin-bottom:0;border-radius:20px 20px 0 0}
+/* 写真管理欄（.imgmanage）が無い＝一般閲覧者のときは、写真の下に余計な白い余白を残さず、
+   カードの下端まで写真を塗り切る（掲示板と地続きに見せるため） */
+.gal-card .gal:last-child{margin-bottom:-22px}
+.gal-card + .bpanel{border-radius:0}
+.bpanel + .dcard{border-radius:0 0 20px 20px;margin-top:0}
+
 /* ---- case detail card ---- */
 .dcard{padding:24px 22px 22px}
 .dcard + .dcard{margin-top:12px}
@@ -79,8 +88,6 @@ a{color:inherit}
 .mut{color:var(--mut)}
 /* タイトル行 */
 .d-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
-/* 写真ギャラリー・写真管理欄のすぐ下にタイトル行が来るときは、他の見出し(.minih)の26pxより広めにあける（画像に詰まって見えるため） */
-.gal + .d-head, .imgmanage + .d-head{margin-top:40px}
 .d-head .d-title{flex:1;min-width:0}
 /* いいね：タイトルに続けて置く。押すと朱色で塗る */
 .like{display:inline-flex;align-items:center;gap:4px;vertical-align:middle;margin-left:.35em;
@@ -185,8 +192,9 @@ a{color:inherit}
 /* ---- 行ってきたよ掲示板 ---- */
 /* 生成りの面でくくって独立した「場」に見せる。見出しの「行ってきたよ」は朱印と同じ赤 */
 /* 掲示板はこのサイトの主役。事件本体の箱（dcard）の外に出して独立した箱にし（箱の中に箱を解消）、
-   他のセクションより広い余白と大きめの見出しをとる */
-.bpanel{margin-top:0;margin-bottom:12px;background:#f4f1e8;border-radius:14px;padding:20px 18px 18px}
+   他のセクションより広い余白と大きめの見出しをとる。既定（写真が無いとき＝先頭）は上だけ角丸、
+   写真の直後（.gal-card + .bpanel）に来るときは写真側の上で丸まっているので四角のまま */
+.bpanel{margin-top:0;margin-bottom:0;background:#f4f1e8;border-radius:20px 20px 0 0;padding:20px 18px 18px}
 .bhead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
 .btitle{font-family:"Shippori Mincho",serif;font-size:1.22rem;font-weight:600}
 .bt-red{color:var(--stamp)}
