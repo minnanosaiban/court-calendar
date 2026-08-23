@@ -148,7 +148,7 @@ window.CC = (function(){
   function partyLinksHtml(c){
     if(!c.links.length) return "";
     return c.links.map(u=>
-      `<p class="d-body"><a href="${escapeAttr(u)}" target="_blank" rel="noopener">${escapeHtml(linkLabel(u))}↗</a></p>`
+      `<p class="d-body"><a href="${escapeAttr(u)}" target="_blank" rel="noopener">${escapeHtml(linkLabel(u))}</a> <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></p>`
     ).join("");
   }
   function likeHtml(c){
