@@ -163,13 +163,15 @@ window.CC = (function(){
     }).join("")}</div>`;
   }
   // ---- 裁判官・事件番号：1行1件で書く（複数あれば改行を増やすだけ。「地裁　坂巻陽士裁判官」のように
-  // 書きたい文言をそのまま1行に書く）。行頭が「地裁」「高裁」などの審級なら、名前の位置がそろうように
-  // 審級部分だけ幅をそろえて表示する（審級を書かなければ、その行はそのまま表示する） ----
+  // 書きたい文言をそのまま1行に書く）。行頭が「地裁」「高裁」などの審級＋スペースなら、名前の位置が
+  // そろうように審級部分だけ幅をそろえて表示する（審級を書かなければ、その行はそのまま表示する）。
+  // スペースを必須にしているのは、「地裁太郎」のように審級と同じ文字で始まる名前を
+  // 「地裁」＋「太郎」に割ってしまわないため ----
   const COURT_LEVELS = "最高裁|高裁|地裁|簡裁|家裁";
   function courtLinesHtml(raw){
     const lines = String(raw||"").split("\n").map(s=>s.trim()).filter(Boolean);
     if(!lines.length) return "";
-    const re = new RegExp(`^(${COURT_LEVELS})[\\s　]*(.*)$`);
+    const re = new RegExp(`^(${COURT_LEVELS})[\\s　]+(.*)$`);
     return lines.map(line=>{
       const m = line.match(re);
       return m
