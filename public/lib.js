@@ -218,7 +218,7 @@ window.CC = (function(){
       </li>`).join("");
       html += `<div class="imgmanage">
         ${rows?`<ul class="imglist">${rows}</ul>`:`<p class="d-body mut">まだ写真はありません。</p>`}
-        <p class="qact"><a data-addimg="${escapeAttr(caseId)}">＋ 写真を追加</a></p>
+        <p class="qact"><a data-addimg="${escapeAttr(caseId)}">＋ 写真を編集</a></p>
       </div>`;
     }
     return html;
@@ -269,7 +269,6 @@ window.CC = (function(){
     if(!c) return null;
     const next = nextEvent(caseId);
     const points=(c.points||[]).map(p=>`<li>${escapeHtml(p)}</li>`).join("");
-    const editCase = me.canWrite ? `<a class="d-edit" data-editcase="${escapeAttr(c.id)}">事件情報を編集</a>` : "";
 
     let html = `
       <div class="card dcard">
@@ -280,7 +279,6 @@ window.CC = (function(){
         </div>
         ${tagsHtml(c)}
         ${full ? shareHtml(c) : ""}
-        ${!full ? editCase : ""}
         ${next?`<p class="minih">最近の期日</p><p class="d-body d-next">${escapeHtml(eventLine(next))}${next.open===false?`<span class="round-closed">非公開・要確認</span>`:""}</p>`:""}
         ${points?`<p class="minih">争点</p><ul class="pts">${points}</ul>`:""}
         ${c.parties?`<p class="minih">当事者</p><p class="d-body">${escapeHtml(c.parties)}</p>`:""}
@@ -291,7 +289,7 @@ window.CC = (function(){
     if(!full){
       html += `<p class="d-more"><a class="pillbtn" href="case?id=${encodeURIComponent(c.id)}">詳細を見る <i class="bi bi-arrow-right" aria-hidden="true"></i></a></p>`;
     }else{
-      const editCaseQact = me.canWrite ? `<p class="qact"><a data-editcase="${escapeAttr(c.id)}">＋ 事件情報を追加</a></p>` : "";
+      const editCaseQact = me.canWrite ? `<p class="qact"><a data-editcase="${escapeAttr(c.id)}">＋ 事件情報を編集</a></p>` : "";
       html += callHtml(c) + pressHtml(c) + editCaseQact + relatedCasesHtml(c) + timelineHtml(caseId) + materialsListHtml(caseId);
     }
     html += `</div>`;
@@ -387,7 +385,7 @@ window.CC = (function(){
     }).join("");
     return `<p class="minih">タイムラインと訴訟資料</p>
       ${rounds.length?`<ol class="tl">${items}</ol>`:`<p class="d-body mut">期日はまだ登録されていません。</p>`}
-      ${me.canWrite?`<p class="qact"><a data-addround="${escapeAttr(caseId)}">＋ 期日を追加</a></p>`:""}`;
+      ${me.canWrite?`<p class="qact"><a data-addround="${escapeAttr(caseId)}">＋ 期日を編集</a></p>`:""}`;
   }
   function materialsListHtml(caseId){
     const mats=caseMaterials(caseId);
@@ -400,7 +398,7 @@ window.CC = (function(){
     }).join("");
     return `<p class="minih">訴訟資料一覧</p>
       ${rows?`<ul class="mlist">${rows}</ul>`:`<p class="d-body mut">訴訟資料はまだ登録されていません。</p>`}
-      ${me.canWrite?`<p class="qact"><a data-addmat="${escapeAttr(caseId)}">＋ 資料を追加</a></p>`:""}`;
+      ${me.canWrite?`<p class="qact"><a data-addmat="${escapeAttr(caseId)}">＋ 資料を編集</a></p>`:""}`;
   }
 
   // ---- 行ってきたよ掲示板 ----
@@ -660,24 +658,21 @@ window.CC = (function(){
   }
 
   // ================= 下部のひっそりしたステータス =================
+  // opts.hideWhenUnlocked: トップページ用。トップはシンプルにしたいので、編集ロック解除中は何も表示しない
+  // （編集の導線は事件ページ・事件をさがすページに集約する。ロックされている間の案内はトップにも出す）
   function renderStatus(el, opts){
     opts = opts || {};
     if(!loaded){ el.innerHTML=""; return; }
     if(me.canWrite){
-      const caseActions = opts.hideCaseActions ? "" :
-        `<a id="stAddCase">＋ 事件を追加</a><span class="sep">・</span>`+
-        `<a id="stAdd">＋ 期日を追加</a><span class="sep">・</span>`;
+      if(opts.hideWhenUnlocked){ el.innerHTML=""; return; }
       el.innerHTML =
         `編集できます ── この端末は編集ロック解除済みです。`+
-        `<br>${caseActions}`+
+        `<br><a id="stAddCase">新たな事件を追加</a><span class="sep">・</span>`+
         `<a id="stLock">ロックする</a>`+
         `<br><span class="status-sub">バックアップ（複数件をまとめて登録・復元するとき用）：`+
         `<a id="stExport">書き出す</a><span class="sep">・</span>`+
         `<a id="stImport">ファイルから取り込む</a></span>`;
-      if(!opts.hideCaseActions){
-        el.querySelector("#stAddCase").addEventListener("click",openCaseAdd);
-        el.querySelector("#stAdd").addEventListener("click",()=>openAdd(todayStr()));
-      }
+      el.querySelector("#stAddCase").addEventListener("click",openCaseAdd);
       el.querySelector("#stLock").addEventListener("click",lockEditing);
       el.querySelector("#stExport").addEventListener("click",exportData);
       el.querySelector("#stImport").addEventListener("click",()=>{
@@ -728,7 +723,7 @@ window.CC = (function(){
           <label>事件名 <span style="color:var(--stamp)">*</span></label>
           <input type="text" id="fCase" list="caseList" placeholder="例）令和7年(ネ)第○○号 損害賠償請求控訴事件">
           <datalist id="caseList"></datalist>
-          <p class="fnote">事件名は候補（一覧）から選んでください。まだ登録されていない事件は、先に「＋ 事件を追加」で事件そのものを登録してから、期日を追加できます。</p>
+          <p class="fnote">事件名は候補（一覧）から選んでください。まだ登録されていない事件は、先に「新たな事件を追加」で事件そのものを登録してから、期日を追加できます。</p>
         </div>
         <div class="two">
           <div class="field">
@@ -1018,7 +1013,7 @@ window.CC = (function(){
     const known=caseByName(c);
     // 事件が先に登録されていないと期日は追加できない（誤字での事件乱立を防ぐため）
     if(!known){
-      alert(`「${c}」という事件はまだ登録されていません。先に「＋ 事件を追加」でこの事件を登録してから、期日を追加してください。`);
+      alert(`「${c}」という事件はまだ登録されていません。先に「新たな事件を追加」でこの事件を登録してから、期日を追加してください。`);
       fCase.focus();
       return;
     }
