@@ -157,6 +157,18 @@ window.CC = (function(){
     return `<button type="button" class="like${c.liked?" on":""}" data-like="${escapeAttr(c.id)}" aria-pressed="${c.liked?"true":"false"}" aria-label="いいね">`+
       `<i class="bi ${c.liked?"bi-heart-fill":"bi-heart"}" aria-hidden="true"></i><span class="like-n">${c.likes||0}</span></button>`;
   }
+  // 関連裁判：自分の relatedCaseIds に加えて、「自分を関連裁判として挙げている他の事件」も拾う（片方に登録すれば両方に出る）
+  function relatedCases(caseId){
+    const ids=new Set(((caseById(caseId)||{}).relatedCaseIds)||[]);
+    cases.forEach(o=>{ if(o.id!==caseId && (o.relatedCaseIds||[]).includes(caseId)) ids.add(o.id); });
+    return [...ids].map(caseById).filter(Boolean);
+  }
+  function relatedCasesHtml(c){
+    const rel=relatedCases(c.id);
+    if(!rel.length) return "";
+    const items=rel.map(r=>`<li><a href="case?id=${encodeURIComponent(r.id)}">${escapeHtml(r.name)}</a></li>`).join("");
+    return `<p class="minih">関連裁判</p><ul class="pts">${items}</ul>`;
+  }
   // 事件のタグ。事件ページ等ではリンク（cases.html の絞り込みへ）、一覧ページの各行では非リンクの札として使う
   function tagsHtml(c, opts){
     if(!c.tags || !c.tags.length) return "";
@@ -272,7 +284,9 @@ window.CC = (function(){
         ${next?`<p class="minih">最近の期日</p><p class="d-body d-next">${escapeHtml(eventLine(next))}${next.open===false?`<span class="round-closed">非公開・要確認</span>`:""}</p>`:""}
         ${points?`<p class="minih">争点</p><ul class="pts">${points}</ul>`:""}
         ${c.parties?`<p class="minih">当事者</p><p class="d-body">${escapeHtml(c.parties)}</p>`:""}
+        ${c.caseNo?`<p class="minih">事件番号</p><p class="d-body">${escapeHtml(c.caseNo)}</p>`:""}
         ${c.judge?`<p class="minih">裁判官</p><p class="d-body">${escapeHtml(c.judge)}</p>`:""}
+        ${relatedCasesHtml(c)}
         ${boardHtml(caseId)}`;
 
     if(!full){
@@ -839,6 +853,11 @@ window.CC = (function(){
           <label>事件名 <span style="color:var(--stamp)">*</span></label>
           <input type="text" id="cName" placeholder="例）情報公開請求をめぐる訴訟">
         </div>
+        <div class="field">
+          <label>事件番号（任意）</label>
+          <input type="text" id="cCaseNo" placeholder="例）令和8年（ワ）第761号">
+          <p class="fnote">地裁→高裁など番号が変わる場合は「地裁　令和6年（ワ）第12345号／高裁　令和7年（ネ）第6789号」のように1つの欄にまとめて書けます（裁判官欄と同じ書き方）。</p>
+        </div>
         <div class="field"><label>当事者</label><input type="text" id="cParties" placeholder="例）原告 従業員 ／ 被告 〇〇株式会社"></div>
         <div class="field"><label>裁判官（任意）</label><input type="text" id="cJudge" placeholder="例）○○ ○○"></div>
         <div class="field"><label>争点（1行に1つ）</label><textarea id="cPoints" placeholder="例）◯◯の事実があったか"></textarea></div>
@@ -858,6 +877,11 @@ window.CC = (function(){
         <div class="field">
           <label>タグ（1行に1つ・任意）</label>
           <textarea id="cTags" placeholder="例）情報公開、行政"></textarea>
+        </div>
+        <div class="field">
+          <label>関連裁判（1行に1つの事件名・任意）</label>
+          <textarea id="cRelated" list="caseList" placeholder="例）槇野圭 vs 山下浩二"></textarea>
+          <p class="fnote">同じ事実に関連する別争点の訴訟など。サイトに登録済みの事件名だけ指定できます（このサイト内の事件へのリンクになります）。どちらか一方に登録すれば、両方の事件ページに表示されます。</p>
         </div>
         <p class="msec">終結（終結した事件のみ入れる）</p>
         <div class="two">
@@ -1036,9 +1060,9 @@ window.CC = (function(){
   }
 
   const $ = (id)=>document.getElementById(id);
-  const cFields = { name:$("cName"), parties:$("cParties"), judge:$("cJudge"), points:$("cPoints"),
+  const cFields = { name:$("cName"), caseNo:$("cCaseNo"), parties:$("cParties"), judge:$("cJudge"), points:$("cPoints"),
                     callText:$("cCall"), host:$("cHost"), contact:$("cContact"), press:$("cPress"), links:$("cLinks"),
-                    tags:$("cTags"), archivedAt:$("cArchivedAt"), closeType:$("cCloseType") };
+                    tags:$("cTags"), related:$("cRelated"), archivedAt:$("cArchivedAt"), closeType:$("cCloseType") };
   const mFields = { title:$("mTitle"), side:$("mSide"), event:$("mEvent"), filedOn:$("mFiledOn"),
                     url:$("mUrl"), file:$("mFile"), fileField:$("mFileField"), fileNow:$("mFileNow"),
                     claims:$("mClaims"), body:$("mBody"), summary:$("mSummary") };
@@ -1046,12 +1070,14 @@ window.CC = (function(){
 
   // ---- 事件 ----
   function fillCaseForm(c){
-    cFields.name.value=c.name||""; cFields.parties.value=c.parties||"";
+    cFields.name.value=c.name||""; cFields.caseNo.value=c.caseNo||""; cFields.parties.value=c.parties||"";
     cFields.judge.value=c.judge||"";
     cFields.points.value=(c.points||[]).join("\n"); cFields.callText.value=c.callText||"";
     cFields.host.value=c.host||""; cFields.contact.value=c.contact||""; cFields.press.value=(c.press||[]).join("\n");
     cFields.links.value=(c.links||[]).join("\n");
     cFields.tags.value=(c.tags||[]).join("\n");
+    // 関連裁判はIDで持つが、入力欄には事件名で表示する（見つからないIDは消えている事件なので無視）
+    cFields.related.value=(c.relatedCaseIds||[]).map(id=>caseById(id)).filter(Boolean).map(r=>r.name).join("\n");
     cFields.archivedAt.value=c.archivedAt||""; cFields.closeType.value=c.closeType||"";
   }
   function openCaseAdd(){
@@ -1073,14 +1099,30 @@ window.CC = (function(){
     if(!me.canWrite) return;
     const name=cFields.name.value.trim();
     if(!name){ alert("事件名を入力してください。"); cFields.name.focus(); return; }
+    // 関連裁判：1行1事件名→サイトに登録済みの事件のIDに変換する（期日の事件名と同じく、未登録の事件名は指定できない）
+    const relatedNames=cFields.related.value.split("\n").map(s=>s.trim()).filter(Boolean);
+    const relatedCaseIds=[];
+    const unknownRelated=[];
+    relatedNames.forEach(n=>{
+      const found=caseByName(n);
+      if(!found) { unknownRelated.push(n); return; }
+      if(editingCaseId && found.id===editingCaseId) return; // 自分自身は無視
+      if(!relatedCaseIds.includes(found.id)) relatedCaseIds.push(found.id);
+    });
+    if(unknownRelated.length){
+      alert(`関連裁判のうち、次の事件名はまだ登録されていません。先にその事件を登録するか、事件名を確認してください：\n${unknownRelated.join("\n")}`);
+      cFields.related.focus();
+      return;
+    }
     const data={
-      name, parties:cFields.parties.value.trim(), judge:cFields.judge.value.trim(),
+      name, caseNo:cFields.caseNo.value.trim(), parties:cFields.parties.value.trim(), judge:cFields.judge.value.trim(),
       points:cFields.points.value.split("\n").map(s=>s.trim()).filter(Boolean),
       callText:cFields.callText.value.trim(),
       host:cFields.host.value.trim(), contact:cFields.contact.value.trim(),
       press:cFields.press.value.split("\n").map(s=>s.trim()).filter(Boolean),
       links:cFields.links.value.split("\n").map(s=>s.trim()).filter(Boolean),
       tags:cFields.tags.value.split("\n").map(s=>s.trim()).filter(Boolean),
+      relatedCaseIds,
       archivedAt:cFields.archivedAt.value, closeType:cFields.closeType.value.trim(),
     };
     $("cSave").disabled=true;

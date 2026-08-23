@@ -42,6 +42,7 @@ migrate_012_judge.sql             事件の裁判官（cases.judge・任意）�
 migrate_015_drop_unused_fields.sql 画面のどこにも表示されていなかった cases.case_no/result・events.level 列を削除する一度きりのマイグレーション
 migrate_016_merge_lede_into_calltext.sql 事件の説明（cases.lede）をよびかけ（cases.call_text）に統合し、lede 列を削除する一度きりのマイグレーション
 migrate_017_drop_materials_kind.sql 画面のどこにも表示されていなかった materials.kind（種別）列を削除する一度きりのマイグレーション
+migrate_018_case_no_and_related.sql 事件番号（cases.case_no）と関連裁判（cases.related_case_ids）を追加する一度きりのマイグレーション
 seed_demo.sql                     動作確認用の架空データ（v3 形式・消し方はファイル冒頭のコメント参照）
 wrangler.toml           設定（D1・R2 バインド・環境変数）
 ```
@@ -51,7 +52,7 @@ wrangler.toml           設定（D1・R2 バインド・環境変数）
 CALL4 のように「事件」を中心に据えた。事件に属するもの（当事者・争点・説明・よびかけ・リンク）は `cases` に1回だけ持ち、
 期日（`events`）は `case_id` で事件にぶら下がる。訴訟資料（`materials`）は目録を D1、ファイル本体を R2 に置く。
 
-- `cases`：`name`（事件名・一意）`parties` `judge`（裁判官・任意）`points`（争点・改行区切り）`call_text`（よびかけ。事件の説明も含む自由記述・空行区切りで複数段落可）`host` `contact` `press`（報道・掲載、改行区切り・任意。行内に`https://`があれば自動でリンク化）`links`（URL・改行区切り。X などはドメインでアイコンを出し分け）
+- `cases`：`name`（事件名・一意）`case_no`（事件番号・任意）`parties` `judge`（裁判官・任意）`points`（争点・改行区切り）`call_text`（よびかけ。事件の説明も含む自由記述・空行区切りで複数段落可）`host` `contact` `press`（報道・掲載、改行区切り・任意。行内に`https://`があれば自動でリンク化）`links`（URL・改行区切り。X などはドメインでアイコンを出し分け）`related_case_ids`（関連する他の事件のID・改行区切り・任意）
 - `events`：`case_id` `date` `time` `type` `court` `place` `open`（事件の説明の列は落とした）
 - `materials`：`case_id` `event_id`（任意＝タイムラインの節にぶら下がる）`title` `side`（原告側/被告側/裁判所/その他）`filed_on` `r2_key` `file_name` `file_size` `mime` `claims`（箇条書き・任意）`summary`（要約・手入力・任意）
 - `likes`：`(case_id, viewer)` が主キー。`viewer` は端末が持つ乱数（`X-Viewer` ヘッダ）の SHA-256。同じ端末から何度押しても1件
@@ -177,6 +178,16 @@ X などでシェアしたときに正しいカード（タイトル・説明・
 - タイムライン内の資料表示（`matBlockHtml`）は、背景色つきの箱をやめて、資料名だけのシンプルな並びに変更（提出者側・種別のタグも非表示）
 - 「訴訟資料一覧」の各行からも「種別」（例：主張書面）の表示を削除。提出者側タグは残す
 - `materials.kind`（種別：主張書面/証拠/判決・決定/その他）は、上記の変更でどこにも表示されなくなったため、資料モーダルの入力欄ごと削除（`migrate_017_drop_materials_kind.sql`）。本番データは実データ18件すべて `kind="主張書面"` で一律だった
+
+### v4：事件番号・関連裁判（2026-08-23）
+
+`cases` に `case_no`（事件番号・任意）`related_case_ids`（関連する他の事件のID・改行区切り・任意）を追加。旧スキーマのDBを更新する場合は `migrate_018_case_no_and_related.sql` を実行すること。
+
+同じ事実に関連して、争点ごとに複数の訴訟を別事件番号で起こしている当事者がいるため追加した。
+
+- `case_no`（事件番号）は事件モーダルの事件名のすぐ下、事件ページでは「当事者」の下に表示。地裁→高裁など審級で番号が変わる場合は、裁判官欄と同じく「地裁　○○号／高裁　○○号」のように1つの欄にまとめて書く運用（`judge` 欄が実際にこの書き方をしている前例に合わせた）
+- `related_case_ids`（関連裁判）は自由記述ではなく、**サイトに登録済みの他の事件へのリンク**。事件モーダルでは事件名で入力し（期日の「事件名」欄と同じオートコンプリート）、保存時にIDへ解決する。未登録の事件名は保存できない（期日の事件名欄と同じ制約＝誤字での事件乱立を防ぐため）
+- 表示は**双方向**：事件Aの関連裁判に事件Bを登録すれば、Aのページにも、Bのページにも（Bには何も登録しなくても）互いにリンクが出る。片方に登録するだけでよい（`CC` 内部の `relatedCases()` が両方向を合成して計算。DBには片方向だけ保存）
 
 ### （過去）events テーブルの列（2026-08-20〜21）
 

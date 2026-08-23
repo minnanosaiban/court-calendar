@@ -21,14 +21,15 @@ export function textToLines(s) {
 }
 
 // ---- 事件 ----
-export const CASE_COLS = `c.id, c.name, c.parties, c.judge, c.points, c.call_text,
-                          c.host, c.contact, c.press, c.links, c.tags, c.archived_at, c.close_type,
+export const CASE_COLS = `c.id, c.name, c.case_no, c.parties, c.judge, c.points, c.call_text,
+                          c.host, c.contact, c.press, c.links, c.tags, c.related_case_ids, c.archived_at, c.close_type,
                           c.created_by, c.updated_by, c.updated_at`;
 
 export function rowToCase(r) {
   return {
     id: r.id,
     name: r.name,
+    caseNo: r.case_no || "",
     parties: r.parties || "",
     judge: r.judge || "",
     points: textToLines(r.points),
@@ -38,6 +39,7 @@ export function rowToCase(r) {
     press: textToLines(r.press),
     links: textToLines(r.links).filter(isHttpUrl),
     tags: textToLines(r.tags),
+    relatedCaseIds: textToLines(r.related_case_ids),
     archivedAt: r.archived_at || "",
     closeType: r.close_type || "",
     likes: Number(r.likes || 0),
@@ -53,6 +55,7 @@ export function isHttpUrl(s) {
 export function caseFromBody(body) {
   return {
     name: String(body.name || "").trim(),
+    case_no: String(body.caseNo || "").trim(),
     parties: String(body.parties || "").trim(),
     judge: String(body.judge || "").trim(),
     points: linesToText(body.points),
@@ -62,6 +65,7 @@ export function caseFromBody(body) {
     press: linesToText(body.press),
     links: textToLines(linesToText(body.links)).filter(isHttpUrl).join("\n"),
     tags: linesToText(body.tags),
+    related_case_ids: linesToText(body.relatedCaseIds),
     archived_at: isYmd(body.archivedAt) ? body.archivedAt : null,
     close_type: String(body.closeType || "").trim(),
   };

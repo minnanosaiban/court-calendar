@@ -35,12 +35,12 @@ export async function onRequestPost({ request, env }) {
   const cid = newId("c");
   const now = new Date().toISOString();
   await env.DB.prepare(
-    `INSERT INTO cases (id, name, parties, judge, points, call_text, host, contact, press, links, tags,
-                        archived_at, close_type,
+    `INSERT INTO cases (id, name, case_no, parties, judge, points, call_text, host, contact, press, links, tags,
+                        related_case_ids, archived_at, close_type,
                         created_by, updated_by, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-  ).bind(cid, c.name, c.parties, c.judge, c.points, c.call_text, c.host, c.contact, c.press, c.links, c.tags,
-         c.archived_at, c.close_type,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  ).bind(cid, c.name, c.case_no, c.parties, c.judge, c.points, c.call_text, c.host, c.contact, c.press, c.links, c.tags,
+         c.related_case_ids, c.archived_at, c.close_type,
          id.email, id.email, now).run();
 
   const row = await env.DB.prepare(`${casesSelect()} WHERE c.id = ?`).bind("", cid).first();

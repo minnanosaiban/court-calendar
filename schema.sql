@@ -10,6 +10,7 @@
 CREATE TABLE IF NOT EXISTS cases (
   id          TEXT PRIMARY KEY,
   name        TEXT NOT NULL UNIQUE, -- 事件名（画面のタイトル）
+  case_no     TEXT,                 -- 事件番号（例：令和8年（ワ）第761号・任意）
   parties     TEXT,                 -- 当事者
   judge       TEXT,                 -- 裁判官（任意）
   points      TEXT,                 -- 争点（1行1項目、改行区切り）
@@ -19,6 +20,7 @@ CREATE TABLE IF NOT EXISTS cases (
   press       TEXT,                 -- 報道・掲載（新聞・ニュース・判例誌掲載、特別保存の指定など。1行1項目、改行区切り・任意）
   links       TEXT,                 -- 当事者のアカウント等のURL（1行1つ、改行区切り）
   tags        TEXT,                 -- タグ（1行1つ、改行区切り・任意）
+  related_case_ids TEXT,            -- 関連する他の事件のID（1行1つ、改行区切り・任意。同じ事実に関連する別争点の訴訟など。双方向表示は画面側で補う）
   archived_at TEXT,                 -- 終結日 YYYY-MM-DD（あれば「裁判アーカイブ」扱い・任意）
   close_type  TEXT,                 -- 終結の種類（判決／和解／取下げ など・任意）
   created_by  TEXT,
