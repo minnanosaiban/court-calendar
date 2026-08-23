@@ -23,7 +23,7 @@
     </div>
   </header>
 
-  <a class="backlink" href="index.html"><i class="bi bi-arrow-left" aria-hidden="true"></i> トップに戻る</a>
+  <a class="pillbtn backlink" href="index.html"><i class="bi bi-arrow-left" aria-hidden="true"></i> トップに戻る</a>
 
   <section style="margin-top:28px">
     <p class="home-title">掲載依頼フォーム</p>
@@ -39,12 +39,20 @@
       <label>事件名 <span style="color:var(--stamp)">*</span></label>
       <input type="text" id="rName" placeholder="例）情報公開請求をめぐる訴訟">
     </div>
-    <div class="field"><label>事件番号</label><input type="text" id="rCaseNo" placeholder="例）令和6年（ワ）第1234号"></div>
+    <div class="field">
+      <label>事件番号（複数の場合は改行、1行に1つ）</label>
+      <textarea id="rCaseNo" placeholder="例）令和6年（ワ）第1234号"></textarea>
+      <p class="fnote">地裁→高裁など番号が変わる場合は「地裁　令和6年（ワ）第12345号」「高裁　令和7年（ネ）第6789号」のように行を分けて書けます（裁判官欄と同じ書き方）。</p>
+    </div>
     <div class="two">
       <div class="field"><label>原告名</label><input type="text" id="rPlaintiff" placeholder="例）従業員"></div>
       <div class="field"><label>被告名</label><input type="text" id="rDefendant" placeholder="例）〇〇株式会社"></div>
     </div>
-    <div class="field"><label>裁判官</label><input type="text" id="rJudge" placeholder="例）〇〇 〇〇"></div>
+    <div class="field">
+      <label>裁判官（複数の場合は改行、1行に1つ）</label>
+      <textarea id="rJudge" placeholder="例）〇〇 〇〇裁判官"></textarea>
+      <p class="fnote">地裁→高裁など審級が変わる場合は「地裁　〇〇 〇〇裁判官」「高裁　〇〇 〇〇裁判官」のように行を分けて書けます（事件番号欄と同じ書き方）。</p>
+    </div>
     <div class="field"><label>争点（複数の場合は改行、1行に1つ）</label><textarea id="rPoints" placeholder="例）〇〇の事実があったか"></textarea></div>
     <div class="field"><label>タグ（複数の場合は改行、1行に1つ）</label><textarea id="rTags" placeholder="例）労働&#10;パワハラ"></textarea></div>
 

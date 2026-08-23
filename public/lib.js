@@ -162,24 +162,20 @@ window.CC = (function(){
       return `<a class="plink" href="${escapeAttr(u)}" target="_blank" rel="noopener" title="${escapeAttr(label)}" aria-label="${escapeAttr(label)}"><i class="bi ${cls}" aria-hidden="true"></i></a>`;
     }).join("")}</div>`;
   }
-  // ---- 裁判官・事件番号：「地裁　○○ ／ 高裁　○○・△△」の書き方（審級ごとに／、同じ審級の複数人は・）を
-  // 解析して1件ずつ改行して出す。この書き方をしていない単純な1件は、そのまま1行で返す ----
+  // ---- 裁判官・事件番号：1行1件で書く（複数あれば改行を増やすだけ。「地裁　坂巻陽士裁判官」のように
+  // 書きたい文言をそのまま1行に書く）。行頭が「地裁」「高裁」などの審級なら、名前の位置がそろうように
+  // 審級部分だけ幅をそろえて表示する（審級を書かなければ、その行はそのまま表示する） ----
   const COURT_LEVELS = "最高裁|高裁|地裁|簡裁|家裁";
-  function parseCourtGroups(raw){
-    const groups = raw.split("／").map(s=>s.trim()).filter(Boolean);
-    if(groups.length<2 && !groups[0].includes("・")) return null;
+  function courtLinesHtml(raw){
+    const lines = String(raw||"").split("\n").map(s=>s.trim()).filter(Boolean);
+    if(!lines.length) return "";
     const re = new RegExp(`^(${COURT_LEVELS})[\\s　]*(.*)$`);
-    return groups.map(g=>{
-      const m = g.match(re);
-      return { label: m?m[1]:"", items: (m?m[2]:g).split("・").map(s=>s.trim()).filter(Boolean) };
-    });
-  }
-  function courtLinesHtml(raw, suffix){
-    const groups = parseCourtGroups(raw);
-    if(!groups) return escapeHtml(raw);
-    return groups.flatMap(g=>g.items.map(v=>
-      `<div>${g.label?escapeHtml(g.label)+"　":""}${escapeHtml(v)}${suffix||""}</div>`
-    )).join("");
+    return lines.map(line=>{
+      const m = line.match(re);
+      return m
+        ? `<div class="court-line"><span class="cl-level">${escapeHtml(m[1])}</span>${escapeHtml(m[2].trim())}</div>`
+        : `<div>${escapeHtml(line)}</div>`;
+    }).join("");
   }
   // ファクトシートの1行。値が無ければ何も出さない（dt/ddのペアをまとめて返す）
   function factRow(label, valueHtml){ return valueHtml ? `<dt>${escapeHtml(label)}</dt><dd>${valueHtml}</dd>` : ""; }
@@ -312,9 +308,9 @@ window.CC = (function(){
     const pointsRow = factRow("争点", points?`<ul class="pts">${points}</ul>`:"");
     const plaintiffRow = factRow("原告", (c.plaintiffName?escapeHtml(c.plaintiffName):"")+partyLinksHtml(c.plaintiffLinks));
     const defendantRow = factRow("被告", (c.defendantName?escapeHtml(c.defendantName):"")+partyLinksHtml(c.defendantLinks));
-    const judgeRow = factRow("裁判官", c.judge?courtLinesHtml(c.judge,"裁判官"):"");
+    const judgeRow = factRow("裁判官", c.judge?courtLinesHtml(c.judge):"");
     const pressRow = full ? factRow("掲載", c.press.length?`<ul class="pts">${c.press.map(line=>`<li>${linkify(line)}</li>`).join("")}</ul>`:"") : "";
-    const caseNoRow = full ? factRow("事件番号", c.caseNo?courtLinesHtml(c.caseNo,""):"") : "";
+    const caseNoRow = full ? factRow("事件番号", c.caseNo?courtLinesHtml(c.caseNo):"") : "";
     const facts1 = nextRow+pointsRow+plaintiffRow+defendantRow+judgeRow+pressRow+caseNoRow;
 
     // 写真・掲示板・事件本体（dcard）は、1つの塊として続けて出す（箱の中に箱、を解消するため）。
@@ -924,18 +920,18 @@ window.CC = (function(){
           <input type="text" id="cName" placeholder="例）情報公開請求をめぐる訴訟">
         </div>
         <div class="field">
-          <label>事件番号</label>
-          <input type="text" id="cCaseNo" placeholder="例）令和6年（ワ）第1234号">
-          <p class="fnote">地裁→高裁など番号が変わる場合は「地裁　令和6年（ワ）第12345号／高裁　令和7年（ネ）第6789号」のように1つの欄にまとめて書けます（裁判官欄と同じ書き方）。</p>
+          <label>事件番号（複数の場合は改行、1行に1つ）</label>
+          <textarea id="cCaseNo" placeholder="例）令和6年（ワ）第1234号"></textarea>
+          <p class="fnote">地裁→高裁など番号が変わる場合は「地裁　令和6年（ワ）第12345号」「高裁　令和7年（ネ）第6789号」のように行を分けて書けます（裁判官欄と同じ書き方）。</p>
         </div>
         <div class="two">
           <div class="field"><label>原告名</label><input type="text" id="cPlaintiff" placeholder="例）従業員"></div>
           <div class="field"><label>被告名</label><input type="text" id="cDefendant" placeholder="例）〇〇株式会社"></div>
         </div>
         <div class="field">
-          <label>裁判官</label>
-          <input type="text" id="cJudge" placeholder="例）○○ ○○">
-          <p class="fnote">地裁→高裁など番号が変わる場合は「地裁　○○ ○○／高裁　○○ ○○・△△ △△」のように1つの欄にまとめて書けます（事件番号欄と同じ書き方。同じ審級に複数人いる場合は「・」で区切ります）。</p>
+          <label>裁判官（複数の場合は改行、1行に1つ）</label>
+          <textarea id="cJudge" placeholder="例）○○ ○○裁判官"></textarea>
+          <p class="fnote">地裁→高裁など審級が変わる場合は「地裁　○○ ○○裁判官」「高裁　○○ ○○裁判官」のように行を分けて書けます（事件番号欄と同じ書き方）。</p>
         </div>
         <div class="field"><label>争点（複数の場合は改行、1行に1つ）</label><textarea id="cPoints" placeholder="例）◯◯の事実があったか"></textarea></div>
         <div class="field"><label>裁判について</label><textarea id="cCall" placeholder="どんな裁判か、傍聴や支援をお願いする文章など（空行を挟むと段落を分けられます）"></textarea></div>

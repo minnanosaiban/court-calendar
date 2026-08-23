@@ -44,7 +44,10 @@ a{color:inherit}
 .masthead h1 a{color:inherit;text-decoration:none}
 .masthead h1 a:hover{opacity:.75}
 .masthead p{font-size:.8rem;color:var(--mut);letter-spacing:.02em;margin-top:2px}
-.backlink{display:inline-block;margin:24px 4px 0;font-size:.8rem;color:var(--mut);text-decoration:underline;text-underline-offset:3px}
+/* 「←トップに戻る」は .pillbtn（「事件をさがす→」等）と同じ見た目にする（HTML側は
+   class="pillbtn backlink"）。.pillbtn の margin 一括指定より後に置き、上だけ上書きする */
+.pillbtn.backlink{margin-top:24px}
+.pillbtn i:first-child{margin-left:0;margin-right:.4em}
 
 /* ---- section label ---- */
 .sech{font-size:.7rem;letter-spacing:.26em;color:var(--mut);margin:48px 4px 12px}
@@ -138,6 +141,10 @@ a{color:inherit}
 .facts dt{color:var(--mut);font-size:.7rem;letter-spacing:.18em;padding-top:4px;white-space:nowrap}
 .facts dd{margin:0;min-width:0}
 .facts-links{display:inline;margin-left:8px}
+/* 裁判官・事件番号で、行頭の審級（地裁／高裁／最高裁 など）だけ幅をそろえ、名前・番号の位置を合わせる。
+   「最高裁」(3文字)が最長なのでそれに合わせた幅にする */
+.court-line{display:grid;grid-template-columns:3.4em 1fr;column-gap:4px}
+.cl-level{color:var(--mut)}
 .facts .plink{display:inline-block;margin-right:6px;font-size:.86rem;color:var(--faint);vertical-align:-1px;text-decoration:none}
 .facts .plink:hover{color:var(--ink)}
 .pts{list-style:none;margin-top:8px;font-size:.9rem}
