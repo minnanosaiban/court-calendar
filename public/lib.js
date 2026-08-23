@@ -469,7 +469,7 @@ window.CC = (function(){
       (mine.length?`<span class="bcount">${mine.length}件の報告</span>`:"")+
       `</div>`+
       // 掲示板だけが独立した箱になったので、どの事件の掲示板かが分かるよう事件名といいねを添える
-      (c?`<p class="d-title board-name">${escapeHtml(c.name)} ${likeHtml(c)}</p>`:"");
+      (c?`<p class="d-title board-name">${likeHtml(c)} ${escapeHtml(c.name)}</p>`:"");
     html += items
       || `<p class="board-empty">${canPost
           ? "まだ報告はありません。傍聴に行かれた方の最初の報告をお待ちしています。"

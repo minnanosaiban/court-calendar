@@ -201,7 +201,7 @@ a{color:inherit}
 .bt-bang{display:inline-block;color:var(--stamp);transform:rotate(-14deg)}
 .bcount{font-size:.8rem;color:var(--mut)}
 /* 掲示板の中に置く事件名（どの事件の掲示板か分かるように） */
-.board-name{font-size:1.2rem;margin-top:8px}
+.board-name{font-size:.9rem;margin-top:8px}
 /* 報告は吹き出しで「声」として並べる */
 .bubble{background:#fff;border-radius:14px;padding:11px 14px;margin-top:10px;position:relative;font-size:.9rem}
 .bubble::before{content:"";position:absolute;left:-6px;top:16px;
@@ -395,6 +395,7 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
   .calcard{padding:20px 16px 16px}
   .dcard{padding:28px 30px 26px}
   .gal-card{padding:28px 30px 22px}
+  .bpanel{padding:24px 26px 22px}
   .gal{margin:-28px -30px 22px}
   .tl-item{padding-left:30px}
   .tl-item::before{left:7px}
