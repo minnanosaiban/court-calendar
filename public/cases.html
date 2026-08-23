@@ -74,7 +74,7 @@
   function rowHtml(c){
     const next = CC.nextEvent(c.id);
     const nextLine = c.archivedAt
-      ? `終結：${CC.escapeHtml(c.archivedAt.replace(/-/g,"."))}${c.closeType?"　"+CC.escapeHtml(c.closeType):""}`
+      ? `終結：${CC.escapeHtml(CC.jpDate(c.archivedAt))}${c.closeType?"　"+CC.escapeHtml(c.closeType):""}`
       : (next?`<b>次回</b>${CC.escapeHtml(CC.eventLine(next))}`:"まだ期日の登録がありません");
     return `<div class="card ccard" data-open="${CC.escapeAttr(c.id)}" role="link" tabindex="0">
       <div class="cbody">
