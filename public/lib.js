@@ -940,7 +940,7 @@ window.CC = (function(){
         </div>
         <div class="field">
           <label>裁判官（複数の場合は改行、1行に1つ）</label>
-          <textarea id="cJudge" placeholder="例）○○ ○○裁判官"></textarea>
+          <textarea id="cJudge" placeholder="地裁　〇〇〇〇裁判官&#10;高裁　〇〇〇〇裁判官"></textarea>
           <p class="fnote">地裁→高裁など審級が変わる場合は「地裁　○○ ○○裁判官」「高裁　○○ ○○裁判官」のように行を分けて書けます（事件番号欄と同じ書き方）。</p>
         </div>
         <div class="field">
@@ -949,7 +949,7 @@ window.CC = (function(){
         </div>
         <div class="field">
           <label>事件番号（複数の場合は改行、1行に1つ）</label>
-          <textarea id="cCaseNo" placeholder="例）令和6年（ワ）第1234号"></textarea>
+          <textarea id="cCaseNo" placeholder="地裁　令和6年(ワ) 第12345号&#10;高裁　令和7年(ネ)第1234号"></textarea>
           <p class="fnote">地裁→高裁など番号が変わる場合は「地裁　令和6年（ワ）第12345号」「高裁　令和7年（ネ）第6789号」のように行を分けて書けます（裁判官欄と同じ書き方）。</p>
         </div>
         <div class="field"><label>裁判について</label><textarea id="cCall" placeholder="どんな裁判か、傍聴や支援をお願いする文章など（空行を挟むと段落を分けられます）"></textarea></div>
