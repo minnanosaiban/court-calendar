@@ -232,6 +232,8 @@ a{color:inherit}
 .btitle{font-family:"Shippori Mincho",serif;font-size:1.6rem;font-weight:600;line-height:1.4}
 .bt-red{color:var(--stamp)}
 .bt-bang{display:inline-block;color:var(--stamp);transform:rotate(-14deg)}
+/* 「掲示板」が「掲」と「示板」で改行で割れてしまうのを防ぐ（狭い画面向け） */
+.nowrap{white-space:nowrap}
 .bcount{font-size:.8rem;color:var(--mut)}
 /* 掲示板の中に置く事件名（どの事件の掲示板か分かるように） */
 .board-name{font-size:.9rem;margin-top:12px}
