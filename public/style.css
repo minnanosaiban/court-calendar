@@ -116,7 +116,8 @@ a{color:inherit}
   color:var(--faint);font-size:.9rem;text-decoration:none;background:none;border:none;cursor:pointer;font-family:inherit}
 .share a:hover,.share button:hover{color:var(--ink)}
 .share button.copied{color:#2f7d4f}
-.d-more{margin-top:24px;text-align:right}
+/* 「報告を書く」(.bwrite)と同じ上余白にそろえる */
+.d-more{margin-top:12px;text-align:right}
 .lede{margin-top:24px;background:var(--card);border-radius:4px 12px 12px 4px;border-left:4px solid var(--stamp);padding:16px;font-size:.9rem}
 .lede-title{font-family:"Shippori Mincho",serif;font-size:1.2rem;font-weight:600}
 .lede p + p{margin-top:12px}
@@ -341,7 +342,7 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .pop-row + .pop-row{margin-top:4px;border-top:1px solid var(--tint);padding-top:12px}
 .pop-arrow{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--stamp);font-size:.85rem}
 .pop-date{font-size:.8rem;color:var(--mut);font-variant-numeric:tabular-nums}
-.pop-title{font-size:1.2rem;font-weight:500;margin-top:1px;font-family:"Shippori Mincho",serif}
+.pop-title{font-size:.9rem;font-weight:500;margin-top:1px;font-family:"Shippori Mincho",serif}
 .pop-meta{font-size:.8rem;color:var(--mut);margin-top:1px}
 /* プレビュー下の操作行：右下に「閉じる×」 */
 .pop-foot{display:flex;justify-content:flex-end;align-items:center;gap:16px;margin-top:4px;padding:8px 12px 4px;border-top:1px solid var(--tint)}

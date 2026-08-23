@@ -177,8 +177,10 @@
   document.addEventListener("click",(e)=>{
     if(!dayPop.hidden && !dayPop.contains(e.target) && !e.target.closest(".cell")) closePopoverNow();
   });
-  // プレビューは画面固定なので、スクロールしたら閉じる（カレンダーから離れて浮き続けないように）
-  window.addEventListener("scroll",()=>{ if(!dayPop.hidden) closePopoverNow(); },{passive:true});
+  // プレビューは画面固定なので、スクロールしたら閉じる（カレンダーから離れて浮き続けないように）。
+  // ただしスマホでは、タップして開いた直後にアドレスバーの収縮などで微小なスクロールが起きることがあり、
+  // それを拾って即座に閉じてしまう。開いた直後（popOpenedAtから400ms）はこの自動close-on-scrollを無視する
+  window.addEventListener("scroll",()=>{ if(!dayPop.hidden && Date.now()-popOpenedAt>=400) closePopoverNow(); },{passive:true});
 
   // ---- カレンダー（2か月ぶん組み立てて、CSSで狭い画面では2つ目を隠す） ----
   function buildMonthGrid(monthDate, gridEl, labelEl){

@@ -19,8 +19,8 @@ hotline の `DESIGN_SYSTEM.md` と同じ位置づけ（今後の手直しで一�
 |---|---|---|
 | サイト名 | **1.8rem** | `.masthead h1`（「応援傍聴ナビ」） |
 | 主見出し | **1.6rem** | `.d-title`（事件名）・`.btitle`（掲示板見出し）・`.home-title` |
-| 節見出し | **1.2rem** | `.lede-title`（裁判について）・`.modal .mhead`（編集モーダル見出し）・`.pop-title`（カレンダーpopoverの事件名）・`.ctitle`（事件をさがす一覧の事件名）・`.month`（カレンダーの年月） |
-| 本文 | **.9rem** | `.d-body`・`.facts`（ファクトシート）・`.pts`（箇条書き）・`.tl-head`（タイムライン）・`.bubble`（掲示板の投稿）・`.board-name`（掲示板の中の事件名）・フォームの input/textarea/select・空状態のメッセージ（`.empty-msg`/`.board-empty`/`.u-empty`）など |
+| 節見出し | **1.2rem** | `.lede-title`（裁判について）・`.modal .mhead`（編集モーダル見出し）・`.ctitle`（事件をさがす一覧の事件名）・`.month`（カレンダーの年月） |
+| 本文 | **.9rem** | `.d-body`・`.facts`（ファクトシート）・`.pts`（箇条書き）・`.tl-head`（タイムライン）・`.bubble`（掲示板の投稿）・`.board-name`（掲示板の中の事件名）・`.pop-title`（カレンダーpopoverの事件名）・フォームの input/textarea/select・空状態のメッセージ（`.empty-msg`/`.board-empty`/`.u-empty`）など |
 | キャプション | **.8rem** | 日付・法廷名などのメタ情報（`.tl-date`・`.mdate`・`.pop-date`・`.ud`/`.um`）・小さい編集/削除リンク（`.d-edit`・`.round-edit`・`.bubble .del`）・`.status`・`.site-footer`・`.fnote` など |
 | ラベル | **.7rem** | 字間を広げた小見出し系（`.minih`・`.sech`・`.msec`）・`.mside-h`・`.tag`・`.btn`（資料の.pdf/.md/要約ボタン）・`.field label`（編集モーダルの各欄名） |
 
