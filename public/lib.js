@@ -200,12 +200,11 @@ window.CC = (function(){
     return `<p class="minih">関連裁判</p><ul class="pts">${items}</ul>`;
   }
   // 事件のアイコン（Twitterのアバターのように、一覧やカレンダーで事件を見分けるための小さな画像）。
-  // 未登録なら、事件名の頭文字を丸い札で代わりに出す。size は "sm"（一覧の行・popover）／"md"（事件をさがすの行）／"lg"（事件名の見出し・編集モーダル）
-  function iconHtml(c, size){
-    const cls = "cicon cicon-"+(size||"sm");
-    if(c.icon) return `<img class="${cls}" src="${escapeAttr(c.icon)}" alt="">`;
+  // 未登録なら、事件名の頭文字を丸い札で代わりに出す。大きさは56px1種類（サイズ違いは廃止・2026-08-24）
+  function iconHtml(c){
+    if(c.icon) return `<img class="cicon" src="${escapeAttr(c.icon)}" alt="">`;
     const ch = placeholderChar(c.name);
-    return `<span class="${cls} cicon-ph" aria-hidden="true">${escapeHtml(ch)}</span>`;
+    return `<span class="cicon cicon-ph" aria-hidden="true">${escapeHtml(ch)}</span>`;
   }
   // 仮アイコンに使う頭文字。「【サンプル】」「【控訴審】」のような先頭の囲みは、どの事件でも同じ文字になって
   // 見分けの役に立たないので読み飛ばし、囲みの後ろの頭文字を拾う（囲みだけで中身が無い名前は元の頭文字に戻す）
@@ -339,7 +338,7 @@ window.CC = (function(){
     let html = galCard + boardHtml(caseId, full) + `
       <div class="card dcard">
         <div class="d-head">
-          ${iconHtml(c,"lg")}
+          ${iconHtml(c)}
           <h2 class="d-title">${escapeHtml(c.name)} ${likeHtml(c)}</h2>
         </div>
         ${tagsHtml(c)}
@@ -500,15 +499,18 @@ window.CC = (function(){
       (mine.length?`<span class="bcount">${mine.length}件の報告</span>`:"")+
       `</div>`+
       // 掲示板だけが独立した箱になったので、どの事件の掲示板かが分かるようアイコン・事件名・いいねを添える。
-      // 行頭はアイコン（見出しの「傍」・下の事件カードのアイコンと左端がそろう）、いいねは事件名の後ろに置く。
+      // アイコン（見出しの「傍」・下の事件カードのアイコンと左端がそろう）の右に、事件名・「報告を書く」を
+      // 縦に2段重ねる（2026-08-24。アイコンが56pxと大きくなり、事件名の1行だけでは右に余白が余るため）。
       // 事件名は事件ページへのリンクにする（下線などの装飾はしない）。ただし事件ページ自身では
       // 自分へのリンクになってしまうので、そこだけは素のテキストのまま
-      (c?`<p class="d-title board-name">${iconHtml(c,"sm")} ${full
-          ? escapeHtml(c.name)
-          : `<a class="board-name-link" href="case?id=${encodeURIComponent(c.id)}">${escapeHtml(c.name)}</a>`
-        } ${likeHtml(c)}</p>`:"")+
-      // 左上（ハートの下）にも書き込みボタンを置く。長い報告一覧を下までスクロールしなくても書き始められる
-      (showWriteBtn?`<p class="bwrite bwrite-top">${writeBtnHtml(caseId)}</p>`:"");
+      (c?`<div class="board-id">${iconHtml(c)}<div class="board-id-main">`+
+          `<p class="d-title board-name">${full
+            ? escapeHtml(c.name)
+            : `<a class="board-name-link" href="case?id=${encodeURIComponent(c.id)}">${escapeHtml(c.name)}</a>`
+          } ${likeHtml(c)}</p>`+
+          // 左上（事件名の下）にも書き込みボタンを置く。長い報告一覧を下までスクロールしなくても書き始められる
+          (showWriteBtn?`<p class="bwrite bwrite-top">${writeBtnHtml(caseId)}</p>`:"")+
+        `</div></div>`:"");
     html += items
       || `<p class="board-empty">${canPost
           ? "まだ報告はありません。傍聴に行かれた方の最初の報告をお待ちしています。"
@@ -538,7 +540,7 @@ window.CC = (function(){
     // 「どの裁判への報告か」を投稿ボタンの直前でもう一度示して、書き間違いを防ぐ
     return `
       <div class="pform">
-        ${c?`<p class="pform-case">${iconHtml(c,"sm")}<span>${escapeHtml(c.name)}</span></p>`:""}
+        ${c?`<p class="pform-case">${iconHtml(c)}<span>${escapeHtml(c.name)}</span></p>`:""}
         <div class="field">
           <label>どの期日についての報告ですか</label>
           <select id="pRound">${roundOptions}</select>
@@ -1199,7 +1201,7 @@ window.CC = (function(){
   }
   // アイコン欄は既存の事件を編集しているときだけ出す（写真・資料と同じく、事件IDが無いと登録先が無いため）
   function renderCIconPreview(c){
-    cIconPreview.innerHTML = iconHtml(c, "lg");
+    cIconPreview.innerHTML = iconHtml(c);
     cIconRemove.hidden = !c.icon;
   }
   function openCaseAdd(){

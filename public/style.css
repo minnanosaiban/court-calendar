@@ -97,41 +97,41 @@ a{color:inherit}
 .imgrow .iacts{display:flex;gap:12px;flex:none}
 .imgrow .iacts a{font-size:.8rem;color:var(--edit);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 /* 事件アイコン（Twitterのアバターのように、一覧やカレンダーで事件を見分けるための小さな画像）。
-   未登録なら .cicon-ph（頭文字の丸い札）で代わりを出す。サイズは3種：sm=一覧の行・popover／md=事件をさがすの行／lg=事件名の見出し・編集モーダル。
-   .board-name のようにインラインで置く場所があるので、次の2つを効かせておく：
-   ・vertical-align:middle（既定のベースライン揃えだと、隣の文字やいいねより上にずれる）
-   ・.cicon-ph は display:inline-grid（grid だとブロック要素になり、そこで改行してしまう）
-   どちらも flex の中（.d-head・.ccard・.u・.pop-main・.pform-case）では自動的に無視されるので、
-   置く場所によって書き分ける必要はない */
-.cicon{border-radius:50%;object-fit:cover;flex:none;align-self:center;background:var(--tint);vertical-align:middle}
-.cicon-ph{border-radius:50%;flex:none;align-self:center;background:var(--tint);color:var(--mut);vertical-align:middle;
+   未登録なら .cicon-ph（頭文字の丸い札）で代わりを出す。大きさは56px1種類
+   （サイズ違い sm/md/lg は2026-08-24に廃止。事件をさがすの行・popover 等の小さい面でも、
+   遠目にも見分けやすい大きさを優先した）。
+   置く場所（.d-head・.ccard・.u・.pop-main・.board-id・.pform-case・.cicon-row）はすべて flex
+   コンテナだが、念のため次の2つも効かせておく：
+   ・vertical-align:middle（インラインで置いた場合、既定のベースライン揃えだと隣の文字より上にずれる）
+   ・.cicon-ph は display:inline-grid（grid だとブロック要素になり、インラインで置いたときに改行してしまう）
+   どちらも flex の中では自動的に無視される */
+.cicon{width:56px;height:56px;border-radius:50%;object-fit:cover;flex:none;align-self:center;
+  background:var(--tint);vertical-align:middle}
+.cicon-ph{width:56px;height:56px;border-radius:50%;flex:none;align-self:center;background:var(--tint);
+  color:var(--mut);vertical-align:middle;font-size:1.3rem;
   display:inline-grid;place-content:center;font-family:"Shippori Mincho",serif;font-weight:600}
-.cicon-sm{width:28px;height:28px;font-size:.8rem}
-.cicon-md{width:44px;height:44px;font-size:1.1rem}
-.cicon-lg{width:56px;height:56px;font-size:1.3rem}
 .d-title{font-family:"Shippori Mincho",serif;font-size:1.6rem;font-weight:600;line-height:1.4}
 .d-body{font-size:.9rem;margin-top:8px}
 .mut{color:var(--mut)}
 /* タイトル行 */
 .d-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
 .d-head .d-title{flex:1;min-width:0}
-/* いいね：タイトルに続けて置く。押すと朱色で塗る */
+/* いいね：タイトルに続けて置く。押すと朱色で塗る。
+   枠・背景は持たず、タイトルに寄り添う"添え物"にする（2026-08-24。それまでは枠線のピル型だった）。
+   押した状態はハートの塗り（bi-heart-fill）と朱色で示すので、面で囲う必要がない。
+   padding は枠が無くても指で押せる大きさを残すために置いている（見た目には出ない） */
 .like{display:inline-flex;align-items:center;gap:4px;vertical-align:middle;margin-left:.35em;
   font-family:"Zen Kaku Gothic New",sans-serif;font-size:.8rem;color:var(--mut);
-  background:none;border:1px solid #e6e4dd;border-radius:999px;padding:4px 12px 4px 8px;cursor:pointer;line-height:1.5}
-.like:hover{border-color:#c9c6bc}
+  background:none;border:none;padding:4px 6px;cursor:pointer;line-height:1.5}
+.like:hover{color:var(--stamp)}
 .like .bi{font-size:.85rem;line-height:1}
-.like.on{color:var(--stamp);border-color:rgba(185,50,38,.35);background:rgba(185,50,38,.06)}
+.like.on{color:var(--stamp)}
 .like:disabled{opacity:.6;cursor:default}
 .like-n{font-variant-numeric:tabular-nums}
 /* 掲示板の中の事件名(.board-name、.9rem)に添えるいいねは、地の文の大きさに合わせて一段小さくする
-   （既定の.like は1.6remの事件名の隣に置く前提のサイズなので、そのままだと大きすぎる）。
-   さらに外枠も外して、事件名に寄り添う"添え物"にする（枠のあるボタンは事件本体のカード側だけ）。
-   padding は枠が無くても指で押せる大きさを残すために置いている（見た目には出ない） */
-.board-name .like{font-size:.7rem;padding:4px 6px;border:none;background:none;margin-left:2px}
+   （既定の.like は1.6remの事件名の隣に置く前提のサイズなので、そのままだと大きすぎる） */
+.board-name .like{font-size:.7rem;margin-left:2px}
 .board-name .like .bi{font-size:.75rem}
-.board-name .like:hover{border-color:transparent;color:var(--stamp)}
-.board-name .like.on{background:none;border-color:transparent}
 .d-edit{display:inline-block;margin-top:8px;font-size:.8rem;color:var(--edit);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 /* シェア（X・LINE・リンクをコピー） */
 .share{display:flex;gap:2px;align-items:center;margin-top:12px}
@@ -251,8 +251,13 @@ a{color:inherit}
 /* 「掲示板」が「掲」と「示板」で改行で割れてしまうのを防ぐ（狭い画面向け） */
 .nowrap{white-space:nowrap}
 .bcount{font-size:.8rem;color:var(--mut)}
-/* 掲示板の中に置く事件名（どの事件の掲示板か分かるように） */
-.board-name{font-size:.9rem;margin-top:12px}
+/* 掲示板の中に置く「どの事件の掲示板か」の一角。アイコン（.cicon、56px）の右に、事件名（.board-name）と
+   「報告を書く」（.bwrite-top）を縦に2段重ねる（2026-08-24）。事件名だけだと1行でアイコンの高さが余るため、
+   ボタンと合わせてアイコンの高さに近づけている */
+.board-id{display:flex;gap:12px;margin-top:12px}
+.board-id-main{min-width:0;flex:1}
+.board-name{font-size:.9rem}
+.board-id .bwrite-top{margin-top:4px}
 /* 下線などの装飾はしない。色は地の文（.board-name）をそのまま継承する（a{color:inherit}が既定で効く） */
 .board-name-link{text-decoration:none}
 /* 報告は吹き出しで「声」として並べる */
@@ -282,7 +287,8 @@ a{color:inherit}
    投稿ボタンの直前でもう一度示す。区切りは罫線1本だけにして、フォーム本体と混ざらないようにする */
 .pform-case{display:flex;align-items:center;gap:8px;font-size:.9rem;
   padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid var(--tint)}
-.pform-case span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* 折り返してでも事件名を全部見せる（誤って報告先を間違えないための行なので、途中で省略しない） */
+.pform-case span{min-width:0}
 .pform .field{margin-bottom:12px}
 .pform .field label{display:block;font-size:.7rem;color:var(--mut);margin-bottom:4px}
 .pform .line{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:.9rem}

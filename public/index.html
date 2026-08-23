@@ -130,7 +130,7 @@
       return `<div class="pop-row" data-case="${CC.escapeAttr(ev.caseId)}">
         <i class="bi bi-chevron-right pop-arrow" aria-hidden="true"></i>
         <div class="pop-main">
-          ${c?CC.iconHtml(c,"sm"):""}
+          ${c?CC.iconHtml(c):""}
           <div class="pop-text">
             <p class="pop-date">${CC.escapeHtml(dateLine)}</p>
             <p class="pop-title">${CC.escapeHtml(ev.case)}</p>
@@ -152,7 +152,9 @@
     dayPop.hidden=false;
     popOpenedAt=Date.now();
     const r=cell.getBoundingClientRect();
-    const pw=Math.min(280, window.innerWidth-24);
+    // 340px（280pxから拡張・2026-08-24）。事件アイコン（56px）を横に置いても本文の折り返しが増えないよう、
+    // アイコンぶん（56px＋間隔10px）だけ広げてある
+    const pw=Math.min(340, window.innerWidth-24);
     dayPop.style.width=pw+"px";
     let left=r.left;
     if(left+pw>window.innerWidth-12) left=window.innerWidth-12-pw;
@@ -267,7 +269,7 @@
         `<div class="um">${CC.escapeHtml([ev.type,place].filter(Boolean).join(" ／ "))||"&nbsp;"}</div>`;
       item.appendChild(bar);
       const c=CC.caseById(ev.caseId);
-      if(c) item.insertAdjacentHTML("beforeend", CC.iconHtml(c,"sm"));
+      if(c) item.insertAdjacentHTML("beforeend", CC.iconHtml(c));
       item.appendChild(body);
       item.addEventListener("click",()=>{ location.href="case?id="+encodeURIComponent(ev.caseId); });
       upcomingBox.appendChild(item);
