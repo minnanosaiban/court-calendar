@@ -499,13 +499,14 @@ window.CC = (function(){
       `<div class="bhead"><span class="btitle"><span class="bt-red">傍聴に行ってきたよ</span><span class="bt-bang">！</span><span class="nowrap">掲示板</span></span>`+
       (mine.length?`<span class="bcount">${mine.length}件の報告</span>`:"")+
       `</div>`+
-      // 掲示板だけが独立した箱になったので、どの事件の掲示板かが分かるよう事件名といいねを添える。
+      // 掲示板だけが独立した箱になったので、どの事件の掲示板かが分かるようアイコン・事件名・いいねを添える。
+      // 行頭はアイコン（見出しの「傍」・下の事件カードのアイコンと左端がそろう）、いいねは事件名の後ろに置く。
       // 事件名は事件ページへのリンクにする（下線などの装飾はしない）。ただし事件ページ自身では
       // 自分へのリンクになってしまうので、そこだけは素のテキストのまま
-      (c?`<p class="d-title board-name">${likeHtml(c)} ${full
+      (c?`<p class="d-title board-name">${iconHtml(c,"sm")} ${full
           ? escapeHtml(c.name)
           : `<a class="board-name-link" href="case?id=${encodeURIComponent(c.id)}">${escapeHtml(c.name)}</a>`
-        }</p>`:"")+
+        } ${likeHtml(c)}</p>`:"")+
       // 左上（ハートの下）にも書き込みボタンを置く。長い報告一覧を下までスクロールしなくても書き始められる
       (showWriteBtn?`<p class="bwrite bwrite-top">${writeBtnHtml(caseId)}</p>`:"");
     html += items
@@ -525,6 +526,7 @@ window.CC = (function(){
   }
 
   function postFormHtml(caseId){
+    const c = caseById(caseId);
     const rounds = caseEvents(caseId);
     const today = todayStr();
     let defaultIdx = 0;
@@ -532,8 +534,11 @@ window.CC = (function(){
     const roundOptions = rounds.map((e,i)=>
       `<option value="${escapeAttr(e.id)}"${i===defaultIdx?" selected":""}>${escapeHtml(e.type||e.date)}</option>`
     ).join("");
+    // フォームの先頭にも事件名を出す。報告が溜まると上の事件名の行はスクロールで画面外に出るので、
+    // 「どの裁判への報告か」を投稿ボタンの直前でもう一度示して、書き間違いを防ぐ
     return `
       <div class="pform">
+        ${c?`<p class="pform-case">${iconHtml(c,"sm")}<span>${escapeHtml(c.name)}</span></p>`:""}
         <div class="field">
           <label>どの期日についての報告ですか</label>
           <select id="pRound">${roundOptions}</select>

@@ -97,10 +97,15 @@ a{color:inherit}
 .imgrow .iacts{display:flex;gap:12px;flex:none}
 .imgrow .iacts a{font-size:.8rem;color:var(--edit);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 /* 事件アイコン（Twitterのアバターのように、一覧やカレンダーで事件を見分けるための小さな画像）。
-   未登録なら .cicon-ph（頭文字の丸い札）で代わりを出す。サイズは3種：sm=一覧の行・popover／md=事件をさがすの行／lg=事件名の見出し・編集モーダル */
-.cicon{border-radius:50%;object-fit:cover;flex:none;align-self:center;background:var(--tint)}
-.cicon-ph{border-radius:50%;flex:none;align-self:center;background:var(--tint);color:var(--mut);
-  display:grid;place-content:center;font-family:"Shippori Mincho",serif;font-weight:600}
+   未登録なら .cicon-ph（頭文字の丸い札）で代わりを出す。サイズは3種：sm=一覧の行・popover／md=事件をさがすの行／lg=事件名の見出し・編集モーダル。
+   .board-name のようにインラインで置く場所があるので、次の2つを効かせておく：
+   ・vertical-align:middle（既定のベースライン揃えだと、隣の文字やいいねより上にずれる）
+   ・.cicon-ph は display:inline-grid（grid だとブロック要素になり、そこで改行してしまう）
+   どちらも flex の中（.d-head・.ccard・.u・.pop-main・.pform-case）では自動的に無視されるので、
+   置く場所によって書き分ける必要はない */
+.cicon{border-radius:50%;object-fit:cover;flex:none;align-self:center;background:var(--tint);vertical-align:middle}
+.cicon-ph{border-radius:50%;flex:none;align-self:center;background:var(--tint);color:var(--mut);vertical-align:middle;
+  display:inline-grid;place-content:center;font-family:"Shippori Mincho",serif;font-weight:600}
 .cicon-sm{width:28px;height:28px;font-size:.8rem}
 .cicon-md{width:44px;height:44px;font-size:1.1rem}
 .cicon-lg{width:56px;height:56px;font-size:1.3rem}
@@ -121,9 +126,12 @@ a{color:inherit}
 .like-n{font-variant-numeric:tabular-nums}
 /* 掲示板の中の事件名(.board-name、.9rem)に添えるいいねは、地の文の大きさに合わせて一段小さくする
    （既定の.like は1.6remの事件名の隣に置く前提のサイズなので、そのままだと大きすぎる）。
-   上下のpaddingは「報告を書く」(.bwrite a)と同じ4pxにして、高さをそろえる */
-.board-name .like{font-size:.7rem;padding:4px 10px 4px 7px}
+   さらに外枠も外して、事件名に寄り添う"添え物"にする（枠のあるボタンは事件本体のカード側だけ）。
+   padding は枠が無くても指で押せる大きさを残すために置いている（見た目には出ない） */
+.board-name .like{font-size:.7rem;padding:4px 6px;border:none;background:none;margin-left:2px}
 .board-name .like .bi{font-size:.75rem}
+.board-name .like:hover{border-color:transparent;color:var(--stamp)}
+.board-name .like.on{background:none;border-color:transparent}
 .d-edit{display:inline-block;margin-top:8px;font-size:.8rem;color:var(--edit);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 /* シェア（X・LINE・リンクをコピー） */
 .share{display:flex;gap:2px;align-items:center;margin-top:12px}
@@ -270,6 +278,11 @@ a{color:inherit}
 .bwrite a:hover{border-color:rgba(185,50,38,.6)}
 .bwrite a .bi{font-size:.8rem;line-height:1;color:var(--stamp)}
 .pform{margin-top:12px;background:#fff;border-radius:12px;padding:16px}
+/* フォームの先頭に置く「どの裁判への報告か」の行。報告が溜まると上の事件名の行は画面外に出るので、
+   投稿ボタンの直前でもう一度示す。区切りは罫線1本だけにして、フォーム本体と混ざらないようにする */
+.pform-case{display:flex;align-items:center;gap:8px;font-size:.9rem;
+  padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid var(--tint)}
+.pform-case span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pform .field{margin-bottom:12px}
 .pform .field label{display:block;font-size:.7rem;color:var(--mut);margin-bottom:4px}
 .pform .line{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:.9rem}
