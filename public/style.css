@@ -214,8 +214,8 @@ a{color:inherit}
 .bubble .del{color:var(--mut);font-size:.8rem;margin-left:.5em;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .board-empty{color:var(--mut);font-size:.9rem;margin-top:10px}
 .board-empty a{color:var(--ink);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
-.bwrite{margin-top:12px}
-.bwrite a{display:inline-block;background:#fff;border-radius:999px;padding:7px 18px;
+.bwrite{margin-top:12px;text-align:right}
+.bwrite a{display:inline-block;background:#fff;border-radius:999px;padding:8px 18px;
   font-size:.8rem;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.06)}
 .bwrite a .bi{color:var(--stamp)}
 .pform{margin-top:12px;background:#fff;border-radius:12px;padding:14px 16px}
