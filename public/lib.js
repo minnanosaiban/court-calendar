@@ -719,6 +719,10 @@ window.CC = (function(){
     <div class="cepanel" data-panel="round">
       <div class="mhead" id="modalTitle">期日を追加</div>
       <div class="mbody">
+        <ul class="pts mut">
+          <li>事件名・期日以外はすべて任意です。分かる範囲でご記入ください。</li>
+          <li>複数行入力する欄は、右下をドラッグすると縦に広げられます。</li>
+        </ul>
         <div class="field">
           <label>事件名 <span style="color:var(--stamp)">*</span></label>
           <input type="text" id="fCase" list="caseList" placeholder="例）令和7年(ネ)第○○号 損害賠償請求控訴事件">
@@ -760,7 +764,7 @@ window.CC = (function(){
             <input type="text" id="fPlace" placeholder="例）610号法廷">
           </div>
         </div>
-        <p class="msec">この回の主張の要約（1行に1つ・任意）</p>
+        <p class="msec">この回の主張の要約（複数の場合は改行、1行に1つ）</p>
         <div class="field">
           <label>原告の主張</label>
           <textarea id="fPlaintiff" placeholder="例）不開示決定の取消しを求める"></textarea>
@@ -784,6 +788,10 @@ window.CC = (function(){
     <div class="cepanel" data-panel="mat" hidden>
       <div class="mhead" id="matModalTitle">資料を追加</div>
       <div class="mbody">
+        <ul class="pts mut">
+          <li>資料名以外はすべて任意です。分かる範囲でご記入ください。</li>
+          <li>複数行入力する欄は、右下をドラッグすると縦に広げられます。</li>
+        </ul>
         <div class="field">
           <label>資料名 <span style="color:var(--stamp)">*</span></label>
           <input type="text" id="mTitle" placeholder="例）訴状、第1準備書面、甲3 ○○">
@@ -796,22 +804,22 @@ window.CC = (function(){
           <div class="field"><label>提出日</label><input type="date" id="mFiledOn"></div>
         </div>
         <div class="field">
-          <label>ファイルのURL（任意）</label>
+          <label>ファイルのURL</label>
           <input type="text" id="mUrl" placeholder="例）/docs/sojo.pdf　または https://…">
           <p class="fnote">PDF を <code>public/docs/</code> に入れて公開すると <code>/docs/ファイル名.pdf</code> で開けます。外部サイトのURLでも可。</p>
         </div>
         <div class="field" id="mFileField">
-          <label>ファイルをアップロード（PDF・PNG・JPEG、20MBまで・任意）</label>
+          <label>ファイルをアップロード（PDF・PNG・JPEG、20MBまで）</label>
           <input type="file" id="mFile" accept="application/pdf,image/png,image/jpeg">
           <p class="fnote" id="mFileNow" hidden></p>
         </div>
-        <div class="field"><label>この書面で主張していること（1行に1つ・任意）</label><textarea id="mClaims" placeholder="例）不開示決定の取消しを求める"></textarea></div>
+        <div class="field"><label>この書面で主張していること（複数の場合は改行、1行に1つ）</label><textarea id="mClaims" placeholder="例）不開示決定の取消しを求める"></textarea></div>
         <div class="field">
-          <label>本文（Markdownを貼り付け・任意）</label>
+          <label>本文（Markdownを貼り付け）</label>
           <textarea id="mBody" placeholder="書面の本文をそのまま貼り付けられます（見出し・箇条書き・**強調**などが使えます）" style="min-height:120px"></textarea>
           <p class="fnote">「本文」ボタンから読めるページになります。原本はPDFなので、本文は補助（検索されやすくする・要点を読みやすくする）目的です。</p>
         </div>
-        <div class="field"><label>要約（任意）</label><textarea id="mSummary" placeholder="手で書いた要約、またはAIに作らせて確認した要約"></textarea></div>
+        <div class="field"><label>要約</label><textarea id="mSummary" placeholder="手で書いた要約、またはAIに作らせて確認した要約"></textarea></div>
       </div>
       <div class="mfoot">
         <button class="btn-del" id="mDelete" style="display:none;">削除</button>
@@ -830,7 +838,7 @@ window.CC = (function(){
           <p class="fnote" id="iFileNow" hidden></p>
           <p class="fnote">JPEG・PNG・WebP、12MBまで。証拠写真は人の顔・氏名・住所が写り込んでいないか確認してから登録してください。</p>
         </div>
-        <div class="field"><label>説明（1行・任意）</label><input type="text" id="iCaption" placeholder="例）提訴後の記者会見にて"></div>
+        <div class="field"><label>説明（1行）</label><input type="text" id="iCaption" placeholder="例）提訴後の記者会見にて"></div>
       </div>
       <div class="mfoot">
         <button class="btn-del" id="iDelete" style="display:none;">削除</button>
