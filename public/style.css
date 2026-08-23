@@ -200,8 +200,8 @@ a{color:inherit}
 .bt-red{color:var(--stamp)}
 .bt-bang{display:inline-block;color:var(--stamp);transform:rotate(-14deg)}
 .bcount{font-size:.8rem;color:var(--mut)}
-/* 掲示板の中に置く事件名（どの事件の掲示板か分かるように。見出しと同じ大きさ） */
-.board-name{margin-top:8px}
+/* 掲示板の中に置く事件名（どの事件の掲示板か分かるように） */
+.board-name{font-size:1.2rem;margin-top:8px}
 /* 報告は吹き出しで「声」として並べる */
 .bubble{background:#fff;border-radius:14px;padding:11px 14px;margin-top:10px;position:relative;font-size:.9rem}
 .bubble::before{content:"";position:absolute;left:-6px;top:16px;
