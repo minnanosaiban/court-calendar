@@ -14,8 +14,12 @@
 /* ---- 余白スケール ----
    ブロック間の margin・カードの padding・gap は 8px 刻み（8/16/24/32/48/64）に揃える。
    細かいところだけ半分の 4px 刻み（4/12/20）を使ってよい。
-   対象外：ボタン・タグ・バッジ・入力欄など「部品そのものの大きさ」を決める padding と、
-   1〜3px の光学調整（アイコンの位置合わせなど）。詳しくは DESIGN_SYSTEM.md */
+   ボタン・タグ・入力欄など部品の padding も 4px 刻みに揃え、同じ文字サイズの部品どうしは
+   同じ高さになるようにする（.btn と .tag、.pillbtn と .bwrite a と .pform button、
+   .field input と .pform input）。1〜3px の光学調整だけが対象外。
+   ---- 角丸スケール ----
+   4px（極小）／ 8px（サムネイル等の小さな面）／ 12px（箱の中の箱）／ 20px（カード・モーダル・
+   浮かぶ面）／ 999px（ピル型のボタン・タグ・棒）／ 50%（円）。詳しくは DESIGN_SYSTEM.md */
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
 /* 矢印は Bootstrap Icons（bi bi-...）で統一。下線のあるリンク内でも、アイコン自体には下線を引かない */
@@ -32,7 +36,7 @@ a{color:inherit}
 
 /* ---- masthead ---- */
 .masthead{display:flex;align-items:center;gap:16px}
-.stamp{flex:none;width:52px;height:52px;border:2.5px solid var(--stamp);border-radius:6px;
+.stamp{flex:none;width:52px;height:52px;border:2.5px solid var(--stamp);border-radius:8px;
   display:grid;place-content:center;color:var(--stamp);
   font-family:"Shippori Mincho",serif;font-weight:700;font-size:17px;line-height:1.1;
   letter-spacing:.04em;text-align:center;transform:rotate(-4deg)}
@@ -74,10 +78,10 @@ a{color:inherit}
 .gal-track{display:flex;height:100%;transition:transform .6s cubic-bezier(.4,0,.2,1)}
 .gal-item{flex:0 0 100%;position:relative;display:block}
 .gal-item img{width:100%;height:100%;object-fit:cover;display:block;background:var(--tint)}
-.gal-cap{position:absolute;left:0;right:0;bottom:0;padding:26px 16px 10px;font-size:.8rem;letter-spacing:.02em;
+.gal-cap{position:absolute;left:0;right:0;bottom:0;padding:24px 16px 12px;font-size:.8rem;letter-spacing:.02em;
   background:linear-gradient(transparent,rgba(0,0,0,.55));color:#fff}
 /* キャプション帯（.gal-cap）が無い写真でも見えるよう、ドット自体に小さな黒地を持たせる（帯任せにしない） */
-.gal-dots{position:absolute;right:8px;bottom:8px;display:flex;gap:6px;padding:5px 7px;border-radius:999px;background:rgba(0,0,0,.32)}
+.gal-dots{position:absolute;right:8px;bottom:8px;display:flex;gap:6px;padding:4px 8px;border-radius:999px;background:rgba(0,0,0,.32)}
 .gal-dots button{width:6px;height:6px;padding:0;border-radius:50%;border:none;background:rgba(255,255,255,.5);cursor:pointer}
 .gal-dots button.on{background:#fff}
 /* 写真の管理（編集権限があるときだけ）：ギャラリーの下に小さな一覧 */
@@ -98,9 +102,9 @@ a{color:inherit}
 /* いいね：タイトルに続けて置く。押すと朱色で塗る */
 .like{display:inline-flex;align-items:center;gap:4px;vertical-align:middle;margin-left:.35em;
   font-family:"Zen Kaku Gothic New",sans-serif;font-size:.8rem;color:var(--mut);
-  background:none;border:1px solid #e6e4dd;border-radius:999px;padding:2px 10px 2px 8px;cursor:pointer;line-height:1.5}
+  background:none;border:1px solid #e6e4dd;border-radius:999px;padding:4px 12px 4px 8px;cursor:pointer;line-height:1.5}
 .like:hover{border-color:#c9c6bc}
-.like .bi{font-size:.85rem}
+.like .bi{font-size:.85rem;line-height:1}
 .like.on{color:var(--stamp);border-color:rgba(185,50,38,.35);background:rgba(185,50,38,.06)}
 .like:disabled{opacity:.6;cursor:default}
 .like-n{font-variant-numeric:tabular-nums}
@@ -145,7 +149,7 @@ a{color:inherit}
 .tl-dot{position:absolute;left:0;top:7px;width:13px;height:13px;border-radius:50%;background:#fff;border:1.5px solid #a9a7a0;box-sizing:border-box}
 .tl-item.past .tl-dot{background:#a9a7a0;border-color:#a9a7a0}
 .tl-item.next .tl-dot{background:var(--stamp);border-color:var(--stamp);box-shadow:0 0 0 3px rgba(185,50,38,.15)}
-.tl-head{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:12px;row-gap:4px;font-size:.9rem;line-height:1.7;border-radius:8px}
+.tl-head{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:12px;row-gap:4px;font-size:.9rem;line-height:1.7}
 .tl-date{color:var(--mut);font-size:.8rem;font-variant-numeric:tabular-nums}
 .tl-type{font-family:"Shippori Mincho",serif;font-weight:600}
 .tl-item.next .tl-type{color:var(--stamp)}
@@ -173,10 +177,12 @@ a{color:inherit}
 /* PDF・本文・要約のボタン列。無いものはグレーで押せない */
 .btns{display:flex;gap:8px;flex-wrap:wrap}
 .btn{display:inline-flex;align-items:center;gap:4px;font-size:.7rem;color:var(--ink);
-  background:#fff;border:1px solid #e6e4dd;border-radius:999px;padding:3px 10px;
+  background:#fff;border:1px solid #e6e4dd;border-radius:999px;padding:4px 12px;
   cursor:pointer;text-decoration:none;line-height:1.5;font-family:inherit}
 .btn:hover{border-color:#c9c6bc}
-.btn .bi{font-size:.8rem;color:var(--mut)}
+/* アイコンは flex アイテムなので line-height がそのまま高さになる。1にしないと
+   文字より背が高くなり、同じ .7rem の .tag と高さがそろわない */
+.btn .bi{font-size:.8rem;line-height:1;color:var(--mut)}
 .btn.pdf .bi{color:var(--stamp)}
 .btn.off{opacity:.4;cursor:default;background:none}
 .btn.on{background:var(--ink);color:#fff;border-color:var(--ink)}
@@ -210,7 +216,7 @@ a{color:inherit}
 /* 掲示板の中に置く事件名（どの事件の掲示板か分かるように） */
 .board-name{font-size:.9rem;margin-top:12px}
 /* 報告は吹き出しで「声」として並べる */
-.bubble{background:#fff;border-radius:14px;padding:12px 16px;margin-top:12px;position:relative;font-size:.9rem}
+.bubble{background:#fff;border-radius:12px;padding:12px 16px;margin-top:12px;position:relative;font-size:.9rem}
 .bubble::before{content:"";position:absolute;left:-6px;top:16px;
   border:6px solid transparent;border-right-color:#fff;border-left:0}
 .bwho{font-size:.8rem;font-weight:700;margin-right:.45em}
@@ -231,12 +237,13 @@ a{color:inherit}
 .pform .field label{display:block;font-size:.7rem;color:var(--mut);margin-bottom:4px}
 .pform .line{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:.9rem}
 .pform select,.pform input{font-family:inherit;font-size:.9rem;color:var(--ink);
-  border:1px solid #e6e4dd;border-radius:9px;padding:7px 9px;background:#fff}
+  border:1px solid #e6e4dd;border-radius:12px;padding:8px 12px;background:#fff}
 .pform .field select{width:100%}
 .pform .line input{flex:1;min-width:11em}
 .pform .count{color:var(--mut);font-size:.8rem;margin-top:8px}
 .pform .acts{display:flex;gap:12px;align-items:center;margin-top:16px}
-.pform button{font-family:inherit;font-size:.8rem;cursor:pointer;border:none;border-radius:999px;padding:8px 20px}
+/* line-height:inherit が無いと button 既定の normal になり、.pillbtn より8px低くなる */
+.pform button{font-family:inherit;font-size:.8rem;line-height:inherit;cursor:pointer;border:none;border-radius:999px;padding:8px 20px}
 .pform .send{background:var(--ink);color:#fff}
 .pform .cancel{background:transparent;color:var(--mut)}
 .pform button:disabled{opacity:.5;cursor:default}
@@ -270,13 +277,13 @@ a{color:inherit}
 .cell.previewing{box-shadow:inset 0 0 0 1.5px var(--faint);border-radius:12px}
 /* 期日の印＝数字の下の下線バー、朱印と同じ赤。件数が増えるとバーが分かれて本数で伝わる */
 .bars{height:9px;margin-top:3px;display:flex;justify-content:center;gap:3px;align-items:center}
-.bar{width:16px;height:3px;border-radius:2px;background:var(--stamp)}
+.bar{width:16px;height:3px;border-radius:999px;background:var(--stamp)}
 .bars.n2 .bar{width:8px}
 .bars.n3 .bar{width:6px}
 .bar.shut{background:none !important;box-shadow:inset 0 0 0 1.5px #a9a7a0}
 .bars .more{color:var(--mut);font-size:.58rem;line-height:1}
 .leg{color:var(--mut);font-size:.8rem;margin:12px 8px 0;display:flex;gap:24px;flex-wrap:wrap}
-.leg i{display:inline-block;width:15px;height:3px;border-radius:2px;background:var(--stamp);margin-right:7px;vertical-align:4px}
+.leg i{display:inline-block;width:15px;height:3px;border-radius:999px;background:var(--stamp);margin-right:8px;vertical-align:4px}
 .leg i.o{background:none;box-shadow:inset 0 0 0 1.5px #a9a7a0}
 .hint{color:var(--mut);font-size:.8rem;margin:12px 8px 24px}
 /* ヘッダーと掲示板の間に置く案内ボタンの帯。上下に同じだけ余白をとって「帯」として独立させる
@@ -288,8 +295,10 @@ a{color:inherit}
 
 /* ---- タグ（事件詳細の下・「事件をさがす」の絞り込みと各行） ---- */
 .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-.tag{font-size:.7rem;color:var(--mut);background:var(--tint);border-radius:999px;padding:3px 10px;
-  text-decoration:none;cursor:pointer;border:none;font-family:inherit;line-height:1.6}
+/* .btn と同じ高さにそろえる（同じ .7rem のピル型部品）。枠線は引かないが、
+   .btn の1px枠のぶんだけ高さがずれるので、透明な枠で埋める */
+.tag{font-size:.7rem;color:var(--mut);background:var(--tint);border-radius:999px;padding:4px 12px;
+  text-decoration:none;cursor:pointer;border:1px solid transparent;font-family:inherit;line-height:1.5}
 a.tag:hover{color:var(--ink);background:#ece9e0}
 .tag.on{background:var(--ink);color:#fff}
 
@@ -315,10 +324,10 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .clike .bi{color:var(--stamp);margin-right:2px}
 
 /* ---- 日付のプレビュー（ホバー／タップ） ---- */
-.daypop{position:fixed;z-index:60;background:var(--card);border-radius:14px;
+.daypop{position:fixed;z-index:60;background:var(--card);border-radius:20px;
   box-shadow:0 14px 40px rgba(0,0,0,.2);padding:8px}
 .daypop[hidden]{display:none}
-.pop-row{position:relative;padding:12px 32px 12px 12px;border-radius:10px;cursor:pointer}
+.pop-row{position:relative;padding:12px 32px 12px 12px;border-radius:12px;cursor:pointer}
 .pop-row:hover{background:var(--tint)}
 .pop-row + .pop-row{margin-top:4px;border-top:1px solid var(--tint);padding-top:12px}
 .pop-arrow{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--stamp);font-size:.85rem}
@@ -327,16 +336,16 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .pop-meta{font-size:.8rem;color:var(--mut);margin-top:1px}
 /* プレビュー下の操作行：右下に「閉じる×」 */
 .pop-foot{display:flex;justify-content:flex-end;align-items:center;gap:16px;margin-top:4px;padding:8px 12px 4px;border-top:1px solid var(--tint)}
-.pop-close{font-size:.8rem;color:var(--mut);background:none;border:none;cursor:pointer;padding:2px}
+.pop-close{font-size:.8rem;color:var(--mut);background:none;border:none;cursor:pointer;padding:4px}
 .pop-close:hover{color:var(--ink)}
 .pop-close i{margin-left:.3em}
 
 /* ---- upcoming ---- */
 .ucard{padding:8px 12px}
-.u{display:flex;gap:12px;padding:12px;border-radius:14px;cursor:pointer;align-items:stretch}
+.u{display:flex;gap:12px;padding:12px;border-radius:12px;cursor:pointer;align-items:stretch}
 .u:hover{background:var(--tint)}
 /* 事件ごとの色を示す縦棒（カレンダーの横線＝赤一色に対して、ここは事件の見分けを担う） */
-.ubar{width:4px;border-radius:3px;flex:0 0 4px;background:var(--stamp)}
+.ubar{width:4px;border-radius:999px;flex:0 0 4px;background:var(--stamp)}
 .ubar.shut{background:none;box-shadow:inset 0 0 0 1.5px #a9a7a0}
 .ubody{min-width:0}
 .ud{color:var(--mut);font-size:.8rem;font-variant-numeric:tabular-nums}
@@ -374,16 +383,16 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .field .check input{width:auto}
 .field input,.field textarea{
   width:100%;font-family:inherit;font-size:.9rem;color:var(--ink);
-  border:1px solid #e6e4dd;border-radius:10px;padding:9px 11px;background:#fff;
+  border:1px solid #e6e4dd;border-radius:12px;padding:8px 12px;background:#fff;
 }
 .field select{
   width:100%;font-family:inherit;font-size:.9rem;color:var(--ink);
-  border:1px solid #e6e4dd;border-radius:10px;padding:9px 11px;background:#fff;
+  border:1px solid #e6e4dd;border-radius:12px;padding:8px 12px;background:#fff;
 }
-.field input[type=file]{padding:7px 9px;font-size:.8rem}
+.field input[type=file]{font-size:.8rem}
 .fnote{color:var(--mut);font-size:.8rem;margin-top:4px;line-height:1.7}
 .fnote a{text-underline-offset:3px}
-.fnote code{font-size:.92em;background:var(--tint);padding:1px 5px;border-radius:4px}
+.fnote code{font-size:.92em;background:var(--tint);padding:1px 4px;border-radius:4px}
 .fnote .inl{display:inline-flex;align-items:center;gap:4px}
 .fnote .inl input{width:auto}
 .field input:focus,.field textarea:focus{outline:none;border-color:#b9b6ac}
@@ -392,7 +401,7 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .mfoot{padding:16px 24px 24px;display:flex;gap:12px;align-items:center}
 .mfoot .spacer{flex:1}
-.mfoot button{font-family:inherit;font-size:.9rem;cursor:pointer;border:none;border-radius:999px;padding:9px 22px}
+.mfoot button{font-family:inherit;font-size:.9rem;line-height:inherit;cursor:pointer;border:none;border-radius:999px;padding:8px 24px}
 .btn-save{background:var(--ink);color:#fff}
 .btn-cancel{background:transparent;color:var(--mut)}
 .btn-del{background:transparent;color:var(--stamp)}
