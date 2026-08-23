@@ -294,25 +294,18 @@ window.CC = (function(){
       html += `<p class="d-more"><a class="pillbtn" href="case?id=${encodeURIComponent(c.id)}">詳細を見る <i class="bi bi-arrow-right" aria-hidden="true"></i></a></p>`;
     }else{
       const editCaseQact = me.canWrite ? `<p class="qact"><a data-editcase="${escapeAttr(c.id)}">＋ 事件情報を編集</a></p>` : "";
-      // 上（期日・争点・当事者・掲示板）とここから先の「記録」を、見出し1つで区切る（罫線ではなく余白＋見出しで）
-      html += `<p class="secbreak">この裁判の記録</p>` + callHtml(c) + pressHtml(c) + editCaseQact + relatedCasesHtml(c) + timelineHtml(caseId) + materialsListHtml(caseId);
+      html += callHtml(c) + pressHtml(c) + editCaseQact + relatedCasesHtml(c) + timelineHtml(caseId) + materialsListHtml(caseId);
     }
     html += `</div>`;
     return html;
   }
 
-  // ---- よびかけ ----
+  // ---- 裁判について（よびかけ文。呼びかけ団体・連絡先はここには出さない） ----
   function callHtml(c){
-    const credit=[
-      c.host?`呼びかけ：${escapeHtml(c.host)}`:"",
-      c.contact?`連絡先：<a href="mailto:${escapeAttr(c.contact)}">${escapeHtml(c.contact)}</a>`:""
-    ].filter(Boolean).join("<br>");
-    if(!c.callText && !credit) return "";
+    if(!c.callText) return "";
     // 空行区切りを段落として分ける（旧「事件の説明」欄との統合で、1つの欄に複数段落が入るようになったため）
-    const paras = c.callText
-      ? c.callText.split(/\n{2,}/).map(p=>p.trim()).filter(Boolean).map(p=>`<p class="call">${escapeHtml(p)}</p>`).join("")
-      : "";
-    return `<div class="lede"><p class="lede-title">よびかけ</p>${paras}${credit?`<span class="credit">${credit}</span>`:""}</div>`;
+    const paras = c.callText.split(/\n{2,}/).map(p=>p.trim()).filter(Boolean).map(p=>`<p class="call">${escapeHtml(p)}</p>`).join("");
+    return `<div class="lede"><p class="lede-title">裁判について</p>${paras}</div>`;
   }
 
   // ---- 報道・掲載（新聞・ニュース・判例誌への掲載、特別保存の指定など。1行1項目、URLがあれば自動でリンクにする） ----

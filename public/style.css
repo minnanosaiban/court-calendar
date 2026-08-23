@@ -105,13 +105,6 @@ a{color:inherit}
 .lede-title{font-family:"Shippori Mincho",serif;font-size:.98rem;font-weight:600}
 .lede p + p{margin-top:10px}
 .lede .call{font-family:"Shippori Mincho",serif}
-/* 上半分（期日・争点・当事者・掲示板）と、この裁判の記録（よびかけ以下）を余白と見出しだけで区切る。罫線は使わない（罫線より余白の方針） */
-.secbreak{margin-top:52px;font-family:"Shippori Mincho",serif;font-size:1rem;font-weight:600;letter-spacing:.12em;color:var(--ink)}
-.secbreak + .lede{margin-top:16px}
-
-/* 説明文の下に、呼びかけ人と連絡先を添える */
-.credit{display:block;color:var(--mut);font-size:.8rem;line-height:1.85;margin-top:10px}
-.credit a{color:var(--mut);text-underline-offset:3px}
 .minih{font-size:.68rem;letter-spacing:.22em;color:var(--mut);margin-top:26px}
 /* ファクトシート：当事者・事件番号・裁判官を1つの定義リストにまとめる（旧・見出し3つ＋本文3つの構成を統合） */
 .facts{display:grid;grid-template-columns:max-content 1fr;column-gap:16px;row-gap:8px;margin-top:10px;font-size:.9rem;line-height:1.7}
