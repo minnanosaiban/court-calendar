@@ -304,7 +304,8 @@ window.CC = (function(){
     const judgeRow = factRow("裁判官", c.judge?courtLinesHtml(c.judge,"裁判官"):"");
     const facts1 = nextRow+pointsRow+plaintiffRow+defendantRow+judgeRow;
 
-    let html = `
+    // 掲示板は事件本体の箱（dcard）の外に出し、独立した箱にする（箱の中に箱、を解消するため）
+    let html = boardHtml(caseId) + `
       <div class="card dcard">
         ${full ? galleryHtml(caseId) : ""}
         <div class="d-head">
@@ -312,8 +313,7 @@ window.CC = (function(){
         </div>
         ${tagsHtml(c)}
         ${full ? shareHtml(c) : ""}
-        ${facts1?`<dl class="facts">${facts1}</dl>`:""}
-        ${boardHtml(caseId)}`;
+        ${facts1?`<dl class="facts">${facts1}</dl>`:""}`;
 
     if(!full){
       html += `<p class="d-more"><a class="pillbtn" href="case?id=${encodeURIComponent(c.id)}">詳細を見る <i class="bi bi-arrow-right" aria-hidden="true"></i></a></p>`;
@@ -453,6 +453,7 @@ window.CC = (function(){
   }
 
   function boardHtml(caseId){
+    const c = caseById(caseId);
     const rounds = caseEvents(caseId);
     const mine = casePosts(caseId);
     // 投稿できるのは：スパム対策(Turnstile)設定済みのとき＝誰でも／未設定でも運営は可
@@ -464,7 +465,9 @@ window.CC = (function(){
     let html=`<div class="bpanel">`+
       `<div class="bhead"><span class="btitle"><span class="bt-red">傍聴に行ってきたよ</span><span class="bt-bang">！</span>掲示板</span>`+
       (mine.length?`<span class="bcount">${mine.length}件の報告</span>`:"")+
-      `</div>`;
+      `</div>`+
+      // 掲示板だけが独立した箱になったので、どの事件の掲示板かが分かるよう事件名といいねを添える
+      (c?`<p class="d-title board-name">${escapeHtml(c.name)} ${likeHtml(c)}</p>`:"");
     html += items
       || `<p class="board-empty">${canPost
           ? "まだ報告はありません。傍聴に行かれた方の最初の報告をお待ちしています。"
