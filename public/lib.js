@@ -145,21 +145,34 @@ window.CC = (function(){
     if(h==="note.com") return "note";
     return "ウェブサイト";
   }
-  // ---- ファクトシート（当事者・事件番号・裁判官を1つの定義リストにまとめる。値がある行だけ出す） ----
-  function factsHtml(c){
-    const links = c.links.length
-      ? `<div class="facts-links">${c.links.map(u=>
-          `<span class="plink"><a href="${escapeAttr(u)}" target="_blank" rel="noopener">${escapeHtml(linkLabel(u))}</a> <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></span>`
-        ).join("")}</div>`
-      : "";
-    const rows = [
-      (c.parties||c.links.length) ? ["当事者", `${c.parties?escapeHtml(c.parties):""}${links}`] : null,
-      c.caseNo ? ["事件番号", escapeHtml(c.caseNo)] : null,
-      c.judge  ? ["裁判官", escapeHtml(c.judge)] : null,
-    ].filter(Boolean);
-    if(!rows.length) return "";
-    return `<dl class="facts">${rows.map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl>`;
+  // 原告のリンク（原告のみ。被告側の欄は defendantLinks を渡す）
+  function partyLinksHtml(links){
+    if(!links.length) return "";
+    return `<div class="facts-links">${links.map(u=>
+      `<span class="plink"><a href="${escapeAttr(u)}" target="_blank" rel="noopener">${escapeHtml(linkLabel(u))}</a> <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></span>`
+    ).join("")}</div>`;
   }
+  // ---- 裁判官・事件番号：「地裁　○○ ／ 高裁　○○・△△」の書き方（審級ごとに／、同じ審級の複数人は・）を
+  // 解析して1件ずつ改行して出す。この書き方をしていない単純な1件は、そのまま1行で返す ----
+  const COURT_LEVELS = "最高裁|高裁|地裁|簡裁|家裁";
+  function parseCourtGroups(raw){
+    const groups = raw.split("／").map(s=>s.trim()).filter(Boolean);
+    if(groups.length<2 && !groups[0].includes("・")) return null;
+    const re = new RegExp(`^(${COURT_LEVELS})[\\s　]*(.*)$`);
+    return groups.map(g=>{
+      const m = g.match(re);
+      return { label: m?m[1]:"", items: (m?m[2]:g).split("・").map(s=>s.trim()).filter(Boolean) };
+    });
+  }
+  function courtLinesHtml(raw, suffix){
+    const groups = parseCourtGroups(raw);
+    if(!groups) return escapeHtml(raw);
+    return groups.flatMap(g=>g.items.map(v=>
+      `<div>${g.label?escapeHtml(g.label)+"　":""}${escapeHtml(v)}${suffix||""}</div>`
+    )).join("");
+  }
+  // ファクトシートの1行。値が無ければ何も出さない（dt/ddのペアをまとめて返す）
+  function factRow(label, valueHtml){ return valueHtml ? `<dt>${escapeHtml(label)}</dt><dd>${valueHtml}</dd>` : ""; }
   function likeHtml(c){
     return `<button type="button" class="like${c.liked?" on":""}" data-like="${escapeAttr(c.id)}" aria-pressed="${c.liked?"true":"false"}" aria-label="いいね">`+
       `<i class="bi ${c.liked?"bi-heart-fill":"bi-heart"}" aria-hidden="true"></i><span class="like-n">${c.likes||0}</span></button>`;
@@ -277,6 +290,19 @@ window.CC = (function(){
     const next = nextEvent(caseId);
     const points=(c.points||[]).map(p=>`<li>${escapeHtml(p)}</li>`).join("");
 
+    // 上段のファクトシート：最近の期日・手続・争点・原告・被告・裁判官（値がある行だけ出す）
+    const nextRow = next
+      ? factRow("最近の期日",
+          `<div>${escapeHtml(jpDate(next.date))}${next.time?" "+escapeHtml(next.time):""}${next.open===false?`<span class="round-closed">非公開・要確認</span>`:""}</div>`+
+          ([next.court,next.place].filter(Boolean).length?`<div>${escapeHtml([next.court,next.place].filter(Boolean).join(" "))}</div>`:"")
+        ) + factRow("手続", next.type?escapeHtml(next.type):"")
+      : "";
+    const pointsRow = factRow("争点", points?`<ul class="pts">${points}</ul>`:"");
+    const plaintiffRow = factRow("原告", (c.plaintiffName?escapeHtml(c.plaintiffName):"")+partyLinksHtml(c.plaintiffLinks));
+    const defendantRow = factRow("被告", (c.defendantName?escapeHtml(c.defendantName):"")+partyLinksHtml(c.defendantLinks));
+    const judgeRow = factRow("裁判官", c.judge?courtLinesHtml(c.judge,"裁判官"):"");
+    const facts1 = nextRow+pointsRow+plaintiffRow+defendantRow+judgeRow;
+
     let html = `
       <div class="card dcard">
         ${full ? galleryHtml(caseId) : ""}
@@ -285,16 +311,18 @@ window.CC = (function(){
         </div>
         ${tagsHtml(c)}
         ${full ? shareHtml(c) : ""}
-        ${next?`<p class="minih">最近の期日</p><p class="d-body d-next">${escapeHtml(eventLine(next))}${next.open===false?`<span class="round-closed">非公開・要確認</span>`:""}</p>`:""}
-        ${points?`<p class="minih">争点</p><ul class="pts">${points}</ul>`:""}
-        ${factsHtml(c)}
+        ${facts1?`<dl class="facts">${facts1}</dl>`:""}
         ${boardHtml(caseId)}`;
 
     if(!full){
       html += `<p class="d-more"><a class="pillbtn" href="case?id=${encodeURIComponent(c.id)}">詳細を見る <i class="bi bi-arrow-right" aria-hidden="true"></i></a></p>`;
     }else{
+      // 下段のファクトシート：報道・掲載、事件番号（参照情報なので裁判についての後ろにまとめる）
+      const pressRow = factRow("報道・掲載", c.press.length?`<ul class="pts">${c.press.map(line=>`<li>${linkify(line)}</li>`).join("")}</ul>`:"");
+      const caseNoRow = factRow("事件番号", c.caseNo?courtLinesHtml(c.caseNo,""):"");
+      const facts2 = pressRow+caseNoRow;
       const editCaseQact = me.canWrite ? `<p class="qact"><a data-editcase="${escapeAttr(c.id)}">＋ 事件情報を編集</a></p>` : "";
-      html += callHtml(c) + pressHtml(c) + editCaseQact + relatedCasesHtml(c) + timelineHtml(caseId) + materialsListHtml(caseId);
+      html += callHtml(c) + (facts2?`<dl class="facts facts-lower">${facts2}</dl>`:"") + editCaseQact + relatedCasesHtml(c) + timelineHtml(caseId) + materialsListHtml(caseId);
     }
     html += `</div>`;
     return html;
@@ -308,12 +336,6 @@ window.CC = (function(){
     return `<div class="lede"><p class="lede-title">裁判について</p>${paras}</div>`;
   }
 
-  // ---- 報道・掲載（新聞・ニュース・判例誌への掲載、特別保存の指定など。1行1項目、URLがあれば自動でリンクにする） ----
-  function pressHtml(c){
-    if(!c.press || !c.press.length) return "";
-    const items = c.press.map(line=>`<li>${linkify(line)}</li>`).join("");
-    return `<p class="minih">報道・掲載</p><ul class="pts">${items}</ul>`;
-  }
 
   // ---- タイムラインと訴訟資料 ----
   const SIDE_CLASS = { "原告側":"g", "被告側":"k", "裁判所":"j", "その他":"" };
@@ -879,17 +901,30 @@ window.CC = (function(){
           <input type="text" id="cCaseNo" placeholder="例）令和6年（ワ）第1234号">
           <p class="fnote">地裁→高裁など番号が変わる場合は「地裁　令和6年（ワ）第12345号／高裁　令和7年（ネ）第6789号」のように1つの欄にまとめて書けます（裁判官欄と同じ書き方）。</p>
         </div>
-        <div class="field"><label>当事者</label><input type="text" id="cParties" placeholder="例）原告 従業員 ／ 被告 〇〇株式会社"></div>
-        <div class="field"><label>裁判官</label><input type="text" id="cJudge" placeholder="例）○○ ○○"></div>
+        <div class="two">
+          <div class="field"><label>原告名</label><input type="text" id="cPlaintiff" placeholder="例）従業員"></div>
+          <div class="field"><label>被告名</label><input type="text" id="cDefendant" placeholder="例）〇〇株式会社"></div>
+        </div>
+        <div class="field">
+          <label>裁判官</label>
+          <input type="text" id="cJudge" placeholder="例）○○ ○○">
+          <p class="fnote">地裁→高裁など番号が変わる場合は「地裁　○○ ○○／高裁　○○ ○○・△△ △△」のように1つの欄にまとめて書けます（事件番号欄と同じ書き方。同じ審級に複数人いる場合は「・」で区切ります）。</p>
+        </div>
         <div class="field"><label>争点（複数の場合は改行、1行に1つ）</label><textarea id="cPoints" placeholder="例）◯◯の事実があったか"></textarea></div>
         <div class="field"><label>裁判について</label><textarea id="cCall" placeholder="どんな裁判か、傍聴や支援をお願いする文章など（空行を挟むと段落を分けられます）"></textarea></div>
         <div class="field">
           <label>報道・掲載（複数の場合は改行、1行に1つ）</label>
           <textarea id="cPress" placeholder="例）〇〇新聞で報道されました https://...&#10;労働判例ジャーナル2025.10 No.163に掲載&#10;裁判所への手続きにより特別保存（永久保存）となっています"></textarea>
         </div>
-        <div class="field">
-          <label>リンク（複数の場合は改行、1行に1つのURL。X・ホームページなど）</label>
-          <textarea id="cLinks" placeholder="https://x.com/..."></textarea>
+        <div class="two">
+          <div class="field">
+            <label>原告のリンク（複数の場合は改行、1行に1つのURL。X・ホームページなど）</label>
+            <textarea id="cPlaintiffLinks" placeholder="https://x.com/..."></textarea>
+          </div>
+          <div class="field">
+            <label>被告のリンク（同上）</label>
+            <textarea id="cDefendantLinks" placeholder="https://x.com/..."></textarea>
+          </div>
         </div>
         <div class="field">
           <label>タグ（複数の場合は改行、1行に1つ）</label>
@@ -1077,8 +1112,8 @@ window.CC = (function(){
   }
 
   const $ = (id)=>document.getElementById(id);
-  const cFields = { name:$("cName"), caseNo:$("cCaseNo"), parties:$("cParties"), judge:$("cJudge"), points:$("cPoints"),
-                    callText:$("cCall"), press:$("cPress"), links:$("cLinks"),
+  const cFields = { name:$("cName"), caseNo:$("cCaseNo"), plaintiff:$("cPlaintiff"), defendant:$("cDefendant"), judge:$("cJudge"), points:$("cPoints"),
+                    callText:$("cCall"), press:$("cPress"), plaintiffLinks:$("cPlaintiffLinks"), defendantLinks:$("cDefendantLinks"),
                     tags:$("cTags"), related:$("cRelated"), archivedAt:$("cArchivedAt"), closeType:$("cCloseType") };
   // 呼びかけ団体・連絡先は入力欄を廃止したが、既存データは保持する（保存のたびに空で上書きしないよう、
   // 編集を開いたときの値をここに覚えておいて、保存時にそのまま送り返す）
@@ -1090,12 +1125,14 @@ window.CC = (function(){
 
   // ---- 事件 ----
   function fillCaseForm(c){
-    cFields.name.value=c.name||""; cFields.caseNo.value=c.caseNo||""; cFields.parties.value=c.parties||"";
+    cFields.name.value=c.name||""; cFields.caseNo.value=c.caseNo||"";
+    cFields.plaintiff.value=c.plaintiffName||""; cFields.defendant.value=c.defendantName||"";
     cFields.judge.value=c.judge||"";
     cFields.points.value=(c.points||[]).join("\n"); cFields.callText.value=c.callText||"";
     editingCaseHost=c.host||""; editingCaseContact=c.contact||"";
     cFields.press.value=(c.press||[]).join("\n");
-    cFields.links.value=(c.links||[]).join("\n");
+    cFields.plaintiffLinks.value=(c.plaintiffLinks||[]).join("\n");
+    cFields.defendantLinks.value=(c.defendantLinks||[]).join("\n");
     cFields.tags.value=(c.tags||[]).join("\n");
     // 関連裁判はIDで持つが、入力欄には事件名で表示する（見つからないIDは消えている事件なので無視）
     cFields.related.value=(c.relatedCaseIds||[]).map(id=>caseById(id)).filter(Boolean).map(r=>r.name).join("\n");
@@ -1136,12 +1173,15 @@ window.CC = (function(){
       return;
     }
     const data={
-      name, caseNo:cFields.caseNo.value.trim(), parties:cFields.parties.value.trim(), judge:cFields.judge.value.trim(),
+      name, caseNo:cFields.caseNo.value.trim(),
+      plaintiffName:cFields.plaintiff.value.trim(), defendantName:cFields.defendant.value.trim(),
+      judge:cFields.judge.value.trim(),
       points:cFields.points.value.split("\n").map(s=>s.trim()).filter(Boolean),
       callText:cFields.callText.value.trim(),
       host:editingCaseHost, contact:editingCaseContact,
       press:cFields.press.value.split("\n").map(s=>s.trim()).filter(Boolean),
-      links:cFields.links.value.split("\n").map(s=>s.trim()).filter(Boolean),
+      plaintiffLinks:cFields.plaintiffLinks.value.split("\n").map(s=>s.trim()).filter(Boolean),
+      defendantLinks:cFields.defendantLinks.value.split("\n").map(s=>s.trim()).filter(Boolean),
       tags:cFields.tags.value.split("\n").map(s=>s.trim()).filter(Boolean),
       relatedCaseIds,
       archivedAt:cFields.archivedAt.value, closeType:cFields.closeType.value.trim(),
@@ -1347,6 +1387,13 @@ window.CC = (function(){
     a.download=`裁判カレンダー_${t.getFullYear()}${String(t.getMonth()+1).padStart(2,"0")}${String(t.getDate()).padStart(2,"0")}.json`;
     a.click(); URL.revokeObjectURL(url);
   }
+  // 旧形式の parties（「原告 ○○ ／ 被告 ○○」の自由記述1本）を、取り込み時だけ原告名・被告名に分割する
+  function splitLegacyParties(raw){
+    const parts=String(raw||"").split("／").map(s=>s.trim()).filter(Boolean);
+    if(parts.length!==2) return {plaintiffName:String(raw||"").trim(), defendantName:""};
+    const m0=parts[0].match(/^(\S+)[\s　]+(.+)$/), m1=parts[1].match(/^(\S+)[\s　]+(.+)$/);
+    return { plaintiffName: m0?m0[2]:parts[0], defendantName: m1?m1[2]:parts[1] };
+  }
   // 取り込み：v3 形式（{cases, events}）と旧形式（期日の配列。各行に事件の説明が入っている）の両方を受ける。
   // 資料（materials）はファイル本体を含まないので取り込まない。
   async function importMerge(file){
@@ -1369,8 +1416,11 @@ window.CC = (function(){
           if(!e.case){ ng++; continue; }
           // 旧形式（期日の行に事件の説明が埋め込まれている）：取り込みのときだけ、その内容で事件を先に作る。
           // 普段の「＋期日を追加」では事件の自動作成はしない（誤字で事件が乱立するのを防ぐため）。
+          // parties は当時「原告 ○○ ／ 被告 ○○」の自由記述1本だったので、取り込み時だけ分割する
+          const pp = splitLegacyParties(e.parties);
           known = await apiCreateCase({
-            name:e.case, parties:e.parties, host:e.host, contact:e.contact, callText:e.lede, points:e.points,
+            name:e.case, plaintiffName:pp.plaintiffName, defendantName:pp.defendantName,
+            host:e.host, contact:e.contact, callText:e.lede, points:e.points,
           });
           cases.push(known);
         }

@@ -21,8 +21,8 @@ export function textToLines(s) {
 }
 
 // ---- 事件 ----
-export const CASE_COLS = `c.id, c.name, c.case_no, c.parties, c.judge, c.points, c.call_text,
-                          c.host, c.contact, c.press, c.links, c.tags, c.related_case_ids, c.archived_at, c.close_type,
+export const CASE_COLS = `c.id, c.name, c.case_no, c.plaintiff_name, c.defendant_name, c.judge, c.points, c.call_text,
+                          c.host, c.contact, c.press, c.plaintiff_links, c.defendant_links, c.tags, c.related_case_ids, c.archived_at, c.close_type,
                           c.created_by, c.updated_by, c.updated_at`;
 
 export function rowToCase(r) {
@@ -30,14 +30,16 @@ export function rowToCase(r) {
     id: r.id,
     name: r.name,
     caseNo: r.case_no || "",
-    parties: r.parties || "",
+    plaintiffName: r.plaintiff_name || "",
+    defendantName: r.defendant_name || "",
     judge: r.judge || "",
     points: textToLines(r.points),
     callText: r.call_text || "",
     host: r.host || "",
     contact: r.contact || "",
     press: textToLines(r.press),
-    links: textToLines(r.links).filter(isHttpUrl),
+    plaintiffLinks: textToLines(r.plaintiff_links).filter(isHttpUrl),
+    defendantLinks: textToLines(r.defendant_links).filter(isHttpUrl),
     tags: textToLines(r.tags),
     relatedCaseIds: textToLines(r.related_case_ids),
     archivedAt: r.archived_at || "",
@@ -56,14 +58,16 @@ export function caseFromBody(body) {
   return {
     name: String(body.name || "").trim(),
     case_no: String(body.caseNo || "").trim(),
-    parties: String(body.parties || "").trim(),
+    plaintiff_name: String(body.plaintiffName || "").trim(),
+    defendant_name: String(body.defendantName || "").trim(),
     judge: String(body.judge || "").trim(),
     points: linesToText(body.points),
     call_text: String(body.callText || "").trim(),
     host: String(body.host || "").trim(),
     contact: String(body.contact || "").trim(),
     press: linesToText(body.press),
-    links: textToLines(linesToText(body.links)).filter(isHttpUrl).join("\n"),
+    plaintiff_links: textToLines(linesToText(body.plaintiffLinks)).filter(isHttpUrl).join("\n"),
+    defendant_links: textToLines(linesToText(body.defendantLinks)).filter(isHttpUrl).join("\n"),
     tags: linesToText(body.tags),
     related_case_ids: linesToText(body.relatedCaseIds),
     archived_at: isYmd(body.archivedAt) ? body.archivedAt : null,

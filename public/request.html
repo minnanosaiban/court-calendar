@@ -40,7 +40,10 @@
       <input type="text" id="rName" placeholder="例）情報公開請求をめぐる訴訟">
     </div>
     <div class="field"><label>事件番号</label><input type="text" id="rCaseNo" placeholder="例）令和6年（ワ）第1234号"></div>
-    <div class="field"><label>当事者</label><input type="text" id="rParties" placeholder="例）原告 従業員 ／ 被告 〇〇株式会社"></div>
+    <div class="two">
+      <div class="field"><label>原告名</label><input type="text" id="rPlaintiff" placeholder="例）従業員"></div>
+      <div class="field"><label>被告名</label><input type="text" id="rDefendant" placeholder="例）〇〇株式会社"></div>
+    </div>
     <div class="field"><label>裁判官</label><input type="text" id="rJudge" placeholder="例）〇〇 〇〇"></div>
     <div class="field"><label>争点（複数の場合は改行、1行に1つ）</label><textarea id="rPoints" placeholder="例）〇〇の事実があったか"></textarea></div>
     <div class="field"><label>タグ（複数の場合は改行、1行に1つ）</label><textarea id="rTags" placeholder="例）労働&#10;パワハラ"></textarea></div>
@@ -110,7 +113,7 @@
     }
 
     const caseObj = {
-      name, caseNo: val("rCaseNo"), parties: val("rParties"), judge: val("rJudge"),
+      name, caseNo: val("rCaseNo"), plaintiffName: val("rPlaintiff"), defendantName: val("rDefendant"), judge: val("rJudge"),
       points: lines("rPoints"), callText: val("rCall"),
       press: lines("rPress"), tags: lines("rTags"),
       archivedAt: val("rArchivedAt"), closeType: val("rCloseType"),
