@@ -295,7 +295,9 @@ a{color:inherit}
 .pform select,.pform input{font-family:inherit;font-size:.9rem;color:var(--ink);
   border:1px solid #e6e4dd;border-radius:12px;padding:8px 12px;background:#fff}
 .pform .field select{width:100%}
-.pform .line input{flex:1;min-width:11em}
+/* 「法廷で聞いたこと」欄は独立した1行を占有させて、60字まで打てるだけの幅を確保する
+   （flex:1 1 100% で、幅が余っていてもこの要素だけ折り返させる） */
+.pform .line input{flex:1 1 100%;min-width:0}
 .pform .count{color:var(--mut);font-size:.8rem;margin-top:8px}
 .pform .acts{display:flex;gap:12px;align-items:center;margin-top:16px}
 /* line-height:inherit が無いと button 既定の normal になり、.pillbtn より8px低くなる */

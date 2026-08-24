@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://court-calendar-6q8.pages.dev/sitemap.xml
