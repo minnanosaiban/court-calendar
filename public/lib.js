@@ -1498,6 +1498,19 @@ window.CC = (function(){
     const m0=parts[0].match(/^(\S+)[\s　]+(.+)$/), m1=parts[1].match(/^(\S+)[\s　]+(.+)$/);
     return { plaintiffName: m0?m0[2]:parts[0], defendantName: m1?m1[2]:parts[1] };
   }
+  // 取り込みで既存の事件に追加データが来たとき用のマージ。incoming側で値が入っている欄だけ上書きし、
+  // 空欄（未入力）は existing の値をそのまま残す
+  const CASE_FIELDS = ["name","caseNo","plaintiffName","defendantName","judge","points","callText","host","contact",
+    "press","plaintiffLinks","defendantLinks","tags","relatedCaseIds","archivedAt","closeType"];
+  function mergeCaseFields(existing, incoming){
+    const merged={};
+    CASE_FIELDS.forEach(k=>{
+      const v=incoming[k];
+      const empty = v==null || v==="" || (Array.isArray(v) && v.length===0);
+      merged[k]= empty ? existing[k] : v;
+    });
+    return merged;
+  }
   // 取り込み：v3 形式（{cases, events}）と旧形式（期日の配列。各行に事件の説明が入っている）の両方を受ける。
   // 資料（materials）はファイル本体を含まないので取り込まない。
   async function importMerge(file){
@@ -1510,8 +1523,18 @@ window.CC = (function(){
     if(!confirm(`事件${inCases.length}件・期日${inEvents.length}件を共有カレンダーに追加します。よろしいですか？`)) return;
     let ok=0, ng=0;
     for(const c of inCases){
-      if(caseByName(c.name)) continue;
-      try{ cases.push(await apiCreateCase(c)); }catch(err){ if(err.status!==409) ng++; }
+      try{
+        const existing=caseByName(c.name);
+        if(existing){
+          // すでにある事件は、新しく来た欄（空でないものだけ）で上書きする。かんたん掲載依頼フォームの
+          // ①（アイコン・事件名）→③（くわしい情報）のように、同じ事件を何度かに分けて取り込む場合に、
+          // 後から来たデータで前の欄（例：①で結んだ関連裁判＝アイコンの引き継ぎ）を空で消してしまわないため
+          const up=await apiUpdateCase(existing.id, mergeCaseFields(existing, c));
+          const i=cases.findIndex(x=>x.id===existing.id); if(i>=0) cases[i]=up;
+        }else{
+          cases.push(await apiCreateCase(c));
+        }
+      }catch(err){ ng++; }
     }
     for(const e of inEvents){
       try{

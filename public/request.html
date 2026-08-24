@@ -111,6 +111,10 @@
   function val(id){ return document.getElementById(id).value.trim(); }
   function lines(id){ return val(id).split("\n").map(s=>s.trim()).filter(Boolean); }
 
+  // かんたん掲載依頼フォームで①を登録済みの場合、その事件名を引き継ぐ（?name=…）
+  const prefillName = new URLSearchParams(location.search).get("name");
+  if(prefillName) document.getElementById("rName").value = prefillName;
+
   document.getElementById("rMake").addEventListener("click", ()=>{
     const msg = document.getElementById("rMsg");
     const name = val("rName");

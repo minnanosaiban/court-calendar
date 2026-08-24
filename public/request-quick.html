@@ -28,13 +28,11 @@
   <section style="margin-top:28px">
     <p class="home-title">かんたん掲載依頼フォーム</p>
     <ul class="pts mut">
-      <li>まずは期日だけでも早く載せたい、という方向けの短いフォームです。争点・原告被告・裁判官などくわしい情報は、あとから追加できます。</li>
-      <li>くわしい内容（争点・原告被告・タイムライン・訴訟資料など）まで公開すると、こんなふうになります：<a href="case?id=cmt3az1tvea4dz">詳しい内容を公開したい人はこちら</a>（実際の事件ページの例）。</li>
-      <li>くわしく書きたい方は<a href="request.html">通常の掲載依頼フォーム</a>をご利用ください。</li>
-      <li>入力ができたら「事件データを作成してダウンロード」を押してください。できあがったデータファイルを、運営者までメールでお送りください。</li>
-      <li>事件名・期日（＊）以外は任意です。</li>
+      <li>まずは①アイコン・事件名だけ、すぐに登録できます。②期日や③くわしい情報は、あとから追い足せます。</li>
+      <li>入力ができたら、それぞれの「データを作成してダウンロード」ボタンを押してください。できあがったデータファイルを、運営者までメールでお送りください。</li>
     </ul>
 
+    <p class="msec">① アイコン・事件名を登録する</p>
     <div class="field">
       <label>アイコン</label>
       <input type="text" id="qRelated" list="qCaseList" placeholder="同じアイコンを使いたい、登録済みの事件があれば選んでください">
@@ -45,25 +43,39 @@
     <div class="field">
       <label>事件名（タイトル） <span style="color:var(--stamp)">*</span></label>
       <input type="text" id="qName" placeholder="例）情報公開請求をめぐる訴訟">
-      <p class="fnote">正式名称でなくても、わかりやすい呼び名で構いません。</p>
+      <p class="fnote">正式名称でなくても、わかりやすい呼び名で構いません。②・③でも同じ事件名を使います。</p>
     </div>
-    <div class="field"><label>タグ（複数の場合は改行、1行に1つ）</label><textarea id="qTags" placeholder="例）労働&#10;パワハラ"></textarea></div>
+    <div style="margin-top:16px">
+      <button type="button" class="btn-save" id="qMakeCase" style="padding:11px 26px">事件データを作成してダウンロード</button>
+    </div>
+    <p class="fnote" id="qCaseMsg" style="margin-top:10px"></p>
+    <p class="fnote" style="margin-top:10px"><a href="#" id="qSkipStage1">すでに①を登録済みの方は、②へ進む</a></p>
 
-    <p class="msec">期日</p>
-    <div class="two">
-      <div class="field"><label>期日（日付） <span style="color:var(--stamp)">*</span></label><input type="date" id="qDate"></div>
-      <div class="field"><label>時刻</label><input type="time" id="qTime"></div>
-    </div>
-    <div class="field"><label>種別</label><input type="text" id="qType" placeholder="例）第3回口頭弁論"></div>
-    <div class="two">
-      <div class="field"><label>裁判所</label><input type="text" id="qCourt" placeholder="例）東京地方裁判所"></div>
-      <div class="field"><label>法廷</label><input type="text" id="qPlace" placeholder="例）610号法廷"></div>
-    </div>
+    <div id="qNextSteps" hidden>
+      <p class="msec">② 期日を登録する</p>
+      <ul class="pts mut">
+        <li>①の事件名が運営者によって登録されたあとに追加してください。期日は決まるたびに、何度でもここから追加できます。</li>
+      </ul>
+      <div class="two">
+        <div class="field"><label>期日（日付） <span style="color:var(--stamp)">*</span></label><input type="date" id="qDate"></div>
+        <div class="field"><label>時刻</label><input type="time" id="qTime"></div>
+      </div>
+      <div class="field"><label>種別</label><input type="text" id="qType" placeholder="例）第3回口頭弁論"></div>
+      <div class="two">
+        <div class="field"><label>裁判所</label><input type="text" id="qCourt" placeholder="例）東京地方裁判所"></div>
+        <div class="field"><label>法廷</label><input type="text" id="qPlace" placeholder="例）610号法廷"></div>
+      </div>
+      <div style="margin-top:16px">
+        <button type="button" class="btn-save" id="qMakeEvent" style="padding:11px 26px">期日データを作成してダウンロード</button>
+      </div>
+      <p class="fnote" id="qEventMsg" style="margin-top:10px"></p>
 
-    <div style="margin-top:24px">
-      <button type="button" class="btn-save" id="qMake" style="padding:11px 26px">事件データを作成してダウンロード</button>
+      <p class="msec">③ もっとくわしく登録する</p>
+      <ul class="pts mut">
+        <li>争点・原告被告・裁判官・タイムライン・訴訟資料などまで公開すると、こんなふうになります：<a href="case?id=cmt3az1tvea4dz">詳しい訴訟内容を掲載した例はこちら</a>。</li>
+        <li>くわしく書きたい方は<a id="qFullLink" href="request.html">通常の掲載依頼フォーム</a>をご利用ください（①の事件名を引き継ぎます）。</li>
+      </ul>
     </div>
-    <p class="fnote" id="qMsg" style="margin-top:10px"></p>
   </section>
 
   <footer class="site-footer">
@@ -75,8 +87,11 @@
 (function(){
   "use strict";
   function val(id){ return document.getElementById(id).value.trim(); }
-  function lines(id){ return val(id).split("\n").map(s=>s.trim()).filter(Boolean); }
   function escAttr(s){ return String(s||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  const LS_KEY = "court-calendar.quickRequest.lastCaseName";
+  const qName = document.getElementById("qName");
+  const qFullLink = document.getElementById("qFullLink");
+  const nextSteps = document.getElementById("qNextSteps");
 
   // 「アイコン」欄の候補（すでにアイコンを登録済みの事件のみ）。閲覧は誰でもできるAPIなので、認証なしで取得する
   let cases = [];
@@ -86,23 +101,31 @@
     qCaseList.innerHTML = cases.filter(c=>c.icon).map(c=>`<option value="${escAttr(c.name)}">`).join("");
   }).catch(()=>{});
 
-  document.getElementById("qMake").addEventListener("click", ()=>{
-    const msg = document.getElementById("qMsg");
+  function revealNextSteps(){ nextSteps.hidden = false; }
+  function updateFullLink(){
+    const n = qName.value.trim();
+    qFullLink.href = n ? `request.html?name=${encodeURIComponent(n)}` : "request.html";
+  }
+  qName.addEventListener("input", updateFullLink);
+
+  function download(obj, filename){
+    const blob = new Blob([JSON.stringify(obj, null, 2)], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+  }
+  function safeName(name){ return name.replace(/[\\/:*?"<>|]/g, "").slice(0, 40) || "無題"; }
+
+  // ① アイコン・事件名
+  document.getElementById("qMakeCase").addEventListener("click", ()=>{
+    const msg = document.getElementById("qCaseMsg");
     const name = val("qName");
-    const date = val("qDate");
     if(!name){
       msg.style.color = "var(--stamp)"; msg.textContent = "事件名は必須です。";
-      document.getElementById("qName").focus();
+      qName.focus();
       return;
     }
-    if(!date){
-      msg.style.color = "var(--stamp)"; msg.textContent = "期日は必須です。";
-      document.getElementById("qDate").focus();
-      return;
-    }
-
-    // 「アイコン」欄に事件名が入っていれば、登録済みの事件かどうかを確認してからIDに変換する
-    // （関連裁判として結びつけるには、名前ではなくIDで指定する必要があるため）
     const relatedName = val("qRelated");
     let relatedCaseIds = [];
     if(relatedName){
@@ -115,29 +138,45 @@
       }
       relatedCaseIds = [found.id];
     }
-
-    const caseObj = { name, tags: lines("qTags"), relatedCaseIds };
-    const data = {
-      version: 3,
-      cases: [caseObj],
-      events: [{
-        case: name, date, time: val("qTime"), type: val("qType"),
-        court: val("qCourt"), place: val("qPlace"), open: true,
-      }],
-    };
-
-    const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    const safe = name.replace(/[\\/:*?"<>|]/g, "").slice(0, 40) || "無題";
-    a.download = `かんたん掲載依頼_${safe}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-
+    download({ version: 3, cases: [{ name, relatedCaseIds }], events: [] }, `かんたん掲載依頼_${safeName(name)}.json`);
+    try{ localStorage.setItem(LS_KEY, name); }catch(e){}
     msg.style.color = "var(--mut)";
     msg.textContent = "ダウンロードしました。このファイルを、アイコン画像があれば添えて、運営者までメールでお送りください。";
+    updateFullLink();
+    revealNextSteps();
   });
+
+  document.getElementById("qSkipStage1").addEventListener("click",(e)=>{ e.preventDefault(); revealNextSteps(); });
+
+  // ② 期日（①の事件名欄をそのまま使う）
+  document.getElementById("qMakeEvent").addEventListener("click", ()=>{
+    const msg = document.getElementById("qEventMsg");
+    const name = val("qName");
+    const date = val("qDate");
+    if(!name){
+      msg.style.color = "var(--stamp)"; msg.textContent = "①で登録した事件名を、上の「事件名（タイトル）」欄に入力してください。";
+      qName.focus();
+      return;
+    }
+    if(!date){
+      msg.style.color = "var(--stamp)"; msg.textContent = "期日は必須です。";
+      document.getElementById("qDate").focus();
+      return;
+    }
+    download({
+      version: 3, cases: [],
+      events: [{ case: name, date, time: val("qTime"), type: val("qType"), court: val("qCourt"), place: val("qPlace"), open: true }],
+    }, `かんたん掲載依頼_期日_${safeName(name)}.json`);
+    msg.style.color = "var(--mut)";
+    msg.textContent = "ダウンロードしました。このファイルを運営者までメールでお送りください。";
+  });
+
+  // 前回このブラウザで①を登録していれば、事件名を引き継いで②③をすぐ使えるようにする
+  try{
+    const last = localStorage.getItem(LS_KEY);
+    if(last){ qName.value = last; revealNextSteps(); }
+  }catch(e){}
+  updateFullLink();
 })();
 </script>
 </body>
