@@ -200,11 +200,18 @@ window.CC = (function(){
     return `<p class="minih">関連裁判</p><ul class="pts">${items}</ul>`;
   }
   // 事件のアイコン（Twitterのアバターのように、一覧やカレンダーで事件を見分けるための小さな画像）。
-  // 未登録なら、事件名の頭文字を丸い札で代わりに出す。大きさは56px1種類（サイズ違いは廃止・2026-08-24）
+  // 自分でアイコンを持たない事件は、関連裁判（下のrelatedCases）の中でアイコンを持つものから借りて表示する
+  // （1つのアイコンを複数の事件で使い回せるようにするため。2026-08-24）。それも無ければ、事件名の頭文字を
+  // 丸い札で代わりに出す。大きさは56px1種類（サイズ違いは廃止・2026-08-24）
   function iconHtml(c){
-    if(c.icon) return `<img class="cicon" src="${escapeAttr(c.icon)}" alt="">`;
+    const icon = c.icon || inheritedIcon(c);
+    if(icon) return `<img class="cicon" src="${escapeAttr(icon)}" alt="">`;
     const ch = placeholderChar(c.name);
     return `<span class="cicon cicon-ph" aria-hidden="true">${escapeHtml(ch)}</span>`;
+  }
+  function inheritedIcon(c){
+    const found = relatedCases(c.id).find(r=>r.icon);
+    return found ? found.icon : "";
   }
   // 仮アイコンに使う頭文字。「【サンプル】」「【控訴審】」のような先頭の囲みは、どの事件でも同じ文字になって
   // 見分けの役に立たないので読み飛ばし、囲みの後ろの頭文字を拾う（囲みだけで中身が無い名前は元の頭文字に戻す）
