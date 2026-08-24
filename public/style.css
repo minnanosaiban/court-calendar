@@ -372,6 +372,11 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .tabs span{padding-bottom:8px;cursor:pointer;border-bottom:2px solid transparent}
 .tabs span.on{color:var(--ink);font-weight:500;border-bottom-color:var(--ink)}
 .clist{display:grid;gap:12px;margin-top:16px}
+/* 期日をさがす：並べ替えの切り替え（期日が古い順⇄新しい順）。タブの下・一覧の上に右寄せで置く */
+.sortrow{display:flex;justify-content:flex-end;margin:8px 4px 12px}
+.sortlink{display:inline-flex;align-items:center;gap:4px;font-size:.8rem;color:var(--mut);cursor:pointer}
+.sortlink:hover{color:var(--ink)}
+.sortlink .bi{font-size:.8rem;line-height:1}
 .ccard{display:flex;gap:16px;padding:16px;cursor:pointer}
 .ccard:hover{box-shadow:0 2px 12px rgba(0,0,0,.07)}
 .cbody{min-width:0;flex:1}
