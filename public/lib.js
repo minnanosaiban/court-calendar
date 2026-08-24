@@ -450,10 +450,11 @@ window.CC = (function(){
   // 全件が側なしなら、旧来どおり見出し無しの1本の並びにする
   function materialsListHtml(caseId){
     const mats=caseMaterials(caseId);
+    // 訴訟資料が1件も無ければ、見出しごと何も出さない（追加は編集モーダルの「資料」タブから常にできるため、
+    // ここに専用の入り口が無くても困らない）
+    if(!mats.length) return "";
     let body;
-    if(!mats.length){
-      body = `<p class="d-body mut">訴訟資料はまだ登録されていません。</p>`;
-    }else if(mats.every(m=>!m.side)){
+    if(mats.every(m=>!m.side)){
       body = `<ul class="mlist">${mats.map(matRowHtml).join("")}</ul>`;
     }else{
       const order=[], groups={};
