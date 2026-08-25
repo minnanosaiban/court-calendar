@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>事件をさがす ｜ 応援傍聴ナビ</title>
-<meta name="description" content="傍聴席に、ひとり増える。それだけで法廷は変わる。">
+<title>問題提起人の事件 ｜ 応援傍聴ナビ</title>
+<meta name="description" content="この問題提起人が起こしている事件の一覧です。">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,17 +23,12 @@
     </div>
   </header>
 
-  <a class="pillbtn backlink" href="index.html"><i class="bi bi-arrow-left" aria-hidden="true"></i> トップに戻る</a>
+  <a class="pillbtn backlink" href="cases.html"><i class="bi bi-arrow-left" aria-hidden="true"></i> 事件をさがすに戻る</a>
 
-  <section aria-labelledby="search-h" style="margin-top:28px">
-    <p class="sech" id="search-h">事件をさがす</p>
-    <div class="search"><i class="bi bi-search" aria-hidden="true"></i><input type="text" id="q" placeholder="事件名で検索" aria-label="事件名で検索"></div>
-    <div class="tags" id="tagFilters" style="margin-top:14px"></div>
-    <div class="tabs" id="statusTabs"></div>
-    <div class="clist" id="clist"></div>
+  <section aria-labelledby="presenter-h" style="margin-top:28px">
+    <div id="presenterHead"></div>
+    <div class="clist" id="clist" style="margin-top:20px"></div>
   </section>
-
-  <input type="file" id="fileInput" accept="application/json,.json" style="display:none;">
 
   <footer class="site-footer">
     <div class="footer-request">
@@ -53,42 +48,24 @@
   </footer>
 </div>
 
-<!-- 期日・事件情報・資料・写真の編集モーダルは lib.js が1つの窓として生成する（EXTRA_MODALS） -->
-
 <script src="lib.js"></script>
 <script>
 (function(){
   "use strict";
-  const qEl=document.getElementById("q");
-  const tagFilters=document.getElementById("tagFilters");
-  const statusTabs=document.getElementById("statusTabs");
+  const presenterId = new URLSearchParams(location.search).get("id") || "";
+  const headEl=document.getElementById("presenterHead");
   const clistEl=document.getElementById("clist");
   const statusEl=document.getElementById("status");
-  let activeTag = new URLSearchParams(location.search).get("tag") || "";
-  let activeStatus = "open";   // "open"=進行中 / "archived"=終結
 
-  function allTagsWithCount(){
-    const m=new Map();
-    CC.cases.forEach(c=>(c.tags||[]).forEach(t=>m.set(t,(m.get(t)||0)+1)));
-    return [...m.entries()].sort((a,b)=> b[1]-a[1] || a[0].localeCompare(b[0],"ja"));
-  }
-  function renderTagFilters(){
-    const tags=allTagsWithCount();
-    if(!tags.length){ tagFilters.innerHTML=""; return; }
-    let html = `<a class="tag${!activeTag?" on":""}" data-tagf="">すべて</a>`;
-    html += tags.map(([t])=>`<a class="tag${activeTag===t?" on":""}" data-tagf="${CC.escapeAttr(t)}">${CC.escapeHtml(t)}</a>`).join("");
-    tagFilters.innerHTML = html;
-    tagFilters.querySelectorAll("[data-tagf]").forEach(a=>{
-      a.addEventListener("click",(e)=>{ e.preventDefault(); activeTag=a.dataset.tagf; renderTagFilters(); renderTabs(); renderList(); });
-    });
-  }
   function rowHtml(c){
     const next = CC.nextEvent(c.id);
     const nextLine = c.archivedAt
       ? `終結：${CC.escapeHtml(CC.jpDate(c.archivedAt))}${c.closeType?"　"+CC.escapeHtml(c.closeType):""}`
       : (next?`<b>次回</b>${CC.escapeHtml(CC.eventLine(next))}`:"まだ期日の登録がありません");
-    return `<div class="card ccard" data-open="${CC.escapeAttr(c.id)}" role="link" tabindex="0">
-      ${CC.iconHtml(c)}
+    // このページはすでに上でその問題提起人のアイコンを大きく出しているので、カードごとには
+    // 繰り返さない（同じ人の事件しか並ばないため、アイコンを重ねても見分けの役に立たず、
+    // むしろ画面がアイコンだらけになる。2026-08-26）
+    return `<div class="card ccard ccard-noicon" data-open="${CC.escapeAttr(c.id)}" role="link" tabindex="0">
       <div class="cbody">
         <div class="ctitle">${CC.escapeHtml(c.name)}</div>
         <div class="cnext">${nextLine}</div>
@@ -99,49 +76,48 @@
       </div>
     </div>`;
   }
-  // 検索・タグだけを反映した候補（タブの件数表示に使う。ステータスでは絞らない）
-  function filteredBase(){
-    const q=qEl.value.trim().toLowerCase();
-    return CC.cases.filter(c=> (!q || c.name.toLowerCase().includes(q)) && (!activeTag || (c.tags||[]).includes(activeTag)));
+
+  function renderHead(){
+    const p = CC.presenterById(presenterId);
+    if(!p){
+      headEl.innerHTML = `<p class="sech">問題提起人</p><p class="empty-msg">${CC.loaded?"見つかりませんでした。":"読み込んでいます…"}</p>`;
+      return;
+    }
+    const icon = p.icon ? `<img class="cicon" src="${CC.escapeAttr(p.icon)}" alt="" style="width:72px;height:72px">`
+      : `<span class="cicon-ph" aria-hidden="true" style="width:72px;height:72px;font-size:1.7rem">${CC.escapeHtml((p.nickname||"？").slice(0,1))}</span>`;
+    headEl.innerHTML = `<div class="d-head" style="align-items:center">
+        ${icon}
+        <div>
+          <h2 class="d-title" id="presenter-h">${CC.escapeHtml(p.nickname)}さん</h2>
+          <p class="mut">${p.caseCount||0}件の事件</p>
+        </div>
+      </div>`;
   }
-  function renderTabs(){
-    const base=filteredBase();
-    const openN=base.filter(c=>!c.archivedAt).length;
-    const archN=base.filter(c=>c.archivedAt).length;
-    statusTabs.innerHTML = `
-      <span class="${activeStatus==="open"?"on":""}" data-statusf="open">進行中 ${openN}</span>
-      <span class="${activeStatus==="archived"?"on":""}" data-statusf="archived">終結 ${archN}</span>`;
-    statusTabs.querySelectorAll("[data-statusf]").forEach(s=>{
-      s.addEventListener("click",()=>{ activeStatus=s.dataset.statusf; renderAll(); });
-    });
-  }
+
   function renderList(){
-    if(!CC.loaded){ clistEl.innerHTML=`<p class="empty-msg">読み込んでいます…</p>`; return; }
-    const list=filteredBase()
-      .filter(c=> activeStatus==="archived" ? !!c.archivedAt : !c.archivedAt)
+    if(!CC.loaded){ clistEl.innerHTML=""; return; }
+    const list = CC.cases.filter(c=>c.presenterId===presenterId)
       .sort((a,b)=>{
-        if(activeStatus==="archived") return (b.archivedAt||"").localeCompare(a.archivedAt||"");
         const na=CC.nextEvent(a.id), nb=CC.nextEvent(b.id);
         if(na && nb) return na.date===nb.date ? 0 : (na.date<nb.date?-1:1);
         if(na) return -1;
         if(nb) return 1;
         return a.name.localeCompare(b.name,"ja");
       });
-    clistEl.innerHTML = list.length ? list.map(rowHtml).join("") : `<p class="empty-msg">見つかりませんでした。</p>`;
+    clistEl.innerHTML = list.length ? list.map(rowHtml).join("") : `<p class="empty-msg">この問題提起人の事件はまだありません。</p>`;
     clistEl.querySelectorAll("[data-open]").forEach(el=>{
       const go=()=>{ location.href="case?id="+encodeURIComponent(el.dataset.open); };
       el.addEventListener("click",go);
       el.addEventListener("keydown",(e)=>{ if(e.key==="Enter") go(); });
     });
   }
+
   function renderAll(){
-    renderTagFilters();
-    renderTabs();
+    renderHead();
     renderList();
     CC.renderStatus(statusEl);
   }
   CC.setOnChange(renderAll);
-  qEl.addEventListener("input", ()=>{ renderTabs(); renderList(); });
 
   (async function init(){
     renderAll();

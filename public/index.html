@@ -12,9 +12,16 @@
 <meta property="og:site_name" content="応援傍聴ナビ">
 <!-- Teams・Slack等の小さいカード用（正方形・中央クロップされても欠けない） -->
 <meta property="og:image" content="https://court-calendar-6q8.pages.dev/og-home-square.png">
-<!-- Xの大きいカード用（twitter:image を og:image より優先して読む） -->
-<meta name="twitter:image" content="https://court-calendar-6q8.pages.dev/og-home.png">
+<meta property="og:image:width" content="875">
+<meta property="og:image:height" content="875">
+<!-- Xの大きいカード用（twitter:image を og:image より優先して読む）。
+     twitter:title・twitter:description は仕様上 og:title・og:description にフォールバックする
+     はずだが、実際には省略するとカードが生成されないことがあるため明示する（2026-08-26） -->
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="応援傍聴ナビ ｜ 傍聴席に、ひとり増える。それだけで法廷は変わる。">
+<meta name="twitter:description" content="傍聴席に、ひとり増える。それだけで法廷は変わる。">
+<meta name="twitter:image" content="https://court-calendar-6q8.pages.dev/og-home.png">
+<meta name="twitter:image:alt" content="応援傍聴ナビ">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -82,13 +89,24 @@
     <div class="card ucard" id="upcoming"></div>
   </section>
 
-  <!-- 期日の追加・編集（ひっそり） -->
-  <p class="status" id="status"></p>
   <input type="file" id="fileInput" accept="application/json,.json" style="display:none;">
 
   <footer class="site-footer">
-    <a href="request-quick.html">掲載をご希望の方へ</a><span class="sep">・</span><a href="https://github.com/minnanosaiban/court-calendar" target="_blank" rel="noopener">ソースコード（GitHub）</a> <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
-    <p class="disc">本サイトは有志による非公式のツールです。掲載情報の正確性・完全性・最新性は保証しません。本サイトの利用により生じたいかなる損害についても運営者は責任を負わず、本サイトは法的助言を提供するものではありません。事件の説明は呼びかけ人の主張であり、裁判所が認定した事実とは限りません。当事者のお名前は、ご本人が実名での掲載を望まれる場合をのぞき掲載しません。</p>
+    <div class="footer-request">
+      <p class="subhead">掲載をご希望の方へ</p>
+      <ul class="pts mut">
+        <li>初回はアイコン画像とニックネームをメールでお送りください。</li>
+        <li>掲載は、公開しても問題ない内容に限定してください。</li>
+        <li>「傍聴に行ってきたよ！掲示板」は、非表示にすることもできます。</li>
+        <li>各事件のページには、訴訟資料などの掲載ができます。</li>
+        <li>その他、掲載したい内容がある場合も事務局までご連絡ください。</li>
+      </ul>
+      <p class="footer-mail"><i class="bi bi-envelope" aria-hidden="true"></i> <a href="mailto:minnawomamorukaisei@gmail.com">minnawomamorukaisei@gmail.com</a></p>
+      <img src="frog-mic.png" alt="" class="request-frog">
+    </div>
+    <p class="disc">本サイトは有志による非公式のツールです。掲載情報の正確性・完全性・最新性は保証しません。本サイトの利用により生じたいかなる損害についても運営者は責任を負わず、本サイトは法的助言を提供するものではありません。事件の説明は問題提起人の主張であり、裁判所が認定した事実とは限りません。当事者のお名前は、ご本人が実名での掲載を望まれる場合をのぞき掲載しません。</p>
+    <!-- 期日の追加・編集（ひっそり） -->
+    <p class="status-row"><a href="https://github.com/minnanosaiban/court-calendar" target="_blank" rel="noopener"><i class="bi bi-github" aria-hidden="true"></i> ソースコード</a><span id="status"></span></p>
   </footer>
 </div>
 

@@ -1,22 +1,20 @@
 import {
-  json, rowToCase, putFile, getIdentity, authorizeWrite, viewerHash,
+  json, rowToPresenter, putFile, getIdentity, authorizeWrite,
   IMAGE_MIMES, ICON_MAX_BYTES,
 } from "../../../_common.js";
-import { casesSelect } from "../../cases.js";
+import { presentersSelect } from "../../presenters.js";
 
-// 更新後の事件を、他のAPIと同じ形（いいね数つき）で読み直す
-async function loadCaseRow(env, request, cid) {
-  const viewer = (await viewerHash(request)) || "";
-  return env.DB.prepare(`${casesSelect()} WHERE c.id = ?`).bind(viewer, cid).first();
+async function loadPresenterRow(env, pid) {
+  return env.DB.prepare(`${presentersSelect()} WHERE presenters.id = ?`).bind(pid).first();
 }
 
-// 登録・差し替え（書き込み権限が必要）。写真と違い、事件につき1枚だけなので置き換え専用
+// 登録・差し替え（書き込み権限が必要）。問題提起人につき1枚だけなので置き換え専用
 export async function onRequestPut({ request, env, params }) {
   const id = await getIdentity(request, env);
   if (!authorizeWrite(request, env, id)) return json({ error: "forbidden" }, 403);
 
-  const cid = params.id;
-  const cur = await env.DB.prepare(`SELECT icon_r2_key FROM cases WHERE id = ?`).bind(cid).first();
+  const pid = params.id;
+  const cur = await env.DB.prepare(`SELECT icon_r2_key FROM presenters WHERE id = ?`).bind(pid).first();
   if (!cur) return json({ error: "not found" }, 404);
 
   let form;
@@ -31,14 +29,14 @@ export async function onRequestPut({ request, env, params }) {
   if (f.size > ICON_MAX_BYTES) return json({ error: "アイコンは5MBまでです" }, 400);
 
   const file = { blob: f, ext, name: f.name || ("icon." + ext), size: f.size, mime: f.type };
-  const key = await putFile(env, "ic", cid, file);
+  const key = await putFile(env, "ic", pid, file);
   await env.DB.prepare(
-    `UPDATE cases SET icon_r2_key=?, updated_by=?, updated_at=? WHERE id=?`
-  ).bind(key, id.email, new Date().toISOString(), cid).run();
+    `UPDATE presenters SET icon_r2_key=?, updated_by=?, updated_at=? WHERE id=?`
+  ).bind(key, id.email, new Date().toISOString(), pid).run();
   if (cur.icon_r2_key && cur.icon_r2_key !== key && env.FILES) await env.FILES.delete(cur.icon_r2_key).catch(() => {});
 
-  const row = await loadCaseRow(env, request, cid);
-  return json(rowToCase(row));
+  const row = await loadPresenterRow(env, pid);
+  return json(rowToPresenter(row));
 }
 
 // 削除（書き込み権限が必要）。R2のファイルも消す
@@ -46,15 +44,15 @@ export async function onRequestDelete({ request, env, params }) {
   const id = await getIdentity(request, env);
   if (!authorizeWrite(request, env, id)) return json({ error: "forbidden" }, 403);
 
-  const cid = params.id;
-  const cur = await env.DB.prepare(`SELECT icon_r2_key FROM cases WHERE id = ?`).bind(cid).first();
+  const pid = params.id;
+  const cur = await env.DB.prepare(`SELECT icon_r2_key FROM presenters WHERE id = ?`).bind(pid).first();
   if (!cur) return json({ error: "not found" }, 404);
 
   await env.DB.prepare(
-    `UPDATE cases SET icon_r2_key=NULL, updated_by=?, updated_at=? WHERE id=?`
-  ).bind(id.email, new Date().toISOString(), cid).run();
+    `UPDATE presenters SET icon_r2_key=NULL, updated_by=?, updated_at=? WHERE id=?`
+  ).bind(id.email, new Date().toISOString(), pid).run();
   if (cur.icon_r2_key && env.FILES) await env.FILES.delete(cur.icon_r2_key).catch(() => {});
 
-  const row = await loadCaseRow(env, request, cid);
-  return json(rowToCase(row));
+  const row = await loadPresenterRow(env, pid);
+  return json(rowToPresenter(row));
 }

@@ -21,22 +21,26 @@ export function textToLines(s) {
 }
 
 // ---- 事件 ----
-export const CASE_COLS = `c.id, c.name, c.icon_r2_key, c.case_no, c.plaintiff_name, c.defendant_name, c.judge, c.points, c.call_text,
-                          c.host, c.contact, c.press, c.plaintiff_links, c.defendant_links, c.tags, c.related_case_ids, c.archived_at, c.close_type,
+// presenters は LEFT JOIN で引く（p. で参照。FROM 句は casesSelect() 側で JOIN する）
+export const CASE_COLS = `c.id, c.name, c.presenter_id, p.nickname AS presenter_nickname, p.icon_r2_key AS presenter_icon_r2_key,
+                          c.case_no, c.plaintiff_name, c.defendant_name, c.judge, c.points, c.call_text,
+                          c.contact, c.press, c.plaintiff_links, c.defendant_links, c.tags, c.related_case_ids, c.archived_at, c.close_type,
+                          c.board_enabled, c.board_restricted,
                           c.created_by, c.updated_by, c.updated_at`;
 
 export function rowToCase(r) {
   return {
     id: r.id,
     name: r.name,
-    icon: r.icon_r2_key ? "/files/" + r.icon_r2_key : "",
+    presenterId: r.presenter_id || "",
+    presenterNickname: r.presenter_nickname || "",
+    presenterIcon: r.presenter_icon_r2_key ? "/files/" + r.presenter_icon_r2_key : "",
     caseNo: r.case_no || "",
     plaintiffName: r.plaintiff_name || "",
     defendantName: r.defendant_name || "",
     judge: r.judge || "",
     points: textToLines(r.points),
     callText: r.call_text || "",
-    host: r.host || "",
     contact: r.contact || "",
     press: textToLines(r.press),
     plaintiffLinks: textToLines(r.plaintiff_links).filter(isHttpUrl),
@@ -45,6 +49,8 @@ export function rowToCase(r) {
     relatedCaseIds: textToLines(r.related_case_ids),
     archivedAt: r.archived_at || "",
     closeType: r.close_type || "",
+    boardEnabled: r.board_enabled === 0 || r.board_enabled === false ? false : true,
+    boardRestricted: r.board_restricted === 1 || r.board_restricted === true,
     likes: Number(r.likes || 0),
     liked: !!r.liked,
     updatedAt: r.updated_at || "",
@@ -58,13 +64,13 @@ export function isHttpUrl(s) {
 export function caseFromBody(body) {
   return {
     name: String(body.name || "").trim(),
+    presenter_id: String(body.presenterId || "").trim() || null,
     case_no: String(body.caseNo || "").trim(),
     plaintiff_name: String(body.plaintiffName || "").trim(),
     defendant_name: String(body.defendantName || "").trim(),
     judge: String(body.judge || "").trim(),
     points: linesToText(body.points),
     call_text: String(body.callText || "").trim(),
-    host: String(body.host || "").trim(),
     contact: String(body.contact || "").trim(),
     press: linesToText(body.press),
     plaintiff_links: textToLines(linesToText(body.plaintiffLinks)).filter(isHttpUrl).join("\n"),
@@ -73,14 +79,29 @@ export function caseFromBody(body) {
     related_case_ids: linesToText(body.relatedCaseIds),
     archived_at: isYmd(body.archivedAt) ? body.archivedAt : null,
     close_type: String(body.closeType || "").trim(),
+    board_enabled: body.boardEnabled === false ? 0 : 1,
+    board_restricted: body.boardRestricted === true ? 1 : 0,
   };
 }
 export function isYmd(s) {
   return typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s);
 }
 
+// ---- 問題提起人（アイコン＋ニックネーム。1人が複数の事件を持てる） ----
+export const PRESENTER_COLS = `id, nickname, icon_r2_key, created_by, updated_by, updated_at`;
+
+export function rowToPresenter(r) {
+  return {
+    id: r.id,
+    nickname: r.nickname,
+    icon: r.icon_r2_key ? "/files/" + r.icon_r2_key : "",
+    caseCount: r.case_count != null ? Number(r.case_count) : undefined,
+    updatedAt: r.updated_at || "",
+  };
+}
+
 // ---- 期日 ----
-export const EVENT_COLS = `e.id, e.case_id, e.date, e.time, e.type, e.court, e.place, e.open,
+export const EVENT_COLS = `e.id, e.case_id, e.date, e.time, e.type, e.court, e.place, e.open, e.report_meeting,
                            e.plaintiff_argument, e.defendant_argument,
                            e.created_by, e.updated_by, e.updated_at, c.name AS case_name`;
 export const EVENT_FROM = `FROM events e JOIN cases c ON c.id = e.case_id`;
@@ -96,6 +117,7 @@ export function rowToEvent(r) {
     court: r.court || "",
     place: r.place || "",
     open: r.open === 0 || r.open === false ? false : true,
+    reportMeeting: r.report_meeting === 1 || r.report_meeting === true,
     plaintiffArgument: textToLines(r.plaintiff_argument),
     defendantArgument: textToLines(r.defendant_argument),
     updatedAt: r.updated_at || "",
@@ -167,7 +189,7 @@ export async function putFile(env, prefix, itemId, file) {
 export const IMAGE_MIMES = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
 export const IMAGE_MAX_BYTES = 12 * 1024 * 1024;
 
-// ---- 事件のアイコン（1件だけ。形式は写真と同じ IMAGE_MIMES を流用、上限だけ小さくする） ----
+// ---- 問題提起人のアイコン（1件だけ。形式は写真と同じ IMAGE_MIMES を流用、上限だけ小さくする） ----
 export const ICON_MAX_BYTES = 5 * 1024 * 1024;
 
 export const IMAGE_COLS = `i.id, i.case_id, i.r2_key, i.file_name, i.file_size, i.mime,

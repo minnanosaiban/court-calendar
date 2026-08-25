@@ -1,5 +1,5 @@
 import {
-  json, newId, rowToPost, getIdentity, authorizePost,
+  json, newId, rowToPost, getIdentity, authorizePost, authorizeWrite,
   POST_SUBJECTS, POST_VERBS, QUOTE_MAX,
 } from "../_common.js";
 
@@ -22,17 +22,32 @@ export async function onRequestGet({ request, env }) {
   return json((results || []).map(rowToPost));
 }
 
-// 投稿（傍聴に行った人なら誰でも。ただし文の形は固定、スパム対策あり）
+// 投稿（傍聴に行った人なら誰でも。ただし文の形は固定、スパム対策あり）。
+// 事件ごとに掲示板の表示・投稿制限（board_enabled / board_restricted）を持てるので、
+// まず事件を JOIN で引いてから権限を判定する。
 export async function onRequestPost({ request, env }) {
   const id = await getIdentity(request, env);
-  if (!(await authorizePost(request, env, id))) {
-    return json({ error: "投稿を受け付けられませんでした。時間をおいて試してください。" }, 403);
-  }
 
   let body;
   try { body = await request.json(); } catch { return json({ error: "bad json" }, 400); }
 
   const eventId = String(body.eventId || "").trim();
+  const ev = await env.DB.prepare(
+    `SELECT e.id, c.board_enabled, c.board_restricted
+       FROM events e JOIN cases c ON c.id = e.case_id
+      WHERE e.id = ?`
+  ).bind(eventId).first();
+  if (!ev) return json({ error: "その期日が見つかりません。" }, 400);
+  if (ev.board_enabled === 0) return json({ error: "この事件の掲示板は現在受け付けていません。" }, 403);
+
+  // 制限ありの事件は、一般の匿名投稿（Turnstile経由）を受け付けず運営のみ（将来は承認済みアカウントのみ）
+  const allowed = ev.board_restricted === 1
+    ? authorizeWrite(request, env, id)
+    : await authorizePost(request, env, id);
+  if (!allowed) {
+    return json({ error: "投稿を受け付けられませんでした。時間をおいて試してください。" }, 403);
+  }
+
   const subject = String(body.subject || "").trim();
   const verb = String(body.verb || "").trim();
   // 改行と前後の空白を落として1行にする
@@ -44,9 +59,6 @@ export async function onRequestPost({ request, env }) {
   if ([...quote].length > QUOTE_MAX) {
     return json({ error: `かぎ括弧の中は${QUOTE_MAX}字までです。` }, 400);
   }
-
-  const ev = await env.DB.prepare(`SELECT id FROM events WHERE id = ?`).bind(eventId).first();
-  if (!ev) return json({ error: "その期日が見つかりません。" }, 400);
 
   const post = {
     id: newId("p"),

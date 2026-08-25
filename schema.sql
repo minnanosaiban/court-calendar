@@ -5,19 +5,32 @@
 --   期日（events）は case_id で事件にぶら下がる。
 --   旧スキーマ（1期日=1行に事件の説明を重複保存）のDBを更新する場合は
 --   migrate_004_cases.sql を実行すること。新規に作るならこのファイルだけでよい。
+--
+-- v4（2026-08-25）：「アイコン＋ニックネーム」を事件から独立させ、問題提起人（presenters）とした。
+--   1人の問題提起人が複数の事件を持てる（例：同じ人・団体が別件で複数の訴訟を抱えている場合）。
+--   旧 cases.host / cases.icon_r2_key から移行する場合は migrate_021_presenters.sql を実行すること。
+
+-- 問題提起人（アイコン＋ニックネーム）。1人が複数の事件を持てる。
+CREATE TABLE IF NOT EXISTS presenters (
+  id          TEXT PRIMARY KEY,
+  nickname    TEXT NOT NULL,        -- 表示名（旧 cases.host を引き継ぐ）
+  icon_r2_key TEXT,                 -- アイコン画像（正方形推奨）のR2オブジェクトキー。/api/presenters/:id/icon で登録・削除
+  created_by  TEXT,
+  updated_by  TEXT,
+  updated_at  TEXT                  -- ISO8601
+);
 
 -- 事件
 CREATE TABLE IF NOT EXISTS cases (
   id          TEXT PRIMARY KEY,
   name        TEXT NOT NULL UNIQUE, -- 事件名（画面のタイトル）
-  icon_r2_key TEXT,                 -- アイコン画像（正方形推奨）のR2オブジェクトキー。一覧・カレンダー等で事件を見分けるための小さな画像（任意。/api/cases/:id/icon で登録・削除）
+  presenter_id TEXT REFERENCES presenters(id), -- 問題提起人（アイコン・ニックネームはここから引く。任意）
   case_no     TEXT,                 -- 事件番号（例：令和6年（ワ）第1234号・任意）
   plaintiff_name TEXT,              -- 原告名（任意）
   defendant_name TEXT,              -- 被告名（任意）
   judge       TEXT,                 -- 裁判官（任意）
   points      TEXT,                 -- 争点（1行1項目、改行区切り）
   call_text   TEXT,                 -- よびかけ（事件の説明＋傍聴・支援のお願い）
-  host        TEXT,                 -- 呼びかけている団体・お名前
   contact     TEXT,                 -- 連絡先（公開してよいものだけ）
   press       TEXT,                 -- 報道・掲載（新聞・ニュース・判例誌掲載、特別保存の指定など。1行1項目、改行区切り・任意）
   plaintiff_links TEXT,             -- 原告のアカウント等のURL（1行1つ、改行区切り・任意）
@@ -26,10 +39,14 @@ CREATE TABLE IF NOT EXISTS cases (
   related_case_ids TEXT,            -- 関連する他の事件のID（1行1つ、改行区切り・任意。同じ事実に関連する別争点の訴訟など。双方向表示は画面側で補う）
   archived_at TEXT,                 -- 終結日 YYYY-MM-DD（あれば「裁判アーカイブ」扱い・任意）
   close_type  TEXT,                 -- 終結の種類（判決／和解／取下げ など・任意）
+  board_enabled    INTEGER NOT NULL DEFAULT 1, -- 1=「傍聴に行ってきたよ！掲示板」を表示する／0=非表示（掲示板ごと出さない）
+  board_restricted INTEGER NOT NULL DEFAULT 0, -- 1=投稿を制限する（一般の匿名投稿は受け付けず運営のみ。将来は問題提起人が承認したアカウントのみに置き換える）／0=誰でも投稿可
   created_by  TEXT,
   updated_by  TEXT,
   updated_at  TEXT                  -- ISO8601
 );
+
+CREATE INDEX IF NOT EXISTS idx_cases_presenter ON cases(presenter_id);
 
 -- 期日（1期日=1行）
 CREATE TABLE IF NOT EXISTS events (
@@ -41,6 +58,7 @@ CREATE TABLE IF NOT EXISTS events (
   court       TEXT,            -- 裁判所名
   place       TEXT,            -- 法廷
   open        INTEGER NOT NULL DEFAULT 1, -- 1=誰でも傍聴できる／0=非公開・要確認
+  report_meeting INTEGER NOT NULL DEFAULT 0, -- 1=この期日のあとに期日報告会がある／0=なし
   plaintiff_argument TEXT,     -- この回で原告が主張したこと（1行1項目、改行区切り・任意）
   defendant_argument TEXT,     -- この回で被告が主張したこと（1行1項目、改行区切り・任意）
   created_by  TEXT,

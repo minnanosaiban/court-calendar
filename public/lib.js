@@ -11,6 +11,7 @@ window.CC = (function(){
   let editKey = localStorage.getItem(EDITKEY_LS) || "";   // 編集パスワード（この端末に保存）
   let loaded = false;   // 最初のデータ取得が終わったか（終わるまで「まだありません」系の文言を出さない）
   let cases = [];
+  let presenters = [];
   let events = [];
   let posts = [];
   let materials = [];
@@ -72,8 +73,6 @@ window.CC = (function(){
   const apiCreateCase  = (d)=> api("POST","/api/cases", d);
   const apiUpdateCase  = (id,d)=> api("PUT","/api/cases/"+encodeURIComponent(id), d);
   const apiDeleteCase  = (id)=> api("DELETE","/api/cases/"+encodeURIComponent(id));
-  const apiUpdateCaseIcon = (id,fd)=> api("PUT","/api/cases/"+encodeURIComponent(id)+"/icon", fd);
-  const apiDeleteCaseIcon = (id)=> api("DELETE","/api/cases/"+encodeURIComponent(id)+"/icon");
   const apiLike        = (id)=> api("POST","/api/cases/"+encodeURIComponent(id)+"/like");
   const apiUnlike      = (id)=> api("DELETE","/api/cases/"+encodeURIComponent(id)+"/like");
   const apiList        = ()=> api("GET","/api/events");
@@ -90,6 +89,13 @@ window.CC = (function(){
   const apiCreateImage = (fd)=> api("POST","/api/images", fd);
   const apiUpdateImage = (id,fd)=> api("PUT","/api/images/"+encodeURIComponent(id), fd);
   const apiDeleteImage = (id)=> api("DELETE","/api/images/"+encodeURIComponent(id));
+  const apiListPresenters  = ()=> api("GET","/api/presenters");
+  const apiCreatePresenter = (d)=> api("POST","/api/presenters", d);
+  const apiUpdatePresenter = (id,d)=> api("PUT","/api/presenters/"+encodeURIComponent(id), d);
+  const apiDeletePresenter = (id)=> api("DELETE","/api/presenters/"+encodeURIComponent(id));
+  const apiUpdatePresenterIcon = (id,fd)=> api("PUT","/api/presenters/"+encodeURIComponent(id)+"/icon", fd);
+  const apiDeletePresenterIcon = (id)=> api("DELETE","/api/presenters/"+encodeURIComponent(id)+"/icon");
+  const apiPresenterCases = (id)=> api("GET","/api/presenters/"+encodeURIComponent(id)+"/cases");
   function saveErr(err){
     if(err && err.status===403) return "この操作は許可されていません（閲覧のみの権限です）。";
     return "保存できませんでした：" + (err && err.message || err);
@@ -97,19 +103,21 @@ window.CC = (function(){
 
   async function load(){
     try{ me = await apiMe(); }catch(e){ me={email:null,canWrite:false,allowAll:false,boardOpen:false,turnstileSiteKey:""}; }
-    const [c,e,p,m,im] = await Promise.all([
-      apiListCases().catch(()=>[]), apiList().catch(()=>[]),
+    const [c,pr,e,p,m,im] = await Promise.all([
+      apiListCases().catch(()=>[]), apiListPresenters().catch(()=>[]), apiList().catch(()=>[]),
       apiListPosts().catch(()=>[]), apiListMats().catch(()=>[]),
       apiListImages().catch(()=>[]),
     ]);
-    cases=c; events=e; posts=p; materials=m; images=im;
+    cases=c; presenters=pr; events=e; posts=p; materials=m; images=im;
     loaded = true;
   }
   async function reloadCases(){ try{ cases = await apiListCases(); }catch(e){} }
+  async function reloadPresenters(){ try{ presenters = await apiListPresenters(); }catch(e){} }
 
   // ================= 事件 =================
   function caseById(id){ return cases.find(c=>c.id===id) || null; }
   function caseByName(name){ return cases.find(c=>c.name===name) || null; }
+  function presenterById(id){ return presenters.find(p=>p.id===id) || null; }
   function caseEvents(caseId){ return events.filter(e=>e.caseId===caseId).sort(byDate); }
   function casePosts(caseId){ return posts.filter(p=>p.caseId===caseId); }
   function caseMaterials(caseId){ return materials.filter(m=>m.caseId===caseId); }
@@ -200,18 +208,27 @@ window.CC = (function(){
     return `<p class="minih">関連裁判</p><ul class="pts">${items}</ul>`;
   }
   // 事件のアイコン（Twitterのアバターのように、一覧やカレンダーで事件を見分けるための小さな画像）。
-  // 自分でアイコンを持たない事件は、関連裁判（下のrelatedCases）の中でアイコンを持つものから借りて表示する
-  // （1つのアイコンを複数の事件で使い回せるようにするため。2026-08-24）。それも無ければ、事件名の頭文字を
-  // 丸い札で代わりに出す。大きさは56px1種類（サイズ違いは廃止・2026-08-24）
+  // 実体は問題提起人（アイコン＋ニックネーム）のアイコンで、複数の事件が同じ問題提起人を持てば
+  // 自然に使い回される（2026-08-25、事件から問題提起人を独立させた）。問題提起人が未設定・
+  // アイコン未登録のときは、事件名の頭文字を丸い札で代わりに出す。大きさは56px1種類
   function iconHtml(c){
-    const icon = c.icon || inheritedIcon(c);
-    if(icon) return `<img class="cicon" src="${escapeAttr(icon)}" alt="">`;
+    if(c.presenterIcon) return `<img class="cicon" src="${escapeAttr(c.presenterIcon)}" alt="">`;
     const ch = placeholderChar(c.name);
     return `<span class="cicon cicon-ph" aria-hidden="true">${escapeHtml(ch)}</span>`;
   }
-  function inheritedIcon(c){
-    const found = relatedCases(c.id).find(r=>r.icon);
-    return found ? found.icon : "";
+  // 事件詳細ページの見出し：アイコンは問題提起人の他の事件一覧（presenter.html）へのリンクにする。
+  // 問題提起人が未設定の事件では、アイコン（頭文字の札）だけを非リンクで出す
+  function presenterHeaderHtml(c){
+    const icon = iconHtml(c);
+    if(!c.presenterId) return icon;
+    return `<a class="cicon-link" href="presenter?id=${encodeURIComponent(c.presenterId)}" title="${escapeAttr(c.presenterNickname)}の他の事件を見る">${icon}</a>`;
+  }
+  // 事件名の下に添える、問題提起人のニックネーム（リンク）。アイコンの下だと名前が長いと省略されて
+  // 読めなくなるため、タイトルの下の広い幅で全文出す（2026-08-26）。
+  // 閲覧者向けの表示なので敬称「さん」を付ける（管理画面のプルダウン等、運営者向けの表示には付けない）
+  function presenterNameHtml(c){
+    if(!c.presenterId || !c.presenterNickname) return "";
+    return `<a class="presenter-name" href="presenter?id=${encodeURIComponent(c.presenterId)}">${escapeHtml(c.presenterNickname)}さん</a>`;
   }
   // 仮アイコンに使う頭文字。「【サンプル】」「【控訴審】」のような先頭の囲みは、どの事件でも同じ文字になって
   // 見分けの役に立たないので読み飛ばし、囲みの後ろの頭文字を拾う（囲みだけで中身が無い名前は元の頭文字に戻す）
@@ -326,7 +343,7 @@ window.CC = (function(){
     // ピックアップカードでは出さない）
     const nextRow = next
       ? factRow("期日",
-          `<div>${escapeHtml(jpDate(next.date))}${next.time?" "+escapeHtml(next.time):""}${next.open===false?`<span class="round-closed">非公開・要確認</span>`:""}</div>`+
+          `<div>${escapeHtml(jpDate(next.date))}${next.time?" "+escapeHtml(next.time):""}${next.open===false?`<span class="round-closed">非公開・要確認</span>`:""}${next.reportMeeting?`<span class="round-note">期日報告会あり</span>`:""}</div>`+
           ([next.court,next.place].filter(Boolean).length?`<div>${escapeHtml([next.court,next.place].filter(Boolean).join(" "))}</div>`:"")
         ) + factRow("手続", next.type?escapeHtml(next.type):"")
       : "";
@@ -345,8 +362,11 @@ window.CC = (function(){
     let html = galCard + boardHtml(caseId, full) + `
       <div class="card dcard">
         <div class="d-head">
-          ${iconHtml(c)}
-          <h2 class="d-title">${escapeHtml(c.name)} ${likeHtml(c)}</h2>
+          ${presenterHeaderHtml(c)}
+          <div class="d-head-main">
+            <h2 class="d-title">${escapeHtml(c.name)} ${likeHtml(c)}</h2>
+            ${presenterNameHtml(c)}
+          </div>
         </div>
         ${tagsHtml(c)}
         ${full ? shareHtml(c) : ""}
@@ -424,13 +444,14 @@ window.CC = (function(){
       const expandable = own.length>0 || hasArgs;
       const place=[ev.court,ev.place].filter(Boolean).join(" ");
       const closed = ev.open===false ? `<span class="round-closed">非公開・要確認</span>` : "";
+      const reportNote = ev.reportMeeting ? `<span class="round-note">期日報告会あり</span>` : "";
       const editLink = me.canWrite ? `<a class="round-edit" data-edit="${escapeAttr(ev.id)}">編集</a>` : "";
       return `<li class="tl-item ${state}">
         <span class="tl-dot" aria-hidden="true"></span>
         <div class="tl-head">
           <span class="tl-date">${escapeHtml(jpDate(ev.date))}${ev.time?" "+escapeHtml(ev.time):""}</span>
           <span class="tl-type">${escapeHtml(ev.type||"期日")}</span>
-          <span class="tl-meta">${escapeHtml(place)}${closed}${editLink}</span>
+          <span class="tl-meta">${escapeHtml(place)}${closed}${reportNote}${editLink}</span>
         </div>
         ${expandable?`<div class="tl-body">${argsHtml(ev)}${own.map(matBlockHtml).join("")}</div>`:""}
       </li>`;
@@ -492,10 +513,13 @@ window.CC = (function(){
   }
   function boardHtml(caseId, full){
     const c = caseById(caseId);
+    // 事件ごとに掲示板を非表示にできる（2026-08-25）。非表示なら既存の報告も含めて丸ごと出さない
+    if(c && c.boardEnabled===false) return "";
     const rounds = caseEvents(caseId);
     const mine = casePosts(caseId);
-    // 投稿できるのは：スパム対策(Turnstile)設定済みのとき＝誰でも／未設定でも運営は可
-    const canPost = (me.boardOpen || me.canWrite) && rounds.length>0;
+    // 投稿できるのは：スパム対策(Turnstile)設定済みのとき＝誰でも／未設定でも運営は可。
+    // 事件が「投稿を制限する」設定のときは、一般の匿名投稿を締めて運営のみにする
+    const canPost = (c && c.boardRestricted ? me.canWrite : (me.boardOpen || me.canWrite)) && rounds.length>0;
     // フォームを開いている間は、左上・右下どちらのボタンも隠す（フォーム自体は右下の位置に出る）
     const showWriteBtn = canPost && boardFormForCase!==caseId;
     const items = mine.map(p=>{
@@ -755,13 +779,14 @@ window.CC = (function(){
   // ================= 下部のひっそりしたステータス =================
   // opts.hideWhenUnlocked: トップページ用。トップはシンプルにしたいので、編集ロック解除中は何も表示しない
   // （編集の導線は事件ページ・事件をさがすページに集約する。ロックされている間の案内はトップにも出す）
+  // el は「ソースコード」リンクと同じ行に続ける想定（区切りは付けず、間は半角スペースだけで空ける）
   function renderStatus(el, opts){
     opts = opts || {};
     if(!loaded){ el.innerHTML=""; return; }
     if(me.canWrite){
       if(opts.hideWhenUnlocked){ el.innerHTML=""; return; }
       el.innerHTML =
-        `編集できます ── この端末は編集ロック解除済みです。`+
+        `<br>編集できます ── この端末は編集ロック解除済みです。`+
         `<br><a id="stAddCase">新たな事件を追加</a><span class="sep">・</span>`+
         `<a id="stLock">ロックする</a>`+
         `<br><span class="status-sub">バックアップ（複数件をまとめて登録・復元するとき用）：`+
@@ -775,7 +800,7 @@ window.CC = (function(){
       });
     }else{
       el.innerHTML =
-        `期日の追加・編集には、<a id="stUnlock">パスワード</a>が必要です。`;
+        ` <a id="stUnlock" title="期日の追加・編集には、パスワードが必要です。"><i class="bi bi-lock" aria-hidden="true"></i> 事務局用</a>`;
       el.querySelector("#stUnlock").addEventListener("click",unlockEditing);
     }
   }
@@ -871,6 +896,9 @@ window.CC = (function(){
         <div class="field">
           <label class="check"><input type="checkbox" id="fOpen" checked> だれでも傍聴できます（チェックを外すと「非公開・要確認」）</label>
         </div>
+        <div class="field">
+          <label class="check"><input type="checkbox" id="fReportMeeting"> 期日報告会があります</label>
+        </div>
       </div>
       <div class="mfoot">
         <button class="btn-del" id="btnDelete" style="display:none;">削除</button>
@@ -948,57 +976,83 @@ window.CC = (function(){
       <div class="mbody">
         <ul class="pts mut">
           <li>事件名（＊）以外はすべて任意です。分かる範囲でご記入ください。</li>
-          <li>複数行入力する欄は、右下をドラッグすると縦に広げられます。</li>
+          <li>複数行の欄は、改行で区切ると1行が1項目になります。右下をドラッグすると縦に広げられます。</li>
         </ul>
-        <div class="field" id="cIconField" hidden>
-          <label>アイコン</label>
-          <div class="cicon-row">
-            <span id="cIconPreview"></span>
-            <input type="file" id="cIconFile" accept="image/jpeg,image/png,image/webp">
+        <p class="msec">事件の基本</p>
+        <div class="field">
+          <label>問題提起人（アイコン＋ニックネーム）</label>
+          <select id="cPresenterSelect">
+            <option value="">（未設定）</option>
+            <option value="__new__">＋ 新しい問題提起人を作る…</option>
+          </select>
+          <p class="fnote">同じ人（団体）が複数の事件を持つときは、同じ問題提起人を選べばアイコン・ニックネームを使い回せます。</p>
+          <div class="subfield" id="cPresenterNewRow" hidden>
+            <div class="cicon-row">
+              <input type="text" id="cPresenterNewNickname" placeholder="ニックネーム（例：〇〇支援の会）">
+              <button type="button" class="btn-save" id="cPresenterNewSave">作成</button>
+            </div>
           </div>
-          <p class="fnote" id="cIconStatus" hidden></p>
-          <p class="fnote">JPEG・PNG・WebP、5MBまで。正方形に近い画像がきれいに表示されます。選ぶとすぐに反映されます（この欄だけ「保存」を待ちません）。<a id="cIconRemove" class="cicon-remove" hidden>アイコンを外す</a></p>
+          <div class="subfield" id="cPresenterIconRow" hidden>
+            <div class="cicon-row">
+              <span id="cPresenterIconPreview"></span>
+              <input type="file" id="cPresenterIconFile" accept="image/jpeg,image/png,image/webp">
+            </div>
+            <p class="fnote" id="cPresenterIconNote">JPEG・PNG・WebP、5MBまで。正方形に近い画像がきれいに出ます。選ぶとすぐ反映され（「保存」を待ちません）、同じ問題提起人の他の事件のアイコンも変わります。<a id="cPresenterIconRemove" class="cicon-remove" hidden>アイコンを外す</a></p>
+          </div>
+          <p class="fnote" id="cPresenterStatus" hidden></p>
         </div>
         <div class="field">
           <label>事件名 <span style="color:var(--stamp)">*</span></label>
           <input type="text" id="cName" placeholder="例）情報公開請求をめぐる訴訟">
         </div>
         <div class="field">
-          <label>タグ（複数の場合は改行、1行に1つ）</label>
+          <label>タグ</label>
           <textarea id="cTags" placeholder="例）情報公開、行政"></textarea>
         </div>
-        <div class="field"><label>争点（複数の場合は改行、1行に1つ）</label><textarea id="cPoints" placeholder="例）◯◯の事実があったか"></textarea></div>
+        <div class="field"><label>争点</label><textarea id="cPoints" placeholder="例）◯◯の事実があったか"></textarea></div>
+
+        <p class="msec">掲示板</p>
+        <div class="field">
+          <label class="check"><input type="checkbox" id="cBoardEnabled" checked> 「傍聴に行ってきたよ！掲示板」を表示する</label>
+        </div>
+        <div class="field">
+          <label class="check"><input type="checkbox" id="cBoardRestricted"> 投稿を制限する（一般の投稿は受け付けず、運営のみ投稿できます）</label>
+        </div>
+
+        <p class="msec">当事者・裁判官</p>
         <div class="two">
           <div class="field"><label>原告名</label><input type="text" id="cPlaintiff" placeholder="例）従業員"></div>
           <div class="field"><label>被告名</label><input type="text" id="cDefendant" placeholder="例）〇〇株式会社"></div>
         </div>
         <div class="two">
           <div class="field">
-            <label>原告のリンク（複数の場合は改行、1行に1つのURL。X・ホームページなど）</label>
+            <label>原告のリンク</label>
             <textarea id="cPlaintiffLinks" placeholder="https://x.com/..."></textarea>
           </div>
           <div class="field">
-            <label>被告のリンク（同上）</label>
+            <label>被告のリンク</label>
             <textarea id="cDefendantLinks" placeholder="https://x.com/..."></textarea>
           </div>
         </div>
         <div class="field">
-          <label>裁判官（複数の場合は改行、1行に1つ）</label>
+          <label>裁判官</label>
           <textarea id="cJudge" placeholder="地裁　〇〇〇〇裁判官&#10;高裁　〇〇〇〇裁判官"></textarea>
           <p class="fnote">地裁→高裁など審級が変わる場合は「地裁　○○ ○○裁判官」「高裁　○○ ○○裁判官」のように行を分けて書けます（事件番号欄と同じ書き方）。</p>
         </div>
+
+        <p class="msec">くわしい情報</p>
         <div class="field">
-          <label>報道・掲載（複数の場合は改行、1行に1つ）</label>
+          <label>報道・掲載</label>
           <textarea id="cPress" placeholder="例）〇〇新聞で報道されました https://...&#10;労働判例ジャーナル2025.10 No.163に掲載&#10;裁判所への手続きにより特別保存（永久保存）となっています"></textarea>
         </div>
         <div class="field">
-          <label>事件番号（複数の場合は改行、1行に1つ）</label>
+          <label>事件番号</label>
           <textarea id="cCaseNo" placeholder="地裁　令和6年(ワ)第12345号&#10;高裁　令和7年(ネ)第1234号"></textarea>
           <p class="fnote">地裁→高裁など番号が変わる場合は「地裁　令和6年（ワ）第12345号」「高裁　令和7年（ネ）第6789号」のように行を分けて書けます（裁判官欄と同じ書き方）。</p>
         </div>
         <div class="field"><label>裁判について</label><textarea id="cCall" placeholder="どんな裁判か、傍聴や支援をお願いする文章など（空行を挟むと段落を分けられます）"></textarea></div>
         <div class="field">
-          <label>関連裁判（複数の場合は改行、1行に1つの事件名）</label>
+          <label>関連裁判</label>
           <textarea id="cRelated" list="caseList" placeholder="例）情報公開請求をめぐる訴訟"></textarea>
           <p class="fnote">同じ事実に関連する別争点の訴訟など。サイトに登録済みの事件名だけ指定できます（このサイト内の事件へのリンクになります）。どちらか一方に登録すれば、両方の事件ページに表示されます。</p>
         </div>
@@ -1043,13 +1097,14 @@ window.CC = (function(){
   const fCourt = document.getElementById("fCourt");
   const fPlace = document.getElementById("fPlace");
   const fOpen = document.getElementById("fOpen");
+  const fReportMeeting = document.getElementById("fReportMeeting");
   const fPlaintiff = document.getElementById("fPlaintiff");
   const fDefendant = document.getElementById("fDefendant");
   const caseList = document.getElementById("caseList");
   const btnSave = document.getElementById("btnSave");
   const btnCancel = document.getElementById("btnCancel");
   const btnDelete = document.getElementById("btnDelete");
-  const formInputs = [fCase,fDate,fTime,fType,fCourt,fPlace,fOpen,fPlaintiff,fDefendant];
+  const formInputs = [fCase,fDate,fTime,fType,fCourt,fPlace,fOpen,fReportMeeting,fPlaintiff,fDefendant];
 
   // ---- タブ（写真／事件情報／期日／資料）。既存の事件を対象に開いたときだけ表示する ----
   const ceTabs = document.getElementById("ceTabs");
@@ -1090,6 +1145,7 @@ window.CC = (function(){
     fCase.value=ev.case||""; fDate.value=ev.date||""; fTime.value=ev.time||"";
     fType.value=ev.type||""; fCourt.value=ev.court||""; fPlace.value=ev.place||"";
     fOpen.checked = ev.open!==false;
+    fReportMeeting.checked = ev.reportMeeting===true;
     fPlaintiff.value=(ev.plaintiffArgument||[]).join("\n");
     fDefendant.value=(ev.defendantArgument||[]).join("\n");
   }
@@ -1145,7 +1201,7 @@ window.CC = (function(){
     const data={
       caseId: known.id, case:c, date:d, time:fTime.value,
       type:fType.value.trim(), court:fCourt.value.trim(), place:fPlace.value.trim(),
-      open:fOpen.checked,
+      open:fOpen.checked, reportMeeting:fReportMeeting.checked,
       plaintiffArgument:fPlaintiff.value.split("\n").map(s=>s.trim()).filter(Boolean),
       defendantArgument:fDefendant.value.split("\n").map(s=>s.trim()).filter(Boolean),
     };
@@ -1182,11 +1238,89 @@ window.CC = (function(){
   const cFields = { name:$("cName"), caseNo:$("cCaseNo"), plaintiff:$("cPlaintiff"), defendant:$("cDefendant"), judge:$("cJudge"), points:$("cPoints"),
                     callText:$("cCall"), press:$("cPress"), plaintiffLinks:$("cPlaintiffLinks"), defendantLinks:$("cDefendantLinks"),
                     tags:$("cTags"), related:$("cRelated"), archivedAt:$("cArchivedAt"), closeType:$("cCloseType") };
-  const cIconField=$("cIconField"), cIconPreview=$("cIconPreview"), cIconFile=$("cIconFile"),
-        cIconRemove=$("cIconRemove"), cIconStatus=$("cIconStatus");
-  // 呼びかけ団体・連絡先は入力欄を廃止したが、既存データは保持する（保存のたびに空で上書きしないよう、
+  const cBoardEnabled=$("cBoardEnabled"), cBoardRestricted=$("cBoardRestricted");
+  const cPresenterSelect=$("cPresenterSelect"), cPresenterNewRow=$("cPresenterNewRow"), cPresenterNewNickname=$("cPresenterNewNickname"),
+        cPresenterNewSave=$("cPresenterNewSave"), cPresenterIconRow=$("cPresenterIconRow"), cPresenterIconPreview=$("cPresenterIconPreview"),
+        cPresenterIconFile=$("cPresenterIconFile"), cPresenterIconRemove=$("cPresenterIconRemove"),
+        cPresenterStatus=$("cPresenterStatus");
+  // 連絡先は入力欄を廃止したが、既存データは保持する（保存のたびに空で上書きしないよう、
   // 編集を開いたときの値をここに覚えておいて、保存時にそのまま送り返す）
-  let editingCaseHost="", editingCaseContact="";
+  let editingCaseContact="";
+  // 問題提起人プルダウンの選択肢を作る（未設定／既存の問題提起人／＋新規作成）
+  function renderPresenterOptions(selectedId){
+    const opts = [`<option value="">（未設定）</option>`]
+      .concat(presenters.map(p=>`<option value="${escapeAttr(p.id)}"${p.id===selectedId?" selected":""}>${escapeHtml(p.nickname)}${p.caseCount?`（${p.caseCount}件）`:""}</option>`))
+      .concat([`<option value="__new__">＋ 新しい問題提起人を作る…</option>`]);
+    cPresenterSelect.innerHTML = opts.join("");
+    if(selectedId) cPresenterSelect.value = selectedId;
+  }
+  // 選んだ内容に応じて、新規作成欄・アイコン欄の出し分けを更新する
+  // （説明文 cPresenterIconNote はアイコン欄の中にあるので、欄ごと出し入れすれば一緒に付いてくる）
+  function updatePresenterFieldUI(){
+    const v = cPresenterSelect.value;
+    cPresenterStatus.hidden = true;
+    if(v==="__new__"){
+      cPresenterNewRow.hidden=false; cPresenterIconRow.hidden=true;
+      cPresenterNewNickname.value="";
+    }else if(v){
+      cPresenterNewRow.hidden=true; cPresenterIconRow.hidden=false;
+      const p = presenterById(v);
+      cPresenterIconPreview.innerHTML = p && p.icon
+        ? `<img class="cicon" src="${escapeAttr(p.icon)}" alt="">`
+        : `<span class="cicon cicon-ph" aria-hidden="true">${escapeHtml(placeholderChar(p?p.nickname:""))}</span>`;
+      cPresenterIconRemove.hidden = !(p && p.icon);
+    }else{
+      cPresenterNewRow.hidden=true; cPresenterIconRow.hidden=true;
+    }
+  }
+  cPresenterSelect.addEventListener("change", updatePresenterFieldUI);
+  // 「作成」を押すとその場ですぐ問題提起人を作り、続けてアイコンも設定できるようにする
+  cPresenterNewSave.addEventListener("click", async ()=>{
+    const nickname = cPresenterNewNickname.value.trim();
+    if(!nickname){ alert("ニックネームを入力してください。"); cPresenterNewNickname.focus(); return; }
+    cPresenterNewSave.disabled=true;
+    try{
+      const created = await apiCreatePresenter({nickname});
+      presenters.push(created);
+      renderPresenterOptions(created.id);
+      updatePresenterFieldUI();
+    }catch(err){ alert(saveErr(err)); }
+    finally{ cPresenterNewSave.disabled=false; }
+  });
+  cPresenterIconFile.addEventListener("change", async ()=>{
+    const f=cPresenterIconFile.files[0];
+    const pid=cPresenterSelect.value;
+    if(!f || !pid || pid==="__new__") return;
+    if(f.size>5*1024*1024){ alert("アイコンは5MBまでです。"); cPresenterIconFile.value=""; return; }
+    const fd=new FormData(); fd.append("file", f, f.name);
+    cPresenterStatus.hidden=false; cPresenterStatus.textContent="アップロード中…";
+    try{
+      const up=await apiUpdatePresenterIcon(pid,fd);
+      const i=presenters.findIndex(x=>x.id===pid); if(i>=0) presenters[i]=up;
+      renderPresenterOptions(pid); updatePresenterFieldUI();
+      cPresenterStatus.hidden=false; cPresenterStatus.textContent="アイコンを更新しました。";
+      await reloadCasesForIconChange();
+    }catch(err){ cPresenterStatus.hidden=false; cPresenterStatus.textContent="アップロードできませんでした：" + (err && err.message || err); }
+    finally{ cPresenterIconFile.value=""; }
+  });
+  cPresenterIconRemove.addEventListener("click", async ()=>{
+    const pid=cPresenterSelect.value;
+    if(!pid || pid==="__new__") return;
+    if(!confirm("アイコンを外します。よろしいですか？")) return;
+    cPresenterStatus.hidden=false; cPresenterStatus.textContent="外しています…";
+    try{
+      const up=await apiDeletePresenterIcon(pid);
+      const i=presenters.findIndex(x=>x.id===pid); if(i>=0) presenters[i]=up;
+      updatePresenterFieldUI();
+      cPresenterStatus.hidden=false; cPresenterStatus.textContent="アイコンを外しました。";
+      await reloadCasesForIconChange();
+    }catch(err){ cPresenterStatus.hidden=false; cPresenterStatus.textContent="外せませんでした：" + (err && err.message || err); }
+  });
+  // 問題提起人のアイコンを変えると、それを使っている全事件の表示（cases配列のpresenterIcon）が古くなるので読み直す
+  async function reloadCasesForIconChange(){
+    await reloadCases();
+    if(onChange) onChange();
+  }
   const mFields = { title:$("mTitle"), side:$("mSide"), event:$("mEvent"), filedOn:$("mFiledOn"),
                     url:$("mUrl"), file:$("mFile"), fileField:$("mFileField"), fileNow:$("mFileNow"),
                     claims:$("mClaims"), body:$("mBody"), summary:$("mSummary") };
@@ -1198,7 +1332,7 @@ window.CC = (function(){
     cFields.plaintiff.value=c.plaintiffName||""; cFields.defendant.value=c.defendantName||"";
     cFields.judge.value=c.judge||"";
     cFields.points.value=(c.points||[]).join("\n"); cFields.callText.value=c.callText||"";
-    editingCaseHost=c.host||""; editingCaseContact=c.contact||"";
+    editingCaseContact=c.contact||"";
     cFields.press.value=(c.press||[]).join("\n");
     cFields.plaintiffLinks.value=(c.plaintiffLinks||[]).join("\n");
     cFields.defendantLinks.value=(c.defendantLinks||[]).join("\n");
@@ -1206,17 +1340,15 @@ window.CC = (function(){
     // 関連裁判はIDで持つが、入力欄には事件名で表示する（見つからないIDは消えている事件なので無視）
     cFields.related.value=(c.relatedCaseIds||[]).map(id=>caseById(id)).filter(Boolean).map(r=>r.name).join("\n");
     cFields.archivedAt.value=c.archivedAt||""; cFields.closeType.value=c.closeType||"";
-  }
-  // アイコン欄は既存の事件を編集しているときだけ出す（写真・資料と同じく、事件IDが無いと登録先が無いため）
-  function renderCIconPreview(c){
-    cIconPreview.innerHTML = iconHtml(c);
-    cIconRemove.hidden = !c.icon;
+    cBoardEnabled.checked = c.boardEnabled!==false;
+    cBoardRestricted.checked = c.boardRestricted===true;
+    renderPresenterOptions(c.presenterId||"");
+    updatePresenterFieldUI();
   }
   function openCaseAdd(){
     if(!me.canWrite) return;
     editingCaseId=null; $("caseModalTitle").textContent="事件を追加"; $("cDelete").style.display="none";
     fillCaseForm({});
-    cIconField.hidden=true; cIconFile.value=""; cIconStatus.hidden=true;
     ceCaseId=null; ceShowTabs(false); ceSwitchTo("info");
     overlay.classList.add("show"); cFields.name.focus();
   }
@@ -1225,7 +1357,6 @@ window.CC = (function(){
     const c=caseById(id); if(!c) return;
     editingCaseId=id; $("caseModalTitle").textContent="事件情報を編集"; $("cDelete").style.display="inline-block";
     fillCaseForm(c);
-    cIconField.hidden=false; cIconFile.value=""; cIconStatus.hidden=true; renderCIconPreview(c);
     ceCaseId=c.id; ceShowTabs(true); ceSwitchTo("info");
     overlay.classList.add("show");
   }
@@ -1248,19 +1379,32 @@ window.CC = (function(){
       cFields.related.focus();
       return;
     }
+    // 問題提起人：「＋新規作成」を選んだままなら、保存の前にここで作る（作成ボタンを押し忘れていても保存できるように）
+    let presenterId = cPresenterSelect.value;
+    if(presenterId==="__new__"){
+      const nickname = cPresenterNewNickname.value.trim();
+      if(!nickname){ alert("問題提起人のニックネームを入力するか、「（未設定）」に戻してください。"); cPresenterNewNickname.focus(); return; }
+      try{
+        const created = await apiCreatePresenter({nickname});
+        presenters.push(created);
+        presenterId = created.id;
+        renderPresenterOptions(presenterId); updatePresenterFieldUI();
+      }catch(err){ alert(saveErr(err)); return; }
+    }
     const data={
-      name, caseNo:cFields.caseNo.value.trim(),
+      name, presenterId, caseNo:cFields.caseNo.value.trim(),
       plaintiffName:cFields.plaintiff.value.trim(), defendantName:cFields.defendant.value.trim(),
       judge:cFields.judge.value.trim(),
       points:cFields.points.value.split("\n").map(s=>s.trim()).filter(Boolean),
       callText:cFields.callText.value.trim(),
-      host:editingCaseHost, contact:editingCaseContact,
+      contact:editingCaseContact,
       press:cFields.press.value.split("\n").map(s=>s.trim()).filter(Boolean),
       plaintiffLinks:cFields.plaintiffLinks.value.split("\n").map(s=>s.trim()).filter(Boolean),
       defendantLinks:cFields.defendantLinks.value.split("\n").map(s=>s.trim()).filter(Boolean),
       tags:cFields.tags.value.split("\n").map(s=>s.trim()).filter(Boolean),
       relatedCaseIds,
       archivedAt:cFields.archivedAt.value, closeType:cFields.closeType.value.trim(),
+      boardEnabled:cBoardEnabled.checked, boardRestricted:cBoardRestricted.checked,
     };
     $("cSave").disabled=true;
     try{
@@ -1292,35 +1436,6 @@ window.CC = (function(){
   $("cSave").addEventListener("click",saveCase);
   $("cCancel").addEventListener("click",closeCaseEditModal);
   $("cDelete").addEventListener("click",deleteCase);
-
-  // アイコンは選ぶ／外すとその場ですぐ反映する（他の欄と違い「保存」ボタンを待たない。写真の並び替えと同じ考え方）
-  cIconFile.addEventListener("change",async ()=>{
-    const f=cIconFile.files[0];
-    if(!f || !editingCaseId) return;
-    if(f.size>5*1024*1024){ alert("アイコンは5MBまでです。"); cIconFile.value=""; return; }
-    const fd=new FormData(); fd.append("file", f, f.name);
-    cIconStatus.hidden=false; cIconStatus.textContent="アップロード中…";
-    try{
-      const up=await apiUpdateCaseIcon(editingCaseId,fd);
-      const i=cases.findIndex(x=>x.id===editingCaseId); if(i>=0) cases[i]=up;
-      renderCIconPreview(up);
-      cIconStatus.textContent="アイコンを更新しました。";
-      if(onChange) onChange();
-    }catch(err){ cIconStatus.textContent="アップロードできませんでした：" + (err && err.message || err); }
-    finally{ cIconFile.value=""; }
-  });
-  cIconRemove.addEventListener("click",async ()=>{
-    if(!editingCaseId) return;
-    if(!confirm("アイコンを外します。よろしいですか？")) return;
-    cIconStatus.hidden=false; cIconStatus.textContent="外しています…";
-    try{
-      const up=await apiDeleteCaseIcon(editingCaseId);
-      const i=cases.findIndex(x=>x.id===editingCaseId); if(i>=0) cases[i]=up;
-      renderCIconPreview(up);
-      cIconStatus.textContent="アイコンを外しました。";
-      if(onChange) onChange();
-    }catch(err){ cIconStatus.textContent="外せませんでした：" + (err && err.message || err); }
-  });
 
   // ---- 資料 ----
   function fillMatForm(m, caseId){
@@ -1483,7 +1598,7 @@ window.CC = (function(){
 
   // ================= バックアップ =================
   function exportData(){
-    const data={ version:3, exportedAt:new Date().toISOString(), cases, events, materials, images };
+    const data={ version:3, exportedAt:new Date().toISOString(), cases, presenters, events, materials, images };
     const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
     const url=URL.createObjectURL(blob);
     const a=document.createElement("a");
@@ -1501,8 +1616,8 @@ window.CC = (function(){
   }
   // 取り込みで既存の事件に追加データが来たとき用のマージ。incoming側で値が入っている欄だけ上書きし、
   // 空欄（未入力）は existing の値をそのまま残す
-  const CASE_FIELDS = ["name","caseNo","plaintiffName","defendantName","judge","points","callText","host","contact",
-    "press","plaintiffLinks","defendantLinks","tags","relatedCaseIds","archivedAt","closeType"];
+  const CASE_FIELDS = ["name","caseNo","plaintiffName","defendantName","judge","points","callText","presenterId","contact",
+    "press","plaintiffLinks","defendantLinks","tags","relatedCaseIds","archivedAt","closeType","boardEnabled","boardRestricted"];
   function mergeCaseFields(existing, incoming){
     const merged={};
     CASE_FIELDS.forEach(k=>{
@@ -1525,15 +1640,23 @@ window.CC = (function(){
     let ok=0, ng=0;
     for(const c of inCases){
       try{
-        const existing=caseByName(c.name);
+        // presenterNickname（問題提起人の自由記述の名前）が来ていれば、同じ名前の問題提起人を
+        // こちらで探すか、無ければ新しく作ってから presenterId に変換する（旧掲載依頼フォームの
+        // 取り込み形式との互換用。手作りのJSONでも同様に使える）
+        let cc = c;
+        if(c.presenterNickname){
+          let p = presenters.find(x=>x.nickname===c.presenterNickname);
+          if(!p){ p = await apiCreatePresenter({ nickname: c.presenterNickname }); presenters.push(p); }
+          cc = Object.assign({}, c, { presenterId: p.id });
+        }
+        const existing=caseByName(cc.name);
         if(existing){
-          // すでにある事件は、新しく来た欄（空でないものだけ）で上書きする。かんたん掲載依頼フォームの
-          // ①（アイコン・事件名）→③（くわしい情報）のように、同じ事件を何度かに分けて取り込む場合に、
-          // 後から来たデータで前の欄（例：①で結んだ関連裁判＝アイコンの引き継ぎ）を空で消してしまわないため
-          const up=await apiUpdateCase(existing.id, mergeCaseFields(existing, c));
+          // すでにある事件は、新しく来た欄（空でないものだけ）で上書きする。同じ事件を何度かに
+          // 分けて取り込む場合に、後から来たデータで前の欄を空で消してしまわないため
+          const up=await apiUpdateCase(existing.id, mergeCaseFields(existing, cc));
           const i=cases.findIndex(x=>x.id===existing.id); if(i>=0) cases[i]=up;
         }else{
-          cases.push(await apiCreateCase(c));
+          cases.push(await apiCreateCase(cc));
         }
       }catch(err){ ng++; }
     }
@@ -1544,17 +1667,22 @@ window.CC = (function(){
           if(!e.case){ ng++; continue; }
           // 旧形式（期日の行に事件の説明が埋め込まれている）：取り込みのときだけ、その内容で事件を先に作る。
           // 普段の「＋期日を追加」では事件の自動作成はしない（誤字で事件が乱立するのを防ぐため）。
-          // parties は当時「原告 ○○ ／ 被告 ○○」の自由記述1本だったので、取り込み時だけ分割する
+          // parties は当時「原告 ○○ ／ 被告 ○○」の自由記述1本だったので、取り込み時だけ分割する。
+          // host（当時は自由記述テキスト1本）があれば、取り込み時だけ問題提起人を新規に起こして紐付ける
           const pp = splitLegacyParties(e.parties);
+          let presenterId = "";
+          if(e.host){
+            try{ const p=await apiCreatePresenter({nickname:e.host}); presenters.push(p); presenterId=p.id; }catch(err){}
+          }
           known = await apiCreateCase({
             name:e.case, plaintiffName:pp.plaintiffName, defendantName:pp.defendantName,
-            host:e.host, contact:e.contact, callText:e.lede, points:e.points,
+            presenterId, contact:e.contact, callText:e.lede, points:e.points,
           });
           cases.push(known);
         }
         const created=await apiCreate({
           caseId: known.id, case:e.case, date:e.date, time:e.time, type:e.type,
-          court:e.court, place:e.place, open:e.open,
+          court:e.court, place:e.place, open:e.open, reportMeeting:e.reportMeeting,
           plaintiffArgument:e.plaintiffArgument, defendantArgument:e.defendantArgument,
         });
         events.push(created); ok++;
@@ -1592,14 +1720,17 @@ window.CC = (function(){
     WD,
     startOfMonth, ymd, parseYmd, todayStr, byTime, escapeHtml, escapeAttr, cssEsc,
     get cases(){ return cases; },
+    get presenters(){ return presenters; },
     get events(){ return events; },
     get posts(){ return posts; },
     get materials(){ return materials; },
     get images(){ return images; },
     get me(){ return me; },
     get loaded(){ return loaded; },
-    caseById, caseByName, caseEvents, casePosts, caseMaterials, caseImages, nearestCase, pickupCase, nextEvent, eventLine, jpDate,
-    likeHtml, toggleLike, isArchived, iconHtml,
+    caseById, caseByName, presenterById, caseEvents, casePosts, caseMaterials, caseImages, nearestCase, pickupCase, nextEvent, eventLine, jpDate,
+    likeHtml, toggleLike, isArchived, iconHtml, presenterHeaderHtml,
+    apiListPresenters, apiCreatePresenter, apiUpdatePresenter, apiDeletePresenter,
+    apiUpdatePresenterIcon, apiDeletePresenterIcon, reloadPresenters, saveErr,
     load, renderCaseDetail, renderStatus, openAdd,
     setOnChange(fn){ onChange = fn; },
   };

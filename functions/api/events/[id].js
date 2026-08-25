@@ -19,7 +19,7 @@ export async function onRequestPut({ request, env, params }) {
 
   const res = await env.DB.prepare(
     `UPDATE events
-        SET case_id=?, date=?, time=?, type=?, court=?, place=?, open=?,
+        SET case_id=?, date=?, time=?, type=?, court=?, place=?, open=?, report_meeting=?,
             plaintiff_argument=?, defendant_argument=?,
             updated_by=?, updated_at=?
       WHERE id=?`
@@ -30,6 +30,7 @@ export async function onRequestPut({ request, env, params }) {
     String(body.court || "").trim(),
     String(body.place || "").trim(),
     body.open === false ? 0 : 1,
+    body.reportMeeting === true ? 1 : 0,
     linesToText(body.plaintiffArgument),
     linesToText(body.defendantArgument),
     id.email, new Date().toISOString(), eid
