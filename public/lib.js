@@ -875,7 +875,7 @@ window.CC = (function(){
           </div>
         </div>
         <div class="field">
-          <label>種別</label>
+          <label>手続</label>
           <input type="text" id="fType" list="typeList" placeholder="例）第3回口頭弁論">
           <datalist id="typeList">
             <option value="口頭弁論">
