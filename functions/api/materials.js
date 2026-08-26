@@ -1,21 +1,22 @@
 import {
   json, newId, rowToMaterial, linesToText, MATERIAL_COLS, isMaterialUrl,
   MATERIAL_SIDES, MATERIAL_MIMES, MATERIAL_MAX_BYTES,
-  getIdentity, authorizeWrite, putFile,
+  getIdentity, authorizeWrite, putFile, hiddenCaseIds,
 } from "../_common.js";
 export { putFile };
 
 export const SELECT = `SELECT ${MATERIAL_COLS} FROM materials m WHERE m.hidden = 0`;
 
 // 一覧（誰でも閲覧可）。?case=<id> で1つの事件にしぼれる。
+// 非公開にした事件の資料は合言葉が合った人にだけ返す。
 export async function onRequestGet({ request, env }) {
   const caseId = new URL(request.url).searchParams.get("case");
   const order = ` ORDER BY COALESCE(m.filed_on, '9999') , m.created_at`;
   const stmt = caseId
     ? env.DB.prepare(`${SELECT} AND m.case_id = ?${order}`).bind(caseId)
     : env.DB.prepare(`${SELECT}${order}`);
-  const { results } = await stmt.all();
-  return json((results || []).map(rowToMaterial));
+  const [{ results }, hidden] = await Promise.all([stmt.all(), hiddenCaseIds(env, request)]);
+  return json((results || []).filter((r) => !hidden.has(r.case_id)).map(rowToMaterial));
 }
 
 // フォーム（multipart/form-data）を読んで、DBに入れる形にそろえる。

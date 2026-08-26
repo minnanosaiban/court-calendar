@@ -8,8 +8,9 @@ function escXml(s) {
 export async function onRequestGet({ request, env }) {
   const base = new URL(request.url).origin;
 
+  // 非公開にした事件（view_key あり）はクローラーに教えない
   const { results } = await env.DB.prepare(
-    `SELECT id, updated_at FROM cases ORDER BY updated_at DESC`
+    `SELECT id, updated_at FROM cases WHERE view_key IS NULL OR view_key = '' ORDER BY updated_at DESC`
   ).all();
 
   const urls = [

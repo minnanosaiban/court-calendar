@@ -5,10 +5,23 @@ window.CC = (function(){
   "use strict";
   const EDITKEY_LS = "court-calendar.editkey";
   const VIEWER_LS  = "court-calendar.viewer";
+  const VIEWKEYS_LS = "court-calendar.viewkeys";
   const WD = ["日","月","火","水","木","金","土"];
 
   // ---- state ----
   let editKey = localStorage.getItem(EDITKEY_LS) || "";   // 編集パスワード（この端末に保存）
+  // 非公開にした事件の合言葉。{ 事件id: 合言葉 } の形でこの端末に保存する。
+  // /case?id=…&key=… で開いたときだけ、URLの key をここに取り込む（以後はURLに無くても効く）。
+  let viewKeys = {};
+  try{ viewKeys = JSON.parse(localStorage.getItem(VIEWKEYS_LS) || "{}") || {}; }catch(e){ viewKeys = {}; }
+  try{
+    const qs = new URLSearchParams(location.search);
+    const kid = qs.get("id"), key = qs.get("key");
+    if(kid && key){
+      viewKeys[kid] = key;
+      localStorage.setItem(VIEWKEYS_LS, JSON.stringify(viewKeys));
+    }
+  }catch(e){}
   let loaded = false;   // 最初のデータ取得が終わったか（終わるまで「まだありません」系の文言を出さない）
   let cases = [];
   let presenters = [];
@@ -56,6 +69,8 @@ window.CC = (function(){
   async function api(method, path, body, extra){
     const opt = { method, headers:{ "X-Viewer": viewer } };
     if(editKey) opt.headers["X-Edit-Key"]=editKey;
+    const vkPairs = Object.keys(viewKeys).map(id=>id+":"+viewKeys[id]).join(",");
+    if(vkPairs) opt.headers["X-View-Keys"]=vkPairs;
     if(extra) Object.assign(opt.headers, extra);
     if(body instanceof FormData){ opt.body=body; }
     else if(body!==undefined){ opt.headers["content-type"]="application/json"; opt.body=JSON.stringify(body); }

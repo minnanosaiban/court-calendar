@@ -1,19 +1,20 @@
 import {
   json, newId, rowToImage, IMAGE_COLS, IMAGE_MIMES, IMAGE_MAX_BYTES, putFile,
-  getIdentity, authorizeWrite,
+  getIdentity, authorizeWrite, hiddenCaseIds,
 } from "../_common.js";
 
 export const SELECT = `SELECT ${IMAGE_COLS} FROM case_images i`;
 
 // 一覧（誰でも閲覧可）。?case=<id> で1つの事件にしぼれる。
+// 非公開にした事件の写真は合言葉が合った人にだけ返す。
 export async function onRequestGet({ request, env }) {
   const caseId = new URL(request.url).searchParams.get("case");
   const order = ` ORDER BY i.sort_order, i.created_at`;
   const stmt = caseId
     ? env.DB.prepare(`${SELECT} WHERE i.case_id = ?${order}`).bind(caseId)
     : env.DB.prepare(`${SELECT}${order}`);
-  const { results } = await stmt.all();
-  return json((results || []).map(rowToImage));
+  const [{ results }, hidden] = await Promise.all([stmt.all(), hiddenCaseIds(env, request)]);
+  return json((results || []).filter((r) => !hidden.has(r.case_id)).map(rowToImage));
 }
 
 // フォーム（multipart/form-data）を読む。caption・並び順は任意、caseId は必須。

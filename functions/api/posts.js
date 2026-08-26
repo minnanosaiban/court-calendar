@@ -1,5 +1,5 @@
 import {
-  json, newId, rowToPost, getIdentity, authorizePost, authorizeWrite,
+  json, newId, rowToPost, getIdentity, authorizePost, authorizeWrite, hiddenCaseIds,
   POST_SUBJECTS, POST_VERBS, QUOTE_MAX,
 } from "../_common.js";
 
@@ -13,13 +13,14 @@ const SELECT = `
    WHERE p.hidden = 0`;
 
 // 一覧（誰でも閲覧可）。?event=<id> で1つの期日にしぼれる。
+// 非公開にした事件についた投稿は合言葉が合った人にだけ返す。
 export async function onRequestGet({ request, env }) {
   const eventId = new URL(request.url).searchParams.get("event");
   const stmt = eventId
     ? env.DB.prepare(`${SELECT} AND p.event_id = ? ORDER BY e.date, p.created_at`).bind(eventId)
     : env.DB.prepare(`${SELECT} ORDER BY e.date, p.created_at`);
-  const { results } = await stmt.all();
-  return json((results || []).map(rowToPost));
+  const [{ results }, hidden] = await Promise.all([stmt.all(), hiddenCaseIds(env, request)]);
+  return json((results || []).filter((r) => !hidden.has(r.case_id)).map(rowToPost));
 }
 
 // 投稿（傍聴に行った人なら誰でも。ただし文の形は固定、スパム対策あり）。

@@ -15,9 +15,12 @@ export async function onRequestGet({ request, env }) {
   if (!assetRes.ok || (!id && !legacyName)) return assetRes;
 
   const c = id
-    ? await env.DB.prepare(`SELECT id, name, call_text FROM cases WHERE id = ?`).bind(id).first()
-    : await env.DB.prepare(`SELECT id, name, call_text FROM cases WHERE name = ?`).bind(legacyName).first();
+    ? await env.DB.prepare(`SELECT id, name, call_text, view_key FROM cases WHERE id = ?`).bind(id).first()
+    : await env.DB.prepare(`SELECT id, name, call_text, view_key FROM cases WHERE name = ?`).bind(legacyName).first();
   if (!c) return assetRes;
+  // 非公開にした事件は、URLの ?key= が合言葉と一致しない限り、事件名・説明をカードに出さない
+  // （SNSの展開カードやクローラーに漏れないように、書き換えず素の案内文のまま返す）
+  if (c.view_key && url.searchParams.get("key") !== c.view_key) return assetRes;
 
   const img = await env.DB.prepare(
     `SELECT r2_key FROM case_images WHERE case_id = ? ORDER BY sort_order, created_at LIMIT 1`

@@ -1,14 +1,15 @@
 import {
   json, newId, rowToEvent, linesToText, EVENT_COLS, EVENT_FROM, resolveCaseId,
-  getIdentity, authorizeWrite,
+  getIdentity, authorizeWrite, hiddenCaseIds,
 } from "../_common.js";
 
-// 一覧（誰でも閲覧可）。事件名も JOIN して返す
-export async function onRequestGet({ env }) {
-  const { results } = await env.DB
-    .prepare(`SELECT ${EVENT_COLS} ${EVENT_FROM} ORDER BY e.date, e.time`)
-    .all();
-  return json((results || []).map(rowToEvent));
+// 一覧（誰でも閲覧可）。事件名も JOIN して返す。非公開にした事件の期日は合言葉が合った人にだけ返す。
+export async function onRequestGet({ request, env }) {
+  const [{ results }, hidden] = await Promise.all([
+    env.DB.prepare(`SELECT ${EVENT_COLS} ${EVENT_FROM} ORDER BY e.date, e.time`).all(),
+    hiddenCaseIds(env, request),
+  ]);
+  return json((results || []).filter((r) => !hidden.has(r.case_id)).map(rowToEvent));
 }
 
 // 追加（書き込み権限が必要）。

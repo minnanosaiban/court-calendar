@@ -87,6 +87,40 @@ export function isYmd(s) {
   return typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s);
 }
 
+// ---- 事件ごとの閲覧制限（view_key） ----
+// 非公開にした事件（cases.view_key が入っている）は、正しい合言葉を持っている人にだけ見せる。
+// 合言葉はブラウザ側が "X-View-Keys" ヘッダで「事件id:合言葉」をカンマ区切りにして送る（lib.js 側で組み立てる）。
+
+// ヘッダを { caseId: key } の形にほどく
+export function parseViewKeys(request) {
+  const raw = request.headers.get("X-View-Keys") || "";
+  const map = {};
+  for (const pair of raw.split(",")) {
+    const i = pair.indexOf(":");
+    if (i < 0) continue;
+    const id = pair.slice(0, i).trim();
+    const key = pair.slice(i + 1).trim();
+    if (id && key) map[id] = key;
+  }
+  return map;
+}
+
+// このリクエストからは見せてはいけない事件idの集合を返す
+// （view_key が設定されている事件のうち、合言葉が一致しなかったもの）。
+// 一覧系APIは、結果を返す前にこの集合で自分の行を除く。
+export async function hiddenCaseIds(env, request) {
+  const { results } = await env.DB.prepare(
+    `SELECT id, view_key FROM cases WHERE view_key IS NOT NULL AND view_key <> ''`
+  ).all();
+  if (!results || !results.length) return new Set();
+  const sent = parseViewKeys(request);
+  const hidden = new Set();
+  for (const row of results) {
+    if (sent[row.id] !== row.view_key) hidden.add(row.id);
+  }
+  return hidden;
+}
+
 // ---- 問題提起人（アイコン＋ニックネーム。1人が複数の事件を持てる） ----
 export const PRESENTER_COLS = `id, nickname, icon_r2_key, created_by, updated_by, updated_at`;
 
