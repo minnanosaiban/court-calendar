@@ -9,6 +9,10 @@
 -- v4（2026-08-25）：「アイコン＋ニックネーム」を事件から独立させ、問題提起人（presenters）とした。
 --   1人の問題提起人が複数の事件を持てる（例：同じ人・団体が別件で複数の訴訟を抱えている場合）。
 --   旧 cases.host / cases.icon_r2_key から移行する場合は migrate_021_presenters.sql を実行すること。
+--
+-- v5（2026-08-26）：事件ごとの閲覧制限（cases.view_key）に向けた下準備。列を追加しただけで、
+--   API側のフィルタ・管理画面での設定はまだ無い（既存の事件は全部NULL＝今まで通り公開のまま）。
+--   新規に作るなら migrate_024_view_key.sql は不要（このファイルに列が入っている）。
 
 -- 問題提起人（アイコン＋ニックネーム）。1人が複数の事件を持てる。
 CREATE TABLE IF NOT EXISTS presenters (
@@ -39,6 +43,8 @@ CREATE TABLE IF NOT EXISTS cases (
   related_case_ids TEXT,            -- 関連する他の事件のID（1行1つ、改行区切り・任意。同じ事実に関連する別争点の訴訟など。双方向表示は画面側で補う）
   archived_at TEXT,                 -- 終結日 YYYY-MM-DD（あれば「裁判アーカイブ」扱い・任意）
   close_type  TEXT,                 -- 終結の種類（判決／和解／取下げ など・任意）
+  view_key    TEXT,                 -- 閲覧キー（値があればこの事件は非公開＝キーが一致する人にだけ見せる。NULLなら今まで通り誰でも公開。
+                                     -- 2026-08-26時点ではAPI側のフィルタは未実装で、列を用意しただけ・全事件NULLのまま）
   board_enabled    INTEGER NOT NULL DEFAULT 1, -- 1=「傍聴に行ってきたよ！掲示板」を表示する／0=非表示（掲示板ごと出さない）
   board_restricted INTEGER NOT NULL DEFAULT 0, -- 1=投稿を制限する（一般の匿名投稿は受け付けず運営のみ。将来は問題提起人が承認したアカウントのみに置き換える）／0=誰でも投稿可
   created_by  TEXT,
