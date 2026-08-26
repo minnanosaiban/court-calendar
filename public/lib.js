@@ -1022,7 +1022,8 @@ window.CC = (function(){
         </div>
         <div class="field">
           <label>タグ</label>
-          <textarea id="cTags" placeholder="例）情報公開、行政"></textarea>
+          <textarea id="cTags" placeholder="情報公開&#10;行政"></textarea>
+          <p class="fnote">1行に1つ。改行で区切ると別のタグになります。</p>
         </div>
         <div class="field"><label>争点</label><textarea id="cPoints" placeholder="例）◯◯の事実があったか"></textarea></div>
 
@@ -1068,7 +1069,7 @@ window.CC = (function(){
         <div class="field"><label>裁判について</label><textarea id="cCall" placeholder="どんな裁判か、傍聴や支援をお願いする文章など（空行を挟むと段落を分けられます）"></textarea></div>
         <div class="field">
           <label>関連裁判</label>
-          <textarea id="cRelated" list="caseList" placeholder="例）情報公開請求をめぐる訴訟"></textarea>
+          <textarea id="cRelated" placeholder="例）情報公開請求をめぐる訴訟"></textarea>
           <p class="fnote">同じ事実に関連する別争点の訴訟など。サイトに登録済みの事件名だけ指定できます（このサイト内の事件へのリンクになります）。どちらか一方に登録すれば、両方の事件ページに表示されます。</p>
         </div>
         <p class="msec">終結（終結した事件のみ入れる）</p>
@@ -1125,9 +1126,17 @@ window.CC = (function(){
   const ceTabs = document.getElementById("ceTabs");
   let ceCaseId = null;
   let ceActiveTab = "round";
+  // タブ切替は open○○() を呼び直してフォームをデータから再充填するので、入力中の内容は残らない。
+  // 黙って消えるのを防ぐため、開いてから入力があったか（ceDirty）を覚えておき、切替前に確認する。
+  let ceDirty = false;
+  overlay.querySelectorAll(".cepanel input, .cepanel textarea, .cepanel select").forEach(el=>{
+    el.addEventListener("input",()=>{ ceDirty=true; });
+    el.addEventListener("change",()=>{ ceDirty=true; });
+  });
   function ceShowTabs(show){ ceTabs.hidden = !show; }
   function ceSwitchTo(tab){
     ceActiveTab = tab;
+    ceDirty = false;   // 切替（＝再充填）した時点で「入力中の変更なし」に戻す
     document.querySelectorAll(".cepanel").forEach(p=>{ p.hidden = (p.dataset.panel !== tab); });
     ceTabs.querySelectorAll("[data-cetab]").forEach(s=>{ s.classList.toggle("on", s.dataset.cetab===tab); });
   }
@@ -1135,6 +1144,8 @@ window.CC = (function(){
     s.addEventListener("click",()=>{
       const id=ceCaseId; if(!id) return;
       const tab=s.dataset.cetab;
+      if(tab===ceActiveTab) return;   // いま開いているタブをもう一度押しても、再充填で入力を消さない
+      if(ceDirty && !confirm("入力中の内容は保存されていません。保存せずにタブを切り替えますか？")) return;
       if(tab==="round") openAddRound(id);
       else if(tab==="mat") openMatAdd(id);
       else if(tab==="img") openImgAdd(id);
