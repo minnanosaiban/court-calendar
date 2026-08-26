@@ -1,6 +1,6 @@
 import {
   json, newId, rowToCase, caseFromBody, CASE_COLS,
-  getIdentity, authorizeWrite, viewerHash, hiddenCaseIds,
+  getIdentity, authorizeWrite, viewerHash, hiddenCaseIds, redactCaseNo,
 } from "../_common.js";
 
 // 事件の一覧は、いいねの数と「この端末が押したか」を一緒に返す（最初の ? に viewer のハッシュを bind する）
@@ -14,13 +14,16 @@ export function casesSelect() {
 }
 
 // 一覧（誰でも閲覧可）。非公開にした事件（view_key あり）は合言葉が合った人にだけ返す。
+// 事件番号は運営（書き込み権限がある人）にだけ返す。
 export async function onRequestGet({ request, env }) {
   const viewer = (await viewerHash(request)) || "";
-  const [{ results }, hidden] = await Promise.all([
+  const [{ results }, hidden, wid] = await Promise.all([
     env.DB.prepare(`${casesSelect()} ORDER BY c.name`).bind(viewer).all(),
     hiddenCaseIds(env, request),
+    getIdentity(request, env),
   ]);
-  return json((results || []).filter((r) => !hidden.has(r.id)).map(rowToCase));
+  const visible = (results || []).filter((r) => !hidden.has(r.id));
+  return json(redactCaseNo(visible, authorizeWrite(request, env, wid)).map(rowToCase));
 }
 
 // 追加（書き込み権限が必要）

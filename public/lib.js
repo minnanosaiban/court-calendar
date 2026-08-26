@@ -353,9 +353,9 @@ window.CC = (function(){
     const next = nextEvent(caseId);
     const points=(c.points||[]).map(p=>`<li>${escapeHtml(p)}</li>`).join("");
 
-    // ファクトシート：最近の期日・手続・争点・原告・被告・裁判官・掲載・事件番号（値がある行だけ出す）。
-    // 掲載・事件番号は参照情報なので、事件ページ（full=true）でだけ末尾に続ける（トップの
-    // ピックアップカードでは出さない）
+    // ファクトシート：最近の期日・手続・争点・原告・被告・裁判官・掲載（値がある行だけ出す）。
+    // 掲載は参照情報なので、事件ページ（full=true）でだけ末尾に続ける（トップの
+    // ピックアップカードでは出さない）。事件番号はここには出さない（下のcaseNoRow廃止のコメント参照）
     const nextRow = next
       ? factRow("期日",
           `<div>${escapeHtml(jpDate(next.date))}${next.time?" "+escapeHtml(next.time):""}${next.open===false?`<span class="round-closed">非公開・要確認</span>`:""}${next.reportMeeting?`<span class="round-note">期日報告会あり</span>`:""}</div>`+
@@ -367,8 +367,8 @@ window.CC = (function(){
     const defendantRow = factRow("被告", (c.defendantName?escapeHtml(c.defendantName):"")+partyLinksHtml(c.defendantLinks));
     const judgeRow = factRow("裁判官", c.judge?courtLinesHtml(c.judge):"");
     const pressRow = full ? factRow("掲載", c.press.length?`<ul class="pts">${c.press.map(line=>`<li>${linkify(line)}</li>`).join("")}</ul>`:"") : "";
-    const caseNoRow = full ? factRow("事件番号", c.caseNo?courtLinesHtml(c.caseNo):"") : "";
-    const facts1 = nextRow+pointsRow+plaintiffRow+defendantRow+judgeRow+pressRow+caseNoRow;
+    // 事件番号は運営が事件を見分けるための内部用の欄なので、画面には出さない（APIも書き込み権限がない人には返さない）
+    const facts1 = nextRow+pointsRow+plaintiffRow+defendantRow+judgeRow+pressRow;
 
     // 写真・掲示板・事件本体（dcard）は、1つの塊として続けて出す（箱の中に箱、を解消するため）。
     // 継ぎ目は角丸にせず、塊の外側（写真の上／事件本体の下）だけ角丸にする（詳しくは style.css）

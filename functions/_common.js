@@ -87,6 +87,14 @@ export function isYmd(s) {
   return typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s);
 }
 
+// 事件番号（case_no）は運営が事件を見分けるための内部用の欄で、画面にもAPI応答にも出さない。
+// 書き込み権限がある人（＝編集する人）にだけ、そのまま返す。
+export function redactCaseNo(rows, canWrite) {
+  if (canWrite) return rows;
+  for (const r of rows) r.case_no = null;
+  return rows;
+}
+
 // ---- 事件ごとの閲覧制限（view_key） ----
 // 非公開にした事件（cases.view_key が入っている）は、正しい合言葉を持っている人にだけ見せる。
 // 合言葉はブラウザ側が "X-View-Keys" ヘッダで「事件id:合言葉」をカンマ区切りにして送る（lib.js 側で組み立てる）。
