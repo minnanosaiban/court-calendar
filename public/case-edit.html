@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>事件情報を編集 ｜ 応援傍聴ナビ</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"><link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap wrap-wide">
+
+  <header class="masthead">
+    <div class="stamp" aria-hidden="true">傍聴</div>
+    <div>
+      <h1><a href="index.html">応援傍聴ナビ</a></h1>
+      <p>傍聴席に、ひとり増える。それだけで法廷は変わる。</p>
+    </div>
+  </header>
+
+  <a class="pillbtn backlink" id="ceBack" href="index.html"><i class="bi bi-arrow-left" aria-hidden="true"></i> <span id="ceBackLabel">戻る</span></a>
+
+  <div class="ce-title" id="ceTitle">事件情報を編集</div>
+  <div class="ce-case" id="ceCaseName"></div>
+
+  <div class="card" id="ceLocked" hidden>
+    <p class="empty-msg">編集にはパスワードが必要です。ページ下の「事務局用」からロックを解除してください。</p>
+  </div>
+
+  <!-- 欄の並びは、事件ページの実際の掲載順（写真・期日・資料はモーダルで編集するのでここには無い） -->
+  <div class="editgrid" id="ceGrid" hidden>
+    <nav class="secnav" id="ceNav" aria-label="節へ移動">
+      <div data-sec="sec-board" class="on">掲示板</div>
+      <div data-sec="sec-name">事件名・タグ</div>
+      <div data-sec="sec-close">終結</div>
+      <div data-sec="sec-facts">争点・当事者</div>
+      <div data-sec="sec-call">裁判について</div>
+      <div data-sec="sec-related">関連裁判</div>
+      <div data-sec="sec-private">非公開の情報</div>
+    </nav>
+    <div>
+      <div class="editcol" id="ceForm">
+
+        <p class="msec" id="sec-board">掲示板</p>
+        <div class="field">
+          <label class="check"><input type="checkbox" id="cBoardEnabled" checked> 「傍聴に行ってきたよ！掲示板」を表示する</label>
+        </div>
+        <div class="field">
+          <label class="check"><input type="checkbox" id="cBoardRestricted"> 投稿を制限する（一般の投稿は受け付けず、運営のみ投稿できます）</label>
+        </div>
+
+        <p class="msec" id="sec-name">事件名・タグ</p>
+        <div class="field">
+          <label>事件名 <span class="reqmark">＊</span></label>
+          <input type="text" id="cName" placeholder="例）情報公開請求をめぐる訴訟">
+        </div>
+        <div class="field">
+          <label>問題提起人（アイコン＋ニックネーム）</label>
+          <select id="cPresenterSelect">
+            <option value="">（未設定）</option>
+            <option value="__new__">＋ 新しい問題提起人を作る…</option>
+          </select>
+          <p class="fnote">同じ人（団体）が複数の事件を持つときは、同じ問題提起人を選べばアイコン・ニックネームを使い回せます。</p>
+          <div class="subfield" id="cPresenterNewRow" hidden>
+            <div class="cicon-row">
+              <input type="text" id="cPresenterNewNickname" placeholder="ニックネーム（例：〇〇支援の会）">
+              <button type="button" class="btn-save" id="cPresenterNewSave">作成</button>
+            </div>
+          </div>
+          <div class="subfield" id="cPresenterIconRow" hidden>
+            <div class="cicon-row">
+              <span id="cPresenterIconPreview"></span>
+              <input type="file" id="cPresenterIconFile" accept="image/jpeg,image/png,image/webp">
+            </div>
+            <p class="fnote" id="cPresenterIconNote">JPEG・PNG・WebP、5MBまで。正方形に近い画像がきれいに出ます。選ぶとすぐ反映され（「保存」を待ちません）、同じ問題提起人の他の事件のアイコンも変わります。<a id="cPresenterIconRemove" class="cicon-remove" hidden>アイコンを外す</a></p>
+          </div>
+          <p class="fnote" id="cPresenterStatus" hidden></p>
+        </div>
+        <div class="field">
+          <label>タグ <span class="lhint">1行に1つ</span></label>
+          <textarea id="cTags" placeholder="情報公開&#10;行政"></textarea>
+        </div>
+
+        <p class="msec" id="sec-close">終結<span class="lhint">終結した事件のみ入れる</span></p>
+        <div class="two">
+          <div class="field"><label>終結日</label><input type="date" id="cArchivedAt"></div>
+          <div class="field"><label>終結の種類</label><input type="text" id="cCloseType" placeholder="例）判決、和解、取下げ"></div>
+        </div>
+
+        <p class="msec" id="sec-facts">争点・当事者</p>
+        <div class="field">
+          <label>争点 <span class="lhint">1行に1つ</span></label>
+          <textarea id="cPoints" placeholder="例）◯◯の事実があったか"></textarea>
+        </div>
+        <div class="two">
+          <div class="field"><label>原告名</label><input type="text" id="cPlaintiff" placeholder="例）従業員"></div>
+          <div class="field"><label>被告名</label><input type="text" id="cDefendant" placeholder="例）〇〇株式会社"></div>
+        </div>
+        <div class="two">
+          <div class="field">
+            <label>原告のリンク <span class="lhint">1行に1つ</span></label>
+            <textarea id="cPlaintiffLinks" placeholder="https://x.com/..."></textarea>
+          </div>
+          <div class="field">
+            <label>被告のリンク <span class="lhint">1行に1つ</span></label>
+            <textarea id="cDefendantLinks" placeholder="https://x.com/..."></textarea>
+          </div>
+        </div>
+        <div class="field">
+          <label>裁判官 <span class="lhint">1行に1人（審級＋スペース＋名前）</span></label>
+          <textarea id="cJudge" placeholder="地裁　〇〇〇〇裁判官&#10;高裁　〇〇〇〇裁判官"></textarea>
+        </div>
+        <div class="field">
+          <label>報道・掲載 <span class="lhint">1行に1件</span></label>
+          <textarea id="cPress" placeholder="例）〇〇新聞で報道されました https://...&#10;労働判例ジャーナル2025.10 No.163に掲載&#10;裁判所への手続きにより特別保存（永久保存）となっています"></textarea>
+        </div>
+
+        <p class="msec" id="sec-call">裁判について</p>
+        <div class="field">
+          <label>本文 <span class="lhint">空行を挟むと段落を分けられます</span></label>
+          <textarea id="cCall" style="min-height:200px" placeholder="どんな裁判か、傍聴や支援をお願いする文章など"></textarea>
+        </div>
+
+        <p class="msec" id="sec-related">関連裁判</p>
+        <div class="field">
+          <label>関連裁判 <span class="lhint">登録済みの事件名を1行に1つ</span></label>
+          <textarea id="cRelated" placeholder="例）情報公開請求をめぐる訴訟"></textarea>
+          <p class="fnote">同じ事実に関連する別争点の訴訟など。どちらか一方に登録すれば、両方の事件ページに表示されます。</p>
+        </div>
+
+        <p class="msec" id="sec-private">非公開の情報</p>
+        <div class="field">
+          <label>事件番号 <span class="lhint">1行に1件・サイトには表示されません</span></label>
+          <textarea id="cCaseNo" placeholder="地裁　令和6年(ワ)第12345号&#10;高裁　令和7年(ネ)第1234号"></textarea>
+          <p class="fnote">運営が事件を見分けるための欄です。閲覧者には表示されず、APIでも返しません。</p>
+        </div>
+
+      </div>
+      <div class="savebar">
+        <button class="btn-del" id="cDelete" style="display:none;">この事件を削除</button>
+        <button class="btn-cancel" id="cCancel">キャンセル</button>
+        <button class="btn-save" id="cSave">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <p class="status-row"><span id="status"></span></p>
+  </footer>
+</div>
+
+<script src="lib.js"></script>
+<script>
+(function(){
+  "use strict";
+  const statusEl=document.getElementById("status");
+  function renderAll(){
+    CC.renderStatus(statusEl);
+    CC.initCaseEditPage();
+  }
+  CC.setOnChange(renderAll);
+  (async function init(){
+    await CC.load();
+    renderAll();
+  })();
+
+  // 節ナビ：クリックでその節へ。スクロールで現在地をハイライト
+  const nav=document.getElementById("ceNav");
+  const items=[...nav.querySelectorAll("[data-sec]")];
+  items.forEach(d=>d.addEventListener("click",()=>{
+    const t=document.getElementById(d.dataset.sec);
+    if(t) t.scrollIntoView({behavior:"smooth",block:"start"});
+  }));
+  window.addEventListener("scroll",()=>{
+    let cur=0;
+    items.forEach((d,i)=>{
+      const t=document.getElementById(d.dataset.sec);
+      if(t && t.getBoundingClientRect().top<100) cur=i;
+    });
+    items.forEach((d,i)=>d.classList.toggle("on",i===cur));
+  },{passive:true});
+})();
+</script>
+</body>
+</html>

@@ -463,9 +463,14 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .overlay.show{display:flex}
 /* 幅は 560px（.sum-modal と同じ）。480px だと日本語の説明文が2〜4行に折り返して読みにくかった（2026-08-26） */
 .modal{background:var(--card);border-radius:20px;width:100%;max-width:560px;box-shadow:0 20px 60px rgba(0,0,0,.22);max-height:92vh;overflow:auto}
-.modal .tabs{margin:16px 24px 0}
+/* タブバーは上に固定する（2026-08-27。長いフォームの途中でも、どのタブにいるか見えるように）。
+   margin だと後ろのフォームが透けるので、背景つきの padding で持つ */
+.modal .tabs{position:sticky;top:0;z-index:3;background:var(--card);margin:0;padding:16px 24px 0}
 .modal .tabs[hidden]{display:none}
 .modal .mhead{padding:24px 24px 4px;font-family:"Shippori Mincho",serif;font-size:1.2rem;font-weight:600}
+/* 見出し右の「＊のみ必須」。冒頭の注意書き（箇条書き2行）の置き換え（2026-08-27） */
+.mhead .mreq{font-family:"Zen Kaku Gothic New",sans-serif;font-size:.8rem;font-weight:400;color:var(--mut);margin-left:8px}
+.reqmark{color:var(--stamp)}
 .modal .mbody{padding:16px 24px 4px}
 /* モーダル内の小見出し。以前は「ラベル」段（.7rem・字間広め・グレー）だったが、それだと
    欄名（.field label）や注記（.fnote）と強さの差がほとんど付かず、フォームが同じ薄いグレーの
@@ -479,6 +484,10 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 /* 欄名も「ラベル」段(.7rem)から一段上げて地色にする。注記(.fnote、.8rem グレー)より
    欄名が沈んで見えないようにするため（2026-08-26） */
 .field label{display:block;font-size:.8rem;color:var(--ink);margin-bottom:4px}
+/* 欄名の横に添える書式の説明（「1行に1つ」など）。冒頭の注意書きの置き換え（2026-08-27） */
+.field label .lhint{font-size:.7rem;color:var(--mut);margin-left:6px;font-weight:400}
+/* 期日タブで、事件が決まっているときの固定表示（入力欄の代わり。書き換え事故を防ぐ） */
+.fixedcase{font-size:.9rem;padding:4px 0}
 .field .check{display:flex;align-items:center;gap:8px;font-size:.9rem;color:var(--ink)}
 .field .check input{width:auto}
 .field input,.field textarea{
@@ -513,15 +522,53 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .fnote .inl input{width:auto}
 .field input:focus,.field textarea:focus{outline:none;border-color:#b9b6ac}
 .field input:disabled,.field textarea:disabled{background:var(--tint);color:var(--ink);opacity:1}
-.field textarea{resize:vertical;min-height:56px}
+/* 入力欄は書いた分だけ自動で伸ばす（lib.js の autosize）。内側スクロールを出さないよう overflow:hidden。
+   最小の高さは3行ぶん（それまでの56px＝2行の覗き窓では、複数行の内容が見渡せなかった。2026-08-27） */
+.field textarea{resize:vertical;min-height:76px;overflow:hidden}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.mfoot{padding:16px 24px 24px;display:flex;gap:12px;align-items:center}
+/* 保存ボタンは下に固定する（2026-08-27。長いフォームの途中でも保存できるように）。
+   罫線は使わない方針だが、流れる本文との境目にだけ薄い1本を敷く（.pop-foot と同じ扱い） */
+.mfoot{position:sticky;bottom:0;z-index:3;background:var(--card);border-top:1px solid var(--tint);
+  padding:12px 24px;display:flex;gap:12px;align-items:center}
 .mfoot .spacer{flex:1}
 .mfoot button{font-family:inherit;font-size:.9rem;line-height:inherit;cursor:pointer;border:none;border-radius:999px;padding:8px 24px}
 .btn-save{background:var(--ink);color:#fff}
 .btn-cancel{background:transparent;color:var(--mut)}
-.btn-del{background:transparent;color:var(--stamp)}
+/* 削除は「この期日を削除」等のリンク風にして、保存と押し間違えにくくする（2026-08-27） */
+.mfoot .btn-del{background:none;border:none;color:var(--stamp);font-size:.8rem;padding:4px 0;
+  text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 .mfoot button:disabled{opacity:.5;cursor:default}
+
+/* ---- 事件情報の編集ページ（case-edit.html、2026-08-27）----
+   事件情報だけモーダルから全画面ページへ分離（モーダルは期日・資料・写真専用に）。
+   欄の並びは事件ページの実際の掲載順に合わせる */
+/* 編集ページだけ少し広く使う（長文編集が主役のため。他ページは720pxのまま） */
+.wrap-wide{max-width:960px}
+.ce-title{font-family:"Shippori Mincho",serif;font-size:1.6rem;font-weight:600;line-height:1.4;margin-top:24px}
+.ce-case{font-size:.9rem;color:var(--mut);margin-top:2px}
+.editgrid{margin-top:24px}
+.secnav{display:none}
+.editcol{background:var(--card);border-radius:20px;padding:24px}
+.editcol .msec{font-family:"Shippori Mincho",serif;font-size:1.2rem;margin:40px 0 16px;scroll-margin-top:16px}
+.editcol .msec:first-child{margin-top:0}
+.editcol .msec .lhint{font-family:"Zen Kaku Gothic New",sans-serif;font-size:.8rem;color:var(--mut);font-weight:400;margin-left:8px}
+/* 保存バーはページ下に固定。背景はグラデーションで地色に溶かす（本文と面で切らない） */
+.savebar{position:sticky;bottom:0;z-index:5;background:linear-gradient(transparent,var(--bg) 40%);
+  padding:24px 0 16px;display:flex;gap:12px;align-items:center;justify-content:flex-end}
+.savebar button{font-family:inherit;font-size:.9rem;line-height:inherit;cursor:pointer;border:none;border-radius:999px;padding:8px 24px}
+.savebar .btn-del{background:none;border:none;color:var(--stamp);font-size:.8rem;margin-right:auto;
+  text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:4px 0}
+.savebar button:disabled{opacity:.5;cursor:default}
+@media(min-width:560px){
+  .editcol{padding:32px}
+}
+@media(min-width:860px){
+  /* PCでは左に節ナビ（ページ内ジャンプ）を出す */
+  .editgrid{display:grid;grid-template-columns:150px 1fr;gap:32px;align-items:start}
+  .secnav{display:block;position:sticky;top:16px;font-size:.8rem;color:var(--mut)}
+  .secnav div{padding:6px 0 6px 12px;cursor:pointer;border-left:2px solid transparent}
+  .secnav div.on{color:var(--ink);border-left-color:var(--ink)}
+}
 
 @media(min-width:560px){
   .wrap{padding:48px 24px 88px}

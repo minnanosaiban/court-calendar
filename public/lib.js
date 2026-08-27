@@ -719,7 +719,7 @@ window.CC = (function(){
       b.addEventListener("click",()=>toggleLike(b.dataset.like, b));
     });
     container.querySelectorAll("[data-editcase]").forEach(a=>{
-      a.addEventListener("click",()=>openCaseEdit(a.dataset.editcase));
+      a.addEventListener("click",()=>{ location.href="case-edit.html?id="+encodeURIComponent(a.dataset.editcase); });
     });
     container.querySelectorAll("[data-edit]").forEach(a=>{
       a.addEventListener("click",(e)=>{ e.stopPropagation(); openEdit(a.dataset.edit); });
@@ -807,7 +807,7 @@ window.CC = (function(){
         `<br><span class="status-sub">バックアップ（複数件をまとめて登録・復元するとき用）：`+
         `<a id="stExport">書き出す</a><span class="sep">・</span>`+
         `<a id="stImport">ファイルから取り込む</a></span>`;
-      el.querySelector("#stAddCase").addEventListener("click",openCaseAdd);
+      el.querySelector("#stAddCase").addEventListener("click",()=>{ location.href="case-edit.html"; });
       el.querySelector("#stLock").addEventListener("click",lockEditing);
       el.querySelector("#stExport").addEventListener("click",exportData);
       el.querySelector("#stImport").addEventListener("click",()=>{
@@ -846,27 +846,26 @@ window.CC = (function(){
   <div class="modal">
     <div class="tabs" id="ceTabs" hidden>
       <span data-cetab="img">写真</span>
-      <span data-cetab="info">事件情報</span>
       <span data-cetab="round">期日</span>
       <span data-cetab="mat">資料</span>
     </div>
 
     <div class="cepanel" data-panel="round">
-      <div class="mhead" id="modalTitle">期日を追加</div>
+      <div class="mhead"><span id="modalTitle">期日を追加</span><span class="mreq"><span class="reqmark">＊</span>のみ必須</span></div>
       <div class="mbody">
-        <ul class="pts mut">
-          <li>事件名・期日以外はすべて任意です。分かる範囲でご記入ください。</li>
-          <li>複数行入力する欄は、右下をドラッグすると縦に広げられます。</li>
-        </ul>
-        <div class="field">
-          <label>事件名 <span style="color:var(--stamp)">*</span></label>
+        <div class="field" id="fCaseFixed" hidden>
+          <label>事件</label>
+          <div class="fixedcase" id="fCaseFixedName"></div>
+        </div>
+        <div class="field" id="fCaseField">
+          <label>事件名 <span class="reqmark">＊</span></label>
           <input type="text" id="fCase" list="caseList" placeholder="例）令和7年(ネ)第○○号 損害賠償請求控訴事件">
           <datalist id="caseList"></datalist>
-          <p class="fnote">事件名は候補（一覧）から選んでください。まだ登録されていない事件は、先に「新たな事件を追加」で事件そのものを登録してから、期日を追加できます。</p>
+          <p class="fnote">候補（一覧）から選んでください。まだ登録されていない事件は、先に「新たな事件を追加」で事件を登録してから期日を追加できます。</p>
         </div>
         <div class="two">
           <div class="field">
-            <label>期日 <span style="color:var(--stamp)">*</span></label>
+            <label>期日 <span class="reqmark">＊</span></label>
             <input type="date" id="fDate">
           </div>
           <div class="field">
@@ -899,13 +898,13 @@ window.CC = (function(){
             <input type="text" id="fPlace" placeholder="例）610号法廷">
           </div>
         </div>
-        <p class="msec">この回の主張の要約（複数の場合は改行、1行に1つ）</p>
+        <p class="msec">この回の主張の要約</p>
         <div class="field">
-          <label>原告の主張</label>
+          <label>原告の主張 <span class="lhint">1行に1項目</span></label>
           <textarea id="fPlaintiff" placeholder="例）不開示決定の取消しを求める"></textarea>
         </div>
         <div class="field">
-          <label>被告の主張</label>
+          <label>被告の主張 <span class="lhint">1行に1項目</span></label>
           <textarea id="fDefendant" placeholder="例）該当する文書は保有していない"></textarea>
         </div>
         <div class="field">
@@ -916,7 +915,7 @@ window.CC = (function(){
         </div>
       </div>
       <div class="mfoot">
-        <button class="btn-del" id="btnDelete" style="display:none;">削除</button>
+        <button class="btn-del" id="btnDelete" style="display:none;">この期日を削除</button>
         <span class="spacer"></span>
         <button class="btn-cancel" id="btnCancel">キャンセル</button>
         <button class="btn-save" id="btnSave">保存</button>
@@ -924,14 +923,10 @@ window.CC = (function(){
     </div>
 
     <div class="cepanel" data-panel="mat" hidden>
-      <div class="mhead" id="matModalTitle">資料を追加</div>
+      <div class="mhead"><span id="matModalTitle">資料を追加</span><span class="mreq"><span class="reqmark">＊</span>のみ必須</span></div>
       <div class="mbody">
-        <ul class="pts mut">
-          <li>資料名以外はすべて任意です。分かる範囲でご記入ください。</li>
-          <li>複数行入力する欄は、右下をドラッグすると縦に広げられます。</li>
-        </ul>
         <div class="field">
-          <label>資料名 <span style="color:var(--stamp)">*</span></label>
+          <label>資料名 <span class="reqmark">＊</span></label>
           <input type="text" id="mTitle" placeholder="例）訴状、第1準備書面、甲3 ○○">
         </div>
         <div class="field"><label>提出者側</label>
@@ -951,7 +946,7 @@ window.CC = (function(){
           <input type="file" id="mFile" accept="application/pdf,image/png,image/jpeg">
           <p class="fnote" id="mFileNow" hidden></p>
         </div>
-        <div class="field"><label>この書面で主張していること（複数の場合は改行、1行に1つ）</label><textarea id="mClaims" placeholder="例）不開示決定の取消しを求める"></textarea></div>
+        <div class="field"><label>この書面で主張していること <span class="lhint">1行に1項目</span></label><textarea id="mClaims" placeholder="例）不開示決定の取消しを求める"></textarea></div>
         <div class="field">
           <label>本文（Markdownを貼り付け）</label>
           <textarea id="mBody" placeholder="書面の本文をそのまま貼り付けられます（見出し・箇条書き・**強調**などが使えます）" style="min-height:120px"></textarea>
@@ -960,7 +955,7 @@ window.CC = (function(){
         <div class="field"><label>要約</label><textarea id="mSummary" placeholder="手で書いた要約、またはAIに作らせて確認した要約"></textarea></div>
       </div>
       <div class="mfoot">
-        <button class="btn-del" id="mDelete" style="display:none;">削除</button>
+        <button class="btn-del" id="mDelete" style="display:none;">この資料を削除</button>
         <span class="spacer"></span>
         <button class="btn-cancel" id="mCancel">キャンセル</button>
         <button class="btn-save" id="mSave">保存</button>
@@ -968,10 +963,10 @@ window.CC = (function(){
     </div>
 
     <div class="cepanel" data-panel="img" hidden>
-      <div class="mhead" id="imgModalTitle">写真を追加</div>
+      <div class="mhead"><span id="imgModalTitle">写真を追加</span><span class="mreq"><span class="reqmark">＊</span>のみ必須</span></div>
       <div class="mbody">
         <div class="field">
-          <label>写真ファイル <span id="iFileReq" style="color:var(--stamp)">*</span></label>
+          <label>写真ファイル <span id="iFileReq" class="reqmark">＊</span></label>
           <input type="file" id="iFile" accept="image/jpeg,image/png,image/webp">
           <p class="fnote" id="iFileNow" hidden></p>
           <p class="fnote">JPEG・PNG・WebP、12MBまで。証拠写真は人の顔・氏名・住所が写り込んでいないか確認してから登録してください。</p>
@@ -979,110 +974,10 @@ window.CC = (function(){
         <div class="field"><label>説明（1行）</label><input type="text" id="iCaption" placeholder="例）提訴後の記者会見にて"></div>
       </div>
       <div class="mfoot">
-        <button class="btn-del" id="iDelete" style="display:none;">削除</button>
+        <button class="btn-del" id="iDelete" style="display:none;">この写真を削除</button>
         <span class="spacer"></span>
         <button class="btn-cancel" id="iCancel">キャンセル</button>
         <button class="btn-save" id="iSave">保存</button>
-      </div>
-    </div>
-
-    <div class="cepanel" data-panel="info" hidden>
-      <div class="mhead" id="caseModalTitle">事件を追加</div>
-      <div class="mbody">
-        <ul class="pts mut">
-          <li>事件名（＊）以外はすべて任意です。分かる範囲でご記入ください。</li>
-          <li>複数行の欄は、改行で区切ると1行が1項目になります。右下をドラッグすると縦に広げられます。</li>
-        </ul>
-        <p class="msec">事件の基本</p>
-        <div class="field">
-          <label>問題提起人（アイコン＋ニックネーム）</label>
-          <select id="cPresenterSelect">
-            <option value="">（未設定）</option>
-            <option value="__new__">＋ 新しい問題提起人を作る…</option>
-          </select>
-          <p class="fnote">同じ人（団体）が複数の事件を持つときは、同じ問題提起人を選べばアイコン・ニックネームを使い回せます。</p>
-          <div class="subfield" id="cPresenterNewRow" hidden>
-            <div class="cicon-row">
-              <input type="text" id="cPresenterNewNickname" placeholder="ニックネーム（例：〇〇支援の会）">
-              <button type="button" class="btn-save" id="cPresenterNewSave">作成</button>
-            </div>
-          </div>
-          <div class="subfield" id="cPresenterIconRow" hidden>
-            <div class="cicon-row">
-              <span id="cPresenterIconPreview"></span>
-              <input type="file" id="cPresenterIconFile" accept="image/jpeg,image/png,image/webp">
-            </div>
-            <p class="fnote" id="cPresenterIconNote">JPEG・PNG・WebP、5MBまで。正方形に近い画像がきれいに出ます。選ぶとすぐ反映され（「保存」を待ちません）、同じ問題提起人の他の事件のアイコンも変わります。<a id="cPresenterIconRemove" class="cicon-remove" hidden>アイコンを外す</a></p>
-          </div>
-          <p class="fnote" id="cPresenterStatus" hidden></p>
-        </div>
-        <div class="field">
-          <label>事件名 <span style="color:var(--stamp)">*</span></label>
-          <input type="text" id="cName" placeholder="例）情報公開請求をめぐる訴訟">
-        </div>
-        <div class="field">
-          <label>タグ</label>
-          <textarea id="cTags" placeholder="情報公開&#10;行政"></textarea>
-          <p class="fnote">1行に1つ。改行で区切ると別のタグになります。</p>
-        </div>
-        <div class="field"><label>争点</label><textarea id="cPoints" placeholder="例）◯◯の事実があったか"></textarea></div>
-
-        <p class="msec">掲示板</p>
-        <div class="field">
-          <label class="check"><input type="checkbox" id="cBoardEnabled" checked> 「傍聴に行ってきたよ！掲示板」を表示する</label>
-        </div>
-        <div class="field">
-          <label class="check"><input type="checkbox" id="cBoardRestricted"> 投稿を制限する（一般の投稿は受け付けず、運営のみ投稿できます）</label>
-        </div>
-
-        <p class="msec">当事者・裁判官</p>
-        <div class="two">
-          <div class="field"><label>原告名</label><input type="text" id="cPlaintiff" placeholder="例）従業員"></div>
-          <div class="field"><label>被告名</label><input type="text" id="cDefendant" placeholder="例）〇〇株式会社"></div>
-        </div>
-        <div class="two">
-          <div class="field">
-            <label>原告のリンク</label>
-            <textarea id="cPlaintiffLinks" placeholder="https://x.com/..."></textarea>
-          </div>
-          <div class="field">
-            <label>被告のリンク</label>
-            <textarea id="cDefendantLinks" placeholder="https://x.com/..."></textarea>
-          </div>
-        </div>
-        <div class="field">
-          <label>裁判官</label>
-          <textarea id="cJudge" placeholder="地裁　〇〇〇〇裁判官&#10;高裁　〇〇〇〇裁判官"></textarea>
-          <p class="fnote">地裁→高裁など審級が変わる場合は「地裁　○○ ○○裁判官」「高裁　○○ ○○裁判官」のように行を分けて書けます（事件番号欄と同じ書き方）。</p>
-        </div>
-
-        <p class="msec">くわしい情報</p>
-        <div class="field">
-          <label>報道・掲載</label>
-          <textarea id="cPress" placeholder="例）〇〇新聞で報道されました https://...&#10;労働判例ジャーナル2025.10 No.163に掲載&#10;裁判所への手続きにより特別保存（永久保存）となっています"></textarea>
-        </div>
-        <div class="field">
-          <label>事件番号</label>
-          <textarea id="cCaseNo" placeholder="地裁　令和6年(ワ)第12345号&#10;高裁　令和7年(ネ)第1234号"></textarea>
-          <p class="fnote">地裁→高裁など番号が変わる場合は「地裁　令和6年（ワ）第12345号」「高裁　令和7年（ネ）第6789号」のように行を分けて書けます（裁判官欄と同じ書き方）。</p>
-        </div>
-        <div class="field"><label>裁判について</label><textarea id="cCall" placeholder="どんな裁判か、傍聴や支援をお願いする文章など（空行を挟むと段落を分けられます）"></textarea></div>
-        <div class="field">
-          <label>関連裁判</label>
-          <textarea id="cRelated" placeholder="例）情報公開請求をめぐる訴訟"></textarea>
-          <p class="fnote">同じ事実に関連する別争点の訴訟など。サイトに登録済みの事件名だけ指定できます（このサイト内の事件へのリンクになります）。どちらか一方に登録すれば、両方の事件ページに表示されます。</p>
-        </div>
-        <p class="msec">終結（終結した事件のみ入れる）</p>
-        <div class="two">
-          <div class="field"><label>終結日</label><input type="date" id="cArchivedAt"></div>
-          <div class="field"><label>終結の種類</label><input type="text" id="cCloseType" placeholder="例）判決、和解、取下げ"></div>
-        </div>
-      </div>
-      <div class="mfoot">
-        <button class="btn-del" id="cDelete" style="display:none;">削除</button>
-        <span class="spacer"></span>
-        <button class="btn-cancel" id="cCancel">キャンセル</button>
-        <button class="btn-save" id="cSave">保存</button>
       </div>
     </div>
   </div>
@@ -1102,11 +997,36 @@ window.CC = (function(){
 </div>`;
   document.body.insertAdjacentHTML("beforeend", EXTRA_MODALS);
 
-  // ================= モーダル：写真・事件情報・期日・資料（1つの窓をタブで切り替える） =================
-  // 4つとも lib.js が生成するモーダル（EXTRA_MODALS）の中にある。要素はここで一度だけ取得する。
+  // ================= モーダル：写真・期日・資料（1つの窓をタブで切り替える） =================
+  // 3つとも lib.js が生成するモーダル（EXTRA_MODALS）の中にある。要素はここで一度だけ取得する。
+  // 事件情報はモーダルから分離し、全画面の編集ページ（case-edit.html）で編集する（2026-08-27）。
   const overlay = document.getElementById("overlay");
+
+  // ---- 入力欄（textarea）は書いた分だけ自動で伸ばす（2026-08-27） ----
+  // 2行の覗き窓＋内側スクロールで長文を編集させない。プログラムから値を入れたとき（fill○○）は
+  // inputイベントが出ないので、開いたあとに autosizeAll() を呼び直す（display:none の間は
+  // scrollHeight が 0 になるため、必ず表示してから測る）。
+  function autosize(el){ el.style.height="auto"; el.style.height=(el.scrollHeight+2)+"px"; }
+  function wireAutosize(root){
+    root.querySelectorAll("textarea").forEach(el=>{
+      if(el.dataset.auto) return;
+      el.dataset.auto="1";
+      el.addEventListener("input",()=>autosize(el));
+    });
+  }
+  function autosizeAll(root){ (root||document).querySelectorAll("textarea[data-auto]").forEach(autosize); }
+  wireAutosize(overlay);
+  function openOverlay(){
+    overlay.classList.add("show");
+    // .show は同期で効くので、その場で測って伸ばせる（rAF頼みにすると、非アクティブな
+    // タブでは発火が遅れて2行の覗き窓のまま見えてしまう）
+    autosizeAll(overlay);
+  }
   const modalTitle = document.getElementById("modalTitle");
   const fCase = document.getElementById("fCase");
+  const fCaseFixed = document.getElementById("fCaseFixed");
+  const fCaseFixedName = document.getElementById("fCaseFixedName");
+  const fCaseField = document.getElementById("fCaseField");
   const fDate = document.getElementById("fDate");
   const fTime = document.getElementById("fTime");
   const fType = document.getElementById("fType");
@@ -1139,6 +1059,7 @@ window.CC = (function(){
     ceDirty = false;   // 切替（＝再充填）した時点で「入力中の変更なし」に戻す
     document.querySelectorAll(".cepanel").forEach(p=>{ p.hidden = (p.dataset.panel !== tab); });
     ceTabs.querySelectorAll("[data-cetab]").forEach(s=>{ s.classList.toggle("on", s.dataset.cetab===tab); });
+    autosizeAll(overlay);
   }
   ceTabs.querySelectorAll("[data-cetab]").forEach(s=>{
     s.addEventListener("click",()=>{
@@ -1149,7 +1070,6 @@ window.CC = (function(){
       if(tab==="round") openAddRound(id);
       else if(tab==="mat") openMatAdd(id);
       else if(tab==="img") openImgAdd(id);
-      else if(tab==="info") openCaseEdit(id);
     });
   });
   function closeCaseEditModal(){
@@ -1175,6 +1095,14 @@ window.CC = (function(){
     fPlaintiff.value=(ev.plaintiffArgument||[]).join("\n");
     fDefendant.value=(ev.defendantArgument||[]).join("\n");
   }
+  // 事件が決まっているとき（事件ページのタブから開いたとき）は、事件名を入力欄でなく固定表示にする。
+  // 書き換え事故（別の事件に期日が付く・誤字で弾かれる）を防ぐ。値は fCase に入れたままにするので、
+  // saveEntry() 側は今まで通り fCase.value を読めばよい。
+  function setCaseFieldMode(fixedName){
+    fCaseFixed.hidden = !fixedName;
+    fCaseField.hidden = !!fixedName;
+    if(fixedName) fCaseFixedName.textContent = fixedName;
+  }
   function openAdd(dateStr){
     if(!me.canWrite) return;
     editingId=null; modalTitle.textContent="期日を追加"; btnDelete.style.display="none";
@@ -1184,8 +1112,9 @@ window.CC = (function(){
       const recent=[...events].sort((a,b)=>b.date.localeCompare(a.date))[0];
       fCase.value=recent.case; fCourt.value=recent.court||""; fPlace.value=recent.place||"";
     }
+    setCaseFieldMode(null);
     ceCaseId=null; ceShowTabs(false); ceSwitchTo("round");
-    overlay.classList.add("show"); fDate.focus();
+    openOverlay(); fDate.focus();
   }
   // 既にある事件に、新しい回を追加する（裁判所・法廷は直近の回から引き継ぐ）
   function openAddRound(caseId){
@@ -1196,8 +1125,9 @@ window.CC = (function(){
     editingId=null; modalTitle.textContent="期日を追加"; btnDelete.style.display="none";
     setReadonly(false); refreshCaseList();
     fillEventForm({case:c.name, court:src&&src.court, place:src&&src.place, open:true});
+    setCaseFieldMode(c.name);
     ceCaseId=c.id; ceShowTabs(true); ceSwitchTo("round");
-    overlay.classList.add("show"); fDate.focus();
+    openOverlay(); fDate.focus();
   }
   function openEdit(id){
     const ev=events.find(e=>e.id===id); if(!ev) return;
@@ -1208,8 +1138,9 @@ window.CC = (function(){
     btnDelete.style.display = ro ? "none" : "inline-block";
     refreshCaseList();
     fillEventForm(ev);
+    setCaseFieldMode(ev.case || null);
     ceCaseId=ev.caseId||null; ceShowTabs(!!ev.caseId); ceSwitchTo("round");
-    overlay.classList.add("show");
+    openOverlay();
   }
 
   async function saveEntry(){
@@ -1261,207 +1192,239 @@ window.CC = (function(){
   }
 
   const $ = (id)=>document.getElementById(id);
-  const cFields = { name:$("cName"), caseNo:$("cCaseNo"), plaintiff:$("cPlaintiff"), defendant:$("cDefendant"), judge:$("cJudge"), points:$("cPoints"),
-                    callText:$("cCall"), press:$("cPress"), plaintiffLinks:$("cPlaintiffLinks"), defendantLinks:$("cDefendantLinks"),
-                    tags:$("cTags"), related:$("cRelated"), archivedAt:$("cArchivedAt"), closeType:$("cCloseType") };
-  const cBoardEnabled=$("cBoardEnabled"), cBoardRestricted=$("cBoardRestricted");
-  const cPresenterSelect=$("cPresenterSelect"), cPresenterNewRow=$("cPresenterNewRow"), cPresenterNewNickname=$("cPresenterNewNickname"),
-        cPresenterNewSave=$("cPresenterNewSave"), cPresenterIconRow=$("cPresenterIconRow"), cPresenterIconPreview=$("cPresenterIconPreview"),
-        cPresenterIconFile=$("cPresenterIconFile"), cPresenterIconRemove=$("cPresenterIconRemove"),
-        cPresenterStatus=$("cPresenterStatus");
-  // 連絡先は入力欄を廃止したが、既存データは保持する（保存のたびに空で上書きしないよう、
-  // 編集を開いたときの値をここに覚えておいて、保存時にそのまま送り返す）
-  let editingCaseContact="";
-  // 問題提起人プルダウンの選択肢を作る（未設定／既存の問題提起人／＋新規作成）
-  function renderPresenterOptions(selectedId){
-    const opts = [`<option value="">（未設定）</option>`]
-      .concat(presenters.map(p=>`<option value="${escapeAttr(p.id)}"${p.id===selectedId?" selected":""}>${escapeHtml(p.nickname)}${p.caseCount?`（${p.caseCount}件）`:""}</option>`))
-      .concat([`<option value="__new__">＋ 新しい問題提起人を作る…</option>`]);
-    cPresenterSelect.innerHTML = opts.join("");
-    if(selectedId) cPresenterSelect.value = selectedId;
-  }
-  // 選んだ内容に応じて、新規作成欄・アイコン欄の出し分けを更新する
-  // （説明文 cPresenterIconNote はアイコン欄の中にあるので、欄ごと出し入れすれば一緒に付いてくる）
-  function updatePresenterFieldUI(){
-    const v = cPresenterSelect.value;
-    cPresenterStatus.hidden = true;
-    if(v==="__new__"){
-      cPresenterNewRow.hidden=false; cPresenterIconRow.hidden=true;
-      cPresenterNewNickname.value="";
-    }else if(v){
-      cPresenterNewRow.hidden=true; cPresenterIconRow.hidden=false;
-      const p = presenterById(v);
-      cPresenterIconPreview.innerHTML = p && p.icon
-        ? `<img class="cicon" src="${escapeAttr(p.icon)}" alt="">`
-        : `<span class="cicon cicon-ph" aria-hidden="true">${escapeHtml(placeholderChar(p?p.nickname:""))}</span>`;
-      cPresenterIconRemove.hidden = !(p && p.icon);
-    }else{
-      cPresenterNewRow.hidden=true; cPresenterIconRow.hidden=true;
-    }
-  }
-  cPresenterSelect.addEventListener("change", updatePresenterFieldUI);
-  // 「作成」を押すとその場ですぐ問題提起人を作り、続けてアイコンも設定できるようにする
-  cPresenterNewSave.addEventListener("click", async ()=>{
-    const nickname = cPresenterNewNickname.value.trim();
-    if(!nickname){ alert("ニックネームを入力してください。"); cPresenterNewNickname.focus(); return; }
-    cPresenterNewSave.disabled=true;
-    try{
-      const created = await apiCreatePresenter({nickname});
-      presenters.push(created);
-      renderPresenterOptions(created.id);
-      updatePresenterFieldUI();
-    }catch(err){ alert(saveErr(err)); }
-    finally{ cPresenterNewSave.disabled=false; }
-  });
-  cPresenterIconFile.addEventListener("change", async ()=>{
-    const f=cPresenterIconFile.files[0];
-    const pid=cPresenterSelect.value;
-    if(!f || !pid || pid==="__new__") return;
-    if(f.size>5*1024*1024){ alert("アイコンは5MBまでです。"); cPresenterIconFile.value=""; return; }
-    const fd=new FormData(); fd.append("file", f, f.name);
-    cPresenterStatus.hidden=false; cPresenterStatus.textContent="アップロード中…";
-    try{
-      const up=await apiUpdatePresenterIcon(pid,fd);
-      const i=presenters.findIndex(x=>x.id===pid); if(i>=0) presenters[i]=up;
-      renderPresenterOptions(pid); updatePresenterFieldUI();
-      cPresenterStatus.hidden=false; cPresenterStatus.textContent="アイコンを更新しました。";
-      await reloadCasesForIconChange();
-    }catch(err){ cPresenterStatus.hidden=false; cPresenterStatus.textContent="アップロードできませんでした：" + (err && err.message || err); }
-    finally{ cPresenterIconFile.value=""; }
-  });
-  cPresenterIconRemove.addEventListener("click", async ()=>{
-    const pid=cPresenterSelect.value;
-    if(!pid || pid==="__new__") return;
-    if(!confirm("アイコンを外します。よろしいですか？")) return;
-    cPresenterStatus.hidden=false; cPresenterStatus.textContent="外しています…";
-    try{
-      const up=await apiDeletePresenterIcon(pid);
-      const i=presenters.findIndex(x=>x.id===pid); if(i>=0) presenters[i]=up;
-      updatePresenterFieldUI();
-      cPresenterStatus.hidden=false; cPresenterStatus.textContent="アイコンを外しました。";
-      await reloadCasesForIconChange();
-    }catch(err){ cPresenterStatus.hidden=false; cPresenterStatus.textContent="外せませんでした：" + (err && err.message || err); }
-  });
-  // 問題提起人のアイコンを変えると、それを使っている全事件の表示（cases配列のpresenterIcon）が古くなるので読み直す
-  async function reloadCasesForIconChange(){
-    await reloadCases();
-    if(onChange) onChange();
-  }
   const mFields = { title:$("mTitle"), side:$("mSide"), event:$("mEvent"), filedOn:$("mFiledOn"),
                     url:$("mUrl"), file:$("mFile"), fileField:$("mFileField"), fileNow:$("mFileNow"),
                     claims:$("mClaims"), body:$("mBody"), summary:$("mSummary") };
   let matCaseId = null;
 
-  // ---- 事件 ----
-  function fillCaseForm(c){
-    cFields.name.value=c.name||""; cFields.caseNo.value=c.caseNo||"";
-    cFields.plaintiff.value=c.plaintiffName||""; cFields.defendant.value=c.defendantName||"";
-    cFields.judge.value=c.judge||"";
-    cFields.points.value=(c.points||[]).join("\n"); cFields.callText.value=c.callText||"";
-    editingCaseContact=c.contact||"";
-    cFields.press.value=(c.press||[]).join("\n");
-    cFields.plaintiffLinks.value=(c.plaintiffLinks||[]).join("\n");
-    cFields.defendantLinks.value=(c.defendantLinks||[]).join("\n");
-    cFields.tags.value=(c.tags||[]).join("\n");
-    // 関連裁判はIDで持つが、入力欄には事件名で表示する（見つからないIDは消えている事件なので無視）
-    cFields.related.value=(c.relatedCaseIds||[]).map(id=>caseById(id)).filter(Boolean).map(r=>r.name).join("\n");
-    cFields.archivedAt.value=c.archivedAt||""; cFields.closeType.value=c.closeType||"";
-    cBoardEnabled.checked = c.boardEnabled!==false;
-    cBoardRestricted.checked = c.boardRestricted===true;
-    renderPresenterOptions(c.presenterId||"");
-    updatePresenterFieldUI();
-  }
-  function openCaseAdd(){
-    if(!me.canWrite) return;
-    editingCaseId=null; $("caseModalTitle").textContent="事件を追加"; $("cDelete").style.display="none";
-    fillCaseForm({});
-    ceCaseId=null; ceShowTabs(false); ceSwitchTo("info");
-    overlay.classList.add("show"); cFields.name.focus();
-  }
-  function openCaseEdit(id){
-    if(!me.canWrite) return;
-    const c=caseById(id); if(!c) return;
-    editingCaseId=id; $("caseModalTitle").textContent="事件情報を編集"; $("cDelete").style.display="inline-block";
-    fillCaseForm(c);
-    ceCaseId=c.id; ceShowTabs(true); ceSwitchTo("info");
-    overlay.classList.add("show");
-  }
-  async function saveCase(){
-    if(!me.canWrite) return;
-    const name=cFields.name.value.trim();
-    if(!name){ alert("事件名を入力してください。"); cFields.name.focus(); return; }
-    // 関連裁判：1行1事件名→サイトに登録済みの事件のIDに変換する（期日の事件名と同じく、未登録の事件名は指定できない）
-    const relatedNames=cFields.related.value.split("\n").map(s=>s.trim()).filter(Boolean);
-    const relatedCaseIds=[];
-    const unknownRelated=[];
-    relatedNames.forEach(n=>{
-      const found=caseByName(n);
-      if(!found) { unknownRelated.push(n); return; }
-      if(editingCaseId && found.id===editingCaseId) return; // 自分自身は無視
-      if(!relatedCaseIds.includes(found.id)) relatedCaseIds.push(found.id);
-    });
-    if(unknownRelated.length){
-      alert(`関連裁判のうち、次の事件名はまだ登録されていません。先にその事件を登録するか、事件名を確認してください：\n${unknownRelated.join("\n")}`);
-      cFields.related.focus();
-      return;
+  // ================= 事件情報の編集ページ（case-edit.html、2026-08-27） =================
+  // 事件情報はモーダルから分離し、全画面ページで編集する。フォームの実体は case-edit.html に
+  // 静的に置いてあり、ここではそのページでだけ配線する（他のページでは何もしない）。
+  // 欄の並びは事件ページの実際の掲載順（掲示板→事件名とタグ→終結→争点・当事者→裁判について→関連裁判→非公開の情報）。
+  let initCaseEditPage = function(){};
+  if(document.getElementById("cName")){
+    const cFields = { name:$("cName"), caseNo:$("cCaseNo"), plaintiff:$("cPlaintiff"), defendant:$("cDefendant"), judge:$("cJudge"), points:$("cPoints"),
+                      callText:$("cCall"), press:$("cPress"), plaintiffLinks:$("cPlaintiffLinks"), defendantLinks:$("cDefendantLinks"),
+                      tags:$("cTags"), related:$("cRelated"), archivedAt:$("cArchivedAt"), closeType:$("cCloseType") };
+    const cBoardEnabled=$("cBoardEnabled"), cBoardRestricted=$("cBoardRestricted");
+    const cPresenterSelect=$("cPresenterSelect"), cPresenterNewRow=$("cPresenterNewRow"), cPresenterNewNickname=$("cPresenterNewNickname"),
+          cPresenterNewSave=$("cPresenterNewSave"), cPresenterIconRow=$("cPresenterIconRow"), cPresenterIconPreview=$("cPresenterIconPreview"),
+          cPresenterIconFile=$("cPresenterIconFile"), cPresenterIconRemove=$("cPresenterIconRemove"),
+          cPresenterStatus=$("cPresenterStatus");
+    // 連絡先は入力欄を廃止したが、既存データは保持する（保存のたびに空で上書きしないよう、
+    // 編集を開いたときの値をここに覚えておいて、保存時にそのまま送り返す）
+    let editingCaseContact="";
+    let edCaseId=null;    // 編集対象の事件ID（null＝新規作成）
+    let edInited=false;   // フォームを一度充填したか（onChangeのたびに入力中の内容を上書きしないため）
+    let edDirty=false;    // 未保存の入力があるか（ページを離れる前の確認に使う）
+    // 問題提起人プルダウンの選択肢を作る（未設定／既存の問題提起人／＋新規作成）
+    function renderPresenterOptions(selectedId){
+      const opts = [`<option value="">（未設定）</option>`]
+        .concat(presenters.map(p=>`<option value="${escapeAttr(p.id)}"${p.id===selectedId?" selected":""}>${escapeHtml(p.nickname)}${p.caseCount?`（${p.caseCount}件）`:""}</option>`))
+        .concat([`<option value="__new__">＋ 新しい問題提起人を作る…</option>`]);
+      cPresenterSelect.innerHTML = opts.join("");
+      if(selectedId) cPresenterSelect.value = selectedId;
     }
-    // 問題提起人：「＋新規作成」を選んだままなら、保存の前にここで作る（作成ボタンを押し忘れていても保存できるように）
-    let presenterId = cPresenterSelect.value;
-    if(presenterId==="__new__"){
+    // 選んだ内容に応じて、新規作成欄・アイコン欄の出し分けを更新する
+    // （説明文 cPresenterIconNote はアイコン欄の中にあるので、欄ごと出し入れすれば一緒に付いてくる）
+    function updatePresenterFieldUI(){
+      const v = cPresenterSelect.value;
+      cPresenterStatus.hidden = true;
+      if(v==="__new__"){
+        cPresenterNewRow.hidden=false; cPresenterIconRow.hidden=true;
+        cPresenterNewNickname.value="";
+      }else if(v){
+        cPresenterNewRow.hidden=true; cPresenterIconRow.hidden=false;
+        const p = presenterById(v);
+        cPresenterIconPreview.innerHTML = p && p.icon
+          ? `<img class="cicon" src="${escapeAttr(p.icon)}" alt="">`
+          : `<span class="cicon cicon-ph" aria-hidden="true">${escapeHtml(placeholderChar(p?p.nickname:""))}</span>`;
+        cPresenterIconRemove.hidden = !(p && p.icon);
+      }else{
+        cPresenterNewRow.hidden=true; cPresenterIconRow.hidden=true;
+      }
+    }
+    cPresenterSelect.addEventListener("change", updatePresenterFieldUI);
+    // 「作成」を押すとその場ですぐ問題提起人を作り、続けてアイコンも設定できるようにする
+    cPresenterNewSave.addEventListener("click", async ()=>{
       const nickname = cPresenterNewNickname.value.trim();
-      if(!nickname){ alert("問題提起人のニックネームを入力するか、「（未設定）」に戻してください。"); cPresenterNewNickname.focus(); return; }
+      if(!nickname){ alert("ニックネームを入力してください。"); cPresenterNewNickname.focus(); return; }
+      cPresenterNewSave.disabled=true;
       try{
         const created = await apiCreatePresenter({nickname});
         presenters.push(created);
-        presenterId = created.id;
-        renderPresenterOptions(presenterId); updatePresenterFieldUI();
-      }catch(err){ alert(saveErr(err)); return; }
+        renderPresenterOptions(created.id);
+        updatePresenterFieldUI();
+      }catch(err){ alert(saveErr(err)); }
+      finally{ cPresenterNewSave.disabled=false; }
+    });
+    cPresenterIconFile.addEventListener("change", async ()=>{
+      const f=cPresenterIconFile.files[0];
+      const pid=cPresenterSelect.value;
+      if(!f || !pid || pid==="__new__") return;
+      if(f.size>5*1024*1024){ alert("アイコンは5MBまでです。"); cPresenterIconFile.value=""; return; }
+      const fd=new FormData(); fd.append("file", f, f.name);
+      cPresenterStatus.hidden=false; cPresenterStatus.textContent="アップロード中…";
+      try{
+        const up=await apiUpdatePresenterIcon(pid,fd);
+        const i=presenters.findIndex(x=>x.id===pid); if(i>=0) presenters[i]=up;
+        renderPresenterOptions(pid); updatePresenterFieldUI();
+        cPresenterStatus.hidden=false; cPresenterStatus.textContent="アイコンを更新しました。";
+        await reloadCases();
+      }catch(err){ cPresenterStatus.hidden=false; cPresenterStatus.textContent="アップロードできませんでした：" + (err && err.message || err); }
+      finally{ cPresenterIconFile.value=""; }
+    });
+    cPresenterIconRemove.addEventListener("click", async ()=>{
+      const pid=cPresenterSelect.value;
+      if(!pid || pid==="__new__") return;
+      if(!confirm("アイコンを外します。よろしいですか？")) return;
+      cPresenterStatus.hidden=false; cPresenterStatus.textContent="外しています…";
+      try{
+        const up=await apiDeletePresenterIcon(pid);
+        const i=presenters.findIndex(x=>x.id===pid); if(i>=0) presenters[i]=up;
+        updatePresenterFieldUI();
+        cPresenterStatus.hidden=false; cPresenterStatus.textContent="アイコンを外しました。";
+        await reloadCases();
+      }catch(err){ cPresenterStatus.hidden=false; cPresenterStatus.textContent="外せませんでした：" + (err && err.message || err); }
+    });
+    function fillCaseForm(c){
+      cFields.name.value=c.name||""; cFields.caseNo.value=c.caseNo||"";
+      cFields.plaintiff.value=c.plaintiffName||""; cFields.defendant.value=c.defendantName||"";
+      cFields.judge.value=c.judge||"";
+      cFields.points.value=(c.points||[]).join("\n"); cFields.callText.value=c.callText||"";
+      editingCaseContact=c.contact||"";
+      cFields.press.value=(c.press||[]).join("\n");
+      cFields.plaintiffLinks.value=(c.plaintiffLinks||[]).join("\n");
+      cFields.defendantLinks.value=(c.defendantLinks||[]).join("\n");
+      cFields.tags.value=(c.tags||[]).join("\n");
+      // 関連裁判はIDで持つが、入力欄には事件名で表示する（見つからないIDは消えている事件なので無視）
+      cFields.related.value=(c.relatedCaseIds||[]).map(id=>caseById(id)).filter(Boolean).map(r=>r.name).join("\n");
+      cFields.archivedAt.value=c.archivedAt||""; cFields.closeType.value=c.closeType||"";
+      cBoardEnabled.checked = c.boardEnabled!==false;
+      cBoardRestricted.checked = c.boardRestricted===true;
+      renderPresenterOptions(c.presenterId||"");
+      updatePresenterFieldUI();
     }
-    const data={
-      name, presenterId, caseNo:cFields.caseNo.value.trim(),
-      plaintiffName:cFields.plaintiff.value.trim(), defendantName:cFields.defendant.value.trim(),
-      judge:cFields.judge.value.trim(),
-      points:cFields.points.value.split("\n").map(s=>s.trim()).filter(Boolean),
-      callText:cFields.callText.value.trim(),
-      contact:editingCaseContact,
-      press:cFields.press.value.split("\n").map(s=>s.trim()).filter(Boolean),
-      plaintiffLinks:cFields.plaintiffLinks.value.split("\n").map(s=>s.trim()).filter(Boolean),
-      defendantLinks:cFields.defendantLinks.value.split("\n").map(s=>s.trim()).filter(Boolean),
-      tags:cFields.tags.value.split("\n").map(s=>s.trim()).filter(Boolean),
-      relatedCaseIds,
-      archivedAt:cFields.archivedAt.value, closeType:cFields.closeType.value.trim(),
-      boardEnabled:cBoardEnabled.checked, boardRestricted:cBoardRestricted.checked,
-    };
-    $("cSave").disabled=true;
-    try{
-      if(editingCaseId){
-        const up=await apiUpdateCase(editingCaseId,data);
-        const i=cases.findIndex(c=>c.id===editingCaseId); if(i>=0) cases[i]=up;
-        events.forEach(e=>{ if(e.caseId===up.id) e.case=up.name; });
-      }else{
-        const created=await apiCreateCase(data);
-        cases.push(created);
+    async function saveCase(){
+      if(!me.canWrite) return;
+      const name=cFields.name.value.trim();
+      if(!name){ alert("事件名を入力してください。"); cFields.name.focus(); return; }
+      // 関連裁判：1行1事件名→サイトに登録済みの事件のIDに変換する（期日の事件名と同じく、未登録の事件名は指定できない）
+      const relatedNames=cFields.related.value.split("\n").map(s=>s.trim()).filter(Boolean);
+      const relatedCaseIds=[];
+      const unknownRelated=[];
+      relatedNames.forEach(n=>{
+        const found=caseByName(n);
+        if(!found) { unknownRelated.push(n); return; }
+        if(edCaseId && found.id===edCaseId) return; // 自分自身は無視
+        if(!relatedCaseIds.includes(found.id)) relatedCaseIds.push(found.id);
+      });
+      if(unknownRelated.length){
+        alert(`関連裁判のうち、次の事件名はまだ登録されていません。先にその事件を登録するか、事件名を確認してください：\n${unknownRelated.join("\n")}`);
+        cFields.related.focus();
+        return;
       }
-      closeCaseEditModal();
-      if(onChange) onChange();
-    }catch(err){ alert(saveErr(err)); }
-    finally{ $("cSave").disabled=false; }
+      // 問題提起人：「＋新規作成」を選んだままなら、保存の前にここで作る（作成ボタンを押し忘れていても保存できるように）
+      let presenterId = cPresenterSelect.value;
+      if(presenterId==="__new__"){
+        const nickname = cPresenterNewNickname.value.trim();
+        if(!nickname){ alert("問題提起人のニックネームを入力するか、「（未設定）」に戻してください。"); cPresenterNewNickname.focus(); return; }
+        try{
+          const created = await apiCreatePresenter({nickname});
+          presenters.push(created);
+          presenterId = created.id;
+          renderPresenterOptions(presenterId); updatePresenterFieldUI();
+        }catch(err){ alert(saveErr(err)); return; }
+      }
+      const data={
+        name, presenterId, caseNo:cFields.caseNo.value.trim(),
+        plaintiffName:cFields.plaintiff.value.trim(), defendantName:cFields.defendant.value.trim(),
+        judge:cFields.judge.value.trim(),
+        points:cFields.points.value.split("\n").map(s=>s.trim()).filter(Boolean),
+        callText:cFields.callText.value.trim(),
+        contact:editingCaseContact,
+        press:cFields.press.value.split("\n").map(s=>s.trim()).filter(Boolean),
+        plaintiffLinks:cFields.plaintiffLinks.value.split("\n").map(s=>s.trim()).filter(Boolean),
+        defendantLinks:cFields.defendantLinks.value.split("\n").map(s=>s.trim()).filter(Boolean),
+        tags:cFields.tags.value.split("\n").map(s=>s.trim()).filter(Boolean),
+        relatedCaseIds,
+        archivedAt:cFields.archivedAt.value, closeType:cFields.closeType.value.trim(),
+        boardEnabled:cBoardEnabled.checked, boardRestricted:cBoardRestricted.checked,
+      };
+      $("cSave").disabled=true;
+      try{
+        let goId;
+        if(edCaseId){
+          const up=await apiUpdateCase(edCaseId,data);
+          goId=up.id;
+        }else{
+          const created=await apiCreateCase(data);
+          goId=created.id;
+        }
+        // 保存できたら事件ページへ戻って結果を見る（見たまま確認の往復）
+        edDirty=false;
+        location.href="case?id="+encodeURIComponent(goId);
+      }catch(err){ alert(saveErr(err)); $("cSave").disabled=false; }
+    }
+    async function deleteCase(){
+      if(!edCaseId || !me.canWrite) return;
+      if(!confirm("この事件を削除します。よろしいですか？（期日や資料が残っていると削除できません）")) return;
+      $("cDelete").disabled=true;
+      try{
+        await apiDeleteCase(edCaseId);
+        edDirty=false;
+        location.href="index.html";
+      }catch(err){ alert(saveErr(err)); $("cDelete").disabled=false; }
+    }
+    $("cSave").addEventListener("click",saveCase);
+    $("cCancel").addEventListener("click",()=>{
+      edDirty=false;   // キャンセル＝破棄の意思表示なので、beforeunloadの確認は出さない
+      location.href = edCaseId ? "case?id="+encodeURIComponent(edCaseId) : "index.html";
+    });
+    $("cDelete").addEventListener("click",deleteCase);
+    const ceForm=$("ceForm");
+    wireAutosize(ceForm);
+    ceForm.addEventListener("input",()=>{ edDirty=true; });
+    ceForm.addEventListener("change",()=>{ edDirty=true; });
+    window.addEventListener("beforeunload",(e)=>{ if(edDirty){ e.preventDefault(); e.returnValue=""; } });
+    // ページの初期化。CC.load() 後にページ側から呼ぶ。編集ロック解除（onChange）でも呼ばれるが、
+    // フォームの充填は一度だけ（アイコン即時反映などの onChange で入力中の内容を上書きしない）
+    initCaseEditPage = function(){
+      if(!loaded) return;
+      const locked=$("ceLocked"), grid=$("ceGrid");
+      if(!me.canWrite){ locked.hidden=false; grid.hidden=true; return; }
+      locked.hidden=true; grid.hidden=false;
+      if(edInited) return;
+      edInited=true;
+      const params=new URLSearchParams(location.search);
+      const id=params.get("id")||"";
+      if(id){
+        const c=caseById(id);
+        if(!c){
+          grid.hidden=true; locked.hidden=false;
+          locked.querySelector(".empty-msg").textContent="その事件は見つかりませんでした。";
+          return;
+        }
+        edCaseId=id;
+        $("ceTitle").textContent="事件情報を編集";
+        $("ceCaseName").textContent=c.name;
+        document.title=c.name+"の編集 ｜ 応援傍聴ナビ";
+        $("ceBack").href="case?id="+encodeURIComponent(id);
+        $("ceBackLabel").textContent="事件ページに戻る";
+        $("cDelete").style.display="";
+        fillCaseForm(c);
+      }else{
+        edCaseId=null;
+        $("ceTitle").textContent="事件を追加";
+        document.title="事件を追加 ｜ 応援傍聴ナビ";
+        $("ceBack").href="index.html";
+        $("ceBackLabel").textContent="トップに戻る";
+        $("cDelete").style.display="none";
+        fillCaseForm({});
+      }
+      autosizeAll(ceForm);   // gridはこの時点で表示済みなので同期で測れる
+    };
   }
-  async function deleteCase(){
-    if(!editingCaseId || !me.canWrite) return;
-    if(!confirm("この事件を削除します。よろしいですか？（期日や資料が残っていると削除できません）")) return;
-    $("cDelete").disabled=true;
-    try{
-      await apiDeleteCase(editingCaseId);
-      cases=cases.filter(c=>c.id!==editingCaseId);
-      closeCaseEditModal();
-      if(onChange) onChange();
-    }catch(err){ alert(saveErr(err)); }
-    finally{ $("cDelete").disabled=false; }
-  }
-  $("cSave").addEventListener("click",saveCase);
-  $("cCancel").addEventListener("click",closeCaseEditModal);
-  $("cDelete").addEventListener("click",deleteCase);
 
   // ---- 資料 ----
   function fillMatForm(m, caseId){
@@ -1489,7 +1452,7 @@ window.CC = (function(){
     let def=""; rounds.forEach(e=>{ if(e.date<=today) def=e.id; });
     fillMatForm({eventId:def}, caseId);
     ceCaseId=caseId; ceShowTabs(true); ceSwitchTo("mat");
-    overlay.classList.add("show"); mFields.title.focus();
+    openOverlay(); mFields.title.focus();
   }
   function openMatEdit(id){
     if(!me.canWrite) return;
@@ -1497,7 +1460,7 @@ window.CC = (function(){
     editingMatId=id; $("matModalTitle").textContent="資料を編集"; $("mDelete").style.display="inline-block";
     fillMatForm(m, m.caseId);
     ceCaseId=m.caseId; ceShowTabs(true); ceSwitchTo("mat");
-    overlay.classList.add("show");
+    openOverlay();
   }
   async function saveMat(){
     if(!me.canWrite || !matCaseId) return;
@@ -1558,7 +1521,7 @@ window.CC = (function(){
     editingImgId=null; imgCaseId=caseId; $("imgModalTitle").textContent="写真を追加"; $("iDelete").style.display="none";
     iFields.file.value=""; iFields.caption.value=""; iFields.fileNow.hidden=true; iFields.fileReq.style.display="";
     ceCaseId=caseId; ceShowTabs(true); ceSwitchTo("img");
-    overlay.classList.add("show"); iFields.file.focus();
+    openOverlay(); iFields.file.focus();
   }
   function openImgEdit(id){
     if(!me.canWrite) return;
@@ -1569,7 +1532,7 @@ window.CC = (function(){
     iFields.fileNow.innerHTML=`いまの写真：<img src="${escapeAttr(im.url)}" alt="" style="width:64px;height:46px;object-fit:cover;border-radius:6px;vertical-align:middle;margin-left:6px">`+
       `　ファイルを選ぶと差し替わります。`;
     ceCaseId=im.caseId; ceShowTabs(true); ceSwitchTo("img");
-    overlay.classList.add("show");
+    openOverlay();
   }
   async function saveImg(){
     if(!me.canWrite || !imgCaseId) return;
@@ -1731,7 +1694,6 @@ window.CC = (function(){
     if((e.ctrlKey||e.metaKey)&&e.key==="Enter"){
       if(overlay.classList.contains("show")){
         if(ceActiveTab==="round") saveEntry();
-        else if(ceActiveTab==="info") saveCase();
         else if(ceActiveTab==="mat") saveMat();
         else if(ceActiveTab==="img") saveImg();
       }
@@ -1758,6 +1720,7 @@ window.CC = (function(){
     apiListPresenters, apiCreatePresenter, apiUpdatePresenter, apiDeletePresenter,
     apiUpdatePresenterIcon, apiDeletePresenterIcon, reloadPresenters, saveErr,
     load, renderCaseDetail, renderStatus, openAdd,
+    initCaseEditPage(){ initCaseEditPage(); },
     setOnChange(fn){ onChange = fn; },
   };
 })();
