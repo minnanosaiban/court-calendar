@@ -124,6 +124,10 @@ a{color:inherit}
    幅が狭く長い名前が省略されてしまうため、タイトルの下の広い幅で全文出す（2026-08-26） */
 .presenter-name{display:block;font-family:"Zen Kaku Gothic New",sans-serif;font-size:.8rem;
   color:var(--mut);text-decoration:underline;text-underline-offset:3px;margin-top:2px}
+/* トップのピックアップカードだけの「事件の詳細を見る」。以前は右下のボタン(.pillbtn)だったが、
+   問題提起人名（.presenter-name）と同じ並び・見た目の下線リンクに揃えた（2026-08-27） */
+.detail-link{display:block;font-family:"Zen Kaku Gothic New",sans-serif;font-size:.8rem;
+  color:var(--mut);text-decoration:underline;text-underline-offset:3px;margin-top:2px}
 .d-title{font-family:"Shippori Mincho",serif;font-size:1.6rem;font-weight:600;line-height:1.4}
 .d-body{font-size:.9rem;margin-top:8px}
 .mut{color:var(--mut)}
@@ -154,8 +158,10 @@ a{color:inherit}
   color:var(--faint);font-size:.9rem;text-decoration:none;background:none;border:none;cursor:pointer;font-family:inherit}
 .share a:hover,.share button:hover{color:var(--ink)}
 .share button.copied{color:#2f7d4f}
-/* 「報告を書く」(.bwrite)と同じ上余白にそろえる */
+/* ピックアップカードの右下：問題提起人名・事件の詳細を見る（枠なし・下線のみ、2026-08-27） */
 .d-more{margin-top:12px;text-align:right}
+.d-more .presenter-name,.d-more .detail-link{margin-top:0}
+.d-more .detail-link{margin-top:4px}
 .lede{margin-top:24px;background:var(--card);border-radius:4px 12px 12px 4px;border-left:4px solid var(--stamp);padding:16px;font-size:.9rem}
 .lede-title{font-family:"Shippori Mincho",serif;font-size:1.2rem;font-weight:600}
 .lede p + p{margin-top:12px}
@@ -276,7 +282,9 @@ a{color:inherit}
 .board-name-link{text-decoration:none}
 /* 報告は吹き出しで「声」として並べる */
 .bubble{background:#fff;border-radius:12px;padding:12px 16px;margin-top:12px;position:relative;font-size:.9rem}
-.bubble::before{content:"";position:absolute;left:-6px;top:16px;
+/* しっぽ（三角形）は本体の左端ぴったり（left:-6px）だと、境目に薄い線が出る（三角の斜辺のアンチエイリアス）。
+   1px だけ本体に食い込ませて継ぎ目を隠す（2026-08-27） */
+.bubble::before{content:"";position:absolute;left:-5px;top:16px;
   border:6px solid transparent;border-right-color:#fff;border-left:0}
 .bwho{font-size:.8rem;font-weight:700;margin-right:.45em}
 .bwho.g{color:#47705a}
@@ -432,7 +440,10 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .ubar.shut{background:none;box-shadow:inset 0 0 0 1.5px #a9a7a0}
 .ubody{min-width:0}
 .ud{color:var(--mut);font-size:.8rem;font-variant-numeric:tabular-nums}
-.ud b{color:var(--ink);font-weight:600;font-size:.8rem;font-family:"Shippori Mincho",serif}
+/* 日付の数字だけ一段大きくして目立たせる（事件名.9remより大きい1.05rem・2026-08-27） */
+.ud b{color:var(--ink);font-weight:600;font-size:1.05rem;font-family:"Shippori Mincho",serif}
+/* 事件名。ルールが無く body の15pxをそのまま継承していたので、本文段（.9rem）に載せる（2026-08-27） */
+.ut{font-size:.9rem}
 .um{color:var(--mut);font-size:.8rem;overflow:hidden;text-overflow:ellipsis}
 .u-empty{color:var(--mut);font-size:.9rem;padding:24px 12px;text-align:center}
 

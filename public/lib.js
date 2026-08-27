@@ -348,10 +348,12 @@ window.CC = (function(){
           ([next.court,next.place].filter(Boolean).length?`<div>${escapeHtml([next.court,next.place].filter(Boolean).join(" "))}</div>`:"")
         ) + factRow("手続", next.type?escapeHtml(next.type):"")
       : "";
-    const pointsRow = factRow("争点", points?`<ul class="pts">${points}</ul>`:"");
-    const plaintiffRow = factRow("原告", (c.plaintiffName?escapeHtml(c.plaintiffName):"")+partyLinksHtml(c.plaintiffLinks));
-    const defendantRow = factRow("被告", (c.defendantName?escapeHtml(c.defendantName):"")+partyLinksHtml(c.defendantLinks));
-    const judgeRow = factRow("裁判官", c.judge?courtLinesHtml(c.judge):"");
+    // 争点・当事者・裁判官は、トップのピックアップカードには出さない（事件ページ full=true だけ）。
+    // 詳しい情報が知りたい人は「事件の詳細を見る」から先へ進んでもらう（2026-08-27）
+    const pointsRow = full ? factRow("争点", points?`<ul class="pts">${points}</ul>`:"") : "";
+    const plaintiffRow = full ? factRow("原告", (c.plaintiffName?escapeHtml(c.plaintiffName):"")+partyLinksHtml(c.plaintiffLinks)) : "";
+    const defendantRow = full ? factRow("被告", (c.defendantName?escapeHtml(c.defendantName):"")+partyLinksHtml(c.defendantLinks)) : "";
+    const judgeRow = full ? factRow("裁判官", c.judge?courtLinesHtml(c.judge):"") : "";
     const pressRow = full ? factRow("掲載", c.press.length?`<ul class="pts">${c.press.map(line=>`<li>${linkify(line)}</li>`).join("")}</ul>`:"") : "";
     // 事件番号は運営が事件を見分けるための内部用の欄なので、画面には出さない（APIも書き込み権限がない人には返さない）
     const facts1 = nextRow+pointsRow+plaintiffRow+defendantRow+judgeRow+pressRow;
@@ -366,7 +368,7 @@ window.CC = (function(){
           ${presenterHeaderHtml(c)}
           <div class="d-head-main">
             <h2 class="d-title">${escapeHtml(c.name)} ${likeHtml(c)}</h2>
-            ${presenterNameHtml(c)}
+            ${full?presenterNameHtml(c):""}
           </div>
         </div>
         ${tagsHtml(c)}
@@ -374,8 +376,10 @@ window.CC = (function(){
         ${facts1?`<dl class="facts">${facts1}</dl>`:""}`;
 
     if(!full){
-      html += `<p class="d-more"><a class="pillbtn" href="case?id=${encodeURIComponent(c.id)}">事件詳細を見る <i class="bi bi-arrow-right" aria-hidden="true"></i></a></p>`;
-    }else{
+      // ピックアップカードだけ：問題提起人名・事件の詳細を見る、を右下にまとめる（枠で囲まない下線リンク・2026-08-27）
+      html += `<p class="d-more">${presenterNameHtml(c)}<a class="detail-link" href="case?id=${encodeURIComponent(c.id)}">事件の詳細を見る</a></p>`;
+    }
+    if(full){
       const editCaseQact = me.canWrite ? `<p class="qact"><a href="case-edit.html?id=${encodeURIComponent(c.id)}">＋ 事件情報を編集</a></p>` : "";
       html += callHtml(c) + editCaseQact + relatedCasesHtml(c) + timelineHtml(caseId) + materialsListHtml(caseId);
     }
