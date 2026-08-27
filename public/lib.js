@@ -106,6 +106,8 @@ window.CC = (function(){
   const apiDeletePresenter = (id)=> api("DELETE","/api/presenters/"+encodeURIComponent(id));
   const apiUpdatePresenterIcon = (id,fd)=> api("PUT","/api/presenters/"+encodeURIComponent(id)+"/icon", fd);
   const apiDeletePresenterIcon = (id)=> api("DELETE","/api/presenters/"+encodeURIComponent(id)+"/icon");
+  const apiUpdateCaseNotice = (id,fd)=> api("PUT","/api/cases/"+encodeURIComponent(id)+"/notice", fd);
+  const apiDeleteCaseNotice = (id)=> api("DELETE","/api/cases/"+encodeURIComponent(id)+"/notice");
   const apiPresenterCases = (id)=> api("GET","/api/presenters/"+encodeURIComponent(id)+"/cases");
   function saveErr(err){
     if(err && err.status===403) return "この操作は許可されていません（閲覧のみの権限です）。";
@@ -373,7 +375,8 @@ window.CC = (function(){
         </div>
         ${tagsHtml(c)}
         ${full ? shareHtml(c) : ""}
-        ${facts1?`<dl class="facts">${facts1}</dl>`:""}`;
+        ${facts1?`<dl class="facts">${facts1}</dl>`:""}
+        ${noticeHtml(c, full)}`;
 
     if(!full){
       // ピックアップカードだけ：問題提起人名・事件の詳細を見る、を右下にまとめる（枠で囲まない下線リンク・2026-08-27）
@@ -385,6 +388,20 @@ window.CC = (function(){
     }
     html += `</div>`;
     return html;
+  }
+
+  // ---- 期日案内PDF（支援者が作る一覧チラシ。あれば埋め込み表示する。2026-08-27） ----
+  // PDFはブラウザのネイティブビューアで表示・拡大できる。埋め込みが効かない環境（Android端末の一部）
+  // に備えて「新しいタブで開く」を必ず添える。事件ページ（full）は大きめ、ピックアップカード（!full）は
+  // 低めに切り詰めて出す（トップは面を大きくしすぎない方針のため）
+  function noticeHtml(c, full){
+    if(!c.noticeUrl) return "";
+    return `<div class="notice${full?"":" compact"}">
+      <div class="notice-head"><span class="notice-lab">期日案内</span>
+        <a class="notice-open" href="${escapeAttr(c.noticeUrl)}" target="_blank" rel="noopener">新しいタブで開く <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>
+      </div>
+      <div class="notice-frame"><iframe src="${escapeAttr(c.noticeUrl)}" title="${escapeAttr(c.noticeFileName||"期日案内")}" loading="lazy"></iframe></div>
+    </div>`;
   }
 
   // ---- 裁判について（よびかけ文。呼びかけ団体・連絡先はここには出さない） ----
@@ -852,6 +869,7 @@ window.CC = (function(){
                       callText:$("cCall"), press:$("cPress"), plaintiffLinks:$("cPlaintiffLinks"), defendantLinks:$("cDefendantLinks"),
                       tags:$("cTags"), related:$("cRelated"), archivedAt:$("cArchivedAt"), closeType:$("cCloseType") };
     const cBoardEnabled=$("cBoardEnabled"), cBoardRestricted=$("cBoardRestricted");
+    const cNoticeFile=$("cNoticeFile"), cNoticeRemove=$("cNoticeRemove"), cNoticeNote=$("cNoticeNote"), cNoticeStatus=$("cNoticeStatus");
     const cPresenterSelect=$("cPresenterSelect"), cPresenterNewRow=$("cPresenterNewRow"), cPresenterNewNickname=$("cPresenterNewNickname"),
           cPresenterNewSave=$("cPresenterNewSave"), cPresenterIconRow=$("cPresenterIconRow"), cPresenterIconPreview=$("cPresenterIconPreview"),
           cPresenterIconFile=$("cPresenterIconFile"), cPresenterIconRemove=$("cPresenterIconRemove"),
@@ -932,6 +950,44 @@ window.CC = (function(){
         await reloadCases();
       }catch(err){ cPresenterStatus.hidden=false; cPresenterStatus.textContent="外せませんでした：" + (err && err.message || err); }
     });
+    // ---- 期日案内PDF（事件につき1枚・差し替え専用。選ぶとすぐ反映される＝presenterアイコンと同じ挙動） ----
+    function updateNoticeFieldUI(c){
+      const has = !!(c && c.noticeUrl);
+      cNoticeRemove.hidden = !has;
+      cNoticeNote.innerHTML = (has
+        ? `いまの案内：<a href="${escapeAttr(c.noticeUrl)}" target="_blank" rel="noopener">${escapeHtml(c.noticeFileName||"ファイル")}</a>　ファイルを選ぶと差し替わります。`
+        : `PDFのみ、20MBまで。支援者向けの「裁判期日一覧のご案内」のようなチラシを想定しています。選ぶとすぐ反映され（「保存」を待ちません）、事件ページとトップに埋め込み表示されます。`)
+        + `<a id="cNoticeRemove" class="cicon-remove" ${has?"":"hidden"}>外す</a>`;
+      // innerHTML で作り直したので、id="cNoticeRemove" は同じidの新しい要素に置き換わっている。参照を取り直して配線する
+      const removeLink = $("cNoticeRemove");
+      if(removeLink) removeLink.addEventListener("click", onNoticeRemove);
+    }
+    async function onNoticeRemove(){
+      if(!edCaseId) return;
+      if(!confirm("期日案内PDFを外します。よろしいですか？")) return;
+      cNoticeStatus.hidden=false; cNoticeStatus.textContent="外しています…";
+      try{
+        const up=await apiDeleteCaseNotice(edCaseId);
+        const i=cases.findIndex(x=>x.id===edCaseId); if(i>=0) cases[i]=up;
+        updateNoticeFieldUI(up);
+        cNoticeStatus.hidden=false; cNoticeStatus.textContent="外しました。";
+      }catch(err){ cNoticeStatus.hidden=false; cNoticeStatus.textContent="外せませんでした：" + (err && err.message || err); }
+    }
+    cNoticeFile.addEventListener("change", async ()=>{
+      const f=cNoticeFile.files[0];
+      if(!f || !edCaseId) return;
+      if(f.type!=="application/pdf"){ alert("期日案内は PDF のみ登録できます。"); cNoticeFile.value=""; return; }
+      if(f.size>20*1024*1024){ alert("ファイルは20MBまでです。"); cNoticeFile.value=""; return; }
+      const fd=new FormData(); fd.append("file", f, f.name);
+      cNoticeStatus.hidden=false; cNoticeStatus.textContent="アップロード中…";
+      try{
+        const up=await apiUpdateCaseNotice(edCaseId,fd);
+        const i=cases.findIndex(x=>x.id===edCaseId); if(i>=0) cases[i]=up;
+        updateNoticeFieldUI(up);
+        cNoticeStatus.hidden=false; cNoticeStatus.textContent="アップロードしました。";
+      }catch(err){ cNoticeStatus.hidden=false; cNoticeStatus.textContent="アップロードできませんでした：" + (err && err.message || err); }
+      finally{ cNoticeFile.value=""; }
+    });
     function fillCaseForm(c){
       cFields.name.value=c.name||""; cFields.caseNo.value=c.caseNo||"";
       cFields.plaintiff.value=c.plaintiffName||""; cFields.defendant.value=c.defendantName||"";
@@ -949,6 +1005,7 @@ window.CC = (function(){
       cBoardRestricted.checked = c.boardRestricted===true;
       renderPresenterOptions(c.presenterId||"");
       updatePresenterFieldUI();
+      updateNoticeFieldUI(c);
     }
     async function saveCase(){
       if(!me.canWrite) return;
@@ -1074,6 +1131,7 @@ window.CC = (function(){
       renderImgList(); renderEvList(); renderMatList();
       // 新規作成のときはまだ事件が無いので、写真・期日・資料の3節ごと隠す
       document.querySelectorAll(".lssec").forEach(s=>{ s.hidden = !edCaseId; });
+      $("sec-notice").hidden = !edCaseId;
       openDeepLink();
     };
 

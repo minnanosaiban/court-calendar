@@ -183,6 +183,20 @@ a{color:inherit}
 .cl-level{color:var(--mut)}
 .facts .plink{display:inline-block;margin-right:6px;font-size:.86rem;color:var(--faint);vertical-align:-1px;text-decoration:none}
 .facts .plink:hover{color:var(--ink)}
+
+/* ---- 期日案内PDF（支援者が作る一覧チラシの埋め込み。2026-08-27） ----
+   PDFはブラウザのネイティブビューアで表示（拡大・ページ送りはそちら任せ）。
+   埋め込みが効かない環境に備え「新しいタブで開く」を必ず添える */
+.notice{margin-top:16px}
+.notice-head{display:flex;align-items:baseline;gap:8px;margin-bottom:8px}
+.notice-lab{font-size:.7rem;letter-spacing:.14em;color:var(--mut)}
+.notice-open{font-size:.75rem;color:var(--stamp);text-decoration:underline;text-underline-offset:3px;margin-left:auto}
+.notice-open .bi{font-size:.7rem}
+.notice-frame{border-radius:12px;overflow:hidden;background:var(--tint)}
+/* 事件ページ：A4に近い比率でしっかり大きく */
+.notice-frame iframe{display:block;width:100%;aspect-ratio:1.414/1;border:0}
+/* ピックアップカード：面を大きくしすぎない方針なので、横長・低めに切り詰める */
+.notice.compact .notice-frame iframe{aspect-ratio:1.9/1}
 .pts{list-style:none;margin-top:8px;font-size:.9rem}
 /* ファクトシート内（争点・掲載）では、.pts自身のmargin-topが dt の位置合わせ用padding-topと
    二重にかかり、他の行（.court-lineや素のテキスト）よりラベルとの間が8px広くなって
