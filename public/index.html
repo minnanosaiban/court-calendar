@@ -39,18 +39,16 @@
     </div>
   </header>
 
-  <!-- 応援ピックアップ：複数ある事件のうち2件を自動で選んで常にここに固定表示する
-       （過去の直近の期日＝pickupCase()、将来の直近の期日＝nearestCase()）。ほかの事件は「事件をさがす」から -->
+  <!-- 応援ピックアップ：複数ある事件のうち、最近開廷された（傍聴の報告が書けるはずの）1件を自動で選んで
+       常にここに固定表示する。選び方は pickupCase()（CC.pickupCase）参照。
+       「次に開廷される事件」は下の「今後の期日」の先頭行と必ず同じになるので、ここには出さない（2026-08-27） -->
   <section aria-labelledby="pickup-h">
     <p class="jumplink"><a class="pillbtn" href="#cal-h">期日カレンダーを見る <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
       <a class="pillbtn" href="cases.html">事件をさがす <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
       <a class="pillbtn" href="dates.html">期日をさがす <i class="bi bi-arrow-right" aria-hidden="true"></i></a></p>
     <p class="home-title" id="pickup-h">応援ピックアップ</p>
-    <p class="hint">最近開廷された事件と、次に開廷される事件です。ほかの事件は「事件をさがす」から見られます。</p>
-    <p class="minih">過去の直近の期日</p>
+    <p class="hint">最近開廷された事件です。ほかの事件は「事件をさがす」から見られます。</p>
     <div id="recentBody"></div>
-    <p class="minih">将来の直近の期日</p>
-    <div id="nearestBody"></div>
   </section>
 
   <!-- カレンダー：日付にカーソルを合わせる（タップする）とその日の予定が出て、クリックすると詳しいページへ -->
@@ -129,7 +127,6 @@
   const upcomingBox=document.getElementById("upcoming");
   const statusEl=document.getElementById("status");
   const recentBody=document.getElementById("recentBody");
-  const nearestBody=document.getElementById("nearestBody");
   const dayPop=document.getElementById("dayPop");
 
   let view = CC.startOfMonth(new Date());
@@ -304,7 +301,6 @@
     renderUpcoming();
     CC.renderStatus(statusEl, {hideWhenUnlocked:true});
     CC.renderCaseDetail(recentBody, CC.pickupCase(), {full:false});
-    CC.renderCaseDetail(nearestBody, CC.nearestCase(), {full:false});
   }
   CC.setOnChange(renderAll);
 
