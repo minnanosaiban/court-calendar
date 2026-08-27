@@ -177,7 +177,7 @@ window.CC = (function(){
     if(h.endsWith("youtube.com")||h==="youtu.be") return ["bi-youtube","YouTube"];
     if(h.endsWith("facebook.com")) return ["bi-facebook","Facebook"];
     if(h==="note.com") return ["bi-journal-text","note"];
-    return ["bi-globe2", "ウェブサイト"];
+    return ["bi-box-arrow-up-right", "ウェブサイト"];
   }
   // 原告のリンク（原告のみ。被告側の欄は defendantLinks を渡す）
   function partyLinksHtml(links){
