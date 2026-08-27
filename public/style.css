@@ -185,9 +185,10 @@ a{color:inherit}
 .facts .plink:hover{color:var(--ink)}
 /* 報道がWEB記事のときのリンク（.pts内、URLがそのまま文字で見える）は下線で示す */
 .pts a{text-decoration:underline;text-underline-offset:3px}
-/* 裁判官マップ等へのリンク（.jlink）はアイコンだけなので下線は付けない（当事者アイコン.plinkと同じ扱い） */
-.jlink{text-decoration:none;vertical-align:-1px}
-.pts .bi,.jlink .bi{font-size:.8em}
+/* 裁判官マップ等へのリンク（.jlink）はアイコンだけなので下線は付けない（当事者アイコン.plinkと同じ扱い）。
+   色・フォントサイズも当事者アイコン.plinkの薄いほうに完全にそろえる（2026-08-28） */
+.jlink{display:inline-block;font-size:.86rem;color:var(--faint);text-decoration:none;vertical-align:-1px}
+.pts .bi{font-size:.8em}
 /* 原告・被告：1行目は本人の名前と同じ並び、2行目以降（代理人など）はひとまわり小さく添える */
 .party-sub{font-size:.85em;color:var(--mut);margin-top:2px}
 

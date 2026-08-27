@@ -147,8 +147,12 @@ window.CC = (function(){
   // 最近開廷された（今日までにいちばん新しく期日があった）事件（トップ「応援ピックアップ」用）。
   // 「傍聴に行ってきたよ！掲示板」は行った"あと"に書く場所なので、これから開かれる事件ではなく
   // 実際に開廷があった事件を選ぶ。まだどの事件も開廷していない（全事件が未来の期日のみ）ときは
-  // nearestCase() にフォールバックする
+  // nearestCase() にフォールバックする。
+  // ※ 2026-08-28、本人指示により当面「（サンプル）情報公開請求をめぐる訴訟」に固定（下のPICKUP_OVERRIDE）。
+  //   自動選定に戻すときはこの定数をnullにするだけでよい
+  const PICKUP_OVERRIDE = "c53bfb741871f"; // （サンプル）情報公開請求をめぐる訴訟
   function pickupCase(){
+    if(PICKUP_OVERRIDE) return PICKUP_OVERRIDE;
     const today=todayStr();
     const list=events.filter(e=>e.date<=today && !isArchived(e.caseId)).sort(byDate);
     return list.length ? list[list.length-1].caseId : nearestCase();
