@@ -37,7 +37,7 @@
   <div class="editgrid" id="ceGrid" hidden>
     <nav class="secnav" id="ceNav" aria-label="節へ移動">
       <div data-sec="sec-board" class="on">掲示板</div>
-      <div data-sec="sec-notice">期日案内PDF</div>
+      <div data-sec="sec-notice">期日案内</div>
       <div data-sec="sec-img">写真<span class="n" id="navImgCount"></span></div>
       <div data-sec="sec-name">事件名・タグ</div>
       <div data-sec="sec-close">終結</div>
@@ -59,15 +59,15 @@
           <label class="check"><input type="checkbox" id="cBoardRestricted"> 投稿を制限する（一般の投稿は受け付けず、運営のみ投稿できます）</label>
         </div>
 
-        <!-- 期日案内PDF：事件につき1枚・差し替え専用（問題提起人アイコンと同じ仕組み）。
+        <!-- 期日案内：事件につき1枚・差し替え専用（問題提起人アイコンと同じ仕組み）。PDFまたは画像（PNG/JPEG）。
              新規作成のときはまだ事件が無いので出さない -->
         <div class="field" id="sec-notice" hidden>
-          <p class="msec">期日案内PDF</p>
-          <label>案内チラシ（PDF）</label>
+          <p class="msec">期日案内</p>
+          <label>案内チラシ（PDF・PNG・JPEG）</label>
           <div class="cicon-row">
-            <input type="file" id="cNoticeFile" accept="application/pdf">
+            <input type="file" id="cNoticeFile" accept="application/pdf,image/png,image/jpeg">
           </div>
-          <p class="fnote" id="cNoticeNote">PDFのみ、20MBまで。支援者向けの「裁判期日一覧のご案内」のようなチラシを想定しています。選ぶとすぐ反映され（「保存」を待ちません）、事件ページとトップに埋め込み表示されます。<a id="cNoticeRemove" class="cicon-remove" hidden>外す</a></p>
+          <p class="fnote" id="cNoticeNote">PDF・PNG・JPEG、20MBまで。支援者向けの「裁判期日一覧のご案内」のようなチラシを想定しています。選ぶとすぐ反映され（「保存」を待ちません）、事件ページとトップに埋め込み表示されます。<a id="cNoticeRemove" class="cicon-remove" hidden>外す</a></p>
           <p class="fnote" id="cNoticeStatus" hidden></p>
         </div>
 

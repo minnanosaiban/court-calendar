@@ -390,17 +390,22 @@ window.CC = (function(){
     return html;
   }
 
-  // ---- 期日案内PDF（支援者が作る一覧チラシ。あれば埋め込み表示する。2026-08-27） ----
-  // PDFはブラウザのネイティブビューアで表示・拡大できる。埋め込みが効かない環境（Android端末の一部）
-  // に備えて「新しいタブで開く」を必ず添える。事件ページ（full）は大きめ、ピックアップカード（!full）は
-  // 低めに切り詰めて出す（トップは面を大きくしすぎない方針のため）
+  // ---- 期日案内（支援者が作る一覧チラシ。PDFまたは画像。あれば埋め込み表示する。2026-08-27） ----
+  // PDFはブラウザのネイティブビューアで表示・拡大できる（埋め込みが効かない環境＝Android端末の一部に
+  // 備えて「新しいタブで開く」を必ず添える）。画像はそのまま<img>で出す（画像はどの環境でも確実に表示され、
+  // 拡大はブラウザの標準機能・別タブで開いた先の画像表示に任せる）。事件ページ（full）は大きめ、
+  // ピックアップカード（!full）は低めに切り詰めて出す（トップは面を大きくしすぎない方針のため）
   function noticeHtml(c, full){
     if(!c.noticeUrl) return "";
+    const isImage = c.noticeMime==="image/png" || c.noticeMime==="image/jpeg";
+    const body = isImage
+      ? `<img src="${escapeAttr(c.noticeUrl)}" alt="${escapeAttr(c.noticeFileName||"期日案内")}" loading="lazy">`
+      : `<iframe src="${escapeAttr(c.noticeUrl)}" title="${escapeAttr(c.noticeFileName||"期日案内")}" loading="lazy"></iframe>`;
     return `<div class="notice${full?"":" compact"}">
       <div class="notice-head"><span class="notice-lab">期日案内</span>
         <a class="notice-open" href="${escapeAttr(c.noticeUrl)}" target="_blank" rel="noopener">新しいタブで開く <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>
       </div>
-      <div class="notice-frame"><iframe src="${escapeAttr(c.noticeUrl)}" title="${escapeAttr(c.noticeFileName||"期日案内")}" loading="lazy"></iframe></div>
+      <div class="notice-frame">${body}</div>
     </div>`;
   }
 
@@ -950,13 +955,13 @@ window.CC = (function(){
         await reloadCases();
       }catch(err){ cPresenterStatus.hidden=false; cPresenterStatus.textContent="外せませんでした：" + (err && err.message || err); }
     });
-    // ---- 期日案内PDF（事件につき1枚・差し替え専用。選ぶとすぐ反映される＝presenterアイコンと同じ挙動） ----
+    // ---- 期日案内（PDFまたは画像。事件につき1枚・差し替え専用。選ぶとすぐ反映される＝presenterアイコンと同じ挙動） ----
     function updateNoticeFieldUI(c){
       const has = !!(c && c.noticeUrl);
       cNoticeRemove.hidden = !has;
       cNoticeNote.innerHTML = (has
         ? `いまの案内：<a href="${escapeAttr(c.noticeUrl)}" target="_blank" rel="noopener">${escapeHtml(c.noticeFileName||"ファイル")}</a>　ファイルを選ぶと差し替わります。`
-        : `PDFのみ、20MBまで。支援者向けの「裁判期日一覧のご案内」のようなチラシを想定しています。選ぶとすぐ反映され（「保存」を待ちません）、事件ページとトップに埋め込み表示されます。`)
+        : `PDF・PNG・JPEG、20MBまで。支援者向けの「裁判期日一覧のご案内」のようなチラシを想定しています。選ぶとすぐ反映され（「保存」を待ちません）、事件ページとトップに埋め込み表示されます。`)
         + `<a id="cNoticeRemove" class="cicon-remove" ${has?"":"hidden"}>外す</a>`;
       // innerHTML で作り直したので、id="cNoticeRemove" は同じidの新しい要素に置き換わっている。参照を取り直して配線する
       const removeLink = $("cNoticeRemove");
@@ -964,7 +969,7 @@ window.CC = (function(){
     }
     async function onNoticeRemove(){
       if(!edCaseId) return;
-      if(!confirm("期日案内PDFを外します。よろしいですか？")) return;
+      if(!confirm("期日案内を外します。よろしいですか？")) return;
       cNoticeStatus.hidden=false; cNoticeStatus.textContent="外しています…";
       try{
         const up=await apiDeleteCaseNotice(edCaseId);
@@ -976,7 +981,7 @@ window.CC = (function(){
     cNoticeFile.addEventListener("change", async ()=>{
       const f=cNoticeFile.files[0];
       if(!f || !edCaseId) return;
-      if(f.type!=="application/pdf"){ alert("期日案内は PDF のみ登録できます。"); cNoticeFile.value=""; return; }
+      if(!["application/pdf","image/png","image/jpeg"].includes(f.type)){ alert("期日案内は PDF・PNG・JPEG のみ登録できます。"); cNoticeFile.value=""; return; }
       if(f.size>20*1024*1024){ alert("ファイルは20MBまでです。"); cNoticeFile.value=""; return; }
       const fd=new FormData(); fd.append("file", f, f.name);
       cNoticeStatus.hidden=false; cNoticeStatus.textContent="アップロード中…";

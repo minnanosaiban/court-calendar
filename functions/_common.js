@@ -25,7 +25,7 @@ export function textToLines(s) {
 export const CASE_COLS = `c.id, c.name, c.presenter_id, p.nickname AS presenter_nickname, p.icon_r2_key AS presenter_icon_r2_key,
                           c.case_no, c.plaintiff_name, c.defendant_name, c.judge, c.points, c.call_text,
                           c.contact, c.press, c.plaintiff_links, c.defendant_links, c.tags, c.related_case_ids, c.archived_at, c.close_type,
-                          c.board_enabled, c.board_restricted, c.notice_r2_key, c.notice_file_name, c.notice_file_size,
+                          c.board_enabled, c.board_restricted, c.notice_r2_key, c.notice_file_name, c.notice_file_size, c.notice_mime,
                           c.created_by, c.updated_by, c.updated_at`;
 
 export function rowToCase(r) {
@@ -53,6 +53,7 @@ export function rowToCase(r) {
     boardRestricted: r.board_restricted === 1 || r.board_restricted === true,
     noticeUrl: r.notice_r2_key ? "/files/" + r.notice_r2_key : "",
     noticeFileName: r.notice_file_name || "",
+    noticeMime: r.notice_mime || "",
     likes: Number(r.likes || 0),
     liked: !!r.liked,
     updatedAt: r.updated_at || "",
@@ -183,8 +184,8 @@ export async function resolveCaseId(env, body, email) {
   return found ? found.id : null;
 }
 
-// ---- 期日案内PDF（支援者が作る一覧チラシ。1事件につき1枚・差し替え専用） ----
-export const NOTICE_MIMES = { "application/pdf": "pdf" };
+// ---- 期日案内（支援者が作る一覧チラシ。PDFまたは画像。1事件につき1枚・差し替え専用） ----
+export const NOTICE_MIMES = { "application/pdf": "pdf", "image/png": "png", "image/jpeg": "jpg" };
 export const NOTICE_MAX_BYTES = 20 * 1024 * 1024;
 
 // ---- 訴訟資料 ----

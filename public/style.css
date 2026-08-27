@@ -184,8 +184,9 @@ a{color:inherit}
 .facts .plink{display:inline-block;margin-right:6px;font-size:.86rem;color:var(--faint);vertical-align:-1px;text-decoration:none}
 .facts .plink:hover{color:var(--ink)}
 
-/* ---- 期日案内PDF（支援者が作る一覧チラシの埋め込み。2026-08-27） ----
+/* ---- 期日案内（支援者が作る一覧チラシの埋め込み。PDFまたは画像。2026-08-27） ----
    PDFはブラウザのネイティブビューアで表示（拡大・ページ送りはそちら任せ）。
+   画像はそのまま収める（object-fit:containで欠けさせない）。
    埋め込みが効かない環境に備え「新しいタブで開く」を必ず添える */
 .notice{margin-top:16px}
 .notice-head{display:flex;align-items:baseline;gap:8px;margin-bottom:8px}
@@ -193,10 +194,14 @@ a{color:inherit}
 .notice-open{font-size:.75rem;color:var(--stamp);text-decoration:underline;text-underline-offset:3px;margin-left:auto}
 .notice-open .bi{font-size:.7rem}
 .notice-frame{border-radius:12px;overflow:hidden;background:var(--tint)}
-/* 事件ページ：A4に近い比率でしっかり大きく */
-.notice-frame iframe{display:block;width:100%;aspect-ratio:1.414/1;border:0}
-/* ピックアップカード：面を大きくしすぎない方針なので、横長・低めに切り詰める */
-.notice.compact .notice-frame iframe{aspect-ratio:1.9/1}
+/* 事件ページ：チラシはA4縦（ポートレート）がほとんどなので、その比率で幅いっぱいに大きく出す。
+   （以前は 1.414/1＝横長の比率になっていて、縦長のPDFが枠の中央に小さく収まり左右に余白が
+   できてしまっていた。A4は横:縦=210:297＝約0.71:1が正しい。2026-08-27） */
+.notice-frame iframe{display:block;width:100%;aspect-ratio:210/297;border:0}
+/* 画像は決め打ちの比率を持たせず、画像自身の縦横比のまま幅いっぱいに出す（どの向きでも余白が出ない） */
+.notice-frame img{display:block;width:100%;height:auto;object-fit:contain}
+/* ピックアップカード：面を大きくしすぎない方針なので、横長・低めに切り詰める（画像はcontainで欠けさせない） */
+.notice.compact .notice-frame iframe,.notice.compact .notice-frame img{aspect-ratio:1.9/1}
 .pts{list-style:none;margin-top:8px;font-size:.9rem}
 /* ファクトシート内（争点・掲載）では、.pts自身のmargin-topが dt の位置合わせ用padding-topと
    二重にかかり、他の行（.court-lineや素のテキスト）よりラベルとの間が8px広くなって

@@ -17,6 +17,9 @@
 -- v6（2026-08-27）：期日案内PDF（cases.notice_r2_key ほか）を追加。支援者が作る「裁判期日一覧の
 --   ご案内」のようなチラシPDFを1事件につき1枚登録できる（問題提起人アイコンと同じ差し替え専用の仕組み）。
 --   旧スキーマのDBを更新する場合は migrate_025_notice_pdf.sql を実行すること。
+--
+-- v7（2026-08-27）：期日案内をPDFだけでなく画像（JPEG・PNG）にも対応。判定用に cases.notice_mime を
+--   追加。旧スキーマのDBを更新する場合は migrate_026_notice_mime.sql を実行すること。
 
 -- 問題提起人（アイコン＋ニックネーム）。1人が複数の事件を持てる。
 CREATE TABLE IF NOT EXISTS presenters (
@@ -51,9 +54,10 @@ CREATE TABLE IF NOT EXISTS cases (
                                      -- 2026-08-26時点ではAPI側のフィルタは未実装で、列を用意しただけ・全事件NULLのまま）
   board_enabled    INTEGER NOT NULL DEFAULT 1, -- 1=「傍聴に行ってきたよ！掲示板」を表示する／0=非表示（掲示板ごと出さない）
   board_restricted INTEGER NOT NULL DEFAULT 0, -- 1=投稿を制限する（一般の匿名投稿は受け付けず運営のみ。将来は問題提起人が承認したアカウントのみに置き換える）／0=誰でも投稿可
-  notice_r2_key   TEXT,              -- 期日案内PDF（支援者向けの一覧チラシ）のR2キー。1事件につき1枚・差し替え専用（任意）
+  notice_r2_key   TEXT,              -- 期日案内（支援者向けの一覧チラシ。PDFまたは画像）のR2キー。1事件につき1枚・差し替え専用（任意）
   notice_file_name TEXT,             -- 元のファイル名
   notice_file_size  INTEGER,
+  notice_mime     TEXT,              -- PDFか画像かの判定に使う（application/pdf・image/png・image/jpeg）
   created_by  TEXT,
   updated_by  TEXT,
   updated_at  TEXT                  -- ISO8601
