@@ -552,6 +552,44 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .editcol .msec{font-family:"Shippori Mincho",serif;font-size:1.2rem;margin:40px 0 16px;scroll-margin-top:16px}
 .editcol .msec:first-child{margin-top:0}
 .editcol .msec .lhint{font-family:"Zen Kaku Gothic New",sans-serif;font-size:.8rem;color:var(--mut);font-weight:400;margin-left:8px}
+
+/* ---- 写真・期日・資料（1件ずつ、行を開いてその場で編集する節）----
+   件数が多くなりうる（実データで写真13・期日8・資料18件）ので、畳んだ一覧＋その場エディタにして
+   事件情報の本文が埋もれないようにする（2026-08-27） */
+.listsec{border-top:1px solid var(--tint);padding-top:24px}
+.listsec:first-child{border-top:none;padding-top:0}
+.listsec .msec{margin:0}
+.lshead{display:flex;align-items:baseline;gap:12px;cursor:pointer;user-select:none}
+.lscount{font-size:.8rem;color:var(--mut);font-variant-numeric:tabular-nums}
+.lschev{margin-left:auto;color:var(--faint);font-size:.8rem;transition:transform .2s}
+.lssec.open .lschev{transform:rotate(180deg)}
+.lsbody{display:none;margin-top:12px}
+.lssec.open .lsbody{display:block}
+.lsnote{font-size:.8rem;color:var(--mut);background:var(--tint);border-radius:12px;padding:8px 12px;margin-bottom:12px}
+.irow{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;cursor:pointer;font-size:.9rem}
+.irow:hover{background:var(--tint)}
+.irow.editing{background:var(--tint)}
+.idate{flex:none;width:6.2em;color:var(--mut);font-size:.8rem;font-variant-numeric:tabular-nums}
+.ititle{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.iside{flex:none;font-size:.7rem;letter-spacing:.1em;font-weight:700}
+.iside.g{color:#47705a}
+.iside.k{color:#4a5a74}
+.ithumb{width:44px;height:32px;border-radius:8px;flex:none;object-fit:cover;background:var(--tint)}
+.imove{flex:none;display:flex;gap:8px}
+.imove a{color:var(--faint);font-size:.9rem;cursor:pointer;text-decoration:none}
+.imove a:hover{color:var(--ink)}
+.ieditor{background:var(--tint);border-radius:12px;padding:16px;margin:4px 0}
+.ieditor .ihead{font-size:.8rem;color:var(--mut);margin-bottom:12px}
+.ieditor .field input,.ieditor .field textarea,.ieditor .field select{background:#fff}
+.ifoot{display:flex;gap:12px;align-items:center;margin-top:4px}
+.ifoot .spacer{flex:1}
+.ifoot button{font-family:inherit;font-size:.8rem;line-height:inherit;cursor:pointer;border:none;border-radius:999px;padding:6px 16px}
+.ifoot .del{background:none;color:var(--stamp);font-size:.8rem;text-decoration:underline;text-underline-offset:3px;padding:4px 0;cursor:pointer}
+.addbtn{display:inline-flex;align-items:center;gap:4px;background:none;border:1px solid #e6e4dd;
+  border-radius:999px;padding:4px 12px;font-size:.7rem;color:var(--ink);cursor:pointer;font-family:inherit;
+  line-height:1.5;margin-top:12px}
+.addbtn:hover{border-color:#c9c6bc}
+
 /* 保存バーはページ下に固定。背景はグラデーションで地色に溶かす（本文と面で切らない） */
 .savebar{position:sticky;bottom:0;z-index:5;background:linear-gradient(transparent,var(--bg) 40%);
   padding:24px 0 16px;display:flex;gap:12px;align-items:center;justify-content:flex-end}
@@ -568,6 +606,7 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
   .secnav{display:block;position:sticky;top:16px;font-size:.8rem;color:var(--mut)}
   .secnav div{padding:6px 0 6px 12px;cursor:pointer;border-left:2px solid transparent}
   .secnav div.on{color:var(--ink);border-left-color:var(--ink)}
+  .secnav div .n{color:var(--faint);font-size:.7rem;margin-left:4px}
 }
 
 @media(min-width:560px){

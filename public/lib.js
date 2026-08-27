@@ -30,9 +30,6 @@ window.CC = (function(){
   let materials = [];
   let images = [];
   let me = { email:null, canWrite:false, viaAccess:false, allowAll:false, boardOpen:false, turnstileSiteKey:"" };
-  let editingId = null;          // 編集中の期日
-  let editingMatId = null;       // 編集中の資料
-  let editingImgId = null;       // 編集中の写真
   let boardFormForCase = null;   // 投稿フォームを開いている事件ID
   let tsToken = "";
   let tsScriptPromise = null;
@@ -288,20 +285,10 @@ window.CC = (function(){
         : "";
       html += `<div class="gal" data-gal="${escapeAttr(caseId)}"><div class="gal-track">${items}</div>${dots}</div>`;
     }
+    // 写真の追加・並び替え・編集は事件情報の編集ページ（case-edit.html）に一本化した（2026-08-27）。
+    // ここ（事件ページ）には「編集」への入口だけを置く（旧・常時展開の管理一覧は廃止）。
     if(me.canWrite){
-      const rows = imgs.map((im,i)=>`<li class="imgrow">
-        <img class="ithumb" src="${escapeAttr(im.url)}" alt="">
-        <span class="icap">${escapeHtml(im.caption)||"&nbsp;"}</span>
-        <span class="iacts">
-          ${i>0?`<a data-imgup="${escapeAttr(im.id)}" title="前へ">↑</a>`:""}
-          ${i<imgs.length-1?`<a data-imgdown="${escapeAttr(im.id)}" title="後ろへ">↓</a>`:""}
-          <a data-editimg="${escapeAttr(im.id)}">編集</a>
-        </span>
-      </li>`).join("");
-      html += `<div class="imgmanage">
-        ${rows?`<ul class="imglist">${rows}</ul>`:`<p class="d-body mut">まだ写真はありません。</p>`}
-        <p class="qact"><a data-addimg="${escapeAttr(caseId)}">＋ 写真を編集</a></p>
-      </div>`;
+      html += `<p class="qact"><a href="case-edit.html?id=${encodeURIComponent(caseId)}&open=img:new">＋ 写真を編集</a></p>`;
     }
     return html;
   }
@@ -389,7 +376,7 @@ window.CC = (function(){
     if(!full){
       html += `<p class="d-more"><a class="pillbtn" href="case?id=${encodeURIComponent(c.id)}">事件詳細を見る <i class="bi bi-arrow-right" aria-hidden="true"></i></a></p>`;
     }else{
-      const editCaseQact = me.canWrite ? `<p class="qact"><a data-editcase="${escapeAttr(c.id)}">＋ 事件情報を編集</a></p>` : "";
+      const editCaseQact = me.canWrite ? `<p class="qact"><a href="case-edit.html?id=${encodeURIComponent(c.id)}">＋ 事件情報を編集</a></p>` : "";
       html += callHtml(c) + editCaseQact + relatedCasesHtml(c) + timelineHtml(caseId) + materialsListHtml(caseId);
     }
     html += `</div>`;
@@ -459,7 +446,7 @@ window.CC = (function(){
       const place=[ev.court,ev.place].filter(Boolean).join(" ");
       const closed = ev.open===false ? `<span class="round-closed">非公開・要確認</span>` : "";
       const reportNote = ev.reportMeeting ? `<span class="round-note">期日報告会あり</span>` : "";
-      const editLink = me.canWrite ? `<a class="round-edit" data-edit="${escapeAttr(ev.id)}">編集</a>` : "";
+      const editLink = me.canWrite ? `<a class="round-edit" href="case-edit.html?id=${encodeURIComponent(caseId)}&open=ev:${encodeURIComponent(ev.id)}">編集</a>` : "";
       return `<li class="tl-item ${state}">
         <span class="tl-dot" aria-hidden="true"></span>
         <div class="tl-head">
@@ -472,10 +459,10 @@ window.CC = (function(){
     }).join("");
     return `<p class="subhead">タイムライン</p>
       ${rounds.length?`<ol class="tl">${items}</ol>`:`<p class="d-body mut">期日はまだ登録されていません。</p>`}
-      ${me.canWrite?`<p class="qact"><a data-addround="${escapeAttr(caseId)}">＋ 期日を編集</a></p>`:""}`;
+      ${me.canWrite?`<p class="qact"><a href="case-edit.html?id=${encodeURIComponent(caseId)}&open=ev:new">＋ 期日を編集</a></p>`:""}`;
   }
-  function matRowHtml(m){
-    const edit = me.canWrite ? `<a class="round-edit" data-editmat="${escapeAttr(m.id)}">編集</a>` : "";
+  function matRowHtml(m, caseId){
+    const edit = me.canWrite ? `<a class="round-edit" href="case-edit.html?id=${encodeURIComponent(caseId)}&open=mat:${encodeURIComponent(m.id)}">編集</a>` : "";
     return `<li class="mrow">
       ${m.filedOn?`<span class="mdate">${escapeHtml(dotDate(m.filedOn))}</span>`:""}
       <span class="mmain"><span class="mat-name">${escapeHtml(m.title)}</span>${matButtonsHtml(m)}${edit}</span>
@@ -485,12 +472,12 @@ window.CC = (function(){
   // 全件が側なしなら、旧来どおり見出し無しの1本の並びにする
   function materialsListHtml(caseId){
     const mats=caseMaterials(caseId);
-    // 訴訟資料が1件も無ければ、見出しごと何も出さない（追加は編集モーダルの「資料」タブから常にできるため、
+    // 訴訟資料が1件も無ければ、見出しごと何も出さない（追加は事件情報の編集ページからいつでもできるため、
     // ここに専用の入り口が無くても困らない）
     if(!mats.length) return "";
     let body;
     if(mats.every(m=>!m.side)){
-      body = `<ul class="mlist">${mats.map(matRowHtml).join("")}</ul>`;
+      body = `<ul class="mlist">${mats.map(m=>matRowHtml(m,caseId)).join("")}</ul>`;
     }else{
       const order=[], groups={};
       mats.forEach(m=>{
@@ -499,12 +486,12 @@ window.CC = (function(){
         groups[side].push(m);
       });
       body = order.map(side=>
-        `<p class="mside-h ${SIDE_CLASS[side]||""}">${escapeHtml(side)}</p><ul class="mlist">${groups[side].map(matRowHtml).join("")}</ul>`
+        `<p class="mside-h ${SIDE_CLASS[side]||""}">${escapeHtml(side)}</p><ul class="mlist">${groups[side].map(m=>matRowHtml(m,caseId)).join("")}</ul>`
       ).join("");
     }
     return `<p class="subhead">訴訟資料一覧</p>
       ${body}
-      ${me.canWrite?`<p class="qact"><a data-addmat="${escapeAttr(caseId)}">＋ 資料を編集</a></p>`:""}`;
+      ${me.canWrite?`<p class="qact"><a href="case-edit.html?id=${encodeURIComponent(caseId)}&open=mat:new">＋ 資料を編集</a></p>`:""}`;
   }
 
   // ---- 行ってきたよ掲示板 ----
@@ -702,29 +689,10 @@ window.CC = (function(){
   function wireCaseDetail(container, caseId, opts){
     const rerender=()=>renderCaseDetail(container, caseId, opts);
     container.querySelectorAll("[data-gal]").forEach(gal=>wireGallery(gal));
-    container.querySelectorAll("[data-addimg]").forEach(a=>{
-      a.addEventListener("click",()=>openImgAdd(a.dataset.addimg));
-    });
-    container.querySelectorAll("[data-editimg]").forEach(a=>{
-      a.addEventListener("click",()=>openImgEdit(a.dataset.editimg));
-    });
-    container.querySelectorAll("[data-imgup]").forEach(a=>{
-      a.addEventListener("click",()=>moveImage(a.dataset.imgup,-1));
-    });
-    container.querySelectorAll("[data-imgdown]").forEach(a=>{
-      a.addEventListener("click",()=>moveImage(a.dataset.imgdown,1));
-    });
+    // 写真・期日・資料の追加・編集・並び替えは、すべて事件情報の編集ページ（case-edit.html）への
+    // 普通のリンクになった（2026-08-27）。ここでのJSでの配線は不要
     container.querySelectorAll("[data-like]").forEach(b=>{
       b.addEventListener("click",()=>toggleLike(b.dataset.like, b));
-    });
-    container.querySelectorAll("[data-editcase]").forEach(a=>{
-      a.addEventListener("click",()=>{ location.href="case-edit.html?id="+encodeURIComponent(a.dataset.editcase); });
-    });
-    container.querySelectorAll("[data-edit]").forEach(a=>{
-      a.addEventListener("click",(e)=>{ e.stopPropagation(); openEdit(a.dataset.edit); });
-    });
-    container.querySelectorAll("[data-addround]").forEach(a=>{
-      a.addEventListener("click",()=>openAddRound(a.dataset.addround));
     });
     container.querySelectorAll("[data-sumopen]").forEach(b=>{
       b.addEventListener("click",(e)=>{
@@ -761,12 +729,6 @@ window.CC = (function(){
           alert("コピーできませんでした。");
         }
       });
-    });
-    container.querySelectorAll("[data-addmat]").forEach(a=>{
-      a.addEventListener("click",()=>openMatAdd(a.dataset.addmat));
-    });
-    container.querySelectorAll("[data-editmat]").forEach(a=>{
-      a.addEventListener("click",(e)=>{ e.stopPropagation(); openMatEdit(a.dataset.editmat); });
     });
     container.querySelectorAll("[data-openpost]").forEach(a=>{
       a.addEventListener("click",()=>{ boardFormForCase=a.dataset.openpost; rerender(); });
@@ -839,148 +801,11 @@ window.CC = (function(){
     if(onChange) onChange();
   }
 
-  // ================= モーダル：写真・事件情報・期日・資料は1つの窓（タブ切替）。HTMLはここで作って先に差し込む =================
+  // ================= モーダル：AIによる要約のポップアップのみ（閲覧専用） =================
+  // 写真・事件情報・期日・資料の編集は、2026-08-27にすべて全画面の編集ページ（case-edit.html）へ
+  // 移した（旧・タブ切替の1つの窓は廃止）。要約ポップアップだけは読み取り専用でどのページにも
+  // 出うるため、引き続きここでHTMLを作って先に差し込む
   const EXTRA_MODALS = `
-<div class="overlay" id="overlay">
-  <div class="modal">
-    <div class="tabs" id="ceTabs" hidden>
-      <span data-cetab="img">写真</span>
-      <span data-cetab="round">期日</span>
-      <span data-cetab="mat">資料</span>
-    </div>
-
-    <div class="cepanel" data-panel="round">
-      <div class="mhead"><span id="modalTitle">期日を追加</span><span class="mreq"><span class="reqmark">＊</span>のみ必須</span></div>
-      <div class="mbody">
-        <div class="field" id="fCaseFixed" hidden>
-          <label>事件</label>
-          <div class="fixedcase" id="fCaseFixedName"></div>
-        </div>
-        <div class="field" id="fCaseField">
-          <label>事件名 <span class="reqmark">＊</span></label>
-          <input type="text" id="fCase" list="caseList" placeholder="例）令和7年(ネ)第○○号 損害賠償請求控訴事件">
-          <datalist id="caseList"></datalist>
-          <p class="fnote">候補（一覧）から選んでください。まだ登録されていない事件は、先に「新たな事件を追加」で事件を登録してから期日を追加できます。</p>
-        </div>
-        <div class="two">
-          <div class="field">
-            <label>期日 <span class="reqmark">＊</span></label>
-            <input type="date" id="fDate">
-          </div>
-          <div class="field">
-            <label>時刻</label>
-            <input type="time" id="fTime">
-          </div>
-        </div>
-        <div class="field">
-          <label>手続</label>
-          <input type="text" id="fType" list="typeList" placeholder="例）第3回口頭弁論">
-          <datalist id="typeList">
-            <option value="口頭弁論">
-            <option value="弁論準備">
-            <option value="進行協議">
-            <option value="和解">
-            <option value="尋問">
-            <option value="当事者尋問">
-            <option value="判決言渡">
-            <option value="控訴審 第1回">
-            <option value="提出期限（書面）">
-          </datalist>
-        </div>
-        <div class="two">
-          <div class="field">
-            <label>裁判所</label>
-            <input type="text" id="fCourt" placeholder="例）東京地方裁判所">
-          </div>
-          <div class="field">
-            <label>法廷</label>
-            <input type="text" id="fPlace" placeholder="例）610号法廷">
-          </div>
-        </div>
-        <p class="msec">この回の主張の要約</p>
-        <div class="field">
-          <label>原告の主張 <span class="lhint">1行に1項目</span></label>
-          <textarea id="fPlaintiff" placeholder="例）不開示決定の取消しを求める"></textarea>
-        </div>
-        <div class="field">
-          <label>被告の主張 <span class="lhint">1行に1項目</span></label>
-          <textarea id="fDefendant" placeholder="例）該当する文書は保有していない"></textarea>
-        </div>
-        <div class="field">
-          <label class="check"><input type="checkbox" id="fOpen" checked> だれでも傍聴できます（チェックを外すと「非公開・要確認」）</label>
-        </div>
-        <div class="field">
-          <label class="check"><input type="checkbox" id="fReportMeeting"> 期日報告会があります</label>
-        </div>
-      </div>
-      <div class="mfoot">
-        <button class="btn-del" id="btnDelete" style="display:none;">この期日を削除</button>
-        <span class="spacer"></span>
-        <button class="btn-cancel" id="btnCancel">キャンセル</button>
-        <button class="btn-save" id="btnSave">保存</button>
-      </div>
-    </div>
-
-    <div class="cepanel" data-panel="mat" hidden>
-      <div class="mhead"><span id="matModalTitle">資料を追加</span><span class="mreq"><span class="reqmark">＊</span>のみ必須</span></div>
-      <div class="mbody">
-        <div class="field">
-          <label>資料名 <span class="reqmark">＊</span></label>
-          <input type="text" id="mTitle" placeholder="例）訴状、第1準備書面、甲3 ○○">
-        </div>
-        <div class="field"><label>提出者側</label>
-          <select id="mSide"><option value="">（未選択）</option><option>原告側</option><option>被告側</option><option>裁判所</option><option>その他</option></select>
-        </div>
-        <div class="two">
-          <div class="field"><label>どの期日の資料か</label><select id="mEvent"></select></div>
-          <div class="field"><label>提出日</label><input type="date" id="mFiledOn"></div>
-        </div>
-        <div class="field">
-          <label>ファイルのURL</label>
-          <input type="text" id="mUrl" placeholder="例）/docs/sojo.pdf　または https://…">
-          <p class="fnote">PDF を <code>public/docs/</code> に入れて公開すると <code>/docs/ファイル名.pdf</code> で開けます。外部サイトのURLでも可。</p>
-        </div>
-        <div class="field" id="mFileField">
-          <label>ファイルをアップロード（PDF・PNG・JPEG、20MBまで）</label>
-          <input type="file" id="mFile" accept="application/pdf,image/png,image/jpeg">
-          <p class="fnote" id="mFileNow" hidden></p>
-        </div>
-        <div class="field"><label>この書面で主張していること <span class="lhint">1行に1項目</span></label><textarea id="mClaims" placeholder="例）不開示決定の取消しを求める"></textarea></div>
-        <div class="field">
-          <label>本文（Markdownを貼り付け）</label>
-          <textarea id="mBody" placeholder="書面の本文をそのまま貼り付けられます（見出し・箇条書き・**強調**などが使えます）" style="min-height:120px"></textarea>
-          <p class="fnote">「本文」ボタンから読めるページになります。原本はPDFなので、本文は補助（検索されやすくする・要点を読みやすくする）目的です。</p>
-        </div>
-        <div class="field"><label>要約</label><textarea id="mSummary" placeholder="手で書いた要約、またはAIに作らせて確認した要約"></textarea></div>
-      </div>
-      <div class="mfoot">
-        <button class="btn-del" id="mDelete" style="display:none;">この資料を削除</button>
-        <span class="spacer"></span>
-        <button class="btn-cancel" id="mCancel">キャンセル</button>
-        <button class="btn-save" id="mSave">保存</button>
-      </div>
-    </div>
-
-    <div class="cepanel" data-panel="img" hidden>
-      <div class="mhead"><span id="imgModalTitle">写真を追加</span><span class="mreq"><span class="reqmark">＊</span>のみ必須</span></div>
-      <div class="mbody">
-        <div class="field">
-          <label>写真ファイル <span id="iFileReq" class="reqmark">＊</span></label>
-          <input type="file" id="iFile" accept="image/jpeg,image/png,image/webp">
-          <p class="fnote" id="iFileNow" hidden></p>
-          <p class="fnote">JPEG・PNG・WebP、12MBまで。証拠写真は人の顔・氏名・住所が写り込んでいないか確認してから登録してください。</p>
-        </div>
-        <div class="field"><label>説明（1行）</label><input type="text" id="iCaption" placeholder="例）提訴後の記者会見にて"></div>
-      </div>
-      <div class="mfoot">
-        <button class="btn-del" id="iDelete" style="display:none;">この写真を削除</button>
-        <span class="spacer"></span>
-        <button class="btn-cancel" id="iCancel">キャンセル</button>
-        <button class="btn-save" id="iSave">保存</button>
-      </div>
-    </div>
-  </div>
-</div>
 <div class="overlay" id="sumOverlay">
   <div class="modal sum-modal">
     <div class="mhead" id="sumModalTitle"></div>
@@ -996,15 +821,11 @@ window.CC = (function(){
 </div>`;
   document.body.insertAdjacentHTML("beforeend", EXTRA_MODALS);
 
-  // ================= モーダル：写真・期日・資料（1つの窓をタブで切り替える） =================
-  // 3つとも lib.js が生成するモーダル（EXTRA_MODALS）の中にある。要素はここで一度だけ取得する。
-  // 事件情報はモーダルから分離し、全画面の編集ページ（case-edit.html）で編集する（2026-08-27）。
-  const overlay = document.getElementById("overlay");
-
   // ---- 入力欄（textarea）は書いた分だけ自動で伸ばす（2026-08-27） ----
   // 2行の覗き窓＋内側スクロールで長文を編集させない。プログラムから値を入れたとき（fill○○）は
-  // inputイベントが出ないので、開いたあとに autosizeAll() を呼び直す（display:none の間は
-  // scrollHeight が 0 になるため、必ず表示してから測る）。
+  // inputイベントが出ないので、値を入れた直後に autosizeAll() を呼び直す（非表示の間は
+  // scrollHeight が 0 になるため、必ず表示してから測る）。事件情報の編集ページ・写真/期日/資料の
+  // 行内エディタ、どちらからも使う共通ユーティリティ
   function autosize(el){ el.style.height="auto"; el.style.height=(el.scrollHeight+2)+"px"; }
   function wireAutosize(root){
     root.querySelectorAll("textarea").forEach(el=>{
@@ -1014,187 +835,8 @@ window.CC = (function(){
     });
   }
   function autosizeAll(root){ (root||document).querySelectorAll("textarea[data-auto]").forEach(autosize); }
-  wireAutosize(overlay);
-  function openOverlay(){
-    overlay.classList.add("show");
-    // .show は同期で効くので、その場で測って伸ばせる（rAF頼みにすると、非アクティブな
-    // タブでは発火が遅れて2行の覗き窓のまま見えてしまう）
-    autosizeAll(overlay);
-  }
-  const modalTitle = document.getElementById("modalTitle");
-  const fCase = document.getElementById("fCase");
-  const fCaseFixed = document.getElementById("fCaseFixed");
-  const fCaseFixedName = document.getElementById("fCaseFixedName");
-  const fCaseField = document.getElementById("fCaseField");
-  const fDate = document.getElementById("fDate");
-  const fTime = document.getElementById("fTime");
-  const fType = document.getElementById("fType");
-  const fCourt = document.getElementById("fCourt");
-  const fPlace = document.getElementById("fPlace");
-  const fOpen = document.getElementById("fOpen");
-  const fReportMeeting = document.getElementById("fReportMeeting");
-  const fPlaintiff = document.getElementById("fPlaintiff");
-  const fDefendant = document.getElementById("fDefendant");
-  const caseList = document.getElementById("caseList");
-  const btnSave = document.getElementById("btnSave");
-  const btnCancel = document.getElementById("btnCancel");
-  const btnDelete = document.getElementById("btnDelete");
-  const formInputs = [fCase,fDate,fTime,fType,fCourt,fPlace,fOpen,fReportMeeting,fPlaintiff,fDefendant];
-
-  // ---- タブ（写真／事件情報／期日／資料）。既存の事件を対象に開いたときだけ表示する ----
-  const ceTabs = document.getElementById("ceTabs");
-  let ceCaseId = null;
-  let ceActiveTab = "round";
-  // タブ切替は open○○() を呼び直してフォームをデータから再充填するので、入力中の内容は残らない。
-  // 黙って消えるのを防ぐため、開いてから入力があったか（ceDirty）を覚えておき、切替前に確認する。
-  let ceDirty = false;
-  overlay.querySelectorAll(".cepanel input, .cepanel textarea, .cepanel select").forEach(el=>{
-    el.addEventListener("input",()=>{ ceDirty=true; });
-    el.addEventListener("change",()=>{ ceDirty=true; });
-  });
-  function ceShowTabs(show){ ceTabs.hidden = !show; }
-  function ceSwitchTo(tab){
-    ceActiveTab = tab;
-    ceDirty = false;   // 切替（＝再充填）した時点で「入力中の変更なし」に戻す
-    document.querySelectorAll(".cepanel").forEach(p=>{ p.hidden = (p.dataset.panel !== tab); });
-    ceTabs.querySelectorAll("[data-cetab]").forEach(s=>{ s.classList.toggle("on", s.dataset.cetab===tab); });
-    autosizeAll(overlay);
-  }
-  ceTabs.querySelectorAll("[data-cetab]").forEach(s=>{
-    s.addEventListener("click",()=>{
-      const id=ceCaseId; if(!id) return;
-      const tab=s.dataset.cetab;
-      if(tab===ceActiveTab) return;   // いま開いているタブをもう一度押しても、再充填で入力を消さない
-      if(ceDirty && !confirm("入力中の内容は保存されていません。保存せずにタブを切り替えますか？")) return;
-      if(tab==="round") openAddRound(id);
-      else if(tab==="mat") openMatAdd(id);
-      else if(tab==="img") openImgAdd(id);
-    });
-  });
-  function closeCaseEditModal(){
-    overlay.classList.remove("show");
-    editingId=null; editingMatId=null; matCaseId=null; editingImgId=null; imgCaseId=null;
-    ceCaseId=null;
-  }
-
-  function refreshCaseList(){
-    const names=cases.map(c=>c.name).sort();
-    caseList.innerHTML=names.map(n=>`<option value="${escapeAttr(n)}">`).join("");
-  }
-  function setReadonly(ro){
-    formInputs.forEach(el=>{ el.disabled=ro; });
-    btnSave.style.display = ro ? "none" : "";
-    btnCancel.textContent = ro ? "閉じる" : "キャンセル";
-  }
-  function fillEventForm(ev){
-    fCase.value=ev.case||""; fDate.value=ev.date||""; fTime.value=ev.time||"";
-    fType.value=ev.type||""; fCourt.value=ev.court||""; fPlace.value=ev.place||"";
-    fOpen.checked = ev.open!==false;
-    fReportMeeting.checked = ev.reportMeeting===true;
-    fPlaintiff.value=(ev.plaintiffArgument||[]).join("\n");
-    fDefendant.value=(ev.defendantArgument||[]).join("\n");
-  }
-  // 事件が決まっているとき（事件ページのタブから開いたとき）は、事件名を入力欄でなく固定表示にする。
-  // 書き換え事故（別の事件に期日が付く・誤字で弾かれる）を防ぐ。値は fCase に入れたままにするので、
-  // saveEntry() 側は今まで通り fCase.value を読めばよい。
-  function setCaseFieldMode(fixedName){
-    fCaseFixed.hidden = !fixedName;
-    fCaseField.hidden = !!fixedName;
-    if(fixedName) fCaseFixedName.textContent = fixedName;
-  }
-  function openAdd(dateStr){
-    if(!me.canWrite) return;
-    editingId=null; modalTitle.textContent="期日を追加"; btnDelete.style.display="none";
-    setReadonly(false); refreshCaseList();
-    fillEventForm({date:dateStr||todayStr(), open:true});
-    if(events.length){
-      const recent=[...events].sort((a,b)=>b.date.localeCompare(a.date))[0];
-      fCase.value=recent.case; fCourt.value=recent.court||""; fPlace.value=recent.place||"";
-    }
-    setCaseFieldMode(null);
-    ceCaseId=null; ceShowTabs(false); ceSwitchTo("round");
-    openOverlay(); fDate.focus();
-  }
-  // 既にある事件に、新しい回を追加する（裁判所・法廷は直近の回から引き継ぐ）
-  function openAddRound(caseId){
-    if(!me.canWrite) return;
-    const c=caseById(caseId); if(!c) return;
-    const rounds = caseEvents(caseId);
-    const src = rounds[rounds.length-1];
-    editingId=null; modalTitle.textContent="期日を追加"; btnDelete.style.display="none";
-    setReadonly(false); refreshCaseList();
-    fillEventForm({case:c.name, court:src&&src.court, place:src&&src.place, open:true});
-    setCaseFieldMode(c.name);
-    ceCaseId=c.id; ceShowTabs(true); ceSwitchTo("round");
-    openOverlay(); fDate.focus();
-  }
-  function openEdit(id){
-    const ev=events.find(e=>e.id===id); if(!ev) return;
-    editingId=id;
-    const ro = !me.canWrite;
-    modalTitle.textContent = ro ? "期日の詳細" : "期日を編集";
-    setReadonly(ro);
-    btnDelete.style.display = ro ? "none" : "inline-block";
-    refreshCaseList();
-    fillEventForm(ev);
-    setCaseFieldMode(ev.case || null);
-    ceCaseId=ev.caseId||null; ceShowTabs(!!ev.caseId); ceSwitchTo("round");
-    openOverlay();
-  }
-
-  async function saveEntry(){
-    if(!me.canWrite) return;
-    const c=fCase.value.trim(), d=fDate.value;
-    if(!c){ alert("事件名を入力してください。"); fCase.focus(); return; }
-    if(!d){ alert("期日（日付）を入力してください。"); fDate.focus(); return; }
-    const known=caseByName(c);
-    // 事件が先に登録されていないと期日は追加できない（誤字での事件乱立を防ぐため）
-    if(!known){
-      alert(`「${c}」という事件はまだ登録されていません。先に「新たな事件を追加」でこの事件を登録してから、期日を追加してください。`);
-      fCase.focus();
-      return;
-    }
-    const data={
-      caseId: known.id, case:c, date:d, time:fTime.value,
-      type:fType.value.trim(), court:fCourt.value.trim(), place:fPlace.value.trim(),
-      open:fOpen.checked, reportMeeting:fReportMeeting.checked,
-      plaintiffArgument:fPlaintiff.value.split("\n").map(s=>s.trim()).filter(Boolean),
-      defendantArgument:fDefendant.value.split("\n").map(s=>s.trim()).filter(Boolean),
-    };
-    btnSave.disabled=true;
-    try{
-      if(editingId){
-        const up=await apiUpdate(editingId,data);
-        const i=events.findIndex(e=>e.id===editingId); if(i>=0) events[i]=up;
-      }else{
-        const created=await apiCreate(data);
-        events.push(created);
-      }
-      closeCaseEditModal();
-      if(onChange) onChange();
-    }catch(err){ alert(saveErr(err)); }
-    finally{ btnSave.disabled=false; }
-  }
-  async function deleteEntry(){
-    if(!editingId || !me.canWrite) return;
-    if(!confirm("この期日を削除します。この期日への掲示板の報告も一緒に消えます。よろしいですか？")) return;
-    btnDelete.disabled=true;
-    try{
-      await apiDelete(editingId);
-      events=events.filter(e=>e.id!==editingId);
-      posts=posts.filter(p=>p.eventId!==editingId);
-      materials.forEach(m=>{ if(m.eventId===editingId) m.eventId=""; });
-      closeCaseEditModal();
-      if(onChange) onChange();
-    }catch(err){ alert(saveErr(err)); }
-    finally{ btnDelete.disabled=false; }
-  }
 
   const $ = (id)=>document.getElementById(id);
-  const mFields = { title:$("mTitle"), side:$("mSide"), event:$("mEvent"), filedOn:$("mFiledOn"),
-                    url:$("mUrl"), file:$("mFile"), fileField:$("mFileField"), fileNow:$("mFileNow"),
-                    claims:$("mClaims"), body:$("mBody"), summary:$("mSummary") };
-  let matCaseId = null;
 
   // ================= 事件情報の編集ページ（case-edit.html、2026-08-27） =================
   // 事件情報はモーダルから分離し、全画面ページで編集する。フォームの実体は case-edit.html に
@@ -1383,8 +1025,11 @@ window.CC = (function(){
     $("cDelete").addEventListener("click",deleteCase);
     const ceForm=$("ceForm");
     wireAutosize(ceForm);
-    ceForm.addEventListener("input",()=>{ edDirty=true; });
-    ceForm.addEventListener("change",()=>{ edDirty=true; });
+    // 写真・期日・資料の行内エディタ（.ieditor）は保存・削除・閉じるがそれぞれ独立して完結するので、
+    // その中の入力は「事件情報」側の未保存扱い（edDirty）に含めない（含めると、行を保存・キャンセル
+    // しただけで「事件情報に未保存の変更がある」という誤った警告が出てしまう）
+    ceForm.addEventListener("input",(e)=>{ if(!e.target.closest(".ieditor")) edDirty=true; });
+    ceForm.addEventListener("change",(e)=>{ if(!e.target.closest(".ieditor")) edDirty=true; });
     window.addEventListener("beforeunload",(e)=>{ if(edDirty){ e.preventDefault(); e.returnValue=""; } });
     // ページの初期化。CC.load() 後にページ側から呼ぶ。編集ロック解除（onChange）でも呼ばれるが、
     // フォームの充填は一度だけ（アイコン即時反映などの onChange で入力中の内容を上書きしない）
@@ -1422,155 +1067,361 @@ window.CC = (function(){
         fillCaseForm({});
       }
       autosizeAll(ceForm);   // gridはこの時点で表示済みなので同期で測れる
+      renderImgList(); renderEvList(); renderMatList();
+      // 新規作成のときはまだ事件が無いので、写真・期日・資料の3節ごと隠す
+      document.querySelectorAll(".lssec").forEach(s=>{ s.hidden = !edCaseId; });
+      openDeepLink();
     };
-  }
 
-  // ---- 資料 ----
-  function fillMatForm(m, caseId){
-    matCaseId=caseId;
-    const rounds=caseEvents(caseId);
-    mFields.event.innerHTML = `<option value="">（紐づけない）</option>` + rounds.map(e=>
-      `<option value="${escapeAttr(e.id)}"${m.eventId===e.id?" selected":""}>${escapeHtml(e.type||"期日")}　${escapeHtml(e.date)}</option>`).join("");
-    mFields.title.value=m.title||""; mFields.side.value=m.side||"";
-    mFields.filedOn.value=m.filedOn||""; mFields.url.value=m.url||""; mFields.file.value="";
-    mFields.claims.value=(m.claims||[]).join("\n"); mFields.body.value=m.body||""; mFields.summary.value=m.summary||"";
-    // アップロード欄は R2 が使えるとき（me.uploads）か、すでに R2 のファイルが付いているときだけ出す
-    const hasR2 = !!(m.fileUrl && m.fileUrl.startsWith("/files/"));
-    mFields.fileField.hidden = !(me.uploads || hasR2);
-    if(hasR2){
-      mFields.fileNow.hidden=false;
-      mFields.fileNow.innerHTML=`いまのファイル：<a href="${escapeAttr(m.fileUrl)}" target="_blank" rel="noopener">${escapeHtml(m.fileName||"ファイル")}</a>`+
-        `　<label class="inl"><input type="checkbox" id="mRemove"> ファイルを外す</label>`;
-    }else{ mFields.fileNow.hidden=true; mFields.fileNow.innerHTML=""; }
-  }
-  function openMatAdd(caseId){
-    if(!me.canWrite) return;
-    editingMatId=null; $("matModalTitle").textContent="資料を追加"; $("mDelete").style.display="none";
-    // 既定の期日＝「最近の期日」（済んだ回があればその最後）
-    const rounds=caseEvents(caseId), today=todayStr();
-    let def=""; rounds.forEach(e=>{ if(e.date<=today) def=e.id; });
-    fillMatForm({eventId:def}, caseId);
-    ceCaseId=caseId; ceShowTabs(true); ceSwitchTo("mat");
-    openOverlay(); mFields.title.focus();
-  }
-  function openMatEdit(id){
-    if(!me.canWrite) return;
-    const m=materials.find(x=>x.id===id); if(!m) return;
-    editingMatId=id; $("matModalTitle").textContent="資料を編集"; $("mDelete").style.display="inline-block";
-    fillMatForm(m, m.caseId);
-    ceCaseId=m.caseId; ceShowTabs(true); ceSwitchTo("mat");
-    openOverlay();
-  }
-  async function saveMat(){
-    if(!me.canWrite || !matCaseId) return;
-    const title=mFields.title.value.trim();
-    if(!title){ alert("資料名を入力してください。"); mFields.title.focus(); return; }
-    const fd=new FormData();
-    fd.append("caseId", matCaseId);
-    fd.append("eventId", mFields.event.value);
-    fd.append("title", title);
-    fd.append("side", mFields.side.value);
-    fd.append("filedOn", mFields.filedOn.value);
-    fd.append("url", mFields.url.value.trim());
-    fd.append("claims", mFields.claims.value);
-    fd.append("body", mFields.body.value);
-    fd.append("summary", mFields.summary.value);
-    const f=mFields.file.files[0];
-    if(f){
-      if(f.size>20*1024*1024){ alert("ファイルは20MBまでです。"); return; }
-      fd.append("file", f, f.name);
+    // ================= 写真・期日・資料（1件ずつ、行を開いてその場で編集する。2026-08-27） =================
+    // 事件情報の保存とは別に、1件ごとにその場で保存する。開けるのは同時に1件だけ
+    // （どれかを開くと、他の行・他の節で開いていたエディタは閉じる）。
+    function closeEditor(){
+      document.querySelectorAll(".ieditor").forEach(x=>x.remove());
+      document.querySelectorAll(".irow.editing").forEach(x=>x.classList.remove("editing"));
     }
-    const rm=$("mRemove"); if(rm && rm.checked) fd.append("removeFile","1");
-    $("mSave").disabled=true;
-    try{
-      if(editingMatId){
-        const up=await apiUpdateMat(editingMatId,fd);
-        const i=materials.findIndex(m=>m.id===editingMatId); if(i>=0) materials[i]=up;
-      }else{
-        const created=await apiCreateMat(fd);
-        materials.push(created);
-      }
-      closeCaseEditModal();
-      if(onChange) onChange();
-    }catch(err){ alert(saveErr(err)); }
-    finally{ $("mSave").disabled=false; }
-  }
-  async function deleteMat(){
-    if(!editingMatId || !me.canWrite) return;
-    if(!confirm("この資料を削除します。ファイルも消えます。よろしいですか？")) return;
-    $("mDelete").disabled=true;
-    try{
-      await apiDeleteMat(editingMatId);
-      materials=materials.filter(m=>m.id!==editingMatId);
-      closeCaseEditModal();
-      if(onChange) onChange();
-    }catch(err){ alert(saveErr(err)); }
-    finally{ $("mDelete").disabled=false; }
-  }
-  $("mSave").addEventListener("click",saveMat);
-  $("mCancel").addEventListener("click",closeCaseEditModal);
-  $("mDelete").addEventListener("click",deleteMat);
+    function openEditorAfter(afterEl, html){
+      closeEditor();
+      afterEl.insertAdjacentHTML("afterend", html);
+      const root = afterEl.nextElementSibling;
+      wireAutosize(root); autosizeAll(root);
+      const first = root.querySelector("input,textarea,select");
+      if(first) first.focus();
+      return root;
+    }
 
-  // ---- 写真 ----
-  const iFields = { file:$("iFile"), fileNow:$("iFileNow"), fileReq:$("iFileReq"), caption:$("iCaption") };
-  let imgCaseId = null;
+    // ---- 写真 ----
+    function renderImgList(){
+      const imgs = edCaseId ? caseImages(edCaseId) : [];
+      const html = imgs.map((im,i)=>`<div class="irow" data-kind="img" data-id="${escapeAttr(im.id)}">
+          <img class="ithumb" src="${escapeAttr(im.url)}" alt="">
+          <span class="ititle">${im.caption?escapeHtml(im.caption):`<span class="mut">（説明なし）</span>`}</span>
+          <span class="imove">
+            ${i>0?`<a data-imgmove="${escapeAttr(im.id)}" data-dir="-1" title="前へ">↑</a>`:""}
+            ${i<imgs.length-1?`<a data-imgmove="${escapeAttr(im.id)}" data-dir="1" title="後ろへ">↓</a>`:""}
+          </span>
+        </div>`).join("") || `<p class="d-body mut">まだ写真はありません。</p>`;
+      $("imgList").innerHTML = html;
+      $("imgCount").textContent = imgs.length + "件";
+      $("navImgCount").textContent = imgs.length || "";
+    }
+    function imgEditorHtml(im){
+      const isNew = !im;
+      const hasR2 = im && im.url;
+      return `<div class="ieditor">
+        <div class="ihead">写真を${isNew?"追加":"編集"}</div>
+        <div class="field"><label>写真ファイル ${isNew?'<span class="reqmark">＊</span>':""}</label>
+          <input type="file" class="ef-file" accept="image/jpeg,image/png,image/webp">
+          ${hasR2?`<p class="fnote">いまの写真：<img src="${escapeAttr(im.url)}" alt="" style="width:64px;height:46px;object-fit:cover;border-radius:6px;vertical-align:middle;margin-left:6px">　ファイルを選ぶと差し替わります。</p>`:""}
+          <p class="fnote">JPEG・PNG・WebP、12MBまで。証拠写真は人の顔・氏名・住所が写り込んでいないか確認してから登録してください。</p>
+        </div>
+        <div class="field"><label>説明（1行）</label><input type="text" class="ef-caption" value="${escapeAttr(im?im.caption:"")}" placeholder="例）提訴後の記者会見にて"></div>
+        <div class="ifoot">
+          ${isNew?"":`<button type="button" class="del" data-del="img" data-id="${escapeAttr(im.id)}">この写真を削除</button>`}
+          <span class="spacer"></span>
+          <button type="button" class="btn-cancel" data-close>閉じる</button>
+          <button type="button" class="btn-save" data-save="img" data-id="${isNew?"":escapeAttr(im.id)}">この写真を保存</button>
+        </div>
+      </div>`;
+    }
+    async function saveImgRow(root, id){
+      if(!me.canWrite || !edCaseId) return;
+      const f = root.querySelector(".ef-file").files[0];
+      if(!id && !f){ alert("写真ファイルを選んでください。"); return; }
+      if(f && f.size>12*1024*1024){ alert("写真は12MBまでです。"); return; }
+      const fd=new FormData();
+      fd.append("caseId", edCaseId);
+      fd.append("caption", root.querySelector(".ef-caption").value.trim());
+      if(f) fd.append("file", f, f.name);
+      const btn=root.querySelector("[data-save]"); btn.disabled=true;
+      try{
+        if(id){
+          const up=await apiUpdateImage(id,fd);
+          const i=images.findIndex(x=>x.id===id); if(i>=0) images[i]=up;
+        }else{
+          const created=await apiCreateImage(fd);
+          images.push(created);
+        }
+        closeEditor(); renderImgList();
+      }catch(err){ alert(saveErr(err)); btn.disabled=false; }
+    }
+    async function deleteImgRow(id){
+      if(!id || !me.canWrite) return;
+      if(!confirm("この写真を削除します。よろしいですか？")) return;
+      try{
+        await apiDeleteImage(id);
+        images=images.filter(x=>x.id!==id);
+        closeEditor(); renderImgList();
+      }catch(err){ alert(saveErr(err)); }
+    }
 
-  function openImgAdd(caseId){
-    if(!me.canWrite) return;
-    editingImgId=null; imgCaseId=caseId; $("imgModalTitle").textContent="写真を追加"; $("iDelete").style.display="none";
-    iFields.file.value=""; iFields.caption.value=""; iFields.fileNow.hidden=true; iFields.fileReq.style.display="";
-    ceCaseId=caseId; ceShowTabs(true); ceSwitchTo("img");
-    openOverlay(); iFields.file.focus();
-  }
-  function openImgEdit(id){
-    if(!me.canWrite) return;
-    const im=images.find(x=>x.id===id); if(!im) return;
-    editingImgId=id; imgCaseId=im.caseId; $("imgModalTitle").textContent="写真を編集"; $("iDelete").style.display="inline-block";
-    iFields.file.value=""; iFields.caption.value=im.caption||""; iFields.fileReq.style.display="none";
-    iFields.fileNow.hidden=false;
-    iFields.fileNow.innerHTML=`いまの写真：<img src="${escapeAttr(im.url)}" alt="" style="width:64px;height:46px;object-fit:cover;border-radius:6px;vertical-align:middle;margin-left:6px">`+
-      `　ファイルを選ぶと差し替わります。`;
-    ceCaseId=im.caseId; ceShowTabs(true); ceSwitchTo("img");
-    openOverlay();
-  }
-  async function saveImg(){
-    if(!me.canWrite || !imgCaseId) return;
-    const f=iFields.file.files[0];
-    if(!editingImgId && !f){ alert("写真ファイルを選んでください。"); return; }
-    if(f && f.size>12*1024*1024){ alert("写真は12MBまでです。"); return; }
-    const fd=new FormData();
-    fd.append("caseId", imgCaseId);
-    fd.append("caption", iFields.caption.value.trim());
-    if(f) fd.append("file", f, f.name);
-    $("iSave").disabled=true;
-    try{
-      if(editingImgId){
-        const up=await apiUpdateImage(editingImgId,fd);
-        const i=images.findIndex(x=>x.id===editingImgId); if(i>=0) images[i]=up;
-      }else{
-        const created=await apiCreateImage(fd);
-        images.push(created);
+    // ---- 期日 ----
+    function renderEvList(){
+      const evs = edCaseId ? caseEvents(edCaseId) : [];
+      const html = evs.map(ev=>`<div class="irow" data-kind="ev" data-id="${escapeAttr(ev.id)}">
+          <span class="idate">${escapeHtml(dotDate(ev.date))}</span>
+          <span class="ititle">${escapeHtml(ev.type||"期日")}${ev.court||ev.place?`　<span class="mut">${escapeHtml([ev.court,ev.place].filter(Boolean).join(" "))}</span>`:""}</span>
+        </div>`).join("") || `<p class="d-body mut">まだ期日はありません。</p>`;
+      $("evList").innerHTML = html;
+      $("evCount").textContent = evs.length + "件";
+      $("navEvCount").textContent = evs.length || "";
+    }
+    const EVENT_TYPES = ["口頭弁論","弁論準備","進行協議","和解","尋問","当事者尋問","判決言渡","控訴審 第1回","提出期限（書面）"];
+    function evEditorHtml(ev){
+      const isNew = !ev;
+      let e = ev;
+      if(isNew){
+        const rounds = caseEvents(edCaseId);
+        const src = rounds[rounds.length-1];
+        e = { date:"", time:"", type:"", court:src&&src.court||"", place:src&&src.place||"", open:true, reportMeeting:false, plaintiffArgument:[], defendantArgument:[] };
       }
-      closeCaseEditModal();
-      if(onChange) onChange();
-    }catch(err){ alert(saveErr(err)); }
-    finally{ $("iSave").disabled=false; }
+      return `<div class="ieditor">
+        <div class="ihead">期日を${isNew?"追加":"編集"}</div>
+        <div class="two">
+          <div class="field"><label>期日 <span class="reqmark">＊</span></label><input type="date" class="ef-date" value="${escapeAttr(e.date)}"></div>
+          <div class="field"><label>時刻</label><input type="time" class="ef-time" value="${escapeAttr(e.time)}"></div>
+        </div>
+        <div class="field"><label>手続</label><input type="text" class="ef-type" list="evTypeList" value="${escapeAttr(e.type)}" placeholder="例）第3回口頭弁論">
+          <datalist id="evTypeList">${EVENT_TYPES.map(t=>`<option value="${escapeAttr(t)}">`).join("")}</datalist>
+        </div>
+        <div class="two">
+          <div class="field"><label>裁判所</label><input type="text" class="ef-court" value="${escapeAttr(e.court)}" placeholder="例）東京地方裁判所"></div>
+          <div class="field"><label>法廷</label><input type="text" class="ef-place" value="${escapeAttr(e.place)}" placeholder="例）610号法廷"></div>
+        </div>
+        <div class="field"><label>原告の主張 <span class="lhint">1行に1項目</span></label><textarea class="ef-plaintiff" placeholder="例）不開示決定の取消しを求める">${escapeHtml((e.plaintiffArgument||[]).join("\n"))}</textarea></div>
+        <div class="field"><label>被告の主張 <span class="lhint">1行に1項目</span></label><textarea class="ef-defendant" placeholder="例）該当する文書は保有していない">${escapeHtml((e.defendantArgument||[]).join("\n"))}</textarea></div>
+        <div class="field"><label class="check"><input type="checkbox" class="ef-open" ${e.open!==false?"checked":""}> だれでも傍聴できます（外すと「非公開・要確認」）</label></div>
+        <div class="field"><label class="check"><input type="checkbox" class="ef-report" ${e.reportMeeting?"checked":""}> 期日報告会があります</label></div>
+        <div class="ifoot">
+          ${isNew?"":`<button type="button" class="del" data-del="ev" data-id="${escapeAttr(ev.id)}">この期日を削除</button>`}
+          <span class="spacer"></span>
+          <button type="button" class="btn-cancel" data-close>閉じる</button>
+          <button type="button" class="btn-save" data-save="ev" data-id="${isNew?"":escapeAttr(ev.id)}">この期日を保存</button>
+        </div>
+      </div>`;
+    }
+    async function saveEvRow(root, id){
+      if(!me.canWrite || !edCaseId) return;
+      const date=root.querySelector(".ef-date").value;
+      if(!date){ alert("期日（日付）を入力してください。"); return; }
+      const data={
+        caseId: edCaseId, date, time: root.querySelector(".ef-time").value,
+        type: root.querySelector(".ef-type").value.trim(),
+        court: root.querySelector(".ef-court").value.trim(), place: root.querySelector(".ef-place").value.trim(),
+        open: root.querySelector(".ef-open").checked, reportMeeting: root.querySelector(".ef-report").checked,
+        plaintiffArgument: root.querySelector(".ef-plaintiff").value.split("\n").map(s=>s.trim()).filter(Boolean),
+        defendantArgument: root.querySelector(".ef-defendant").value.split("\n").map(s=>s.trim()).filter(Boolean),
+      };
+      const btn=root.querySelector("[data-save]"); btn.disabled=true;
+      try{
+        if(id){
+          const up=await apiUpdate(id,data);
+          const i=events.findIndex(x=>x.id===id); if(i>=0) events[i]=up;
+        }else{
+          const created=await apiCreate(data);
+          events.push(created);
+        }
+        closeEditor(); renderEvList(); renderMatList();  // 資料の「どの期日か」候補も変わりうる
+      }catch(err){ alert(saveErr(err)); btn.disabled=false; }
+    }
+    async function deleteEvRow(id){
+      if(!id || !me.canWrite) return;
+      if(!confirm("この期日を削除します。この期日への掲示板の報告も一緒に消えます。よろしいですか？")) return;
+      try{
+        await apiDelete(id);
+        events=events.filter(e=>e.id!==id);
+        posts=posts.filter(p=>p.eventId!==id);
+        materials.forEach(m=>{ if(m.eventId===id) m.eventId=""; });
+        closeEditor(); renderEvList(); renderMatList();
+      }catch(err){ alert(saveErr(err)); }
+    }
+
+    // ---- 資料 ----
+    function renderMatList(){
+      const mats = edCaseId ? caseMaterials(edCaseId) : [];
+      const html = mats.map(m=>`<div class="irow" data-kind="mat" data-id="${escapeAttr(m.id)}">
+          ${m.side?`<span class="iside ${SIDE_CLASS[m.side]||""}">${escapeHtml(m.side)}</span>`:""}
+          <span class="ititle">${escapeHtml(m.title)}</span>
+        </div>`).join("") || `<p class="d-body mut">まだ資料はありません。</p>`;
+      $("matList").innerHTML = html;
+      $("matCount").textContent = mats.length + "件";
+      $("navMatCount").textContent = mats.length || "";
+    }
+    function matEventOptionsHtml(selectedId){
+      const rounds = caseEvents(edCaseId);
+      return `<option value="">（紐づけない）</option>` + rounds.map(e=>
+        `<option value="${escapeAttr(e.id)}"${selectedId===e.id?" selected":""}>${escapeHtml(e.type||"期日")}　${escapeHtml(e.date)}</option>`).join("");
+    }
+    function matEditorHtml(m){
+      const isNew = !m;
+      let mm = m;
+      if(isNew){
+        const rounds=caseEvents(edCaseId), today=todayStr();
+        let def=""; rounds.forEach(e=>{ if(e.date<=today) def=e.id; });
+        mm = { title:"", side:"", eventId:def, filedOn:"", url:"", claims:[], body:"", summary:"", fileUrl:"", fileName:"" };
+      }
+      const hasR2 = !!(mm.fileUrl && mm.fileUrl.startsWith("/files/"));
+      const showFileField = me.uploads || hasR2;
+      return `<div class="ieditor">
+        <div class="ihead">資料を${isNew?"追加":"編集"}</div>
+        <div class="field"><label>資料名 <span class="reqmark">＊</span></label><input type="text" class="ef-title" value="${escapeAttr(mm.title)}" placeholder="例）訴状、第1準備書面、甲3 ○○"></div>
+        <div class="field"><label>提出者側</label>
+          <select class="ef-side"><option value=""${!mm.side?" selected":""}>（未選択）</option>${["原告側","被告側","裁判所","その他"].map(s=>`<option${mm.side===s?" selected":""}>${s}</option>`).join("")}</select>
+        </div>
+        <div class="two">
+          <div class="field"><label>どの期日の資料か</label><select class="ef-event">${matEventOptionsHtml(mm.eventId)}</select></div>
+          <div class="field"><label>提出日</label><input type="date" class="ef-filedon" value="${escapeAttr(mm.filedOn)}"></div>
+        </div>
+        <div class="field"><label>ファイルのURL</label><input type="text" class="ef-url" value="${escapeAttr(mm.url)}" placeholder="例）/docs/sojo.pdf　または https://…">
+          <p class="fnote">PDF を <code>public/docs/</code> に入れて公開すると <code>/docs/ファイル名.pdf</code> で開けます。外部サイトのURLでも可。</p>
+        </div>
+        ${showFileField?`<div class="field"><label>ファイルをアップロード（PDF・PNG・JPEG、20MBまで）</label><input type="file" class="ef-file" accept="application/pdf,image/png,image/jpeg">
+          ${hasR2?`<p class="fnote">いまのファイル：<a href="${escapeAttr(mm.fileUrl)}" target="_blank" rel="noopener">${escapeHtml(mm.fileName||"ファイル")}</a>　<label class="inl"><input type="checkbox" class="ef-removefile"> ファイルを外す</label></p>`:""}
+        </div>`:""}
+        <div class="field"><label>この書面で主張していること <span class="lhint">1行に1項目</span></label><textarea class="ef-claims" placeholder="例）不開示決定の取消しを求める">${escapeHtml((mm.claims||[]).join("\n"))}</textarea></div>
+        <div class="field"><label>本文（Markdownを貼り付け）</label><textarea class="ef-body" style="min-height:120px" placeholder="書面の本文をそのまま貼り付けられます（見出し・箇条書き・**強調**などが使えます）">${escapeHtml(mm.body)}</textarea>
+          <p class="fnote">「本文」ボタンから読めるページになります。原本はPDFなので、本文は補助（検索されやすくする・要点を読みやすくする）目的です。</p>
+        </div>
+        <div class="field"><label>要約</label><textarea class="ef-summary" placeholder="手で書いた要約、またはAIに作らせて確認した要約">${escapeHtml(mm.summary)}</textarea></div>
+        <div class="ifoot">
+          ${isNew?"":`<button type="button" class="del" data-del="mat" data-id="${escapeAttr(m.id)}">この資料を削除</button>`}
+          <span class="spacer"></span>
+          <button type="button" class="btn-cancel" data-close>閉じる</button>
+          <button type="button" class="btn-save" data-save="mat" data-id="${isNew?"":escapeAttr(m.id)}">この資料を保存</button>
+        </div>
+      </div>`;
+    }
+    async function saveMatRow(root, id){
+      if(!me.canWrite || !edCaseId) return;
+      const title=root.querySelector(".ef-title").value.trim();
+      if(!title){ alert("資料名を入力してください。"); return; }
+      const fd=new FormData();
+      fd.append("caseId", edCaseId);
+      fd.append("eventId", root.querySelector(".ef-event").value);
+      fd.append("title", title);
+      fd.append("side", root.querySelector(".ef-side").value);
+      fd.append("filedOn", root.querySelector(".ef-filedon").value);
+      fd.append("url", root.querySelector(".ef-url").value.trim());
+      fd.append("claims", root.querySelector(".ef-claims").value);
+      fd.append("body", root.querySelector(".ef-body").value);
+      fd.append("summary", root.querySelector(".ef-summary").value);
+      const fEl=root.querySelector(".ef-file");
+      const f=fEl && fEl.files[0];
+      if(f){
+        if(f.size>20*1024*1024){ alert("ファイルは20MBまでです。"); return; }
+        fd.append("file", f, f.name);
+      }
+      const rm=root.querySelector(".ef-removefile");
+      if(rm && rm.checked) fd.append("removeFile","1");
+      const btn=root.querySelector("[data-save]"); btn.disabled=true;
+      try{
+        if(id){
+          const up=await apiUpdateMat(id,fd);
+          const i=materials.findIndex(m=>m.id===id); if(i>=0) materials[i]=up;
+        }else{
+          const created=await apiCreateMat(fd);
+          materials.push(created);
+        }
+        closeEditor(); renderMatList();
+      }catch(err){ alert(saveErr(err)); btn.disabled=false; }
+    }
+    async function deleteMatRow(id){
+      if(!id || !me.canWrite) return;
+      if(!confirm("この資料を削除します。ファイルも消えます。よろしいですか？")) return;
+      try{
+        await apiDeleteMat(id);
+        materials=materials.filter(m=>m.id!==id);
+        closeEditor(); renderMatList();
+      }catch(err){ alert(saveErr(err)); }
+    }
+
+    // ---- 3節ぶんの配線（クリックの委譲・1か所にまとめる） ----
+    const LIST = {
+      img:{ items:()=>edCaseId?caseImages(edCaseId):[], editorHtml:imgEditorHtml, save:saveImgRow, del:deleteImgRow, addBtn:"imgAddBtn", list:"imgList" },
+      ev:{ items:()=>edCaseId?caseEvents(edCaseId):[], editorHtml:evEditorHtml, save:saveEvRow, del:deleteEvRow, addBtn:"evAddBtn", list:"evList" },
+      mat:{ items:()=>edCaseId?caseMaterials(edCaseId):[], editorHtml:matEditorHtml, save:saveMatRow, del:deleteMatRow, addBtn:"matAddBtn", list:"matList" },
+    };
+    ceGrid_wireOnce();
+    function ceGrid_wireOnce(){
+      const grid=$("ceGrid");
+      grid.addEventListener("click",(e)=>{
+        const head=e.target.closest(".lshead");
+        if(head){ head.closest(".lssec").classList.toggle("open"); return; }
+
+        const mv=e.target.closest("[data-imgmove]");
+        if(mv){
+          e.stopPropagation();
+          moveImage(mv.dataset.imgmove, Number(mv.dataset.dir)).then(renderImgList);
+          return;
+        }
+
+        const close=e.target.closest("[data-close]");
+        if(close){ closeEditor(); return; }
+
+        const save=e.target.closest("[data-save]");
+        if(save){
+          const kind=save.dataset.save, id=save.dataset.id||null;
+          LIST[kind].save(save.closest(".ieditor"), id);
+          return;
+        }
+
+        const del=e.target.closest("[data-del]");
+        if(del){ LIST[del.dataset.del].del(del.dataset.id); return; }
+
+        const add=e.target.closest(".addbtn");
+        if(add){
+          const kind=Object.keys(LIST).find(k=>LIST[k].addBtn===add.id);
+          if(!kind || !edCaseId) return;
+          closeEditor();
+          add.insertAdjacentHTML("beforebegin", LIST[kind].editorHtml(null));
+          const root=add.previousElementSibling;
+          wireAutosize(root); autosizeAll(root);
+          const first=root.querySelector("input,textarea,select"); if(first) first.focus();
+          return;
+        }
+
+        const row=e.target.closest(".irow");
+        if(row){
+          if(e.target.closest(".imove")) return;   // 並び替えは編集を開かない
+          const alreadyOpen = row.nextElementSibling && row.nextElementSibling.classList.contains("ieditor");
+          if(alreadyOpen){ closeEditor(); return; }
+          const kind=row.dataset.kind, id=row.dataset.id;
+          const item=LIST[kind].items().find(x=>x.id===id);
+          if(!item) return;
+          row.classList.add("editing");
+          openEditorAfter(row, LIST[kind].editorHtml(item));
+          row.classList.add("editing");   // openEditorAfter内のcloseEditor()で消えるため、開いた後に付け直す
+        }
+      });
+    }
+
+    // ---- 深いリンク：case.html の「編集」「＋◯◯を編集」から ?open=img:new / ev:<id> / mat:<id> で来たとき、
+    // 該当節を開いて、そのエディタも開いた状態にする ----
+    function openDeepLink(){
+      const open=new URLSearchParams(location.search).get("open");
+      if(!open || !edCaseId) return;
+      const [kind, idOrNew] = open.split(":");
+      const def=LIST[kind]; if(!def) return;
+      const sec=document.getElementById("sec-"+kind); if(sec) sec.classList.add("open");
+      if(idOrNew==="new"){
+        const addBtn=$(def.addBtn);
+        addBtn.insertAdjacentHTML("beforebegin", def.editorHtml(null));
+        const root=addBtn.previousElementSibling;
+        wireAutosize(root); autosizeAll(root);
+        requestAnimationFrame(()=>root.scrollIntoView({block:"center"}));
+      }else{
+        const item=def.items().find(x=>x.id===idOrNew);
+        if(!item) return;
+        const row=document.querySelector(`.irow[data-kind="${kind}"][data-id="${CSS.escape(idOrNew)}"]`);
+        if(!row) return;
+        row.classList.add("editing");
+        openEditorAfter(row, def.editorHtml(item));
+        row.classList.add("editing");
+        requestAnimationFrame(()=>row.scrollIntoView({block:"center"}));
+      }
+    }
   }
-  async function deleteImg(){
-    if(!editingImgId || !me.canWrite) return;
-    if(!confirm("この写真を削除します。よろしいですか？")) return;
-    $("iDelete").disabled=true;
-    try{
-      await apiDeleteImage(editingImgId);
-      images=images.filter(x=>x.id!==editingImgId);
-      closeCaseEditModal();
-      if(onChange) onChange();
-    }catch(err){ alert(saveErr(err)); }
-    finally{ $("iDelete").disabled=false; }
-  }
-  $("iSave").addEventListener("click",saveImg);
-  $("iCancel").addEventListener("click",closeCaseEditModal);
-  $("iDelete").addEventListener("click",deleteImg);
+
 
   // ---- 要約（ポップアップで開く。編集はできない・閲覧専用） ----
   const sumOverlay=$("sumOverlay");
@@ -1680,23 +1531,9 @@ window.CC = (function(){
     alert(`追加：${ok}件${ng?`／失敗：${ng}件`:""}`);
   }
 
-  // ---- モーダルの配線（両ページ共通） ----
-  btnSave.addEventListener("click",saveEntry);
-  btnCancel.addEventListener("click",closeCaseEditModal);
-  btnDelete.addEventListener("click",deleteEntry);
-  overlay.addEventListener("click",(e)=>{ if(e.target===overlay) closeCaseEditModal(); });
+  // ---- 要約ポップアップ（sumOverlay）の配線（両ページ共通） ----
   document.addEventListener("keydown",(e)=>{
-    if(e.key==="Escape"){
-      if(overlay.classList.contains("show")) closeCaseEditModal();
-      if(sumOverlay.classList.contains("show")) closeSummaryModal();
-    }
-    if((e.ctrlKey||e.metaKey)&&e.key==="Enter"){
-      if(overlay.classList.contains("show")){
-        if(ceActiveTab==="round") saveEntry();
-        else if(ceActiveTab==="mat") saveMat();
-        else if(ceActiveTab==="img") saveImg();
-      }
-    }
+    if(e.key==="Escape" && sumOverlay.classList.contains("show")) closeSummaryModal();
   });
   const fileInputEl = document.getElementById("fileInput");
   if(fileInputEl){
@@ -1718,7 +1555,7 @@ window.CC = (function(){
     likeHtml, toggleLike, isArchived, iconHtml, presenterHeaderHtml,
     apiListPresenters, apiCreatePresenter, apiUpdatePresenter, apiDeletePresenter,
     apiUpdatePresenterIcon, apiDeletePresenterIcon, reloadPresenters, saveErr,
-    load, renderCaseDetail, renderStatus, openAdd,
+    load, renderCaseDetail, renderStatus,
     initCaseEditPage(){ initCaseEditPage(); },
     setOnChange(fn){ onChange = fn; },
   };

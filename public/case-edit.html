@@ -31,19 +31,34 @@
     <p class="empty-msg">編集にはパスワードが必要です。ページ下の「事務局用」からロックを解除してください。</p>
   </div>
 
-  <!-- 欄の並びは、事件ページの実際の掲載順（写真・期日・資料はモーダルで編集するのでここには無い） -->
+  <!-- 欄の並びは、事件ページの実際の掲載順（写真→掲示板→事件名・タグ→終結→争点・当事者→裁判について
+       →関連裁判→期日→資料→非公開の情報）。写真・期日・資料は複数件の集まりなので、事件情報とは
+       性質が違う＝1件ずつ保存する行内エディタにしている（2026-08-27） -->
   <div class="editgrid" id="ceGrid" hidden>
     <nav class="secnav" id="ceNav" aria-label="節へ移動">
-      <div data-sec="sec-board" class="on">掲示板</div>
+      <div data-sec="sec-img" class="on">写真<span class="n" id="navImgCount"></span></div>
+      <div data-sec="sec-board">掲示板</div>
       <div data-sec="sec-name">事件名・タグ</div>
       <div data-sec="sec-close">終結</div>
       <div data-sec="sec-facts">争点・当事者</div>
       <div data-sec="sec-call">裁判について</div>
       <div data-sec="sec-related">関連裁判</div>
+      <div data-sec="sec-ev">期日<span class="n" id="navEvCount"></span></div>
+      <div data-sec="sec-mat">資料<span class="n" id="navMatCount"></span></div>
       <div data-sec="sec-private">非公開の情報</div>
     </nav>
     <div>
       <div class="editcol" id="ceForm">
+
+        <!-- 写真：1件ずつ保存（新規作成のときはまだ事件が無いので出さない） -->
+        <section class="lssec listsec" id="sec-img" data-listsec="img" hidden>
+          <div class="lshead"><p class="msec">写真</p><span class="lscount" id="imgCount"></span><span class="lschev">▾</span></div>
+          <div class="lsbody">
+            <div class="lsnote">写真・期日・資料は1件ずつ保存されます（下の「事件情報を保存」とは別です）。</div>
+            <div id="imgList"></div>
+            <button type="button" class="addbtn" id="imgAddBtn">＋ 写真を追加</button>
+          </div>
+        </section>
 
         <p class="msec" id="sec-board">掲示板</p>
         <div class="field">
@@ -132,6 +147,24 @@
           <p class="fnote">同じ事実に関連する別争点の訴訟など。どちらか一方に登録すれば、両方の事件ページに表示されます。</p>
         </div>
 
+        <!-- 期日：1件ずつ保存（新規作成のときはまだ事件が無いので出さない） -->
+        <section class="lssec listsec" id="sec-ev" data-listsec="ev" hidden>
+          <div class="lshead"><p class="msec">期日</p><span class="lscount" id="evCount"></span><span class="lschev">▾</span></div>
+          <div class="lsbody">
+            <div id="evList"></div>
+            <button type="button" class="addbtn" id="evAddBtn">＋ 期日を追加</button>
+          </div>
+        </section>
+
+        <!-- 資料：1件ずつ保存（新規作成のときはまだ事件が無いので出さない） -->
+        <section class="lssec listsec" id="sec-mat" data-listsec="mat" hidden>
+          <div class="lshead"><p class="msec">資料</p><span class="lscount" id="matCount"></span><span class="lschev">▾</span></div>
+          <div class="lsbody">
+            <div id="matList"></div>
+            <button type="button" class="addbtn" id="matAddBtn">＋ 資料を追加</button>
+          </div>
+        </section>
+
         <p class="msec" id="sec-private">非公開の情報</p>
         <div class="field">
           <label>事件番号 <span class="lhint">1行に1件・サイトには表示されません</span></label>
@@ -143,7 +176,7 @@
       <div class="savebar">
         <button class="btn-del" id="cDelete" style="display:none;">この事件を削除</button>
         <button class="btn-cancel" id="cCancel">キャンセル</button>
-        <button class="btn-save" id="cSave">保存</button>
+        <button class="btn-save" id="cSave">事件情報を保存</button>
       </div>
     </div>
   </div>
@@ -168,12 +201,14 @@
     renderAll();
   })();
 
-  // 節ナビ：クリックでその節へ。スクロールで現在地をハイライト
+  // 節ナビ：クリックでその節へ（畳んである一覧は開いてから移動）。スクロールで現在地をハイライト
   const nav=document.getElementById("ceNav");
   const items=[...nav.querySelectorAll("[data-sec]")];
   items.forEach(d=>d.addEventListener("click",()=>{
     const t=document.getElementById(d.dataset.sec);
-    if(t) t.scrollIntoView({behavior:"smooth",block:"start"});
+    if(!t) return;
+    if(t.classList.contains("lssec")) t.classList.add("open");
+    t.scrollIntoView({behavior:"smooth",block:"start"});
   }));
   window.addEventListener("scroll",()=>{
     let cur=0;
