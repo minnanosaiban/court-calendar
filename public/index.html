@@ -62,6 +62,11 @@
         <span id="todayBtn">今日</span>
       </div>
     </div>
+    <!-- 凡例はカレンダーの上（印を見る前に意味が分かるように・2026-08-27） -->
+    <p class="leg">
+      <span><i></i>誰でも傍聴できる</span>
+      <span><i class="o"></i>非公開・要確認</span>
+    </p>
     <div class="cal-row">
       <div class="cal-block">
         <div class="month" id="monthLabel1"></div>
@@ -78,15 +83,10 @@
         </div>
       </div>
     </div>
-    <p class="leg">
-      <span><i></i>誰でも傍聴できる</span>
-      <span><i class="o"></i>非公開・要確認</span>
-    </p>
   </section>
 
-  <!-- 今後の期日 -->
-  <section aria-labelledby="up-h">
-    <p class="sech" id="up-h">今後の期日</p>
+  <!-- 今後の期日（見出しは置かず、一覧だけを地の上に置く。2026-08-27） -->
+  <section aria-label="今後の期日">
     <div class="ulist" id="upcoming"></div>
   </section>
 
