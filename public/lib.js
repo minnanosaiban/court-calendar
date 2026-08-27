@@ -52,9 +52,11 @@ window.CC = (function(){
   function byDate(a,b){ return a.date===b.date ? byTime(a,b) : a.date.localeCompare(b.date); }
   function escapeHtml(s){ return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
   function escapeAttr(s){ return String(s||"").replace(/"/g,"&quot;"); }
-  // 1行のテキストに https://... が含まれていればリンクにする（必ず先にエスケープしてから当てはめる）
+  // 1行のテキストに https://... が含まれていればリンクにする（必ず先にエスケープしてから当てはめる）。
+  // リンクの直後に「外部サイトを開く」アイコンを添える（報道がWEB記事のときの目印）
   function linkify(s){
-    return escapeHtml(s).replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+    return escapeHtml(s).replace(/(https?:\/\/[^\s]+)/g,
+      '<a href="$1" target="_blank" rel="noopener">$1 <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>');
   }
   function cssEsc(s){ return String(s).replace(/"/g,'\\"'); }
   function jpDate(s){ const d=parseYmd(s); return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${WD[d.getDay()]}）`; }
@@ -189,18 +191,38 @@ window.CC = (function(){
   // 書きたい文言をそのまま1行に書く）。行頭が「地裁」「高裁」などの審級＋スペースなら、名前の位置が
   // そろうように審級部分だけ幅をそろえて表示する（審級を書かなければ、その行はそのまま表示する）。
   // スペースを必須にしているのは、「地裁太郎」のように審級と同じ文字で始まる名前を
-  // 「地裁」＋「太郎」に割ってしまわないため ----
+  // 「地裁」＋「太郎」に割ってしまわないため。行末に https://... を書くと、その裁判官のリンク
+  // （「裁判官マップ」等）としてアイコンで添える（任意・URLの部分は表示上は隠れる） ----
   const COURT_LEVELS = "最高裁|高裁|地裁|簡裁|家裁";
   function courtLinesHtml(raw){
     const lines = String(raw||"").split("\n").map(s=>s.trim()).filter(Boolean);
     if(!lines.length) return "";
     const re = new RegExp(`^(${COURT_LEVELS})[\\s　]+(.*)$`);
+    const urlRe = /[\s　](https?:\/\/\S+)$/;
     return lines.map(line=>{
+      let url = "";
+      const um = line.match(urlRe);
+      if(um){ url = um[1]; line = line.slice(0, um.index).trim(); }
+      const linkHtml = url
+        ? ` <a class="jlink" href="${escapeAttr(url)}" target="_blank" rel="noopener" title="外部サイトを見る" aria-label="外部サイトを見る"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>`
+        : "";
       const m = line.match(re);
+      // 名前＋リンクは1つの要素にまとめる（.court-lineはgridで2列固定なので、直接の子要素が
+      // 3つになると3つ目が次の行の1列目に流れてレイアウトが崩れてしまうため）
       return m
-        ? `<div class="court-line"><span class="cl-level">${escapeHtml(m[1])}</span>${escapeHtml(m[2].trim())}</div>`
-        : `<div>${escapeHtml(line)}</div>`;
+        ? `<div class="court-line"><span class="cl-level">${escapeHtml(m[1])}</span><span>${escapeHtml(m[2].trim())}${linkHtml}</span></div>`
+        : `<div>${escapeHtml(line)}${linkHtml}</div>`;
     }).join("");
+  }
+  // ---- 原告・被告名：1行目=本人の名前、2行目以降は「代理人　〇〇」のような補足（任意・改行を
+  // 増やすだけで複数行書ける）。2行目以降はひとまわり小さく添える ----
+  function partyNameHtml(raw){
+    const lines = String(raw||"").split("\n").map(s=>s.trim()).filter(Boolean);
+    if(!lines.length) return "";
+    return lines.map((line,i)=> i===0
+      ? escapeHtml(line)
+      : `<div class="party-sub">${escapeHtml(line)}</div>`
+    ).join("");
   }
   // ファクトシートの1行。値が無ければ何も出さない（dt/ddのペアをまとめて返す）
   function factRow(label, valueHtml){ return valueHtml ? `<dt>${escapeHtml(label)}</dt><dd>${valueHtml}</dd>` : ""; }
@@ -353,8 +375,8 @@ window.CC = (function(){
     // 争点・当事者・裁判官は、トップのピックアップカードには出さない（事件ページ full=true だけ）。
     // 詳しい情報が知りたい人は「事件の詳細を見る」から先へ進んでもらう（2026-08-27）
     const pointsRow = full ? factRow("争点", points?`<ul class="pts">${points}</ul>`:"") : "";
-    const plaintiffRow = full ? factRow("原告", (c.plaintiffName?escapeHtml(c.plaintiffName):"")+partyLinksHtml(c.plaintiffLinks)) : "";
-    const defendantRow = full ? factRow("被告", (c.defendantName?escapeHtml(c.defendantName):"")+partyLinksHtml(c.defendantLinks)) : "";
+    const plaintiffRow = full ? factRow("原告", partyNameHtml(c.plaintiffName)+partyLinksHtml(c.plaintiffLinks)) : "";
+    const defendantRow = full ? factRow("被告", partyNameHtml(c.defendantName)+partyLinksHtml(c.defendantLinks)) : "";
     const judgeRow = full ? factRow("裁判官", c.judge?courtLinesHtml(c.judge):"") : "";
     const pressRow = full ? factRow("掲載", c.press.length?`<ul class="pts">${c.press.map(line=>`<li>${linkify(line)}</li>`).join("")}</ul>`:"") : "";
     // 事件番号は運営が事件を見分けるための内部用の欄なので、画面には出さない（APIも書き込み権限がない人には返さない）

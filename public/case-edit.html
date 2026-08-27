@@ -125,8 +125,14 @@
           <textarea id="cPoints" placeholder="例）◯◯の事実があったか"></textarea>
         </div>
         <div class="two">
-          <div class="field"><label>原告名</label><input type="text" id="cPlaintiff" placeholder="例）従業員"></div>
-          <div class="field"><label>被告名</label><input type="text" id="cDefendant" placeholder="例）〇〇株式会社"></div>
+          <div class="field">
+            <label>原告名 <span class="lhint">2行目以降は代理人名など（任意）</span></label>
+            <textarea id="cPlaintiff" placeholder="例）従業員&#10;代理人　〇〇"></textarea>
+          </div>
+          <div class="field">
+            <label>被告名 <span class="lhint">2行目以降は代理人名など（任意）</span></label>
+            <textarea id="cDefendant" placeholder="例）〇〇株式会社&#10;代理人　〇〇"></textarea>
+          </div>
         </div>
         <div class="two">
           <div class="field">
@@ -139,8 +145,8 @@
           </div>
         </div>
         <div class="field">
-          <label>裁判官 <span class="lhint">1行に1人（審級＋スペース＋名前）</span></label>
-          <textarea id="cJudge" placeholder="地裁　〇〇〇〇裁判官&#10;高裁　〇〇〇〇裁判官"></textarea>
+          <label>裁判官 <span class="lhint">1行に1人（審級＋スペース＋名前）。末尾に半角スペース＋URLで「裁判官マップ」等へのリンクを添えられます（任意）</span></label>
+          <textarea id="cJudge" placeholder="地裁　〇〇〇〇裁判官&#10;高裁　〇〇〇〇裁判官 https://saibankan-map.jp/..."></textarea>
         </div>
         <div class="field">
           <label>報道・掲載 <span class="lhint">1行に1件</span></label>
