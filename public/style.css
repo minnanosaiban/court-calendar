@@ -200,8 +200,8 @@ a{color:inherit}
 .notice-frame iframe{display:block;width:100%;aspect-ratio:210/297;border:0}
 /* 画像は決め打ちの比率を持たせず、画像自身の縦横比のまま幅いっぱいに出す（どの向きでも余白が出ない） */
 .notice-frame img{display:block;width:100%;height:auto;object-fit:contain}
-/* ピックアップカード：面を大きくしすぎない方針なので、横長・低めに切り詰める（画像はcontainで欠けさせない） */
-.notice.compact .notice-frame iframe,.notice.compact .notice-frame img{aspect-ratio:1.9/1}
+/* トップのピックアップカードも同じ大きさで出す（2026-08-27：横長1.9:1に切り詰めていたのをやめ、
+   案内チラシは事件ページと同じくA4縦・原寸の比率で拡大表示） */
 .pts{list-style:none;margin-top:8px;font-size:.9rem}
 /* ファクトシート内（争点・掲載）では、.pts自身のmargin-topが dt の位置合わせ用padding-topと
    二重にかかり、他の行（.court-lineや素のテキスト）よりラベルとの間が8px広くなって
