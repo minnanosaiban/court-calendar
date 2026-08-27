@@ -432,7 +432,11 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .pop-close i{margin-left:.3em}
 
 /* ---- upcoming ---- */
+/* 「期日をさがす」（dates.html）の結果一覧：検索欄・タブなどの操作と分けるため白い面に載せる */
 .ucard{padding:8px 12px}
+/* トップの「今後の期日」：白い面に載せず、地の上に直接置く（2026-08-27。トップは面が多すぎたため。
+   箱の内側12pxが無くなるぶん、特にスマホで左右が広がり事件名の折り返しが減る） */
+.ulist{padding:0}
 .u{display:flex;gap:12px;padding:12px;border-radius:12px;cursor:pointer;align-items:stretch}
 .u:hover{background:var(--tint)}
 /* 事件ごとの色を示す縦棒（カレンダーの横線＝赤一色に対して、ここは事件の見分けを担う） */
