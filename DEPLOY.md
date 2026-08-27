@@ -12,9 +12,10 @@
 ```
 public/index.html       画面（カレンダー・「最近の期日」・「今後の期日」）
 public/case.html        画面（1つの事件の詳細ページ・?id=事件ID で開く。旧リンク ?case=事件名 も可）
+public/case-edit.html   画面（事件情報の編集。全画面ページ。?id=事件ID で編集／無しで新規作成。2026-08-27〜、モーダルから分離）
 public/cases.html       画面（事件をさがす・検索とタグの絞り込み・?tag=… で開くとその絞り込み済み）
 public/style.css        両ページ共通のスタイル
-public/lib.js           両ページ共通のロジック（状態・API呼び出し・モーダル・掲示板・タイムライン・資料）。window.CC として公開
+public/lib.js           各ページ共通のロジック（状態・API呼び出し・モーダル・掲示板・タイムライン・資料・事件情報編集ページの配線）。window.CC として公開
 functions/_common.js    共通処理（認証・権限・JSON・行→画面の変換・掲示板の投稿可否判定）
 functions/api/me.js               GET  /api/me           ログイン状態と権限・掲示板の受付状況
 functions/api/cases.js            GET  /api/cases        事件の一覧（いいね数つき） / POST 追加

@@ -31,7 +31,6 @@ window.CC = (function(){
   let images = [];
   let me = { email:null, canWrite:false, viaAccess:false, allowAll:false, boardOpen:false, turnstileSiteKey:"" };
   let editingId = null;          // 編集中の期日
-  let editingCaseId = null;      // 編集中の事件
   let editingMatId = null;       // 編集中の資料
   let editingImgId = null;       // 編集中の写真
   let boardFormForCase = null;   // 投稿フォームを開いている事件ID
@@ -1074,7 +1073,7 @@ window.CC = (function(){
   });
   function closeCaseEditModal(){
     overlay.classList.remove("show");
-    editingId=null; editingCaseId=null; editingMatId=null; matCaseId=null; editingImgId=null; imgCaseId=null;
+    editingId=null; editingMatId=null; matCaseId=null; editingImgId=null; imgCaseId=null;
     ceCaseId=null;
   }
 
