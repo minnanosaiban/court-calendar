@@ -398,9 +398,13 @@ window.CC = (function(){
   function noticeHtml(c, full){
     if(!c.noticeUrl) return "";
     const isImage = c.noticeMime==="image/png" || c.noticeMime==="image/jpeg";
+    // 埋め込み側はツールバー（拡大・ページ送り・印刷・ダウンロードのアイコン列）を隠してすっきりさせる。
+    // #toolbar=0 はChromeが慣習的に対応しているだけの指定（Adobeの古い仕様が起源）で、対応していない
+    // ブラウザでは単に元のツールバー付きに戻るだけ・実害なし。拡大等が必要な人は「新しいタブで開く」
+    // （こちらはtoolbar=0を付けないのでフル機能）へ誘導する
     const body = isImage
       ? `<img src="${escapeAttr(c.noticeUrl)}" alt="${escapeAttr(c.noticeFileName||"期日案内")}" loading="lazy">`
-      : `<iframe src="${escapeAttr(c.noticeUrl)}" title="${escapeAttr(c.noticeFileName||"期日案内")}" loading="lazy"></iframe>`;
+      : `<iframe src="${escapeAttr(c.noticeUrl)}#toolbar=0&navpanes=0" title="${escapeAttr(c.noticeFileName||"期日案内")}" loading="lazy"></iframe>`;
     return `<div class="notice${full?"":" compact"}">
       <div class="notice-head"><span class="notice-lab">期日案内</span>
         <a class="notice-open" href="${escapeAttr(c.noticeUrl)}" target="_blank" rel="noopener">新しいタブで開く <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>
