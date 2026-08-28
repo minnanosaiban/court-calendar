@@ -25,7 +25,7 @@ export async function onRequestPut({ request, env, params }) {
   }
   if (!env.FILES) return json({ error: "ファイルのアップロード（R2）はまだ使えません" }, 400);
   const ext = NOTICE_MIMES[f.type];
-  if (!ext) return json({ error: "期日案内は PDF・PNG・JPEG のみ登録できます" }, 400);
+  if (!ext) return json({ error: "期日案内は JPEG のみ登録できます" }, 400);
   if (f.size > NOTICE_MAX_BYTES) return json({ error: "ファイルは20MBまでです" }, 400);
 
   const file = { blob: f, ext, name: f.name || ("notice." + ext), size: f.size, mime: f.type };

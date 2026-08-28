@@ -1,6 +1,6 @@
 import {
   json, rowToPresenter, putFile, getIdentity, authorizeWrite,
-  IMAGE_MIMES, ICON_MAX_BYTES,
+  ICON_MIMES, ICON_MAX_BYTES,
 } from "../../../_common.js";
 import { presentersSelect } from "../../presenters.js";
 
@@ -24,8 +24,8 @@ export async function onRequestPut({ request, env, params }) {
     return json({ error: "アイコンの画像ファイルを選んでください" }, 400);
   }
   if (!env.FILES) return json({ error: "アイコンのアップロード（R2）はまだ使えません" }, 400);
-  const ext = IMAGE_MIMES[f.type];
-  if (!ext) return json({ error: "アイコンは JPEG・PNG・WebP のみ登録できます" }, 400);
+  const ext = ICON_MIMES[f.type];
+  if (!ext) return json({ error: "アイコンは JPEG・WebP のみ登録できます" }, 400);
   if (f.size > ICON_MAX_BYTES) return json({ error: "アイコンは5MBまでです" }, 400);
 
   const file = { blob: f, ext, name: f.name || ("icon." + ext), size: f.size, mime: f.type };

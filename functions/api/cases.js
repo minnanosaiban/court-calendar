@@ -1,6 +1,6 @@
 import {
   json, newId, rowToCase, caseFromBody, CASE_COLS,
-  getIdentity, authorizeWrite, viewerHash, hiddenCaseIds, redactCaseNo,
+  getIdentity, authorizeWrite, viewerHash, hiddenCaseIds, redactCaseNo, uniqueCaseName,
 } from "../_common.js";
 
 // 事件の一覧は、いいねの数と「この端末が押したか」を一緒に返す（最初の ? に viewer のハッシュを bind する）
@@ -14,7 +14,7 @@ export function casesSelect() {
 }
 
 // 一覧（誰でも閲覧可）。非公開にした事件（view_key あり）は合言葉が合った人にだけ返す。
-// 事件番号は運営（書き込み権限がある人）にだけ返す。
+// 事件番号は運営（書き込み権限がある人）と、「公開してもよい」とチェックされた事件にだけ返す。
 export async function onRequestGet({ request, env }) {
   const viewer = (await viewerHash(request)) || "";
   const [{ results }, hidden, wid] = await Promise.all([
@@ -36,8 +36,8 @@ export async function onRequestPost({ request, env }) {
   const c = caseFromBody(body);
   if (!c.name) return json({ error: "事件名は必須です" }, 400);
 
-  const dup = await env.DB.prepare(`SELECT id FROM cases WHERE name = ?`).bind(c.name).first();
-  if (dup) return json({ error: "同じ名前の事件がすでにあります" }, 409);
+  // 事件名が重複していたら、エラーで止めずに全角の連番を振って回避する（2026-08-28）
+  c.name = await uniqueCaseName(env, c.name);
 
   if (c.presenter_id) {
     const pr = await env.DB.prepare(`SELECT id FROM presenters WHERE id = ?`).bind(c.presenter_id).first();
@@ -47,14 +47,20 @@ export async function onRequestPost({ request, env }) {
   const cid = newId("c");
   const now = new Date().toISOString();
   await env.DB.prepare(
-    `INSERT INTO cases (id, name, presenter_id, case_no, plaintiff_name, defendant_name, judge, points, call_text, contact, press,
+    `INSERT INTO cases (id, name, presenter_id, case_no, case_no_public, show_case_no_on_top,
+                        plaintiff_name, show_plaintiff_on_top, defendant_name, show_defendant_on_top,
+                        judge, show_judge_on_top, points, show_points_on_top, call_text, show_call_on_top,
+                        contact, press, show_press_on_top,
                         plaintiff_links, defendant_links, tags,
-                        related_case_ids, archived_at, close_type, board_enabled, board_restricted,
+                        related_case_ids, show_related_on_top, archived_at, close_type, board_enabled, board_restricted,
                         created_by, updated_by, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-  ).bind(cid, c.name, c.presenter_id, c.case_no, c.plaintiff_name, c.defendant_name, c.judge, c.points, c.call_text, c.contact, c.press,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  ).bind(cid, c.name, c.presenter_id, c.case_no, c.case_no_public, c.show_case_no_on_top,
+         c.plaintiff_name, c.show_plaintiff_on_top, c.defendant_name, c.show_defendant_on_top,
+         c.judge, c.show_judge_on_top, c.points, c.show_points_on_top, c.call_text, c.show_call_on_top,
+         c.contact, c.press, c.show_press_on_top,
          c.plaintiff_links, c.defendant_links, c.tags,
-         c.related_case_ids, c.archived_at, c.close_type, c.board_enabled, c.board_restricted,
+         c.related_case_ids, c.show_related_on_top, c.archived_at, c.close_type, c.board_enabled, c.board_restricted,
          id.email, id.email, now).run();
 
   const row = await env.DB.prepare(`${casesSelect()} WHERE c.id = ?`).bind("", cid).first();

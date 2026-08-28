@@ -32,8 +32,12 @@
   </div>
 
   <!-- 欄の並びは、事件ページの実際の掲載順（写真→掲示板→事件名・タグ→終結→争点・当事者→裁判について
-       →関連裁判→期日→資料→非公開の情報）。写真・期日・資料は複数件の集まりなので、事件情報とは
-       性質が違う＝1件ずつ保存する行内エディタにしている（2026-08-27） -->
+       →関連裁判→期日→資料）。写真・期日・資料は複数件の集まりなので、事件情報とは
+       性質が違う＝1件ずつ保存する行内エディタにしている（2026-08-27）。事件番号は「争点・当事者」の
+       先頭に置く（公開チェックが無いかぎり運営専用の内部メモとして扱う・2026-08-28）。
+       表示設定のチェック（公開する／トップにも表示する）は .checkrow に入れ、欄名の直下・入力欄の
+       上に置く。入力欄の下に置くと、上の入力欄と下の欄名のどちらに属するのか読み取れなかった
+       （2026-08-28） -->
   <div class="editgrid" id="ceGrid" hidden>
     <nav class="secnav" id="ceNav" aria-label="節へ移動">
       <div data-sec="sec-board" class="on">掲示板</div>
@@ -46,7 +50,6 @@
       <div data-sec="sec-related">関連裁判</div>
       <div data-sec="sec-ev">期日<span class="n" id="navEvCount"></span></div>
       <div data-sec="sec-mat">資料<span class="n" id="navMatCount"></span></div>
-      <div data-sec="sec-private">非公開の情報</div>
     </nav>
     <div>
       <div class="editcol" id="ceForm">
@@ -59,15 +62,16 @@
           <label class="check"><input type="checkbox" id="cBoardRestricted"> 投稿を制限する（一般の投稿は受け付けず、運営のみ投稿できます）</label>
         </div>
 
-        <!-- 期日案内：事件につき1枚・差し替え専用（問題提起人アイコンと同じ仕組み）。PDFまたは画像（PNG/JPEG）。
+        <!-- 期日案内：事件につき1枚・差し替え専用（問題提起人アイコンと同じ仕組み）。JPEGのみ
+             （2026-08-28：ファイルサイズが小さく済むJPEGに限定。PDF・PNGは既存データの表示のみ対応）。
              新規作成のときはまだ事件が無いので出さない -->
         <div class="field" id="sec-notice" hidden>
           <p class="msec">期日案内</p>
-          <label>案内チラシ（PDF・PNG・JPEG）</label>
+          <label>案内チラシ（JPEG）</label>
           <div class="cicon-row">
-            <input type="file" id="cNoticeFile" accept="application/pdf,image/png,image/jpeg">
+            <input type="file" id="cNoticeFile" accept="image/jpeg">
           </div>
-          <p class="fnote" id="cNoticeNote">PDF・PNG・JPEG、20MBまで。支援者向けの「裁判期日一覧のご案内」のようなチラシを想定しています。選ぶとすぐ反映され（「保存」を待ちません）、事件ページとトップに埋め込み表示されます。<a id="cNoticeRemove" class="cicon-remove" hidden>外す</a></p>
+          <p class="fnote" id="cNoticeNote">JPEG、20MBまで。支援者向けの「裁判期日一覧のご案内」のようなチラシを想定しています。選ぶとすぐ反映され（「保存」を待ちません）、事件ページとトップに埋め込み表示されます。<a id="cNoticeRemove" class="cicon-remove" hidden>外す</a></p>
           <p class="fnote" id="cNoticeStatus" hidden></p>
         </div>
 
@@ -102,14 +106,15 @@
           <div class="subfield" id="cPresenterIconRow" hidden>
             <div class="cicon-row">
               <span id="cPresenterIconPreview"></span>
-              <input type="file" id="cPresenterIconFile" accept="image/jpeg,image/png,image/webp">
+              <input type="file" id="cPresenterIconFile" accept="image/jpeg,image/webp">
             </div>
-            <p class="fnote" id="cPresenterIconNote">JPEG・PNG・WebP、5MBまで。正方形に近い画像がきれいに出ます。選ぶとすぐ反映され（「保存」を待ちません）、同じ問題提起人の他の事件のアイコンも変わります。<a id="cPresenterIconRemove" class="cicon-remove" hidden>アイコンを外す</a></p>
+            <p class="fnote" id="cPresenterIconNote">JPEG・WebP、5MBまで。正方形に近い画像がきれいに出ます。選ぶとすぐ反映され（「保存」を待ちません）、同じ問題提起人の他の事件のアイコンも変わります。<a id="cPresenterIconRemove" class="cicon-remove" hidden>アイコンを外す</a></p>
           </div>
           <p class="fnote" id="cPresenterStatus" hidden></p>
         </div>
         <div class="field">
-          <label>タグ <span class="lhint">1行に1つ</span></label>
+          <label>タグ</label>
+          <span class="lhint">1行に1つ</span>
           <textarea id="cTags" placeholder="情報公開&#10;行政"></textarea>
         </div>
 
@@ -121,47 +126,72 @@
 
         <p class="msec" id="sec-facts">争点・当事者</p>
         <div class="field">
-          <label>争点 <span class="lhint">1行に1つ</span></label>
+          <label>事件番号</label>
+          <div class="checkrow">
+            <label class="check"><input type="checkbox" id="cCaseNoPublic"> 公開する</label>
+            <label class="check"><input type="checkbox" id="cShowCaseNoOnTop"> トップにも表示する</label>
+          </div>
+          <span class="lhint">1行に1件</span>
+          <textarea id="cCaseNo" placeholder="地裁　令和6年(ワ)第12345号&#10;高裁　令和7年(ネ)第1234号"></textarea>
+        </div>
+        <div class="field">
+          <label>争点</label>
+          <div class="checkrow"><label class="check"><input type="checkbox" id="cShowPointsOnTop"> トップにも表示する</label></div>
+          <span class="lhint">1行に1つ</span>
           <textarea id="cPoints" placeholder="例）◯◯の事実があったか"></textarea>
         </div>
         <div class="two">
           <div class="field">
-            <label>原告名 <span class="lhint">2行目以降は代理人名など（任意）</span></label>
+            <label>原告名</label>
+            <div class="checkrow"><label class="check"><input type="checkbox" id="cShowPlaintiffOnTop"> トップにも表示する</label></div>
+            <span class="lhint">2行目以降は代理人名など（任意）</span>
             <textarea id="cPlaintiff" placeholder="例）従業員&#10;代理人　〇〇"></textarea>
           </div>
           <div class="field">
-            <label>被告名 <span class="lhint">2行目以降は代理人名など（任意）</span></label>
+            <label>被告名</label>
+            <div class="checkrow"><label class="check"><input type="checkbox" id="cShowDefendantOnTop"> トップにも表示する</label></div>
+            <span class="lhint">2行目以降は代理人名など（任意）</span>
             <textarea id="cDefendant" placeholder="例）〇〇株式会社&#10;代理人　〇〇"></textarea>
           </div>
         </div>
         <div class="two">
           <div class="field">
-            <label>原告のリンク <span class="lhint">1行に1つ</span></label>
+            <label>原告のリンク</label>
+            <span class="lhint">1行に1つ</span>
             <textarea id="cPlaintiffLinks" placeholder="https://x.com/..."></textarea>
           </div>
           <div class="field">
-            <label>被告のリンク <span class="lhint">1行に1つ</span></label>
+            <label>被告のリンク</label>
+            <span class="lhint">1行に1つ</span>
             <textarea id="cDefendantLinks" placeholder="https://x.com/..."></textarea>
           </div>
         </div>
         <div class="field">
-          <label>裁判官 <span class="lhint">1行に1人（審級＋スペース＋名前）。末尾に半角スペース＋URLで「裁判官マップ」等へのリンクを添えられます（任意）</span></label>
+          <label>裁判官</label>
+          <div class="checkrow"><label class="check"><input type="checkbox" id="cShowJudgeOnTop"> トップにも表示する</label></div>
+          <span class="lhint">1行に1人（審級＋スペース＋名前）。末尾に半角スペース＋URLで「裁判官マップ」等へのリンクを添えられます（任意）</span>
           <textarea id="cJudge" placeholder="地裁　〇〇〇〇裁判官&#10;高裁　〇〇〇〇裁判官 https://saibankan-map.jp/..."></textarea>
         </div>
         <div class="field">
-          <label>報道・掲載 <span class="lhint">1行に1件。末尾に半角スペース＋URLで記事のリンクを添えられます（任意）</span></label>
+          <label>報道・掲載</label>
+          <div class="checkrow"><label class="check"><input type="checkbox" id="cShowPressOnTop"> トップにも表示する</label></div>
+          <span class="lhint">1行に1件。末尾に半角スペース＋URLで記事のリンクを添えられます（任意）</span>
           <textarea id="cPress" placeholder="例）〇〇新聞で報道されました https://...&#10;労働判例ジャーナル2025.10 No.163に掲載&#10;裁判所への手続きにより特別保存（永久保存）となっています"></textarea>
         </div>
 
         <p class="msec" id="sec-call">裁判について</p>
         <div class="field">
-          <label>本文 <span class="lhint">空行を挟むと段落を分けられます</span></label>
+          <label>本文</label>
+          <div class="checkrow"><label class="check"><input type="checkbox" id="cShowCallOnTop"> トップにも表示する</label></div>
+          <span class="lhint">空行を挟むと段落を分けられます</span>
           <textarea id="cCall" style="min-height:200px" placeholder="どんな裁判か、傍聴や支援をお願いする文章など"></textarea>
         </div>
 
         <p class="msec" id="sec-related">関連裁判</p>
         <div class="field">
-          <label>関連裁判 <span class="lhint">登録済みの事件名を1行に1つ</span></label>
+          <label>関連裁判</label>
+          <div class="checkrow"><label class="check"><input type="checkbox" id="cShowRelatedOnTop"> トップにも表示する</label></div>
+          <span class="lhint">登録済みの事件名を1行に1つ</span>
           <textarea id="cRelated" placeholder="例）情報公開請求をめぐる訴訟"></textarea>
           <p class="fnote">同じ事実に関連する別争点の訴訟など。どちらか一方に登録すれば、両方の事件ページに表示されます。</p>
         </div>
@@ -183,13 +213,6 @@
             <button type="button" class="addbtn" id="matAddBtn">＋ 資料を追加</button>
           </div>
         </section>
-
-        <p class="msec" id="sec-private">非公開の情報</p>
-        <div class="field">
-          <label>事件番号 <span class="lhint">1行に1件・サイトには表示されません</span></label>
-          <textarea id="cCaseNo" placeholder="地裁　令和6年(ワ)第12345号&#10;高裁　令和7年(ネ)第1234号"></textarea>
-          <p class="fnote">運営が事件を見分けるための欄です。閲覧者には表示されず、APIでも返しません。</p>
-        </div>
 
       </div>
       <div class="savebar">
