@@ -948,6 +948,7 @@ window.CC = (function(){
     const cPresenterSelect=$("cPresenterSelect"), cPresenterNewRow=$("cPresenterNewRow"), cPresenterNewNickname=$("cPresenterNewNickname"),
           cPresenterNewSave=$("cPresenterNewSave"), cPresenterIconRow=$("cPresenterIconRow"), cPresenterIconPreview=$("cPresenterIconPreview"),
           cPresenterIconFile=$("cPresenterIconFile"), cPresenterIconRemove=$("cPresenterIconRemove"),
+          cPresenterRenameRow=$("cPresenterRenameRow"), cPresenterRenameNickname=$("cPresenterRenameNickname"), cPresenterRenameSave=$("cPresenterRenameSave"),
           cPresenterStatus=$("cPresenterStatus");
     // 連絡先は入力欄を廃止したが、既存データは保持する（保存のたびに空で上書きしないよう、
     // 編集を開いたときの値をここに覚えておいて、保存時にそのまま送り返す）
@@ -969,17 +970,18 @@ window.CC = (function(){
       const v = cPresenterSelect.value;
       cPresenterStatus.hidden = true;
       if(v==="__new__"){
-        cPresenterNewRow.hidden=false; cPresenterIconRow.hidden=true;
+        cPresenterNewRow.hidden=false; cPresenterIconRow.hidden=true; cPresenterRenameRow.hidden=true;
         cPresenterNewNickname.value="";
       }else if(v){
-        cPresenterNewRow.hidden=true; cPresenterIconRow.hidden=false;
+        cPresenterNewRow.hidden=true; cPresenterIconRow.hidden=false; cPresenterRenameRow.hidden=false;
         const p = presenterById(v);
+        cPresenterRenameNickname.value = p ? p.nickname : "";
         cPresenterIconPreview.innerHTML = p && p.icon
           ? `<img class="cicon" src="${escapeAttr(p.icon)}" alt="">`
           : `<span class="cicon cicon-ph" aria-hidden="true">${escapeHtml(placeholderChar(p?p.nickname:""))}</span>`;
         cPresenterIconRemove.hidden = !(p && p.icon);
       }else{
-        cPresenterNewRow.hidden=true; cPresenterIconRow.hidden=true;
+        cPresenterNewRow.hidden=true; cPresenterIconRow.hidden=true; cPresenterRenameRow.hidden=true;
       }
     }
     cPresenterSelect.addEventListener("change", updatePresenterFieldUI);
@@ -995,6 +997,23 @@ window.CC = (function(){
         updatePresenterFieldUI();
       }catch(err){ alert(saveErr(err)); }
       finally{ cPresenterNewSave.disabled=false; }
+    });
+    // ニックネームの変更（同じ問題提起人の他の事件もまとめて表示名が変わる）
+    cPresenterRenameSave.addEventListener("click", async ()=>{
+      const pid=cPresenterSelect.value;
+      if(!pid || pid==="__new__") return;
+      const nickname = cPresenterRenameNickname.value.trim();
+      if(!nickname){ alert("ニックネームを入力してください。"); cPresenterRenameNickname.focus(); return; }
+      cPresenterRenameSave.disabled=true;
+      cPresenterStatus.hidden=false; cPresenterStatus.textContent="変更しています…";
+      try{
+        const up = await apiUpdatePresenter(pid, {nickname});
+        const i=presenters.findIndex(x=>x.id===pid); if(i>=0) presenters[i]=up;
+        renderPresenterOptions(pid); updatePresenterFieldUI();
+        cPresenterStatus.hidden=false; cPresenterStatus.textContent="ニックネームを変更しました。";
+        await reloadCases();
+      }catch(err){ cPresenterStatus.hidden=false; cPresenterStatus.textContent="変更できませんでした：" + (err && err.message || err); }
+      finally{ cPresenterRenameSave.disabled=false; }
     });
     cPresenterIconFile.addEventListener("change", async ()=>{
       const f=cPresenterIconFile.files[0];
