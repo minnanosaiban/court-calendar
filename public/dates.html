@@ -30,7 +30,10 @@
     <div class="search"><i class="bi bi-search" aria-hidden="true"></i><input type="text" id="q" placeholder="事件名で検索" aria-label="事件名で検索"></div>
     <div class="tags" id="tagFilters" style="margin-top:14px"></div>
     <div class="tabs" id="periodTabs"></div>
-    <div class="sortrow"><span class="sortlink" id="sortToggle" role="button" tabindex="0"><i class="bi bi-arrow-down-up" aria-hidden="true"></i> <span id="sortLabel"></span></span></div>
+    <div class="sortrow">
+      <span class="favtoggle" id="favToggle" role="button" tabindex="0" aria-pressed="false"><i class="bi bi-bookmark" aria-hidden="true"></i> お気に入りのみ</span>
+      <span class="sortlink" id="sortToggle" role="button" tabindex="0"><i class="bi bi-arrow-down-up" aria-hidden="true"></i> <span id="sortLabel"></span></span>
+    </div>
     <div class="card ucard" id="dlist"></div>
   </section>
 
@@ -63,11 +66,13 @@
   const periodTabs=document.getElementById("periodTabs");
   const sortToggle=document.getElementById("sortToggle");
   const sortLabel=document.getElementById("sortLabel");
+  const favToggle=document.getElementById("favToggle");
   const dlistEl=document.getElementById("dlist");
   const statusEl=document.getElementById("status");
   let activeTag = new URLSearchParams(location.search).get("tag") || "";
   let activePeriod = "upcoming";   // "upcoming"=今後 / "past"=過去
   let sortAsc = true;              // true=日付が古い順（今後タブでは＝近い順） / false=日付が新しい順
+  let favOnly = false;             // true＝お気に入り登録した期日だけに絞り込む
 
   // タグは期日そのものではなく、その事件のタグを使う（事件をさがす と同じ絞り込み体験にそろえる）
   function allTagsWithCount(){
@@ -99,7 +104,7 @@
       <div class="ubody">
         <div class="ud"><b>${d.getMonth()+1}/${d.getDate()}</b>（${CC.WD[d.getDay()]}）${ev.time?" "+CC.escapeHtml(ev.time):""}</div>
         <div class="ut">${CC.escapeHtml(ev.case)}</div>
-        <div class="um">${CC.escapeHtml([ev.type,place].filter(Boolean).join(" ／ "))||"&nbsp;"}</div>
+        <div class="um">${CC.escapeHtml([ev.type,place].filter(Boolean).join(" ／ "))||"&nbsp;"} ${CC.bookmarkHtml(ev)}</div>
       </div>
     </div>`;
   }
@@ -109,7 +114,8 @@
     const q=qEl.value.trim().toLowerCase();
     return CC.events.filter(ev=>{
       const c=CC.caseById(ev.caseId);
-      return (!q || ev.case.toLowerCase().includes(q)) && (!activeTag || (c&&c.tags||[]).includes(activeTag));
+      return (!q || ev.case.toLowerCase().includes(q)) && (!activeTag || (c&&c.tags||[]).includes(activeTag))
+        && (!favOnly || ev.bookmarked);
     });
   }
   // 終結した事件の期日は、日付の前後にかかわらず「過去」扱いにする（事件をさがす の 進行中/終結 と同じ考え方）
@@ -141,11 +147,17 @@
       .sort((a,b)=> sortAsc
         ? (a.date===b.date ? CC.byTime(a,b) : a.date.localeCompare(b.date))
         : (a.date===b.date ? CC.byTime(a,b) : b.date.localeCompare(a.date)));
-    dlistEl.innerHTML = list.length ? list.map(rowHtml).join("") : `<p class="empty-msg">見つかりませんでした。</p>`;
+    dlistEl.innerHTML = list.length ? list.map(rowHtml).join("")
+      : `<p class="empty-msg">${favOnly?"お気に入りの期日は見つかりませんでした。":"見つかりませんでした。"}</p>`;
+    // お気に入りボタンは行内にあるが行そのものは事件ページへのリンクなので、
+    // ボタン操作（クリック／キーボードのEnter）が行のリンクへ突き抜けないようにガードする
     dlistEl.querySelectorAll("[data-open]").forEach(el=>{
       const go=()=>{ location.href="case?id="+encodeURIComponent(el.dataset.open); };
-      el.addEventListener("click",go);
-      el.addEventListener("keydown",(e)=>{ if(e.key==="Enter") go(); });
+      el.addEventListener("click",(e)=>{ if(!e.target.closest("[data-bookmark]")) go(); });
+      el.addEventListener("keydown",(e)=>{ if(e.key==="Enter" && !e.target.closest("[data-bookmark]")) go(); });
+    });
+    dlistEl.querySelectorAll("[data-bookmark]").forEach(b=>{
+      b.addEventListener("click",(e)=>{ e.stopPropagation(); CC.toggleBookmark(b.dataset.bookmark, b); });
     });
   }
   function renderAll(){
@@ -159,6 +171,14 @@
   qEl.addEventListener("input", ()=>{ renderTabs(); renderList(); });
   sortToggle.addEventListener("click", ()=>{ sortAsc=!sortAsc; renderSort(); renderList(); });
   sortToggle.addEventListener("keydown",(e)=>{ if(e.key==="Enter"){ sortAsc=!sortAsc; renderSort(); renderList(); } });
+  function toggleFavOnly(){
+    favOnly=!favOnly;
+    favToggle.classList.toggle("on",favOnly);
+    favToggle.setAttribute("aria-pressed",favOnly?"true":"false");
+    renderTabs(); renderList();
+  }
+  favToggle.addEventListener("click", toggleFavOnly);
+  favToggle.addEventListener("keydown",(e)=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); toggleFavOnly(); } });
 
   (async function init(){
     renderAll();

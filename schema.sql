@@ -20,6 +20,23 @@
 --
 -- v7（2026-08-27）：期日案内をPDFだけでなく画像（JPEG・PNG）にも対応。判定用に cases.notice_mime を
 --   追加。旧スキーマのDBを更新する場合は migrate_026_notice_mime.sql を実行すること。
+--
+-- v8（2026-08-28）：事件番号（cases.case_no）を「公開してもよい場合だけ」表示できるように
+--   cases.case_no_public を追加。既定は0（非公開・従来どおり運営専用）。旧スキーマのDBを
+--   更新する場合は migrate_027_case_no_public.sql を実行すること。
+--
+-- v9（2026-08-28）：「争点・当事者」〜「関連裁判」を事件ページだけでなくトップページの
+--   ピックアップカードにも出せるように、項目ごとにトップ表示フラグを追加（cases.show_case_no_on_top・
+--   show_points_on_top・show_plaintiff_on_top・show_defendant_on_top・show_judge_on_top・
+--   show_press_on_top・show_call_on_top・show_related_on_top）。既定はすべて0＝事件ページだけ。
+--   ひとまとめのチェックボックス案だった cases.show_details_on_top は使わずに廃止した。
+--   旧スキーマのDBを更新する場合は migrate_028_show_details_on_top.sql・
+--   migrate_029_show_case_no_on_top.sql・migrate_030_show_items_on_top.sql を順に実行すること。
+--
+-- v10（2026-08-29）：期日（events）単位の「お気に入り」を追加。事件単位の❤いいね（likes、件数表示あり）
+--   とは別の概念で、こちらは件数を出さない・自分専用のON/OFFの目印（🔖bookmark）。
+--   端末ごとの識別子（likesと同じ viewer ハッシュ）で (event_id, viewer) を主キーに持つ event_bookmarks を追加。
+--   旧スキーマのDBを更新する場合は migrate_031_event_bookmarks.sql を実行すること。
 
 -- 問題提起人（アイコン＋ニックネーム）。1人が複数の事件を持てる。
 CREATE TABLE IF NOT EXISTS presenters (
@@ -37,17 +54,26 @@ CREATE TABLE IF NOT EXISTS cases (
   name        TEXT NOT NULL UNIQUE, -- 事件名（画面のタイトル）
   presenter_id TEXT REFERENCES presenters(id), -- 問題提起人（アイコン・ニックネームはここから引く。任意）
   case_no     TEXT,                 -- 事件番号（例：令和6年（ワ）第1234号・任意）
+  case_no_public INTEGER NOT NULL DEFAULT 0, -- 1=事件番号を一般公開する／0=非公開（既定。運営専用の内部メモ扱い）
+  show_case_no_on_top INTEGER NOT NULL DEFAULT 0, -- 1=（公開している場合）事件番号をトップのピックアップカードにも出す／0=事件ページだけ（既定）
   plaintiff_name TEXT,              -- 原告名（任意）
+  show_plaintiff_on_top INTEGER NOT NULL DEFAULT 0, -- 原告をトップのピックアップカードにも出すか（既定は事件ページだけ）
   defendant_name TEXT,              -- 被告名（任意）
+  show_defendant_on_top INTEGER NOT NULL DEFAULT 0, -- 被告（同上）
   judge       TEXT,                 -- 裁判官（任意）
+  show_judge_on_top INTEGER NOT NULL DEFAULT 0, -- 裁判官（同上）
   points      TEXT,                 -- 争点（1行1項目、改行区切り）
+  show_points_on_top INTEGER NOT NULL DEFAULT 0, -- 争点（同上）
   call_text   TEXT,                 -- よびかけ（事件の説明＋傍聴・支援のお願い）
+  show_call_on_top INTEGER NOT NULL DEFAULT 0, -- 裁判について（同上）
   contact     TEXT,                 -- 連絡先（公開してよいものだけ）
   press       TEXT,                 -- 報道・掲載（新聞・ニュース・判例誌掲載、特別保存の指定など。1行1項目、改行区切り・任意）
+  show_press_on_top INTEGER NOT NULL DEFAULT 0, -- 報道・掲載（同上）
   plaintiff_links TEXT,             -- 原告のアカウント等のURL（1行1つ、改行区切り・任意）
   defendant_links TEXT,             -- 被告のアカウント等のURL（1行1つ、改行区切り・任意）
   tags        TEXT,                 -- タグ（1行1つ、改行区切り・任意）
   related_case_ids TEXT,            -- 関連する他の事件のID（1行1つ、改行区切り・任意。同じ事実に関連する別争点の訴訟など。双方向表示は画面側で補う）
+  show_related_on_top INTEGER NOT NULL DEFAULT 0, -- 関連裁判をトップのピックアップカードにも出すか（既定は事件ページだけ）
   archived_at TEXT,                 -- 終結日 YYYY-MM-DD（あれば「裁判アーカイブ」扱い・任意）
   close_type  TEXT,                 -- 終結の種類（判決／和解／取下げ など・任意）
   view_key    TEXT,                 -- 閲覧キー（値があればこの事件は非公開＝キーが一致する人にだけ見せる。NULLなら今まで通り誰でも公開。
@@ -148,3 +174,12 @@ CREATE TABLE IF NOT EXISTS posts (
   created_at TEXT NOT NULL               -- 投稿日時 ISO8601
 );
 CREATE INDEX IF NOT EXISTS idx_posts_event ON posts(event_id, created_at);
+
+-- 期日のお気に入り（🔖）。likes（事件単位・件数表示あり）とは別の、期日単位・件数表示なしの自分専用の目印。
+-- viewer は likes と同じく端末ごとの識別子を SHA-256 した値。
+CREATE TABLE IF NOT EXISTS event_bookmarks (
+  event_id    TEXT NOT NULL REFERENCES events(id),
+  viewer      TEXT NOT NULL,
+  created_at  TEXT NOT NULL,
+  PRIMARY KEY (event_id, viewer)
+);

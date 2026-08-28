@@ -146,6 +146,15 @@ a{color:inherit}
 .like.on{color:var(--stamp)}
 .like:disabled{opacity:.6;cursor:default}
 .like-n{font-variant-numeric:tabular-nums}
+/* 期日のお気に入り：❤いいね（事件単位・件数表示あり）と見た目・意味を区別するため、
+   アイコンはハートでなくしおり（bi-bookmark）。件数は出さない自分専用のON/OFFの目印。 */
+.bookmark{display:inline-flex;align-items:center;vertical-align:middle;
+  font-family:"Zen Kaku Gothic New",sans-serif;color:var(--mut);
+  background:none;border:none;padding:4px 6px;cursor:pointer;line-height:1.5}
+.bookmark:hover{color:var(--stamp)}
+.bookmark .bi{font-size:.85rem;line-height:1}
+.bookmark.on{color:var(--stamp)}
+.bookmark:disabled{opacity:.6;cursor:default}
 /* 掲示板の中の事件名(.board-name、.9rem)に添えるいいねは、地の文の大きさに合わせて一段小さくする
    （既定の.like は1.6remの事件名の隣に置く前提のサイズなので、そのままだと大きすぎる） */
 .board-name .like{font-size:.7rem;margin-left:2px}
@@ -199,7 +208,7 @@ a{color:inherit}
 .notice{margin-top:16px}
 .notice-head{display:flex;align-items:baseline;gap:8px;margin-bottom:8px}
 .notice-lab{font-size:.7rem;letter-spacing:.14em;color:var(--mut)}
-.notice-open{font-size:.75rem;color:var(--stamp);text-decoration:underline;text-underline-offset:3px;margin-left:auto}
+.notice-open{font-size:.75rem;color:var(--mut);text-decoration:underline;text-underline-offset:3px;margin-left:auto}
 .notice-open .bi{font-size:.7rem}
 .notice-frame{border-radius:12px;overflow:hidden;background:var(--tint)}
 /* 事件ページ：チラシはA4縦（ポートレート）がほとんどなので、その比率で幅いっぱいに大きく出す。
@@ -366,6 +375,10 @@ a{color:inherit}
 .navbtns{color:var(--mut);font-size:.8rem;display:flex;gap:16px}
 .navbtns span{cursor:pointer;user-select:none}
 .navbtns span:hover{color:var(--ink)}
+/* カレンダー・「今後の期日」を、お気に入り登録した期日だけに絞り込むトグル（2026-08-29） */
+.favtoggle{margin-left:auto;color:var(--mut);font-size:.8rem;cursor:pointer;user-select:none}
+.favtoggle:hover{color:var(--ink)}
+.favtoggle.on{color:var(--stamp)}
 .cal-row{display:flex;flex-direction:column;gap:32px}
 .cal-block2{display:none}
 .month{font-family:"Shippori Mincho",serif;font-size:1.2rem;font-weight:600;
@@ -425,7 +438,7 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .tabs span.on{color:var(--ink);font-weight:500;border-bottom-color:var(--ink)}
 .clist{display:grid;gap:12px;margin-top:16px}
 /* 期日をさがす：並べ替えの切り替え（期日が古い順⇄新しい順）。タブの下・一覧の上に右寄せで置く */
-.sortrow{display:flex;justify-content:flex-end;margin:8px 4px 12px}
+.sortrow{display:flex;justify-content:flex-end;gap:16px;flex-wrap:wrap;margin:8px 4px 12px}
 .sortlink{display:inline-flex;align-items:center;gap:4px;font-size:.8rem;color:var(--mut);cursor:pointer}
 .sortlink:hover{color:var(--ink)}
 .sortlink .bi{font-size:.8rem;line-height:1}
@@ -525,15 +538,27 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .sum-modal{max-width:560px}
 .sum-text{font-size:.9rem;line-height:1.9;white-space:pre-wrap}
 .field{margin-bottom:16px}
-/* 欄名も「ラベル」段(.7rem)から一段上げて地色にする。注記(.fnote、.8rem グレー)より
-   欄名が沈んで見えないようにするため（2026-08-26） */
-.field label{display:block;font-size:.8rem;color:var(--ink);margin-bottom:4px}
-/* 欄名の横に添える書式の説明（「1行に1つ」など）。冒頭の注意書きの置き換え（2026-08-27） */
-.field label .lhint{font-size:.7rem;color:var(--mut);margin-left:6px;font-weight:400}
+/* 欄名は明朝・.9rem にして、節見出し（明朝1.2rem）の下位見出しとして読めるようにする
+   （ゴシック.8rem・地色だと、注記(.fnote)やチェックの表示設定と強さの差が付かず沈んで見えた。
+   2026-08-26に一度.8rem・地色まで上げていたが、チェックボックスを項目ごとに増やしたことで
+   欄名がさらに埋もれたため、書体で立てる方向へ変更・2026-08-28） */
+.field label{display:block;font-family:"Shippori Mincho",serif;font-size:.9rem;font-weight:600;color:var(--ink);margin-bottom:4px}
+/* 書式の説明（「1行に1つ」など）は欄名の行から外し、入力欄のすぐ上に単独行で置く。同じ行に
+   同居させると、欄名（明朝）から書式説明（ゴシック）へ行の途中で書体が切り替わってしまうため。
+   冒頭の注意書きの置き換え（2026-08-27）→ 単独行に変更（2026-08-28） */
+.field > .lhint{display:block;font-size:.7rem;color:var(--mut);margin-bottom:4px;line-height:1.7}
 /* 期日タブで、事件が決まっているときの固定表示（入力欄の代わり。書き換え事故を防ぐ） */
 .fixedcase{font-size:.9rem;padding:4px 0}
 .field .check{display:flex;align-items:center;gap:8px;font-size:.9rem;color:var(--ink)}
 .field .check input{width:auto}
+/* 欄に付く表示設定のチェック（「公開する」「トップにも表示する」）。欄名の直下・入力欄の上に置く。
+   .field .check の既定（.9rem・地色）のままだと、欄名（.8rem）より大きく同じ濃さになり、
+   従属的な設定のほうが強く見えて欄の切れ目が読めなくなる。ここだけ「キャプション段」（.8rem・
+   --mut、.fnote と同じ強さ）まで落として、欄名 ＞ 中身 ＞ この設定、の順に強さを並べる。
+   1つの欄に複数個あるとき（事件番号）は横並び。2026-08-28 */
+.checkrow{display:flex;flex-wrap:wrap;gap:2px 20px;margin-bottom:8px}
+.checkrow .check{font-size:.8rem;color:var(--mut)}
+.checkrow .check input{accent-color:var(--mut)}
 .field input,.field textarea{
   width:100%;font-family:inherit;font-size:.9rem;color:var(--ink);
   border:1px solid #e6e4dd;border-radius:12px;padding:8px 12px;background:#fff;

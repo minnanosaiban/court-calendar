@@ -88,6 +88,8 @@ window.CC = (function(){
   const apiDeleteCase  = (id)=> api("DELETE","/api/cases/"+encodeURIComponent(id));
   const apiLike        = (id)=> api("POST","/api/cases/"+encodeURIComponent(id)+"/like");
   const apiUnlike      = (id)=> api("DELETE","/api/cases/"+encodeURIComponent(id)+"/like");
+  const apiBookmark    = (id)=> api("POST","/api/events/"+encodeURIComponent(id)+"/bookmark");
+  const apiUnbookmark  = (id)=> api("DELETE","/api/events/"+encodeURIComponent(id)+"/bookmark");
   const apiList        = ()=> api("GET","/api/events");
   const apiCreate      = (d)=> api("POST","/api/events", d);
   const apiUpdate      = (id,d)=> api("PUT","/api/events/"+encodeURIComponent(id), d);
@@ -148,9 +150,9 @@ window.CC = (function(){
   // 「傍聴に行ってきたよ！掲示板」は行った"あと"に書く場所なので、これから開かれる事件ではなく
   // 実際に開廷があった事件を選ぶ。まだどの事件も開廷していない（全事件が未来の期日のみ）ときは
   // nearestCase() にフォールバックする。
-  // ※ 2026-08-28、本人指示により当面「（サンプル）情報公開請求をめぐる訴訟」に固定（下のPICKUP_OVERRIDE）。
+  // ※ 2026-08-28、本人指示により当面「サンプル）情報公開請求をめぐる訴訟」に固定（下のPICKUP_OVERRIDE）。
   //   自動選定に戻すときはこの定数をnullにするだけでよい
-  const PICKUP_OVERRIDE = "c53bfb741871f"; // （サンプル）情報公開請求をめぐる訴訟
+  const PICKUP_OVERRIDE = "c53bfb741871f"; // サンプル）情報公開請求をめぐる訴訟
   function pickupCase(){
     if(PICKUP_OVERRIDE) return PICKUP_OVERRIDE;
     const today=todayStr();
@@ -233,6 +235,11 @@ window.CC = (function(){
   function likeHtml(c){
     return `<button type="button" class="like${c.liked?" on":""}" data-like="${escapeAttr(c.id)}" aria-pressed="${c.liked?"true":"false"}" aria-label="いいね">`+
       `<i class="bi ${c.liked?"bi-heart-fill":"bi-heart"}" aria-hidden="true"></i><span class="like-n">${c.likes||0}</span></button>`;
+  }
+  // 期日のお気に入り。❤いいね（事件単位・件数表示あり）とは別に、期日単位・件数表示なしの自分専用の目印
+  function bookmarkHtml(ev){
+    return `<button type="button" class="bookmark${ev.bookmarked?" on":""}" data-bookmark="${escapeAttr(ev.id)}" aria-pressed="${ev.bookmarked?"true":"false"}" aria-label="お気に入り">`+
+      `<i class="bi ${ev.bookmarked?"bi-bookmark-fill":"bi-bookmark"}" aria-hidden="true"></i></button>`;
   }
   // 関連裁判：自分の relatedCaseIds に加えて、「自分を関連裁判として挙げている他の事件」も拾う（片方に登録すれば両方に出る）
   function relatedCases(caseId){
@@ -367,24 +374,25 @@ window.CC = (function(){
     const next = nextEvent(caseId);
     const points=(c.points||[]).map(p=>`<li>${escapeHtml(p)}</li>`).join("");
 
-    // ファクトシート：最近の期日・手続・争点・原告・被告・裁判官・掲載（値がある行だけ出す）。
-    // 掲載は参照情報なので、事件ページ（full=true）でだけ末尾に続ける（トップの
-    // ピックアップカードでは出さない）。事件番号はここには出さない（下のcaseNoRow廃止のコメント参照）
+    // ファクトシート：最近の期日・手続・事件番号・争点・原告・被告・裁判官・掲載（値がある行だけ出す）。
+    // 事件番号〜掲載は、既定では事件ページ（full=true）でだけ出す。トップのピックアップカードにも
+    // 出すかどうかは項目ごとのチェックボックス（showXxxOnTop）で選べる（2026-08-28、事件番号は
+    // さらに「公開する」もチェックされている場合だけ）。詳しい情報が知りたい人は「事件の詳細を見る」
+    // から先へ進んでもらう（2026-08-27）
     const nextRow = next
       ? factRow("期日",
           `<div>${escapeHtml(jpDate(next.date))}${next.time?" "+escapeHtml(next.time):""}${next.open===false?`<span class="round-closed">非公開・要確認</span>`:""}${next.reportMeeting?`<span class="round-note">期日報告会あり</span>`:""}</div>`+
           ([next.court,next.place].filter(Boolean).length?`<div>${escapeHtml([next.court,next.place].filter(Boolean).join(" "))}</div>`:"")
         ) + factRow("手続", next.type?escapeHtml(next.type):"")
       : "";
-    // 争点・当事者・裁判官は、トップのピックアップカードには出さない（事件ページ full=true だけ）。
-    // 詳しい情報が知りたい人は「事件の詳細を見る」から先へ進んでもらう（2026-08-27）
-    const pointsRow = full ? factRow("争点", points?`<ul class="pts">${points}</ul>`:"") : "";
-    const plaintiffRow = full ? factRow("原告", partyNameHtml(c.plaintiffName)+partyLinksHtml(c.plaintiffLinks)) : "";
-    const defendantRow = full ? factRow("被告", partyNameHtml(c.defendantName)+partyLinksHtml(c.defendantLinks)) : "";
-    const judgeRow = full ? factRow("裁判官", c.judge?courtLinesHtml(c.judge):"") : "";
-    const pressRow = full ? factRow("掲載", c.press.length?`<ul class="pts">${c.press.map(line=>`<li>${linkify(line)}</li>`).join("")}</ul>`:"") : "";
-    // 事件番号は運営が事件を見分けるための内部用の欄なので、画面には出さない（APIも書き込み権限がない人には返さない）
-    const facts1 = nextRow+pointsRow+plaintiffRow+defendantRow+judgeRow+pressRow;
+    const caseNoRow = (c.caseNoPublic && (full || c.showCaseNoOnTop))
+      ? factRow("事件番号", courtLinesHtml(c.caseNo)) : "";
+    const pointsRow = (full || c.showPointsOnTop) ? factRow("争点", points?`<ul class="pts">${points}</ul>`:"") : "";
+    const plaintiffRow = (full || c.showPlaintiffOnTop) ? factRow("原告", partyNameHtml(c.plaintiffName)+partyLinksHtml(c.plaintiffLinks)) : "";
+    const defendantRow = (full || c.showDefendantOnTop) ? factRow("被告", partyNameHtml(c.defendantName)+partyLinksHtml(c.defendantLinks)) : "";
+    const judgeRow = (full || c.showJudgeOnTop) ? factRow("裁判官", c.judge?courtLinesHtml(c.judge):"") : "";
+    const pressRow = (full || c.showPressOnTop) ? factRow("掲載", c.press.length?`<ul class="pts">${c.press.map(line=>`<li>${linkify(line)}</li>`).join("")}</ul>`:"") : "";
+    const facts1 = nextRow+caseNoRow+pointsRow+plaintiffRow+defendantRow+judgeRow+pressRow;
 
     // 写真・掲示板・事件本体（dcard）は、1つの塊として続けて出す（箱の中に箱、を解消するため）。
     // 継ぎ目は角丸にせず、塊の外側（写真の上／事件本体の下）だけ角丸にする（詳しくは style.css）
@@ -411,15 +419,21 @@ window.CC = (function(){
     if(full){
       const editCaseQact = me.canWrite ? `<p class="qact"><a href="case-edit.html?id=${encodeURIComponent(c.id)}">＋ 事件情報を編集</a></p>` : "";
       html += callHtml(c) + editCaseQact + relatedCasesHtml(c) + timelineHtml(caseId) + materialsListHtml(caseId);
+    } else {
+      // ピックアップカードでも、項目ごとのチェックがある「裁判について」「関連裁判」は出す
+      // （編集リンク・タイムライン・訴訟資料一覧は事件ページだけの機能なのでここには出さない）
+      html += (c.showCallOnTop ? callHtml(c) : "") + (c.showRelatedOnTop ? relatedCasesHtml(c) : "");
     }
     html += `</div>`;
     return html;
   }
 
-  // ---- 期日案内（支援者が作る一覧チラシ。PDFまたは画像。あれば埋め込み表示する。2026-08-27） ----
+  // ---- 期日案内（支援者が作る一覧チラシ。あれば埋め込み表示する。2026-08-27） ----
+  // 新規アップロードはJPEGのみ（2026-08-28）。画像はそのまま<img>で出す（画像はどの環境でも確実に表示され、
+  // 拡大はブラウザの標準機能・別タブで開いた先の画像表示に任せる）。isImageでないPDF分岐は、制限前に
+  // アップロード済みの既存データ（PDF・PNG）を引き続き表示するための後方互換（新規には出てこない）。
   // PDFはブラウザのネイティブビューアで表示・拡大できる（埋め込みが効かない環境＝Android端末の一部に
-  // 備えて「新しいタブで開く」を必ず添える）。画像はそのまま<img>で出す（画像はどの環境でも確実に表示され、
-  // 拡大はブラウザの標準機能・別タブで開いた先の画像表示に任せる）。トップのピックアップカード（!full）
+  // 備えて「新しいタブで開く」を必ず添える）。トップのピックアップカード（!full）
   // でも事件ページ（full）と同じ大きさで出す（2026-08-27：以前は低めに切り詰めていたが拡大表示に変更）
   function noticeHtml(c, full){
     if(!c.noticeUrl) return "";
@@ -508,7 +522,7 @@ window.CC = (function(){
         <div class="tl-head">
           <span class="tl-date">${escapeHtml(jpDate(ev.date))}${ev.time?" "+escapeHtml(ev.time):""}</span>
           <span class="tl-type">${escapeHtml(ev.type||"期日")}</span>
-          <span class="tl-meta">${escapeHtml(place)}${closed}${reportNote}${editLink}</span>
+          <span class="tl-meta">${escapeHtml(place)}${closed}${reportNote}${bookmarkHtml(ev)}${editLink}</span>
         </div>
         ${expandable?`<div class="tl-body">${argsHtml(ev)}${own.map(matBlockHtml).join("")}</div>`:""}
       </li>`;
@@ -720,6 +734,24 @@ window.CC = (function(){
     }catch(err){ btn.disabled=false; }
   }
 
+  // ---- 期日のお気に入り ----
+  // ボタン自身も直接書き換える：カレンダーの日付ポップオーバーは onChange の再描画対象に入っていない
+  // （開いている間はそのまま）ため、押した本人のボタンだけは即座に見た目を反映させておく。
+  // 他の場所（今後の期日・タイムライン・期日をさがす）は onChange の再描画で自然に揃う。
+  async function toggleBookmark(eventId, btn){
+    const ev=events.find(e=>e.id===eventId); if(!ev) return;
+    btn.disabled=true;
+    try{
+      const r = ev.bookmarked ? await apiUnbookmark(eventId) : await apiBookmark(eventId);
+      ev.bookmarked=r.bookmarked;
+      btn.classList.toggle("on", ev.bookmarked);
+      btn.setAttribute("aria-pressed", ev.bookmarked?"true":"false");
+      const i=btn.querySelector("i"); if(i) i.className="bi "+(ev.bookmarked?"bi-bookmark-fill":"bi-bookmark");
+      btn.disabled=false;
+      if(onChange) onChange();
+    }catch(err){ btn.disabled=false; }
+  }
+
   // 事件のカードを、指定した入れ物に描く（トップの「最近の期日」／事件ページ共通）
   function renderCaseDetail(container, caseId, opts){
     const full = !!(opts && opts.full);
@@ -749,6 +781,9 @@ window.CC = (function(){
     // 普通のリンクになった（2026-08-27）。ここでのJSでの配線は不要
     container.querySelectorAll("[data-like]").forEach(b=>{
       b.addEventListener("click",()=>toggleLike(b.dataset.like, b));
+    });
+    container.querySelectorAll("[data-bookmark]").forEach(b=>{
+      b.addEventListener("click",(e)=>{ e.stopPropagation(); toggleBookmark(b.dataset.bookmark, b); });
     });
     container.querySelectorAll("[data-sumopen]").forEach(b=>{
       b.addEventListener("click",(e)=>{
@@ -897,13 +932,18 @@ window.CC = (function(){
   // ================= 事件情報の編集ページ（case-edit.html、2026-08-27） =================
   // 事件情報はモーダルから分離し、全画面ページで編集する。フォームの実体は case-edit.html に
   // 静的に置いてあり、ここではそのページでだけ配線する（他のページでは何もしない）。
-  // 欄の並びは事件ページの実際の掲載順（掲示板→事件名とタグ→終結→争点・当事者→裁判について→関連裁判→非公開の情報）。
+  // 欄の並びは事件ページの実際の掲載順（掲示板→事件名とタグ→終結→争点・当事者→裁判について→関連裁判）。
   let initCaseEditPage = function(){};
   if(document.getElementById("cName")){
     const cFields = { name:$("cName"), caseNo:$("cCaseNo"), plaintiff:$("cPlaintiff"), defendant:$("cDefendant"), judge:$("cJudge"), points:$("cPoints"),
                       callText:$("cCall"), press:$("cPress"), plaintiffLinks:$("cPlaintiffLinks"), defendantLinks:$("cDefendantLinks"),
                       tags:$("cTags"), related:$("cRelated"), archivedAt:$("cArchivedAt"), closeType:$("cCloseType") };
     const cBoardEnabled=$("cBoardEnabled"), cBoardRestricted=$("cBoardRestricted");
+    const cCaseNoPublic=$("cCaseNoPublic");
+    // 争点・当事者〜関連裁判の各項目を、トップのピックアップカードにも出すかの項目ごとのチェックボックス（2026-08-28）
+    const cShowOnTop = { caseNo:$("cShowCaseNoOnTop"), points:$("cShowPointsOnTop"), plaintiff:$("cShowPlaintiffOnTop"),
+                          defendant:$("cShowDefendantOnTop"), judge:$("cShowJudgeOnTop"), press:$("cShowPressOnTop"),
+                          call:$("cShowCallOnTop"), related:$("cShowRelatedOnTop") };
     const cNoticeFile=$("cNoticeFile"), cNoticeRemove=$("cNoticeRemove"), cNoticeNote=$("cNoticeNote"), cNoticeStatus=$("cNoticeStatus");
     const cPresenterSelect=$("cPresenterSelect"), cPresenterNewRow=$("cPresenterNewRow"), cPresenterNewNickname=$("cPresenterNewNickname"),
           cPresenterNewSave=$("cPresenterNewSave"), cPresenterIconRow=$("cPresenterIconRow"), cPresenterIconPreview=$("cPresenterIconPreview"),
@@ -960,6 +1000,7 @@ window.CC = (function(){
       const f=cPresenterIconFile.files[0];
       const pid=cPresenterSelect.value;
       if(!f || !pid || pid==="__new__") return;
+      if(!["image/jpeg","image/webp"].includes(f.type)){ alert("アイコンは JPEG・WebP のみ登録できます。"); cPresenterIconFile.value=""; return; }
       if(f.size>5*1024*1024){ alert("アイコンは5MBまでです。"); cPresenterIconFile.value=""; return; }
       const fd=new FormData(); fd.append("file", f, f.name);
       cPresenterStatus.hidden=false; cPresenterStatus.textContent="アップロード中…";
@@ -985,13 +1026,13 @@ window.CC = (function(){
         await reloadCases();
       }catch(err){ cPresenterStatus.hidden=false; cPresenterStatus.textContent="外せませんでした：" + (err && err.message || err); }
     });
-    // ---- 期日案内（PDFまたは画像。事件につき1枚・差し替え専用。選ぶとすぐ反映される＝presenterアイコンと同じ挙動） ----
+    // ---- 期日案内（JPEGのみ。事件につき1枚・差し替え専用。選ぶとすぐ反映される＝presenterアイコンと同じ挙動） ----
     function updateNoticeFieldUI(c){
       const has = !!(c && c.noticeUrl);
       cNoticeRemove.hidden = !has;
       cNoticeNote.innerHTML = (has
         ? `いまの案内：<a href="${escapeAttr(c.noticeUrl)}" target="_blank" rel="noopener">${escapeHtml(c.noticeFileName||"ファイル")}</a>　ファイルを選ぶと差し替わります。`
-        : `PDF・PNG・JPEG、20MBまで。支援者向けの「裁判期日一覧のご案内」のようなチラシを想定しています。選ぶとすぐ反映され（「保存」を待ちません）、事件ページとトップに埋め込み表示されます。`)
+        : `JPEG、20MBまで。支援者向けの「裁判期日一覧のご案内」のようなチラシを想定しています。選ぶとすぐ反映され（「保存」を待ちません）、事件ページとトップに埋め込み表示されます。`)
         + `<a id="cNoticeRemove" class="cicon-remove" ${has?"":"hidden"}>外す</a>`;
       // innerHTML で作り直したので、id="cNoticeRemove" は同じidの新しい要素に置き換わっている。参照を取り直して配線する
       const removeLink = $("cNoticeRemove");
@@ -1011,7 +1052,7 @@ window.CC = (function(){
     cNoticeFile.addEventListener("change", async ()=>{
       const f=cNoticeFile.files[0];
       if(!f || !edCaseId) return;
-      if(!["application/pdf","image/png","image/jpeg"].includes(f.type)){ alert("期日案内は PDF・PNG・JPEG のみ登録できます。"); cNoticeFile.value=""; return; }
+      if(f.type!=="image/jpeg"){ alert("期日案内は JPEG のみ登録できます。"); cNoticeFile.value=""; return; }
       if(f.size>20*1024*1024){ alert("ファイルは20MBまでです。"); cNoticeFile.value=""; return; }
       const fd=new FormData(); fd.append("file", f, f.name);
       cNoticeStatus.hidden=false; cNoticeStatus.textContent="アップロード中…";
@@ -1025,6 +1066,15 @@ window.CC = (function(){
     });
     function fillCaseForm(c){
       cFields.name.value=c.name||""; cFields.caseNo.value=c.caseNo||"";
+      cCaseNoPublic.checked = c.caseNoPublic===true;
+      cShowOnTop.caseNo.checked = c.showCaseNoOnTop===true;
+      cShowOnTop.points.checked = c.showPointsOnTop===true;
+      cShowOnTop.plaintiff.checked = c.showPlaintiffOnTop===true;
+      cShowOnTop.defendant.checked = c.showDefendantOnTop===true;
+      cShowOnTop.judge.checked = c.showJudgeOnTop===true;
+      cShowOnTop.press.checked = c.showPressOnTop===true;
+      cShowOnTop.call.checked = c.showCallOnTop===true;
+      cShowOnTop.related.checked = c.showRelatedOnTop===true;
       cFields.plaintiff.value=c.plaintiffName||""; cFields.defendant.value=c.defendantName||"";
       cFields.judge.value=c.judge||"";
       cFields.points.value=(c.points||[]).join("\n"); cFields.callText.value=c.callText||"";
@@ -1074,7 +1124,11 @@ window.CC = (function(){
         }catch(err){ alert(saveErr(err)); return; }
       }
       const data={
-        name, presenterId, caseNo:cFields.caseNo.value.trim(),
+        name, presenterId, caseNo:cFields.caseNo.value.trim(), caseNoPublic:cCaseNoPublic.checked,
+        showCaseNoOnTop:cShowOnTop.caseNo.checked, showPointsOnTop:cShowOnTop.points.checked,
+        showPlaintiffOnTop:cShowOnTop.plaintiff.checked, showDefendantOnTop:cShowOnTop.defendant.checked,
+        showJudgeOnTop:cShowOnTop.judge.checked, showPressOnTop:cShowOnTop.press.checked,
+        showCallOnTop:cShowOnTop.call.checked, showRelatedOnTop:cShowOnTop.related.checked,
         plaintiffName:cFields.plaintiff.value.trim(), defendantName:cFields.defendant.value.trim(),
         judge:cFields.judge.value.trim(),
         points:cFields.points.value.split("\n").map(s=>s.trim()).filter(Boolean),
@@ -1285,8 +1339,8 @@ window.CC = (function(){
           <div class="field"><label>裁判所</label><input type="text" class="ef-court" value="${escapeAttr(e.court)}" placeholder="例）東京地方裁判所"></div>
           <div class="field"><label>法廷</label><input type="text" class="ef-place" value="${escapeAttr(e.place)}" placeholder="例）610号法廷"></div>
         </div>
-        <div class="field"><label>原告の主張 <span class="lhint">1行に1項目</span></label><textarea class="ef-plaintiff" placeholder="例）不開示決定の取消しを求める">${escapeHtml((e.plaintiffArgument||[]).join("\n"))}</textarea></div>
-        <div class="field"><label>被告の主張 <span class="lhint">1行に1項目</span></label><textarea class="ef-defendant" placeholder="例）該当する文書は保有していない">${escapeHtml((e.defendantArgument||[]).join("\n"))}</textarea></div>
+        <div class="field"><label>原告の主張</label><span class="lhint">1行に1項目</span><textarea class="ef-plaintiff" placeholder="例）不開示決定の取消しを求める">${escapeHtml((e.plaintiffArgument||[]).join("\n"))}</textarea></div>
+        <div class="field"><label>被告の主張</label><span class="lhint">1行に1項目</span><textarea class="ef-defendant" placeholder="例）該当する文書は保有していない">${escapeHtml((e.defendantArgument||[]).join("\n"))}</textarea></div>
         <div class="field"><label class="check"><input type="checkbox" class="ef-open" ${e.open!==false?"checked":""}> だれでも傍聴できます（外すと「非公開・要確認」）</label></div>
         <div class="field"><label class="check"><input type="checkbox" class="ef-report" ${e.reportMeeting?"checked":""}> 期日報告会があります</label></div>
         <div class="ifoot">
@@ -1375,7 +1429,7 @@ window.CC = (function(){
         ${showFileField?`<div class="field"><label>ファイルをアップロード（PDF・PNG・JPEG、20MBまで）</label><input type="file" class="ef-file" accept="application/pdf,image/png,image/jpeg">
           ${hasR2?`<p class="fnote">いまのファイル：<a href="${escapeAttr(mm.fileUrl)}" target="_blank" rel="noopener">${escapeHtml(mm.fileName||"ファイル")}</a>　<label class="inl"><input type="checkbox" class="ef-removefile"> ファイルを外す</label></p>`:""}
         </div>`:""}
-        <div class="field"><label>この書面で主張していること <span class="lhint">1行に1項目</span></label><textarea class="ef-claims" placeholder="例）不開示決定の取消しを求める">${escapeHtml((mm.claims||[]).join("\n"))}</textarea></div>
+        <div class="field"><label>この書面で主張していること</label><span class="lhint">1行に1項目</span><textarea class="ef-claims" placeholder="例）不開示決定の取消しを求める">${escapeHtml((mm.claims||[]).join("\n"))}</textarea></div>
         <div class="field"><label>本文（Markdownを貼り付け）</label><textarea class="ef-body" style="min-height:120px" placeholder="書面の本文をそのまま貼り付けられます（見出し・箇条書き・**強調**などが使えます）">${escapeHtml(mm.body)}</textarea>
           <p class="fnote">「本文」ボタンから読めるページになります。原本はPDFなので、本文は補助（検索されやすくする・要点を読みやすくする）目的です。</p>
         </div>
@@ -1649,7 +1703,7 @@ window.CC = (function(){
     get me(){ return me; },
     get loaded(){ return loaded; },
     caseById, caseByName, presenterById, caseEvents, casePosts, caseMaterials, caseImages, nearestCase, pickupCase, nextEvent, eventLine, jpDate,
-    likeHtml, toggleLike, isArchived, iconHtml, presenterHeaderHtml,
+    likeHtml, toggleLike, bookmarkHtml, toggleBookmark, isArchived, iconHtml, presenterHeaderHtml,
     apiListPresenters, apiCreatePresenter, apiUpdatePresenter, apiDeletePresenter,
     apiUpdatePresenterIcon, apiDeletePresenterIcon, reloadPresenters, saveErr,
     load, renderCaseDetail, renderStatus,

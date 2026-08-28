@@ -62,6 +62,9 @@
         <span id="next">次の月 <i class="bi bi-chevron-right" aria-hidden="true"></i></span>
         <span id="todayBtn">今日</span>
       </div>
+      <span class="favtoggle" id="favToggle" role="button" tabindex="0" aria-pressed="false">
+        <i class="bi bi-bookmark" aria-hidden="true"></i> お気に入りのみ
+      </span>
     </div>
     <!-- 凡例はカレンダーの上（印を見る前に意味が分かるように・2026-08-27） -->
     <p class="leg">
@@ -129,6 +132,7 @@
   const dayPop=document.getElementById("dayPop");
 
   let view = CC.startOfMonth(new Date());
+  let favOnly = false;   // true＝カレンダー・今後の期日を、お気に入り登録した期日だけに絞り込む
   let popCloseTimer=null;
   let popOpenedAt=0;   // プレビューを開いた時刻。開いた直後は、開いた指がそのまま予定行や閉じるボタンに触れてしまう
                         // （スマホの「タップ＝ホバー相当＋クリック」挙動）ことがあるため、その"貫通クリック"は無視する
@@ -153,7 +157,7 @@
           <div class="pop-text">
             <p class="pop-date">${CC.escapeHtml(dateLine)}</p>
             <p class="pop-title">${CC.escapeHtml(ev.case)}</p>
-            <p class="pop-meta">${CC.escapeHtml([ev.type,place].filter(Boolean).join(" ／ "))}</p>
+            <p class="pop-meta">${CC.escapeHtml([ev.type,place].filter(Boolean).join(" ／ "))} ${CC.bookmarkHtml(ev)}</p>
           </div>
         </div>
       </div>`;
@@ -190,6 +194,13 @@
         location.href="case?id="+encodeURIComponent(row.dataset.case);
       });
     });
+    dayPop.querySelectorAll("[data-bookmark]").forEach(b=>{
+      b.addEventListener("click",(e)=>{
+        e.stopPropagation();
+        if(Date.now()-popOpenedAt<400) return;
+        CC.toggleBookmark(b.dataset.bookmark, b);
+      });
+    });
     dayPop.querySelector(".pop-close").addEventListener("click",()=>{
       if(Date.now()-popOpenedAt<400) return;
       closePopoverNow();
@@ -222,7 +233,7 @@
     for(let i=0;i<42;i++){
       const d=new Date(gridStart.getFullYear(),gridStart.getMonth(),gridStart.getDate()+i);
       const ds=CC.ymd(d);
-      const dayEvents=CC.events.filter(e=>e.date===ds).sort(CC.byTime);
+      const dayEvents=CC.events.filter(e=>e.date===ds && (!favOnly || e.bookmarked)).sort(CC.byTime);
       const cell=document.createElement("div");
       cell.className="cell";
       if(d.getMonth()!==m) cell.classList.add("out");
@@ -271,10 +282,15 @@
   function renderUpcoming(){
     if(!CC.loaded){ upcomingBox.innerHTML=`<div class="u-empty">読み込んでいます…</div>`; return; }
     const today=CC.todayStr();
-    const list=CC.events.filter(e=>e.date>=today && !CC.isArchived(e.caseId))
+    const list=CC.events.filter(e=>e.date>=today && !CC.isArchived(e.caseId) && (!favOnly || e.bookmarked))
       .sort((a,b)=> a.date===b.date?CC.byTime(a,b):a.date.localeCompare(b.date)).slice(0,12);
     upcomingBox.innerHTML="";
-    if(!list.length){ upcomingBox.innerHTML=`<div class="u-empty">今後の予定はありません</div>`; return; }
+    if(!list.length){
+      upcomingBox.innerHTML = favOnly
+        ? `<div class="u-empty">お気に入りの期日はありません</div>`
+        : `<div class="u-empty">今後の予定はありません</div>`;
+      return;
+    }
     for(const ev of list){
       const d=CC.parseYmd(ev.date);
       const item=document.createElement("div"); item.className="u";
@@ -285,12 +301,15 @@
       body.innerHTML=
         `<div class="ud"><b>${d.getMonth()+1}/${d.getDate()}</b>（${CC.WD[d.getDay()]}）${ev.time?" "+CC.escapeHtml(ev.time):""}</div>`+
         `<div class="ut">${CC.escapeHtml(ev.case)}</div>`+
-        `<div class="um">${CC.escapeHtml([ev.type,place].filter(Boolean).join(" ／ "))||"&nbsp;"}</div>`;
+        `<div class="um">${CC.escapeHtml([ev.type,place].filter(Boolean).join(" ／ "))||"&nbsp;"} ${CC.bookmarkHtml(ev)}</div>`;
       item.appendChild(bar);
       const c=CC.caseById(ev.caseId);
       if(c) item.insertAdjacentHTML("beforeend", CC.iconHtml(c));
       item.appendChild(body);
       item.addEventListener("click",()=>{ location.href="case?id="+encodeURIComponent(ev.caseId); });
+      item.querySelectorAll("[data-bookmark]").forEach(b=>{
+        b.addEventListener("click",(e)=>{ e.stopPropagation(); CC.toggleBookmark(b.dataset.bookmark, b); });
+      });
       upcomingBox.appendChild(item);
     }
   }
@@ -306,6 +325,17 @@
   document.getElementById("prev").addEventListener("click",()=>{view=new Date(view.getFullYear(),view.getMonth()-1,1);renderCalendars();});
   document.getElementById("next").addEventListener("click",()=>{view=new Date(view.getFullYear(),view.getMonth()+1,1);renderCalendars();});
   document.getElementById("todayBtn").addEventListener("click",()=>{view=CC.startOfMonth(new Date());renderCalendars();});
+  const favToggle=document.getElementById("favToggle");
+  function toggleFavOnly(){
+    favOnly=!favOnly;
+    favToggle.classList.toggle("on",favOnly);
+    favToggle.setAttribute("aria-pressed",favOnly?"true":"false");
+    closePopoverNow();
+    renderCalendars();
+    renderUpcoming();
+  }
+  favToggle.addEventListener("click",toggleFavOnly);
+  favToggle.addEventListener("keydown",(e)=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); toggleFavOnly(); } });
 
   (async function init(){
     renderAll();

@@ -23,8 +23,11 @@ export function textToLines(s) {
 // ---- 事件 ----
 // presenters は LEFT JOIN で引く（p. で参照。FROM 句は casesSelect() 側で JOIN する）
 export const CASE_COLS = `c.id, c.name, c.presenter_id, p.nickname AS presenter_nickname, p.icon_r2_key AS presenter_icon_r2_key,
-                          c.case_no, c.plaintiff_name, c.defendant_name, c.judge, c.points, c.call_text,
-                          c.contact, c.press, c.plaintiff_links, c.defendant_links, c.tags, c.related_case_ids, c.archived_at, c.close_type,
+                          c.case_no, c.case_no_public, c.show_case_no_on_top,
+                          c.plaintiff_name, c.show_plaintiff_on_top, c.defendant_name, c.show_defendant_on_top,
+                          c.judge, c.show_judge_on_top, c.points, c.show_points_on_top, c.call_text, c.show_call_on_top,
+                          c.contact, c.press, c.show_press_on_top, c.plaintiff_links, c.defendant_links, c.tags,
+                          c.related_case_ids, c.show_related_on_top, c.archived_at, c.close_type,
                           c.board_enabled, c.board_restricted, c.notice_r2_key, c.notice_file_name, c.notice_file_size, c.notice_mime,
                           c.created_by, c.updated_by, c.updated_at`;
 
@@ -36,17 +39,26 @@ export function rowToCase(r) {
     presenterNickname: r.presenter_nickname || "",
     presenterIcon: r.presenter_icon_r2_key ? "/files/" + r.presenter_icon_r2_key : "",
     caseNo: r.case_no || "",
+    caseNoPublic: r.case_no_public === 1 || r.case_no_public === true,
+    showCaseNoOnTop: r.show_case_no_on_top === 1 || r.show_case_no_on_top === true,
     plaintiffName: r.plaintiff_name || "",
+    showPlaintiffOnTop: r.show_plaintiff_on_top === 1 || r.show_plaintiff_on_top === true,
     defendantName: r.defendant_name || "",
+    showDefendantOnTop: r.show_defendant_on_top === 1 || r.show_defendant_on_top === true,
     judge: r.judge || "",
+    showJudgeOnTop: r.show_judge_on_top === 1 || r.show_judge_on_top === true,
     points: textToLines(r.points),
+    showPointsOnTop: r.show_points_on_top === 1 || r.show_points_on_top === true,
     callText: r.call_text || "",
+    showCallOnTop: r.show_call_on_top === 1 || r.show_call_on_top === true,
     contact: r.contact || "",
     press: textToLines(r.press),
+    showPressOnTop: r.show_press_on_top === 1 || r.show_press_on_top === true,
     plaintiffLinks: textToLines(r.plaintiff_links).filter(isHttpUrl),
     defendantLinks: textToLines(r.defendant_links).filter(isHttpUrl),
     tags: textToLines(r.tags),
     relatedCaseIds: textToLines(r.related_case_ids),
+    showRelatedOnTop: r.show_related_on_top === 1 || r.show_related_on_top === true,
     archivedAt: r.archived_at || "",
     closeType: r.close_type || "",
     boardEnabled: r.board_enabled === 0 || r.board_enabled === false ? false : true,
@@ -69,17 +81,26 @@ export function caseFromBody(body) {
     name: String(body.name || "").trim(),
     presenter_id: String(body.presenterId || "").trim() || null,
     case_no: String(body.caseNo || "").trim(),
+    case_no_public: body.caseNoPublic === true ? 1 : 0,
+    show_case_no_on_top: body.showCaseNoOnTop === true ? 1 : 0,
     plaintiff_name: String(body.plaintiffName || "").trim(),
+    show_plaintiff_on_top: body.showPlaintiffOnTop === true ? 1 : 0,
     defendant_name: String(body.defendantName || "").trim(),
+    show_defendant_on_top: body.showDefendantOnTop === true ? 1 : 0,
     judge: String(body.judge || "").trim(),
+    show_judge_on_top: body.showJudgeOnTop === true ? 1 : 0,
     points: linesToText(body.points),
+    show_points_on_top: body.showPointsOnTop === true ? 1 : 0,
     call_text: String(body.callText || "").trim(),
+    show_call_on_top: body.showCallOnTop === true ? 1 : 0,
     contact: String(body.contact || "").trim(),
     press: linesToText(body.press),
+    show_press_on_top: body.showPressOnTop === true ? 1 : 0,
     plaintiff_links: textToLines(linesToText(body.plaintiffLinks)).filter(isHttpUrl).join("\n"),
     defendant_links: textToLines(linesToText(body.defendantLinks)).filter(isHttpUrl).join("\n"),
     tags: linesToText(body.tags),
     related_case_ids: linesToText(body.relatedCaseIds),
+    show_related_on_top: body.showRelatedOnTop === true ? 1 : 0,
     archived_at: isYmd(body.archivedAt) ? body.archivedAt : null,
     close_type: String(body.closeType || "").trim(),
     board_enabled: body.boardEnabled === false ? 0 : 1,
@@ -90,11 +111,33 @@ export function isYmd(s) {
   return typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s);
 }
 
-// 事件番号（case_no）は運営が事件を見分けるための内部用の欄で、画面にもAPI応答にも出さない。
-// 書き込み権限がある人（＝編集する人）にだけ、そのまま返す。
+// 事件名（cases.name）はUNIQUE制約があるが、同種の事件（同じ内容で被告違いなど）が複数件になる
+// 運用が増えてきたため、重複していたらエラーで止めずに全角の連番を自動で振って作成・変更できる
+// ようにする。例：「〇〇をめぐる訴訟」が既にあれば「〇〇をめぐる訴訟２」、それも有れば「３」…と
+// 空いている番号を1つずつ探す（2026-08-28）。excludeId は自分自身の改名時に自分を除外するため
+const FULLWIDTH_DIGITS = "０１２３４５６７８９";
+function toFullWidthNumber(n) {
+  return String(n).split("").map((d) => FULLWIDTH_DIGITS[Number(d)]).join("");
+}
+export async function uniqueCaseName(env, name, excludeId) {
+  const taken = async (n) => {
+    const stmt = excludeId
+      ? env.DB.prepare(`SELECT id FROM cases WHERE name = ? AND id <> ?`).bind(n, excludeId)
+      : env.DB.prepare(`SELECT id FROM cases WHERE name = ?`).bind(n);
+    return !!(await stmt.first());
+  };
+  if (!(await taken(name))) return name;
+  let i = 2;
+  while (await taken(name + toFullWidthNumber(i))) i++;
+  return name + toFullWidthNumber(i);
+}
+
+// 事件番号（case_no）は既定では運営が事件を見分けるための内部用の欄で、画面にもAPI応答にも出さない。
+// 書き込み権限がある人（＝編集する人）には常にそのまま返す。書き込み権限が無い人には、
+// 「公開してもよい」とチェックされた事件（case_no_public=1）にだけそのまま返し、それ以外は隠す（2026-08-28）。
 export function redactCaseNo(rows, canWrite) {
   if (canWrite) return rows;
-  for (const r of rows) r.case_no = null;
+  for (const r of rows) { if (!r.case_no_public) r.case_no = null; }
   return rows;
 }
 
@@ -146,9 +189,12 @@ export function rowToPresenter(r) {
 }
 
 // ---- 期日 ----
+// bookmarked は「この端末がお気に入りにしたか」（件数は出さない、liked と違って likes 相当の集計は無い）。
+// 呼び出し側は SELECT の最初の ? に viewer のハッシュを bind すること（casesSelect() の liked と同じ形）。
 export const EVENT_COLS = `e.id, e.case_id, e.date, e.time, e.type, e.court, e.place, e.open, e.report_meeting,
                            e.plaintiff_argument, e.defendant_argument,
-                           e.created_by, e.updated_by, e.updated_at, c.name AS case_name`;
+                           e.created_by, e.updated_by, e.updated_at, c.name AS case_name,
+                           (SELECT COUNT(*) FROM event_bookmarks eb WHERE eb.event_id = e.id AND eb.viewer = ?) AS bookmarked`;
 export const EVENT_FROM = `FROM events e JOIN cases c ON c.id = e.case_id`;
 
 export function rowToEvent(r) {
@@ -165,6 +211,7 @@ export function rowToEvent(r) {
     reportMeeting: r.report_meeting === 1 || r.report_meeting === true,
     plaintiffArgument: textToLines(r.plaintiff_argument),
     defendantArgument: textToLines(r.defendant_argument),
+    bookmarked: !!r.bookmarked,
     updatedAt: r.updated_at || "",
   };
 }
@@ -184,8 +231,10 @@ export async function resolveCaseId(env, body, email) {
   return found ? found.id : null;
 }
 
-// ---- 期日案内（支援者が作る一覧チラシ。PDFまたは画像。1事件につき1枚・差し替え専用） ----
-export const NOTICE_MIMES = { "application/pdf": "pdf", "image/png": "png", "image/jpeg": "jpg" };
+// ---- 期日案内（支援者が作る一覧チラシ。JPEGのみ。1事件につき1枚・差し替え専用） ----
+// 2026-08-28：PDF・PNGも受け付けていたが、ファイルサイズが小さく済むJPEGのみに絞った。
+// 既存データにPDF・PNGの期日案内が残っている場合、表示（noticeHtml）は引き続き対応する（新規アップロードのみ制限）
+export const NOTICE_MIMES = { "image/jpeg": "jpg" };
 export const NOTICE_MAX_BYTES = 20 * 1024 * 1024;
 
 // ---- 訴訟資料 ----
@@ -238,7 +287,9 @@ export async function putFile(env, prefix, itemId, file) {
 export const IMAGE_MIMES = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
 export const IMAGE_MAX_BYTES = 12 * 1024 * 1024;
 
-// ---- 問題提起人のアイコン（1件だけ。形式は写真と同じ IMAGE_MIMES を流用、上限だけ小さくする） ----
+// ---- 問題提起人のアイコン（1件だけ。上限は写真より小さくする） ----
+// 2026-08-28：写真と共通のIMAGE_MIMESを流用していたが、アイコンはJPEG・WebPのみに絞った（PNGを除外）
+export const ICON_MIMES = { "image/jpeg": "jpg", "image/webp": "webp" };
 export const ICON_MAX_BYTES = 5 * 1024 * 1024;
 
 export const IMAGE_COLS = `i.id, i.case_id, i.r2_key, i.file_name, i.file_size, i.mime,

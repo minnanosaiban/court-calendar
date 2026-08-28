@@ -1,12 +1,13 @@
 import {
   json, newId, rowToEvent, linesToText, EVENT_COLS, EVENT_FROM, resolveCaseId,
-  getIdentity, authorizeWrite, hiddenCaseIds,
+  getIdentity, authorizeWrite, hiddenCaseIds, viewerHash,
 } from "../_common.js";
 
 // 一覧（誰でも閲覧可）。事件名も JOIN して返す。非公開にした事件の期日は合言葉が合った人にだけ返す。
 export async function onRequestGet({ request, env }) {
+  const viewer = (await viewerHash(request)) || "";
   const [{ results }, hidden] = await Promise.all([
-    env.DB.prepare(`SELECT ${EVENT_COLS} ${EVENT_FROM} ORDER BY e.date, e.time`).all(),
+    env.DB.prepare(`SELECT ${EVENT_COLS} ${EVENT_FROM} ORDER BY e.date, e.time`).bind(viewer).all(),
     hiddenCaseIds(env, request),
   ]);
   return json((results || []).filter((r) => !hidden.has(r.case_id)).map(rowToEvent));
@@ -50,6 +51,6 @@ export async function onRequestPost({ request, env }) {
          ev.plaintiff_argument, ev.defendant_argument,
          id.email, id.email, now).run();
 
-  const row = await env.DB.prepare(`SELECT ${EVENT_COLS} ${EVENT_FROM} WHERE e.id = ?`).bind(ev.id).first();
+  const row = await env.DB.prepare(`SELECT ${EVENT_COLS} ${EVENT_FROM} WHERE e.id = ?`).bind("", ev.id).first();
   return json(rowToEvent(row), 201);
 }

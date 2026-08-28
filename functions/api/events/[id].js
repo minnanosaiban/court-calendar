@@ -37,11 +37,11 @@ export async function onRequestPut({ request, env, params }) {
   ).run();
   if (!res.meta || res.meta.changes === 0) return json({ error: "not found" }, 404);
 
-  const row = await env.DB.prepare(`SELECT ${EVENT_COLS} ${EVENT_FROM} WHERE e.id = ?`).bind(eid).first();
+  const row = await env.DB.prepare(`SELECT ${EVENT_COLS} ${EVENT_FROM} WHERE e.id = ?`).bind("", eid).first();
   return json(rowToEvent(row));
 }
 
-// 削除（書き込み権限が必要）。この期日への掲示板の投稿も一緒に消し、資料の紐づけは外す
+// 削除（書き込み権限が必要）。この期日への掲示板の投稿・お気に入りも一緒に消し、資料の紐づけは外す
 export async function onRequestDelete({ request, env, params }) {
   const id = await getIdentity(request, env);
   if (!authorizeWrite(request, env, id)) return json({ error: "forbidden" }, 403);
@@ -49,6 +49,7 @@ export async function onRequestDelete({ request, env, params }) {
   const eid = params.id;
   await env.DB.batch([
     env.DB.prepare(`DELETE FROM posts WHERE event_id = ?`).bind(eid),
+    env.DB.prepare(`DELETE FROM event_bookmarks WHERE event_id = ?`).bind(eid),
     env.DB.prepare(`UPDATE materials SET event_id = NULL WHERE event_id = ?`).bind(eid),
   ]);
   const res = await env.DB.prepare(`DELETE FROM events WHERE id=?`).bind(eid).run();
