@@ -415,11 +415,8 @@ window.CC = (function(){
         ${facts1?`<dl class="facts">${facts1}</dl>`:""}
         ${noticeHtml(c, full)}`;
 
-    if(!full){
-      // ピックアップカードだけ：「事件の詳細を見る」を右下に置く（枠で囲まない下線リンク・2026-08-27）。
-      // 問題提起人名は事件ページと同じくタイトル下に出るようになったので、ここでは重複させない（2026-08-29）
-      html += `<p class="d-more"><a class="detail-link" href="case?id=${encodeURIComponent(c.id)}">事件の詳細を見る</a></p>`;
-    }
+    // 旧・右下の「事件の詳細を見る」（.d-more）は2026-08-29に廃止：期日案内の隣・タイトル・掲示板の
+    // 事件名がいずれもリンクになり、下に重ねて置く必要がなくなったため
     if(full){
       const editCaseQact = me.canWrite ? `<p class="qact"><a href="case-edit.html?id=${encodeURIComponent(c.id)}">＋ 事件情報を編集</a></p>` : "";
       html += callHtml(c) + editCaseQact + relatedCasesHtml(c) + timelineHtml(caseId) + materialsListHtml(caseId);
@@ -449,14 +446,10 @@ window.CC = (function(){
     const body = isImage
       ? `<img src="${escapeAttr(c.noticeUrl)}" alt="${escapeAttr(c.noticeFileName||"期日案内")}" loading="lazy">`
       : `<iframe src="${escapeAttr(c.noticeUrl)}#toolbar=0&navpanes=0" title="${escapeAttr(c.noticeFileName||"期日案内")}" loading="lazy"></iframe>`;
-    // 見出し行の右側：事件ページ（full）は「新しいタブで開く」を右に出す（見出しにたたむと事件ページには
-    // 他に置き場が無いため）。トップ（!full）は「新しいタブで開く」を見出しの隣（期日案内（新しいタブで開く））
-    // に畳み込み、空いた右側には「事件の詳細を見る」を置く（2026-08-29）
-    const head = full
-      ? `<span class="notice-lab">期日案内</span>
-         <a class="notice-open" href="${escapeAttr(c.noticeUrl)}" target="_blank" rel="noopener">新しいタブで開く <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>`
-      : `<span class="notice-lab">期日案内<a class="notice-lab-link" href="${escapeAttr(c.noticeUrl)}" target="_blank" rel="noopener">（新しいタブで開く <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>）</a></span>
-         <a class="notice-open" href="case?id=${encodeURIComponent(c.id)}">事件の詳細を見る</a>`;
+    // 見出し「期日案内」の隣に「（新しいタブで開く）」を畳み込む（full・!full共通、2026-08-29）。
+    // 空いた右側は、トップ（!full）だけ「事件の詳細を見る」を置く（事件ページ自身では不要）
+    const head = `<span class="notice-lab">期日案内<a class="notice-lab-link" href="${escapeAttr(c.noticeUrl)}" target="_blank" rel="noopener">（新しいタブで開く <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>）</a></span>`
+      + (full ? "" : `<a class="notice-open" href="case?id=${encodeURIComponent(c.id)}">事件の詳細を見る</a>`);
     return `<div class="notice${full?"":" compact"}">
       <div class="notice-head">${head}</div>
       <div class="notice-frame">${body}</div>
