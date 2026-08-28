@@ -403,7 +403,10 @@ window.CC = (function(){
         <div class="d-head">
           ${presenterHeaderHtml(c)}
           <div class="d-head-main">
-            <h2 class="d-title">${escapeHtml(c.name)} ${likeHtml(c)}</h2>
+            <h2 class="d-title">${full
+              ? escapeHtml(c.name)
+              : `<a class="d-title-link" href="case?id=${encodeURIComponent(c.id)}">${escapeHtml(c.name)}</a>`
+            } ${likeHtml(c)}</h2>
             ${presenterNameHtml(c)}
           </div>
         </div>
@@ -446,10 +449,16 @@ window.CC = (function(){
     const body = isImage
       ? `<img src="${escapeAttr(c.noticeUrl)}" alt="${escapeAttr(c.noticeFileName||"期日案内")}" loading="lazy">`
       : `<iframe src="${escapeAttr(c.noticeUrl)}#toolbar=0&navpanes=0" title="${escapeAttr(c.noticeFileName||"期日案内")}" loading="lazy"></iframe>`;
+    // 見出し行の右側：事件ページ（full）は「新しいタブで開く」を右に出す（見出しにたたむと事件ページには
+    // 他に置き場が無いため）。トップ（!full）は「新しいタブで開く」を見出しの隣（期日案内（新しいタブで開く））
+    // に畳み込み、空いた右側には「事件の詳細を見る」を置く（2026-08-29）
+    const head = full
+      ? `<span class="notice-lab">期日案内</span>
+         <a class="notice-open" href="${escapeAttr(c.noticeUrl)}" target="_blank" rel="noopener">新しいタブで開く <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>`
+      : `<span class="notice-lab">期日案内<a class="notice-lab-link" href="${escapeAttr(c.noticeUrl)}" target="_blank" rel="noopener">（新しいタブで開く <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>）</a></span>
+         <a class="notice-open" href="case?id=${encodeURIComponent(c.id)}">事件の詳細を見る</a>`;
     return `<div class="notice${full?"":" compact"}">
-      <div class="notice-head"><span class="notice-lab">期日案内</span>
-        <a class="notice-open" href="${escapeAttr(c.noticeUrl)}" target="_blank" rel="noopener">${(!full&&isImage)?"画像を新しいタブで開く":"新しいタブで開く"} <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>
-      </div>
+      <div class="notice-head">${head}</div>
       <div class="notice-frame">${body}</div>
     </div>`;
   }

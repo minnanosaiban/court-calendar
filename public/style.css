@@ -129,6 +129,9 @@ a{color:inherit}
 .detail-link{display:block;font-family:"Zen Kaku Gothic New",sans-serif;font-size:.8rem;
   color:var(--mut);text-decoration:underline;text-underline-offset:3px;margin-top:2px}
 .d-title{font-family:"Shippori Mincho",serif;font-size:1.6rem;font-weight:600;line-height:1.4}
+/* トップのピックアップカードだけ：事件名を事件ページへのリンクにする。事件名（.board-name-link）と
+   同じく下線は引かず地の文と同じ見た目のまま（2026-08-29） */
+.d-title-link{text-decoration:none}
 .d-body{font-size:.9rem;margin-top:8px}
 .mut{color:var(--mut)}
 /* タイトル行 */
@@ -210,6 +213,9 @@ a{color:inherit}
 .notice-lab{font-size:.7rem;letter-spacing:.14em;color:var(--mut)}
 .notice-open{font-size:.75rem;color:var(--mut);text-decoration:underline;text-underline-offset:3px;margin-left:auto}
 .notice-open .bi{font-size:.7rem}
+/* トップ（!full）だけ：見出し「期日案内」の隣に畳み込む「（新しいタブで開く）」リンク（2026-08-29） */
+.notice-lab-link{color:inherit;text-decoration:underline;text-underline-offset:2px}
+.notice-lab-link .bi{font-size:.65rem}
 .notice-frame{border-radius:12px;overflow:hidden;background:var(--tint)}
 /* 事件ページ：チラシはA4縦（ポートレート）がほとんどなので、その比率で幅いっぱいに大きく出す。
    （以前は 1.414/1＝横長の比率になっていて、縦長のPDFが枠の中央に小さく収まり左右に余白が
