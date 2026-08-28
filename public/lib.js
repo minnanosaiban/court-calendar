@@ -404,7 +404,7 @@ window.CC = (function(){
           ${presenterHeaderHtml(c)}
           <div class="d-head-main">
             <h2 class="d-title">${escapeHtml(c.name)} ${likeHtml(c)}</h2>
-            ${full?presenterNameHtml(c):""}
+            ${presenterNameHtml(c)}
           </div>
         </div>
         ${tagsHtml(c)}
@@ -413,8 +413,9 @@ window.CC = (function(){
         ${noticeHtml(c, full)}`;
 
     if(!full){
-      // ピックアップカードだけ：問題提起人名・事件の詳細を見る、を右下にまとめる（枠で囲まない下線リンク・2026-08-27）
-      html += `<p class="d-more">${presenterNameHtml(c)}<a class="detail-link" href="case?id=${encodeURIComponent(c.id)}">事件の詳細を見る</a></p>`;
+      // ピックアップカードだけ：「事件の詳細を見る」を右下に置く（枠で囲まない下線リンク・2026-08-27）。
+      // 問題提起人名は事件ページと同じくタイトル下に出るようになったので、ここでは重複させない（2026-08-29）
+      html += `<p class="d-more"><a class="detail-link" href="case?id=${encodeURIComponent(c.id)}">事件の詳細を見る</a></p>`;
     }
     if(full){
       const editCaseQact = me.canWrite ? `<p class="qact"><a href="case-edit.html?id=${encodeURIComponent(c.id)}">＋ 事件情報を編集</a></p>` : "";
@@ -447,7 +448,7 @@ window.CC = (function(){
       : `<iframe src="${escapeAttr(c.noticeUrl)}#toolbar=0&navpanes=0" title="${escapeAttr(c.noticeFileName||"期日案内")}" loading="lazy"></iframe>`;
     return `<div class="notice${full?"":" compact"}">
       <div class="notice-head"><span class="notice-lab">期日案内</span>
-        <a class="notice-open" href="${escapeAttr(c.noticeUrl)}" target="_blank" rel="noopener">新しいタブで開く <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>
+        <a class="notice-open" href="${escapeAttr(c.noticeUrl)}" target="_blank" rel="noopener">${(!full&&isImage)?"画像を新しいタブで開く":"新しいタブで開く"} <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>
       </div>
       <div class="notice-frame">${body}</div>
     </div>`;
@@ -593,6 +594,8 @@ window.CC = (function(){
     const canPost = (c && c.boardRestricted ? me.canWrite : (me.boardOpen || me.canWrite)) && rounds.length>0;
     // フォームを開いている間は、左上・右下どちらのボタンも隠す（フォーム自体は右下の位置に出る）
     const showWriteBtn = canPost && boardFormForCase!==caseId;
+    // 問題提起人名は事件名の前に置く（問題提起人が居ない事件では何も足さない・2026-08-29）
+    const presPart = presenterNameHtml(c);
     const items = mine.map(p=>{
       const ev = rounds.find(e=>e.id===p.eventId);
       return bubbleHtml(p, (ev && ev.type) || p.round || "");
@@ -607,7 +610,7 @@ window.CC = (function(){
       // 事件名は事件ページへのリンクにする（下線などの装飾はしない）。ただし事件ページ自身では
       // 自分へのリンクになってしまうので、そこだけは素のテキストのまま
       (c?`<div class="board-id">${iconHtml(c)}<div class="board-id-main">`+
-          `<p class="d-title board-name">${full
+          `<p class="d-title board-name">${presPart?presPart+"　":""}${full
             ? escapeHtml(c.name)
             : `<a class="board-name-link" href="case?id=${encodeURIComponent(c.id)}">${escapeHtml(c.name)}</a>`
           } ${likeHtml(c)}</p>`+
