@@ -219,7 +219,9 @@ a{color:inherit}
    外部リンクのアイコンが付いているので下線は引かない */
 .notice-lab-link{color:inherit;text-decoration:none}
 .notice-lab-link .bi{font-size:.65rem}
-.notice-frame{border-radius:12px;overflow:hidden;background:var(--tint)}
+/* チラシは白地の紙がほとんどで、枠が無いとページの背景色と溶けて境目が消えるため、
+   ここだけ「罫線より余白」の原則の例外として、細く薄い枠を引く（2026-08-29） */
+.notice-frame{border-radius:12px;overflow:hidden;background:var(--tint);border:1px solid rgba(34,31,26,.08)}
 /* 事件ページ：チラシはA4縦（ポートレート）がほとんどなので、その比率で幅いっぱいに大きく出す。
    （以前は 1.414/1＝横長の比率になっていて、縦長のPDFが枠の中央に小さく収まり左右に余白が
    できてしまっていた。A4は横:縦=210:297＝約0.71:1が正しい。2026-08-27） */
