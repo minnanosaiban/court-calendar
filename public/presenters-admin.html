@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>問題提起人の管理 ｜ 応援傍聴ナビ</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap wrap-wide">
+
+  <header class="masthead">
+    <div class="stamp" aria-hidden="true">傍聴</div>
+    <div>
+      <h1><a href="index.html">応援傍聴ナビ</a></h1>
+      <p>傍聴席に、ひとり増える。それだけで法廷は変わる。</p>
+    </div>
+  </header>
+
+  <a class="pillbtn backlink" href="index.html"><i class="bi bi-arrow-left" aria-hidden="true"></i> トップに戻る</a>
+
+  <div class="ce-title">問題提起人の管理</div>
+  <p class="d-body mut" style="margin-top:4px">運営専用の画面です。ログインの発行・再発行・解除、ニックネーム・アイコンの変更ができます。</p>
+
+  <div class="card" id="paLocked" hidden style="margin-top:20px">
+    <p class="empty-msg">この画面を見るには、事務局用のパスワードが必要です。</p>
+  </div>
+
+  <div id="paGrid" hidden style="margin-top:20px">
+    <div class="card">
+      <p class="msec" style="margin-top:0">新しい問題提起人を作る</p>
+      <div class="cicon-row">
+        <input type="text" id="paNewNickname" placeholder="ニックネーム（例：〇〇支援の会）">
+        <button type="button" class="btn-save" id="paNewSave">作成</button>
+      </div>
+      <p class="fnote">事件に紐づけるのは、その事件の「事件情報を編集」画面から行います。ここでは問題提起人の"箱"だけを先に作れます。</p>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <p class="msec" style="margin-top:0">一覧<span class="lscount" id="paCount" style="margin-left:8px"></span></p>
+      <div id="paList"></div>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <p class="status-row"><span id="status"></span></p>
+  </footer>
+</div>
+
+<script src="lib.js"></script>
+<script>
+(function(){
+  "use strict";
+  const $ = (id)=>document.getElementById(id);
+  const lockedEl=$("paLocked"), gridEl=$("paGrid"), listEl=$("paList"), countEl=$("paCount");
+  const statusEl=$("status");
+  let openId = null;   // いま編集中の問題提起人ID（同時に1件だけ開く）
+
+  function placeholderChar(nickname){
+    return (nickname||"？").trim().slice(0,1) || "？";
+  }
+  function iconHtml(p){
+    return p.icon
+      ? `<img class="cicon" src="${CC.escapeAttr(p.icon)}" alt="" style="width:40px;height:40px">`
+      : `<span class="cicon cicon-ph" aria-hidden="true" style="width:40px;height:40px">${CC.escapeHtml(placeholderChar(p.nickname))}</span>`;
+  }
+
+  function rowHtml(p){
+    const loginBadge = p.hasLogin
+      ? `<span class="mut">ログイン発行済み${p.loginUsername?"（"+CC.escapeHtml(p.loginUsername)+"）":""}</span>`
+      : `<span class="mut">未発行</span>`;
+    return `<div class="irow" data-id="${CC.escapeAttr(p.id)}">
+        ${iconHtml(p)}
+        <span class="ititle">${CC.escapeHtml(p.nickname)}</span>
+        <span class="mut">${p.caseCount||0}件</span>
+        ${loginBadge}
+      </div>`;
+  }
+
+  function editorHtml(p){
+    const loginRemove = p.hasLogin
+      ? `<a id="paLoginRemove" style="cursor:pointer;text-decoration:underline;margin-left:8px">ログインを外す</a>` : "";
+    return `<div class="ieditor">
+      <div class="field">
+        <label>ニックネーム</label>
+        <div class="cicon-row">
+          <input type="text" id="paNickname" value="${CC.escapeAttr(p.nickname)}">
+          <button type="button" class="btn-save" id="paNicknameSave">変更</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>アイコン</label>
+        <div class="cicon-row">
+          <span id="paIconPreview">${iconHtml(p)}</span>
+          <input type="file" id="paIconFile" accept="image/jpeg,image/webp">
+        </div>
+        <p class="fnote">JPEG・WebP、5MBまで。選ぶとすぐ反映されます。${p.icon?'<a id="paIconRemove" style="cursor:pointer;text-decoration:underline">アイコンを外す</a>':""}</p>
+      </div>
+      <div class="field">
+        <p class="msec" style="margin-top:12px">ログイン設定（運営専用）</p>
+        <div class="cicon-row">
+          <input type="text" id="paLoginUsername" value="${CC.escapeAttr(p.loginUsername||"")}" placeholder="ログインID（例：メールアドレス）">
+          <button type="button" class="btn-save" id="paLoginUsernameSave">保存</button>
+        </div>
+        <p class="fnote">
+          <a id="paLoginReset" style="cursor:pointer;text-decoration:underline">パスワードを発行／再発行する</a>${loginRemove}
+        </p>
+        <p class="fnote" id="paLoginStatus" hidden></p>
+      </div>
+      <div class="ifoot">
+        <button type="button" class="del" id="paDelete">この問題提起人を削除</button>
+        <span class="spacer"></span>
+        <button type="button" class="btn-cancel" id="paClose">閉じる</button>
+      </div>
+    </div>`;
+  }
+
+  function render(){
+    if(!CC.loaded) return;
+    if(!CC.me.canWrite){
+      lockedEl.hidden=false; gridEl.hidden=true;
+      return;
+    }
+    lockedEl.hidden=true; gridEl.hidden=false;
+    const list = [...CC.presenters].sort((a,b)=>a.nickname.localeCompare(b.nickname,"ja"));
+    countEl.textContent = list.length + "件";
+    listEl.innerHTML = list.length ? list.map(rowHtml).join("") : `<p class="empty-msg">まだ問題提起人はいません。</p>`;
+    // 開いていた行があれば、再描画のあとも開いたままにする
+    if(openId){
+      const row = listEl.querySelector(`.irow[data-id="${CSS.escape(openId)}"]`);
+      const p = CC.presenterById(openId);
+      if(row && p) openEditor(row, p);
+      else openId=null;
+    }
+    wireList();
+  }
+
+  function closeEditor(){
+    document.querySelectorAll(".ieditor").forEach(x=>x.remove());
+    document.querySelectorAll(".irow.editing").forEach(x=>x.classList.remove("editing"));
+    openId = null;
+  }
+
+  function openEditor(row, p){
+    closeEditor();
+    row.insertAdjacentHTML("afterend", editorHtml(p));
+    row.classList.add("editing");
+    openId = p.id;
+    wireEditor(row.nextElementSibling, p);
+  }
+
+  function wireList(){
+    listEl.querySelectorAll(".irow").forEach(row=>{
+      row.addEventListener("click", ()=>{
+        const id = row.dataset.id;
+        if(openId===id){ closeEditor(); return; }
+        const p = CC.presenterById(id);
+        if(p) openEditor(row, p);
+      });
+    });
+  }
+
+  function wireEditor(root, p){
+    root.querySelector("#paClose").addEventListener("click", closeEditor);
+
+    root.querySelector("#paNicknameSave").addEventListener("click", async ()=>{
+      const nickname = root.querySelector("#paNickname").value.trim();
+      if(!nickname){ alert("ニックネームを入力してください。"); return; }
+      try{
+        await CC.apiUpdatePresenter(p.id, {nickname});
+        await CC.reloadPresenters();
+        render();
+      }catch(err){ alert(CC.saveErr(err)); }
+    });
+
+    root.querySelector("#paIconFile").addEventListener("change", async ()=>{
+      const f = root.querySelector("#paIconFile").files[0];
+      if(!f) return;
+      if(!["image/jpeg","image/webp"].includes(f.type)){ alert("アイコンは JPEG・WebP のみ登録できます。"); return; }
+      if(f.size>5*1024*1024){ alert("アイコンは5MBまでです。"); return; }
+      const fd=new FormData(); fd.append("file", f, f.name);
+      try{
+        await CC.apiUpdatePresenterIcon(p.id, fd);
+        await CC.reloadPresenters();
+        render();
+      }catch(err){ alert(CC.saveErr(err)); }
+    });
+    const iconRemove = root.querySelector("#paIconRemove");
+    if(iconRemove) iconRemove.addEventListener("click", async ()=>{
+      if(!confirm("アイコンを外します。よろしいですか？")) return;
+      try{
+        await CC.apiDeletePresenterIcon(p.id);
+        await CC.reloadPresenters();
+        render();
+      }catch(err){ alert(CC.saveErr(err)); }
+    });
+
+    const statusEl2 = root.querySelector("#paLoginStatus");
+    function showStatus(text){ statusEl2.hidden=false; statusEl2.textContent=text; }
+
+    root.querySelector("#paLoginUsernameSave").addEventListener("click", async ()=>{
+      const loginUsername = root.querySelector("#paLoginUsername").value.trim();
+      showStatus("保存しています…");
+      try{
+        await CC.apiUpdatePresenter(p.id, {nickname:p.nickname, loginUsername});
+        await CC.reloadPresenters();
+        // 一覧の行（未発行／発行済みバッジ・ログインID）を最新化するため再描画する。
+        // render()はエディタを作り直すので、メッセージは作り直した後の要素に出す（作り直す前に出すと消えてしまう）
+        render();
+        const fresh = document.getElementById("paLoginStatus");
+        if(fresh){ fresh.hidden=false; fresh.textContent="ログインIDを保存しました。"; }
+      }catch(err){ showStatus("保存できませんでした：" + (err && err.message || err)); }
+    });
+
+    root.querySelector("#paLoginReset").addEventListener("click", async ()=>{
+      const cur = CC.presenterById(p.id);
+      if(!cur || !cur.loginUsername){ alert("先にログインIDを保存してください。"); return; }
+      if(!confirm("新しいパスワードを発行します。今までのパスワードは使えなくなります。よろしいですか？")) return;
+      showStatus("発行しています…");
+      try{
+        const up = await CC.apiUpdatePresenter(p.id, {nickname:p.nickname, resetPassword:true});
+        await CC.reloadPresenters();
+        render();
+        const fresh = document.getElementById("paLoginStatus");
+        if(fresh){ fresh.hidden=false; fresh.textContent=`新しいパスワード：${up.newPassword}　※このパスワードは今だけ表示されます。ログインID・パスワードを本人にお伝えください。`; }
+      }catch(err){ showStatus("発行できませんでした：" + (err && err.message || err)); }
+    });
+
+    const loginRemove = root.querySelector("#paLoginRemove");
+    if(loginRemove) loginRemove.addEventListener("click", async ()=>{
+      if(!confirm("この問題提起人のログインを外します（本人はログインできなくなります）。よろしいですか？")) return;
+      showStatus("外しています…");
+      try{
+        await CC.apiUpdatePresenter(p.id, {nickname:p.nickname, removeLogin:true});
+        await CC.reloadPresenters();
+        render();
+      }catch(err){ showStatus("外せませんでした：" + (err && err.message || err)); }
+    });
+
+    root.querySelector("#paDelete").addEventListener("click", async ()=>{
+      if(!confirm(`「${p.nickname}」を削除します。よろしいですか？（事件が1件でも紐づいていると削除できません）`)) return;
+      try{
+        await CC.apiDeletePresenter(p.id);
+        await CC.reloadPresenters();
+        closeEditor();
+        render();
+      }catch(err){ alert(CC.saveErr(err)); }
+    });
+  }
+
+  $("paNewSave").addEventListener("click", async ()=>{
+    const nickname = $("paNewNickname").value.trim();
+    if(!nickname){ alert("ニックネームを入力してください。"); return; }
+    try{
+      await CC.apiCreatePresenter({nickname});
+      $("paNewNickname").value="";
+      await CC.reloadPresenters();
+      render();
+    }catch(err){ alert(CC.saveErr(err)); }
+  });
+
+  CC.setOnChange(()=>{ CC.renderStatus(statusEl); render(); });
+  (async function init(){
+    await CC.load();
+    CC.renderStatus(statusEl);
+    render();
+  })();
+})();
+</script>
+</body>
+</html>

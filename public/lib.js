@@ -894,11 +894,13 @@ window.CC = (function(){
       el.innerHTML =
         `<br>編集できます ── この端末は編集ロック解除済みです。`+
         `<br><a id="stAddCase">新たな事件を追加</a><span class="sep">・</span>`+
+        `<a id="stPresentersAdmin">問題提起人を管理</a><span class="sep">・</span>`+
         `<a id="stLock">ロックする</a>`+
         `<br><span class="status-sub">バックアップ（複数件をまとめて登録・復元するとき用）：`+
         `<a id="stExport">書き出す</a><span class="sep">・</span>`+
         `<a id="stImport">ファイルから取り込む</a></span>`;
       el.querySelector("#stAddCase").addEventListener("click",()=>{ location.href="case-edit.html"; });
+      el.querySelector("#stPresentersAdmin").addEventListener("click",()=>{ location.href="presenters-admin.html"; });
       el.querySelector("#stLock").addEventListener("click",lockEditing);
       el.querySelector("#stExport").addEventListener("click",exportData);
       el.querySelector("#stImport").addEventListener("click",()=>{
