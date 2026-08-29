@@ -528,6 +528,9 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .ut{font-size:.9rem}
 .um{color:var(--mut);font-size:.8rem;overflow:hidden;text-overflow:ellipsis}
 .u-empty{color:var(--mut);font-size:.9rem;padding:24px 12px;text-align:center}
+/* 行末の矢印。.pop-arrowと同じく、カードに触れると少し右へ動く（クリックできる目印。2026-08-30） */
+.u-arrow{flex:none;align-self:center;color:var(--stamp);font-size:.85rem;transition:transform .15s ease}
+.u:hover .u-arrow{transform:translateX(3px)}
 
 /* ---- footer最終行：ソースコードリンク＋事務局用ステータスを1行に並べる（2026-08-25） ---- */
 .status-row{margin-top:8px;color:var(--mut);font-size:.8rem;line-height:1.9}

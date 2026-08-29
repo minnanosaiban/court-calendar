@@ -307,7 +307,7 @@ window.CC = (function(){
     if(!c.presenterId) return icon;
     // ブラウザ標準のtitleツールチップ（OSごとの太い枠つき）ではなく、data-tip側の
     // 自前の吹き出し（枠なし・角丸）で出す（2026-08-30）
-    const tip = `${escapeAttr(c.presenterNickname)}の他の事件を見る`;
+    const tip = `${escapeAttr(c.presenterNickname)}さんの他の事件を見る`;
     return `<a class="cicon-link" href="presenter?id=${encodeURIComponent(c.presenterId)}" data-tip="${tip}" aria-label="${tip}">${icon}</a>`;
   }
   // 事件名の下に添える、問題提起人のニックネーム（リンク）。アイコンの下だと名前が長いと省略されて

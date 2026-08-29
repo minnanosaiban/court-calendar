@@ -51,8 +51,7 @@
       <div class="login-invite">
         <p class="mut">すでに掲載されている方へ</p>
         <a class="pillbtn" href="login.html"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> ログイン</a>
-        <p class="fnote">ログインすると、ご自身の事件をいつでも直せます。<br>パスワードを忘れた場合は事務局にメールでご連絡ください。</p>
-        <p class="footer-mail"><i class="bi bi-envelope" aria-hidden="true"></i> <a href="mailto:minnawomamorukaisei@gmail.com">minnawomamorukaisei@gmail.com</a></p>
+        <p class="fnote">ログインすると、ご自身の事件をいつでも直せます。<br>パスワードを忘れた場合は<a href="mailto:minnawomamorukaisei@gmail.com">事務局にメール</a>でご連絡ください。</p>
       </div>
       <img src="frog-mic.png" alt="" class="request-frog">
     </div>
@@ -112,6 +111,7 @@
         <div class="ut">${CC.escapeHtml(ev.case)}</div>
         <div class="um">${CC.escapeHtml([ev.type,place].filter(Boolean).join(" ／ "))||"&nbsp;"} ${CC.bookmarkHtml(ev)}</div>
       </div>
+      <i class="bi bi-chevron-double-right u-arrow" aria-hidden="true"></i>
     </div>`;
   }
   // 検索・タグだけを反映した候補（タブの件数表示に使う。期間では絞らない）。
