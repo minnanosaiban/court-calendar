@@ -610,8 +610,9 @@ window.CC = (function(){
       // アイコン（見出しの「傍」・下の事件カードのアイコンと左端がそろう）の右に、事件名・「報告を書く」を
       // 縦に2段重ねる（2026-08-24。アイコンが56pxと大きくなり、事件名の1行だけでは右に余白が余るため）。
       // 事件名は事件ページへのリンクにする（下線などの装飾はしない）。ただし事件ページ自身では
-      // 自分へのリンクになってしまうので、そこだけは素のテキストのまま
-      (c?`<div class="board-id">${iconHtml(c)}<div class="board-id-main">`+
+      // 自分へのリンクになってしまうので、そこだけは素のテキストのまま。
+      // アイコンは事件詳細ページの見出しと同じく、問題提起人の他の事件一覧（presenter.html）へのリンクにする
+      (c?`<div class="board-id">${presenterHeaderHtml(c)}<div class="board-id-main">`+
           `<p class="d-title board-name">${presPart?presPart+"　":""}${full
             ? escapeHtml(c.name)
             : `<a class="board-name-link" href="case?id=${encodeURIComponent(c.id)}">${escapeHtml(c.name)}</a>`

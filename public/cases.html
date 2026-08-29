@@ -86,7 +86,7 @@
       ? `終結：${CC.escapeHtml(CC.jpDate(c.archivedAt))}${c.closeType?"　"+CC.escapeHtml(c.closeType):""}`
       : (next?`<b>次回</b>${CC.escapeHtml(CC.eventLine(next))}`:"まだ期日の登録がありません");
     return `<div class="card ccard" data-open="${CC.escapeAttr(c.id)}" role="link" tabindex="0">
-      ${CC.iconHtml(c)}
+      ${CC.presenterHeaderHtml(c)}
       <div class="cbody">
         <div class="ctitle">${CC.escapeHtml(c.name)}</div>
         <div class="cnext">${nextLine}</div>
@@ -126,10 +126,11 @@
         return a.name.localeCompare(b.name,"ja");
       });
     clistEl.innerHTML = list.length ? list.map(rowHtml).join("") : `<p class="empty-msg">見つかりませんでした。</p>`;
+    // アイコンは問題提起人ページへの独自リンクなので、カードのクリックが事件ページへ突き抜けないようガードする
     clistEl.querySelectorAll("[data-open]").forEach(el=>{
       const go=()=>{ location.href="case?id="+encodeURIComponent(el.dataset.open); };
-      el.addEventListener("click",go);
-      el.addEventListener("keydown",(e)=>{ if(e.key==="Enter") go(); });
+      el.addEventListener("click",(e)=>{ if(!e.target.closest(".cicon-link")) go(); });
+      el.addEventListener("keydown",(e)=>{ if(e.key==="Enter" && !e.target.closest(".cicon-link")) go(); });
     });
   }
   function renderAll(){

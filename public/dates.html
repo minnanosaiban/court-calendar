@@ -100,7 +100,7 @@
     const place=[ev.court,ev.place].filter(Boolean).join(" ");
     return `<div class="u" data-open="${CC.escapeAttr(ev.caseId)}" role="link" tabindex="0">
       <span class="ubar${ev.open===false?" shut":""}" aria-hidden="true"></span>
-      ${c?CC.iconHtml(c):""}
+      ${c?CC.presenterHeaderHtml(c):""}
       <div class="ubody">
         <div class="ud"><b>${d.getMonth()+1}/${d.getDate()}</b>（${CC.WD[d.getDay()]}）${ev.time?" "+CC.escapeHtml(ev.time):""}</div>
         <div class="ut">${CC.escapeHtml(ev.case)}</div>
@@ -149,12 +149,13 @@
         : (a.date===b.date ? CC.byTime(a,b) : b.date.localeCompare(a.date)));
     dlistEl.innerHTML = list.length ? list.map(rowHtml).join("")
       : `<p class="empty-msg">${favOnly?"お気に入りの期日は見つかりませんでした。":"見つかりませんでした。"}</p>`;
-    // お気に入りボタンは行内にあるが行そのものは事件ページへのリンクなので、
-    // ボタン操作（クリック／キーボードのEnter）が行のリンクへ突き抜けないようにガードする
+    // お気に入りボタン・問題提起人アイコンは行内にあるが行そのものは事件ページへのリンクなので、
+    // それらの操作（クリック／キーボードのEnter）が行のリンクへ突き抜けないようにガードする
     dlistEl.querySelectorAll("[data-open]").forEach(el=>{
       const go=()=>{ location.href="case?id="+encodeURIComponent(el.dataset.open); };
-      el.addEventListener("click",(e)=>{ if(!e.target.closest("[data-bookmark]")) go(); });
-      el.addEventListener("keydown",(e)=>{ if(e.key==="Enter" && !e.target.closest("[data-bookmark]")) go(); });
+      const guarded=(e)=> e.target.closest("[data-bookmark]") || e.target.closest(".cicon-link");
+      el.addEventListener("click",(e)=>{ if(!guarded(e)) go(); });
+      el.addEventListener("keydown",(e)=>{ if(e.key==="Enter" && !guarded(e)) go(); });
     });
     dlistEl.querySelectorAll("[data-bookmark]").forEach(b=>{
       b.addEventListener("click",(e)=>{ e.stopPropagation(); CC.toggleBookmark(b.dataset.bookmark, b); });
