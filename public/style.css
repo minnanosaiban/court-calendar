@@ -133,6 +133,12 @@ a{color:inherit}
 /* タイトル行 */
 .d-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
 .d-head-main{flex:1;min-width:0}
+/* 問題提起人が自分としてログイン中の目印（presenter.html）。状態（バッジ）と操作
+   （パスワード変更・ログアウト）を同じ行にまとめる（2026-08-30） */
+.selfbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:.85rem;color:var(--mut);margin-top:8px}
+.selfbar .badge{background:#eef3f6;color:var(--edit);border-radius:999px;padding:2px 12px;font-size:.78rem}
+.selfbar a{cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.selfbar .sep{color:var(--faint)}
 /* いいね：タイトルに続けて置く。押すと朱色で塗る。
    枠・背景は持たず、タイトルに寄り添う"添え物"にする（2026-08-24。それまでは枠線のピル型だった）。
    押した状態はハートの塗り（bi-heart-fill）と朱色で示すので、面で囲う必要がない。
@@ -528,6 +534,10 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .footer-mail{margin-top:12px;font-size:.9rem;color:var(--ink);padding-right:88px}
 .footer-mail a{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
 .request-frog{position:absolute;right:16px;bottom:16px;width:72px;height:auto;pointer-events:none}
+/* 「すでに掲載されている方へ」＝問題提起人ログインへの入口。「掲載をご希望の方へ」の続きとして
+   同じ枠の下部に置く（フッターのひっそりした行からは外した。2026-08-30） */
+.login-invite{margin-top:20px;padding-top:16px;border-top:1px solid rgba(185,50,38,.15)}
+.login-invite .pillbtn{margin-top:8px}
 
 /* ---- modal ---- */
 .overlay{position:fixed;inset:0;background:rgba(28,26,22,.34);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
@@ -639,6 +649,20 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .editcol .msec{font-family:"Shippori Mincho",serif;font-size:1.2rem;margin:40px 0 16px;scroll-margin-top:16px}
 .editcol .msec:first-child{margin-top:0}
 .editcol .msec .lhint{font-family:"Zen Kaku Gothic New",sans-serif;font-size:.8rem;color:var(--mut);font-weight:400;margin-left:8px}
+/* 節ナビの小見出し（「まず書くこと」等）。クリック対象ではないので secnav div とは分けて軽く扱う（2026-08-30） */
+.grp{font-size:.68rem;letter-spacing:.06em;color:var(--faint);margin:14px 0 4px;padding-left:12px}
+.grp:first-child{margin-top:0}
+/* 「トップにも表示する」のまとめ説明（節の先頭に1回だけ置く。2026-08-30） */
+.helpbar{background:#eef3f6;border-left:3px solid var(--edit);border-radius:0 8px 8px 0;
+  padding:10px 14px;font-size:.8rem;color:var(--mut);line-height:1.8;margin-bottom:18px}
+/* 変更できない「問題提起人」欄（問題提起人本人がログイン中のとき）。入力欄の形をやめ、
+   選べない・押せないことが一目で分かるようにする（2026-08-30） */
+.fixedval{display:flex;align-items:center;gap:12px;background:var(--tint);border-radius:12px;padding:10px 14px}
+.fixedval .cicon-ph{width:36px;height:36px;font-size:.95rem}
+/* .fixedval に display:flex を書いた時点で、CSS上は常に hidden 属性より勝ってしまう
+   （[hidden]はUAスタイルシート側にしかなく、著者スタイルシートの通常宣言が常に優先されるため。
+   #1で見つかった .editgrid と同じ理由）。属性セレクタで明示的に上書きする（2026-08-30） */
+.fixedval[hidden]{display:none}
 
 /* ---- 写真・期日・資料（1件ずつ、行を開いてその場で編集する節）----
    件数が多くなりうる（実データで写真13・期日8・資料18件）ので、畳んだ一覧＋その場エディタにして
@@ -680,6 +704,11 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 /* 保存バーはページ下に固定。背景はグラデーションで地色に溶かす（本文と面で切らない） */
 .savebar{position:sticky;bottom:0;z-index:5;background:linear-gradient(transparent,var(--bg) 40%);
   padding:24px 0 16px;display:flex;gap:12px;align-items:center;justify-content:flex-end}
+/* .savebar の非固定版（小さいカード内の短いフォーム用。パスワード変更など。2026-08-30）。
+   ページ下に貼り付けるほどの長さが無いフォームで、固定されると浮いて見えるため分けた */
+.formfoot{display:flex;gap:12px;align-items:center;justify-content:flex-end;margin-top:8px}
+.formfoot button{font-family:inherit;font-size:.9rem;line-height:inherit;cursor:pointer;border:none;border-radius:999px;padding:8px 24px}
+.formfoot button:disabled{opacity:.5;cursor:default}
 .savebar button{font-family:inherit;font-size:.9rem;line-height:inherit;cursor:pointer;border:none;border-radius:999px;padding:8px 24px}
 .savebar .btn-del{background:none;border:none;color:var(--stamp);font-size:.8rem;margin-right:auto;
   text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:4px 0}
@@ -694,6 +723,26 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
   .secnav div{padding:6px 0 6px 12px;cursor:pointer;border-left:2px solid transparent}
   .secnav div.on{color:var(--ink);border-left-color:var(--ink)}
   .secnav div .n{color:var(--faint);font-size:.7rem;margin-left:4px}
+  .secnav .grp{cursor:default}
+  .mobtoc{display:none}
+}
+/* スマホでは左の節ナビが出せないので、代わりに「目次∨」の帯を1本だけ出す。ふだんは
+   いまの節名だけを示し、タップすると secnav をその場に開いて全節を縦に見せる
+   （hotline の判決文ページで採用した「目次∨」と同じ考え方。2026-08-30） */
+@media(max-width:859.98px){
+  .mobtoc{display:flex;align-items:center;gap:8px;cursor:pointer;position:sticky;top:0;z-index:4;
+    background:rgba(243,242,238,.96);backdrop-filter:blur(6px);
+    margin:0 -16px 8px;padding:11px 16px;border-bottom:1px solid #e6e4dd;
+    font-size:.85rem;color:var(--mut)}
+  .mobtoc .cur{color:var(--ink);font-weight:500}
+  .mobtoc .chev{margin-left:auto;color:var(--faint);transition:transform .2s}
+  .mobtoc.open .chev{transform:rotate(180deg)}
+  .mobtoc.open + .secnav{display:block}
+  .secnav{background:var(--card);border-bottom:1px solid #e6e4dd;
+    position:sticky;top:41px;z-index:4;margin:0 -16px 12px;padding:4px 16px 10px;font-size:.85rem}
+  .secnav div{padding:9px 0;border-left:none}
+  .secnav div.on{font-weight:500}
+  .secnav .grp{padding-left:0}
 }
 
 @media(min-width:560px){

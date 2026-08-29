@@ -27,6 +27,28 @@
 
   <section aria-labelledby="presenter-h" style="margin-top:28px">
     <div id="presenterHead"></div>
+    <!-- パスワード変更（本人としてログイン中のときだけ、renderHeadから開閉する） -->
+    <div class="card" id="pwCard" hidden style="margin-top:16px;padding:20px 22px;max-width:420px">
+      <p class="msec" style="margin-top:0">パスワードの変更</p>
+      <div class="field">
+        <label>いまのパスワード</label>
+        <input type="password" id="pwCurrent" autocomplete="current-password">
+      </div>
+      <div class="field">
+        <label>新しいパスワード</label>
+        <input type="password" id="pwNew" autocomplete="new-password">
+        <p class="fnote">8文字以上にしてください。</p>
+      </div>
+      <div class="field">
+        <label>新しいパスワード（確認）</label>
+        <input type="password" id="pwConfirm" autocomplete="new-password">
+      </div>
+      <p class="fnote" id="pwStatus" hidden></p>
+      <div class="formfoot">
+        <button type="button" class="btn-cancel" id="pwCancel">キャンセル</button>
+        <button type="button" class="btn-save" id="pwSubmit">変更する</button>
+      </div>
+    </div>
     <div class="clist" id="clist" style="margin-top:20px"></div>
   </section>
 
@@ -39,6 +61,11 @@
         <li>「傍聴に行ってきたよ！掲示板」は、非表示にすることもできます。</li>
       </ul>
       <p class="footer-mail"><i class="bi bi-envelope" aria-hidden="true"></i> <a href="mailto:minnawomamorukaisei@gmail.com">minnawomamorukaisei@gmail.com</a></p>
+      <div class="login-invite">
+        <p class="mut">すでに掲載されている方へ</p>
+        <a class="pillbtn" href="login.html"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> 問題提起人ログイン</a>
+        <p class="fnote">ログインすると、ご自身の事件をいつでも直せます。</p>
+      </div>
       <img src="frog-mic.png" alt="" class="request-frog">
     </div>
     <p class="disc">本サイトは有志による非公式のツールです。掲載情報の正確性・完全性・最新性は保証しません。本サイトの利用により生じたいかなる損害についても運営者は責任を負わず、本サイトは法的助言を提供するものではありません。事件の説明は問題提起人の主張であり、裁判所が認定した事実とは限りません。当事者のお名前は、ご本人が実名での掲載を望まれる場合をのぞき掲載しません。</p>
@@ -88,8 +115,12 @@
     }
     const icon = p.icon ? `<img class="cicon" src="${CC.escapeAttr(p.icon)}" alt="" style="width:72px;height:72px">`
       : `<span class="cicon-ph" aria-hidden="true" style="width:72px;height:72px;font-size:1.7rem">${CC.escapeHtml((p.nickname||"？").slice(0,1))}</span>`;
+    // 状態（バッジ）と操作（パスワード変更・ログアウト）を同じ行にまとめる（2026-08-30。
+    // 以前はここに「パスワードを変更」だけがあり、ログアウトはページ最下部にしかなかった）
     const selfNote = CC.me.presenterId===presenterId
-      ? `<p class="mut" style="margin-top:6px">ご本人としてログイン中です。<a id="pwChangeLink" style="cursor:pointer;text-decoration:underline">パスワードを変更</a></p>` : "";
+      ? `<div class="selfbar"><span class="badge">ご本人としてログイン中</span>`+
+        `<a id="pwChangeLink">パスワードを変更</a><span class="sep">・</span>`+
+        `<a id="selfLogoutLink">ログアウト</a></div>` : "";
     headEl.innerHTML = `<div class="d-head" style="align-items:center">
         ${icon}
         <div>
@@ -99,18 +130,36 @@
         </div>
       </div>`;
     const pwLink = document.getElementById("pwChangeLink");
-    if(pwLink) pwLink.addEventListener("click", changePassword);
+    if(pwLink) pwLink.addEventListener("click", openPwCard);
+    const logoutLink = document.getElementById("selfLogoutLink");
+    if(logoutLink) logoutLink.addEventListener("click", async ()=>{
+      await CC.presenterLogout();
+      location.href = "index.html";
+    });
   }
-  async function changePassword(){
-    const current = prompt("現在のパスワードを入力してください");
-    if(current==null) return;
-    const next = prompt("新しいパスワード（8文字以上）を入力してください");
-    if(next==null) return;
+
+  // パスワード変更：ブラウザの prompt() 2回だと入力が平文で見え、確認の再入力も無かったため、
+  // ページ内の小さなフォームに変えた（2026-08-30）
+  const pwCard=document.getElementById("pwCard"), pwCurrent=document.getElementById("pwCurrent"),
+        pwNew=document.getElementById("pwNew"), pwConfirm=document.getElementById("pwConfirm"),
+        pwStatus=document.getElementById("pwStatus");
+  function showPwStatus(t){ pwStatus.hidden=false; pwStatus.textContent=t; }
+  function openPwCard(){
+    pwCurrent.value=""; pwNew.value=""; pwConfirm.value=""; pwStatus.hidden=true;
+    pwCard.hidden=false;
+    pwCurrent.focus();
+  }
+  document.getElementById("pwCancel").addEventListener("click",()=>{ pwCard.hidden=true; });
+  document.getElementById("pwSubmit").addEventListener("click", async ()=>{
+    const current=pwCurrent.value, next=pwNew.value, confirm2=pwConfirm.value;
+    if(!next || next.length<8){ showPwStatus("新しいパスワードは8文字以上にしてください。"); return; }
+    if(next!==confirm2){ showPwStatus("新しいパスワード（確認）が一致しません。"); return; }
     try{
       await CC.apiPresenterChangePassword(current, next);
+      pwCard.hidden=true;
       alert("パスワードを変更しました。");
-    }catch(err){ alert("変更できませんでした：" + (err && err.message || err)); }
-  }
+    }catch(err){ showPwStatus("変更できませんでした：" + (err && err.message || err)); }
+  });
 
   function renderList(){
     if(!CC.loaded){ clistEl.innerHTML=""; return; }

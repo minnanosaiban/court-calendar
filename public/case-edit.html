@@ -31,59 +31,35 @@
     <p class="empty-msg">編集にはパスワードが必要です。ページ下の「事務局用」からロックを解除してください。</p>
   </div>
 
-  <!-- 欄の並びは、事件ページの実際の掲載順（写真→掲示板→事件名・タグ→終結→争点・当事者→裁判について
-       →関連裁判→期日→資料）。写真・期日・資料は複数件の集まりなので、事件情報とは
+  <!-- 節の並びは「①まず書くこと（事件名・争点・裁判について）→②記録を足す（期日・資料・写真）
+       →③表示の設定（期日案内・関連裁判・掲示板・終結）」の3群（2026-08-30）。本人が編集画面を
+       開いたとき、いちばん書きたい内容が先に来るようにした（以前は事件ページの掲載順そのままで、
+       運営向けの設定が先頭に来ていた）。写真・期日・資料は複数件の集まりなので、事件情報とは
        性質が違う＝1件ずつ保存する行内エディタにしている（2026-08-27）。事件番号は「争点・当事者」の
        先頭に置く（公開チェックが無いかぎり運営専用の内部メモとして扱う・2026-08-28）。
        表示設定のチェック（公開する／トップにも表示する）は .checkrow に入れ、欄名の直下・入力欄の
        上に置く。入力欄の下に置くと、上の入力欄と下の欄名のどちらに属するのか読み取れなかった
        （2026-08-28） -->
   <div class="editgrid" id="ceGrid" hidden>
+    <!-- スマホ用「目次∨」。secnav の直前に置く（CSSの隣接セレクタでタップ時だけ secnav を開く） -->
+    <div class="mobtoc" id="ceMobToc"><span class="cur" id="ceMobTocCur">事件名・タグ</span><span class="chev" aria-hidden="true">∨</span></div>
     <nav class="secnav" id="ceNav" aria-label="節へ移動">
-      <div data-sec="sec-board" class="on">掲示板</div>
-      <div data-sec="sec-notice">期日案内</div>
-      <div data-sec="sec-img">写真<span class="n" id="navImgCount"></span></div>
-      <div data-sec="sec-name">事件名・タグ</div>
-      <div data-sec="sec-close">終結</div>
+      <div class="grp">まず書くこと</div>
+      <div data-sec="sec-name" class="on">事件名・タグ</div>
       <div data-sec="sec-facts">争点・当事者</div>
       <div data-sec="sec-call">裁判について</div>
-      <div data-sec="sec-related">関連裁判</div>
+      <div class="grp">記録を足す</div>
       <div data-sec="sec-ev">期日<span class="n" id="navEvCount"></span></div>
       <div data-sec="sec-mat">資料<span class="n" id="navMatCount"></span></div>
+      <div data-sec="sec-img">写真<span class="n" id="navImgCount"></span></div>
+      <div class="grp">表示の設定</div>
+      <div data-sec="sec-notice">期日案内</div>
+      <div data-sec="sec-related">関連裁判</div>
+      <div data-sec="sec-board">掲示板</div>
+      <div data-sec="sec-close">終結</div>
     </nav>
     <div>
       <div class="editcol" id="ceForm">
-
-        <p class="msec" id="sec-board">掲示板</p>
-        <div class="field">
-          <label class="check"><input type="checkbox" id="cBoardEnabled" checked> 「傍聴に行ってきたよ！掲示板」を表示する</label>
-        </div>
-        <div class="field">
-          <label class="check"><input type="checkbox" id="cBoardRestricted"> 投稿を制限する（一般の投稿は受け付けず、運営とこの事件の問題提起人のみ投稿できます）</label>
-        </div>
-
-        <!-- 期日案内：事件につき1枚・差し替え専用（問題提起人アイコンと同じ仕組み）。JPEGのみ
-             （2026-08-28：ファイルサイズが小さく済むJPEGに限定。PDF・PNGは既存データの表示のみ対応）。
-             新規作成のときはまだ事件が無いので出さない -->
-        <div class="field" id="sec-notice" hidden>
-          <p class="msec">期日案内</p>
-          <label>案内チラシ（JPEG）</label>
-          <div class="cicon-row">
-            <input type="file" id="cNoticeFile" accept="image/jpeg">
-          </div>
-          <p class="fnote" id="cNoticeNote">JPEG、20MBまで。支援者向けの「裁判期日一覧のご案内」のようなチラシを想定しています。選ぶとすぐ反映され（「保存」を待ちません）、事件ページとトップに埋め込み表示されます。<a id="cNoticeRemove" class="cicon-remove" hidden>外す</a></p>
-          <p class="fnote" id="cNoticeStatus" hidden></p>
-        </div>
-
-        <!-- 写真：1件ずつ保存（新規作成のときはまだ事件が無いので出さない） -->
-        <section class="lssec listsec" id="sec-img" data-listsec="img" hidden>
-          <div class="lshead"><p class="msec">写真</p><span class="lscount" id="imgCount"></span><span class="lschev">▾</span></div>
-          <div class="lsbody">
-            <div class="lsnote">写真・期日・資料は1件ずつ保存されます（下の「事件情報を保存」とは別です）。</div>
-            <div id="imgList"></div>
-            <button type="button" class="addbtn" id="imgAddBtn">＋ 写真を追加</button>
-          </div>
-        </section>
 
         <p class="msec" id="sec-name">事件名・タグ</p>
         <div class="field">
@@ -96,6 +72,11 @@
             <option value="">（未設定）</option>
             <option value="__new__">＋ 新しい問題提起人を作る…</option>
           </select>
+          <!-- 問題提起人本人がログイン中は、選べない欄をプルダウンの形にしない（下でJSが出し分ける） -->
+          <div class="fixedval" id="cPresenterFixed" hidden>
+            <span id="cPresenterFixedIcon"></span>
+            <span id="cPresenterFixedName"></span>
+          </div>
           <p class="fnote" id="cPresenterHint">同じ人（団体）が複数の事件を持つときは、同じ問題提起人を選べばアイコン・ニックネームを使い回せます。</p>
           <div class="subfield" id="cPresenterNewRow" hidden>
             <div class="cicon-row">
@@ -139,19 +120,18 @@
           <textarea id="cTags" placeholder="情報公開&#10;行政"></textarea>
         </div>
 
-        <p class="msec" id="sec-close">終結<span class="lhint">終結した事件のみ入れる</span></p>
-        <div class="two">
-          <div class="field"><label>終結日</label><input type="date" id="cArchivedAt"></div>
-          <div class="field"><label>終結の種類</label><input type="text" id="cCloseType" placeholder="例）判決、和解、取下げ"></div>
-        </div>
-
         <p class="msec" id="sec-facts">争点・当事者</p>
+        <div class="helpbar">
+          <b>「トップにも表示する」とは</b><br>
+          ここの項目は、ふだん<b>事件ページ</b>にだけ出ます。✓を入れると、この事件がトップページの〈応援ピックアップ〉に選ばれたときに一緒に出ます（ピックアップは直近に開廷した事件が自動で選ばれます）。
+        </div>
         <div class="field">
           <label>事件番号</label>
           <div class="checkrow">
             <label class="check"><input type="checkbox" id="cCaseNoPublic"> 公開する</label>
             <label class="check"><input type="checkbox" id="cShowCaseNoOnTop"> トップにも表示する</label>
           </div>
+          <p class="fnote" id="cCaseNoPublicNote" style="margin:0 0 6px"></p>
           <span class="lhint">1行に1件</span>
           <textarea id="cCaseNo" placeholder="地裁　令和6年(ワ)第12345号&#10;高裁　令和7年(ネ)第1234号"></textarea>
         </div>
@@ -208,15 +188,6 @@
           <textarea id="cCall" style="min-height:200px" placeholder="どんな裁判か、傍聴や支援をお願いする文章など"></textarea>
         </div>
 
-        <p class="msec" id="sec-related">関連裁判</p>
-        <div class="field">
-          <label>関連裁判</label>
-          <div class="checkrow"><label class="check"><input type="checkbox" id="cShowRelatedOnTop"> トップにも表示する</label></div>
-          <span class="lhint">登録済みの事件名を1行に1つ</span>
-          <textarea id="cRelated" placeholder="例）情報公開請求をめぐる訴訟"></textarea>
-          <p class="fnote">同じ事実に関連する別争点の訴訟など。どちらか一方に登録すれば、両方の事件ページに表示されます。</p>
-        </div>
-
         <!-- 期日：1件ずつ保存（新規作成のときはまだ事件が無いので出さない） -->
         <section class="lssec listsec" id="sec-ev" data-listsec="ev" hidden>
           <div class="lshead"><p class="msec">期日</p><span class="lscount" id="evCount"></span><span class="lschev">▾</span></div>
@@ -234,6 +205,52 @@
             <button type="button" class="addbtn" id="matAddBtn">＋ 資料を追加</button>
           </div>
         </section>
+
+        <!-- 写真：1件ずつ保存（新規作成のときはまだ事件が無いので出さない） -->
+        <section class="lssec listsec" id="sec-img" data-listsec="img" hidden>
+          <div class="lshead"><p class="msec">写真</p><span class="lscount" id="imgCount"></span><span class="lschev">▾</span></div>
+          <div class="lsbody">
+            <div class="lsnote">写真・期日・資料は1件ずつ保存されます（下の「事件情報を保存」とは別です）。</div>
+            <div id="imgList"></div>
+            <button type="button" class="addbtn" id="imgAddBtn">＋ 写真を追加</button>
+          </div>
+        </section>
+
+        <!-- 期日案内：事件につき1枚・差し替え専用（問題提起人アイコンと同じ仕組み）。JPEGのみ
+             （2026-08-28：ファイルサイズが小さく済むJPEGに限定。PDF・PNGは既存データの表示のみ対応）。
+             新規作成のときはまだ事件が無いので出さない -->
+        <div class="field" id="sec-notice" hidden>
+          <p class="msec">期日案内</p>
+          <label>案内チラシ（JPEG）</label>
+          <div class="cicon-row">
+            <input type="file" id="cNoticeFile" accept="image/jpeg">
+          </div>
+          <p class="fnote" id="cNoticeNote">JPEG、20MBまで。支援者向けの「裁判期日一覧のご案内」のようなチラシを想定しています。選ぶとすぐ反映され（「保存」を待ちません）、事件ページとトップに埋め込み表示されます。<a id="cNoticeRemove" class="cicon-remove" hidden>外す</a></p>
+          <p class="fnote" id="cNoticeStatus" hidden></p>
+        </div>
+
+        <p class="msec" id="sec-related">関連裁判</p>
+        <div class="field">
+          <label>関連裁判</label>
+          <div class="checkrow"><label class="check"><input type="checkbox" id="cShowRelatedOnTop"> トップにも表示する</label></div>
+          <span class="lhint">登録済みの事件名を1行に1つ</span>
+          <textarea id="cRelated" placeholder="例）情報公開請求をめぐる訴訟"></textarea>
+          <p class="fnote">同じ事実に関連する別争点の訴訟など。どちらか一方に登録すれば、両方の事件ページに表示されます。</p>
+        </div>
+
+        <p class="msec" id="sec-board">掲示板</p>
+        <div class="field">
+          <label class="check"><input type="checkbox" id="cBoardEnabled" checked> 「傍聴に行ってきたよ！掲示板」を表示する</label>
+        </div>
+        <div class="field">
+          <label class="check"><input type="checkbox" id="cBoardRestricted"> 投稿を制限する（一般の投稿は受け付けず、運営とこの事件の問題提起人のみ投稿できます）</label>
+        </div>
+
+        <p class="msec" id="sec-close">終結<span class="lhint">終結した事件のみ入れる</span></p>
+        <div class="two">
+          <div class="field"><label>終結日</label><input type="date" id="cArchivedAt"></div>
+          <div class="field"><label>終結の種類</label><input type="text" id="cCloseType" placeholder="例）判決、和解、取下げ"></div>
+        </div>
 
       </div>
       <div class="savebar">
@@ -267,19 +284,29 @@
   // 節ナビ：クリックでその節へ（畳んである一覧は開いてから移動）。スクロールで現在地をハイライト
   const nav=document.getElementById("ceNav");
   const items=[...nav.querySelectorAll("[data-sec]")];
+  // スマホの「目次∨」：ふだんは畳んで現在地だけを示し、タップで secnav をその場に開く（2026-08-30）
+  const mobToc=document.getElementById("ceMobToc");
+  const mobTocCur=document.getElementById("ceMobTocCur");
+  mobToc.addEventListener("click",()=>mobToc.classList.toggle("open"));
   items.forEach(d=>d.addEventListener("click",()=>{
     const t=document.getElementById(d.dataset.sec);
     if(!t) return;
     if(t.classList.contains("lssec")) t.classList.add("open");
     t.scrollIntoView({behavior:"smooth",block:"start"});
+    mobToc.classList.remove("open");
   }));
   window.addEventListener("scroll",()=>{
     let cur=0;
+    // 「画面の上から3分の1を過ぎたら次の節」という判定にする。固定値100pxだと、次の見出しが
+    // まだ画面下の方にあるうちから切り替わってしまい、実際に読んでいる節より1つ手前が光っていた
+    // （2026-08-30）
+    const threshold=innerHeight/3;
     items.forEach((d,i)=>{
       const t=document.getElementById(d.dataset.sec);
-      if(t && t.getBoundingClientRect().top<100) cur=i;
+      if(t && t.getBoundingClientRect().top<threshold) cur=i;
     });
     items.forEach((d,i)=>d.classList.toggle("on",i===cur));
+    mobTocCur.textContent=items[cur].childNodes[0].textContent;
   },{passive:true});
 })();
 </script>

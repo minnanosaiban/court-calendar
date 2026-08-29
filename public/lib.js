@@ -125,7 +125,8 @@ window.CC = (function(){
       // 問題提起人としてログイン中に403が返るのは、ほぼ「ログインし直す必要がある」場合
       // （パスワード再発行・ログイン解除などでこの端末のセッションが失効した）。
       // 一度も権限を持たない人への「閲覧のみです」という案内とは分けて伝える（2026-08-30）
-      if(me.presenterId) return "編集セッションが切れました。お手数ですが、ページ下部からログインし直してください。";
+      // ログイン画面（login.html）へのリンクは alert() には貼れないため、ページ名で案内する（2026-08-30）
+      if(me.presenterId) return "編集セッションが切れました。お手数ですが、login.html からログインし直してください。";
       return "この操作は許可されていません（閲覧のみの権限です）。";
     }
     return "保存できませんでした：" + (err && err.message || err);
@@ -921,11 +922,11 @@ window.CC = (function(){
       el.querySelector("#stMyPage").addEventListener("click",()=>{ location.href="presenter.html?id="+encodeURIComponent(me.presenterId); });
       el.querySelector("#stPresenterLogout").addEventListener("click",presenterLogout);
     }else{
+      // 問題提起人ログインへの入口は「掲載をご希望の方へ」の中（.login-invite）に移した（2026-08-30）。
+      // ここは運営専用のまま、事務局用だけを出す
       el.innerHTML =
-        ` <a id="stUnlock" title="期日の追加・編集には、パスワードが必要です。"><i class="bi bi-lock" aria-hidden="true"></i> 事務局用</a>`+
-        `<span class="sep">・</span><a id="stPresenterLoginLink">問題提起人としてログイン</a>`;
+        ` <a id="stUnlock" title="期日の追加・編集には、パスワードが必要です。"><i class="bi bi-lock" aria-hidden="true"></i> 事務局用</a>`;
       el.querySelector("#stUnlock").addEventListener("click",unlockEditing);
-      el.querySelector("#stPresenterLoginLink").addEventListener("click",()=>{ location.href="login.html"; });
     }
   }
   async function unlockEditing(){
@@ -1010,7 +1011,9 @@ window.CC = (function(){
           cPresenterLoginRow=$("cPresenterLoginRow"), cPresenterLoginUsername=$("cPresenterLoginUsername"),
           cPresenterLoginUsernameSave=$("cPresenterLoginUsernameSave"), cPresenterLoginReset=$("cPresenterLoginReset"),
           cPresenterLoginRemoveWrap=$("cPresenterLoginRemoveWrap"), cPresenterLoginRemove=$("cPresenterLoginRemove"),
-          cPresenterLoginStatus=$("cPresenterLoginStatus");
+          cPresenterLoginStatus=$("cPresenterLoginStatus"),
+          cPresenterFixed=$("cPresenterFixed"), cPresenterFixedIcon=$("cPresenterFixedIcon"), cPresenterFixedName=$("cPresenterFixedName"),
+          cCaseNoPublicNote=$("cCaseNoPublicNote");
     // 連絡先は入力欄を廃止したが、既存データは保持する（保存のたびに空で上書きしないよう、
     // 編集を開いたときの値をここに覚えておいて、保存時にそのまま送り返す）
     let editingCaseContact="";
@@ -1023,13 +1026,19 @@ window.CC = (function(){
     function renderPresenterOptions(selectedId){
       const hint=$("cPresenterHint");
       if(!edIsAdmin){
+        // 選び直せない欄は入力欄の形にしない（disabledのプルダウンだと押せそうに見えたため。2026-08-30）
+        cPresenterSelect.hidden = true;
+        cPresenterFixed.hidden = false;
         const p = presenterById(selectedId);
-        cPresenterSelect.innerHTML = `<option value="${escapeAttr(selectedId)}" selected>${escapeHtml(p?p.nickname:"")}</option>`;
-        cPresenterSelect.disabled = true;
-        if(hint) hint.textContent = "ニックネーム・アイコンは下で変更できます。付け替えは運営にご連絡ください。";
+        cPresenterFixedIcon.innerHTML = p && p.icon
+          ? `<img class="cicon-ph" style="border-radius:50%;width:36px;height:36px;object-fit:cover" src="${escapeAttr(p.icon)}" alt="">`
+          : `<span class="cicon-ph" aria-hidden="true">${escapeHtml(placeholderChar(p?p.nickname:""))}</span>`;
+        cPresenterFixedName.textContent = p ? p.nickname : "";
+        if(hint) hint.textContent = "ニックネーム・アイコンは下で変更できます。別の問題提起人への付け替えをご希望の場合は運営にご連絡ください。";
         return;
       }
-      cPresenterSelect.disabled = false;
+      cPresenterSelect.hidden = false;
+      cPresenterFixed.hidden = true;
       if(hint) hint.textContent = "同じ人（団体）が複数の事件を持つときは、同じ問題提起人を選べばアイコン・ニックネームを使い回せます。";
       const opts = [`<option value="">（未設定）</option>`]
         .concat(presenters.map(p=>`<option value="${escapeAttr(p.id)}"${p.id===selectedId?" selected":""}>${escapeHtml(p.nickname)}${p.caseCount?`（${p.caseCount}件）`:""}</option>`))
@@ -1205,9 +1214,17 @@ window.CC = (function(){
       }catch(err){ cNoticeStatus.hidden=false; cNoticeStatus.textContent="アップロードできませんでした：" + (err && err.message || err); }
       finally{ cNoticeFile.value=""; }
     });
+    // 事件番号「公開する」のいまの状態を1行で示す（外れていると、誰に見えているのか分からなかったため。2026-08-30）
+    function updateCaseNoPublicNote(){
+      cCaseNoPublicNote.textContent = cCaseNoPublic.checked
+        ? "いまは事件ページに表示されています。"
+        : "いまはサイトに出ていません。「公開する」に✓を入れると事件ページに表示されます（この欄はご本人と運営にだけ見えています）。";
+    }
+    cCaseNoPublic.addEventListener("change", updateCaseNoPublicNote);
     function fillCaseForm(c){
       cFields.name.value=c.name||""; cFields.caseNo.value=c.caseNo||"";
       cCaseNoPublic.checked = c.caseNoPublic===true;
+      updateCaseNoPublicNote();
       cShowOnTop.caseNo.checked = c.showCaseNoOnTop===true;
       cShowOnTop.points.checked = c.showPointsOnTop===true;
       cShowOnTop.plaintiff.checked = c.showPlaintiffOnTop===true;
@@ -1333,8 +1350,10 @@ window.CC = (function(){
       const allowed = id ? canEditCase(id) : me.canWrite;
       if(!allowed){
         locked.hidden=false; grid.hidden=true;
-        locked.querySelector(".empty-msg").textContent = id
-          ? "この事件を編集する権限がありません。"
+        // この画面（case-edit.html）には「掲載をご希望の方へ」の枠が無いので、ログインへの
+        // 入口をここにも添える（セッション切れ・ブックマークからの再訪などで来ることがあるため。2026-08-30）
+        locked.querySelector(".empty-msg").innerHTML = id
+          ? `この事件を編集する権限がありません。問題提起人の方は<a href="login.html">こちらからログイン</a>してください。`
           : "新しい事件の登録は運営にご連絡ください。";
         return;
       }
