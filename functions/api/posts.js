@@ -1,5 +1,5 @@
 import {
-  json, newId, rowToPost, getIdentity, authorizePost, authorizeWrite, hiddenCaseIds,
+  json, newId, rowToPost, getIdentity, authorizePost, authorizeCaseWrite, hiddenCaseIds,
   POST_SUBJECTS, POST_VERBS, QUOTE_MAX,
 } from "../_common.js";
 
@@ -34,16 +34,16 @@ export async function onRequestPost({ request, env }) {
 
   const eventId = String(body.eventId || "").trim();
   const ev = await env.DB.prepare(
-    `SELECT e.id, c.board_enabled, c.board_restricted
+    `SELECT e.id, e.case_id, c.board_enabled, c.board_restricted
        FROM events e JOIN cases c ON c.id = e.case_id
       WHERE e.id = ?`
   ).bind(eventId).first();
   if (!ev) return json({ error: "その期日が見つかりません。" }, 400);
   if (ev.board_enabled === 0) return json({ error: "この事件の掲示板は現在受け付けていません。" }, 403);
 
-  // 制限ありの事件は、一般の匿名投稿（Turnstile経由）を受け付けず運営のみ（将来は承認済みアカウントのみ）
+  // 制限ありの事件は、一般の匿名投稿（Turnstile経由）を受け付けず運営とその事件の問題提起人のみ
   const allowed = ev.board_restricted === 1
-    ? authorizeWrite(request, env, id)
+    ? (await authorizeCaseWrite(request, env, id, ev.case_id)).ok
     : await authorizePost(request, env, id);
   if (!allowed) {
     return json({ error: "投稿を受け付けられませんでした。時間をおいて試してください。" }, 403);

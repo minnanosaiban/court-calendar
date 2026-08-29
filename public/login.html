@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>問題提起人ログイン ｜ 応援傍聴ナビ</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="stamp" aria-hidden="true">傍聴</div>
+    <div>
+      <h1><a href="index.html">応援傍聴ナビ</a></h1>
+      <p>傍聴席に、ひとり増える。それだけで法廷は変わる。</p>
+    </div>
+  </header>
+
+  <a class="pillbtn backlink" href="index.html"><i class="bi bi-arrow-left" aria-hidden="true"></i> トップに戻る</a>
+
+  <div class="ce-title">問題提起人ログイン</div>
+
+  <div class="card" id="loginCard" style="max-width:420px;margin-top:20px">
+    <p class="d-body mut">運営から発行されたログインID・パスワードでログインすると、ご自身の事件の詳細ページをいつでも登録・変更できます。</p>
+    <div class="field">
+      <label>ログインID</label>
+      <input type="text" id="lgUsername" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>パスワード</label>
+      <input type="password" id="lgPassword" autocomplete="current-password">
+    </div>
+    <p class="fnote" id="lgStatus" hidden></p>
+    <div class="savebar" style="justify-content:flex-end">
+      <button type="button" class="btn-save" id="lgSubmit">ログイン</button>
+    </div>
+    <p class="fnote">ログインIDをお持ちでない方は、掲載をご依頼の際に運営へお問い合わせください。</p>
+  </div>
+
+  <footer class="site-footer">
+    <p class="status-row"><span id="status"></span></p>
+  </footer>
+</div>
+
+<script src="lib.js"></script>
+<script>
+(function(){
+  "use strict";
+  const statusEl=document.getElementById("status");
+  function renderAll(){ CC.renderStatus(statusEl); }
+  CC.setOnChange(renderAll);
+  (async function init(){ await CC.load(); renderAll(); })();
+
+  const userEl=document.getElementById("lgUsername"), pwEl=document.getElementById("lgPassword");
+  const stEl=document.getElementById("lgStatus"), btn=document.getElementById("lgSubmit");
+  async function doLogin(){
+    const username=userEl.value.trim(), password=pwEl.value;
+    if(!username || !password){ stEl.hidden=false; stEl.textContent="ログインIDとパスワードを入力してください。"; return; }
+    btn.disabled=true; stEl.hidden=false; stEl.textContent="確認しています…";
+    try{
+      const r = await CC.presenterLogin(username, password);
+      location.href = "presenter.html?id="+encodeURIComponent(r.presenterId);
+    }catch(err){
+      stEl.textContent = "ログインできませんでした：" + (err && err.message || err);
+      btn.disabled=false;
+    }
+  }
+  btn.addEventListener("click", doLogin);
+  pwEl.addEventListener("keydown",(e)=>{ if(e.key==="Enter") doLogin(); });
+})();
+</script>
+</body>
+</html>

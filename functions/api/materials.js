@@ -1,22 +1,25 @@
 import {
   json, newId, rowToMaterial, linesToText, MATERIAL_COLS, isMaterialUrl,
   MATERIAL_SIDES, MATERIAL_MIMES, MATERIAL_MAX_BYTES,
-  getIdentity, authorizeWrite, putFile, hiddenCaseIds,
+  getIdentity, putFile, hiddenCaseIds, authorizeCaseWrite, actorLabel, getPresenterSession, myCaseIds,
 } from "../_common.js";
 export { putFile };
 
 export const SELECT = `SELECT ${MATERIAL_COLS} FROM materials m WHERE m.hidden = 0`;
 
 // 一覧（誰でも閲覧可）。?case=<id> で1つの事件にしぼれる。
-// 非公開にした事件の資料は合言葉が合った人にだけ返す。
+// 非公開にした事件の資料は合言葉が合った人にだけ返す（自分の事件は常に見える）。
 export async function onRequestGet({ request, env }) {
   const caseId = new URL(request.url).searchParams.get("case");
   const order = ` ORDER BY COALESCE(m.filed_on, '9999') , m.created_at`;
   const stmt = caseId
     ? env.DB.prepare(`${SELECT} AND m.case_id = ?${order}`).bind(caseId)
     : env.DB.prepare(`${SELECT}${order}`);
-  const [{ results }, hidden] = await Promise.all([stmt.all(), hiddenCaseIds(env, request)]);
-  return json((results || []).filter((r) => !hidden.has(r.case_id)).map(rowToMaterial));
+  const [{ results }, hidden, session] = await Promise.all([
+    stmt.all(), hiddenCaseIds(env, request), getPresenterSession(request, env),
+  ]);
+  const mine = await myCaseIds(env, session);
+  return json((results || []).filter((r) => !hidden.has(r.case_id) || mine.has(r.case_id)).map(rowToMaterial));
 }
 
 // フォーム（multipart/form-data）を読んで、DBに入れる形にそろえる。
@@ -72,13 +75,13 @@ export async function readMaterialForm(request, env) {
   return { fields, file, removeFile: get("removeFile") === "1" };
 }
 
-// 追加（書き込み権限が必要）
+// 追加（書き込み権限が必要。運営は全事件、問題提起人は自分の事件だけ）
 export async function onRequestPost({ request, env }) {
   const id = await getIdentity(request, env);
-  if (!authorizeWrite(request, env, id)) return json({ error: "forbidden" }, 403);
-
   const r = await readMaterialForm(request, env);
   if (r.error) return json({ error: r.error }, 400);
+  const auth = await authorizeCaseWrite(request, env, id, r.fields.case_id);
+  if (!auth.ok) return json({ error: "forbidden" }, 403);
 
   const mid = newId("m");
   const now = new Date().toISOString();
@@ -95,7 +98,7 @@ export async function onRequestPost({ request, env }) {
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)`
   ).bind(mid, f.case_id, f.event_id, f.title, f.side, f.filed_on, f.url,
          r2.key, r2.name, r2.size, r2.mime, f.claims, f.body, f.summary,
-         id.email, id.email, now, now).run();
+         actorLabel(id, auth), actorLabel(id, auth), now, now).run();
 
   const row = await env.DB.prepare(`${SELECT} AND m.id = ?`).bind(mid).first();
   return json(rowToMaterial(row), 201);

@@ -1,20 +1,23 @@
 import {
   json, newId, rowToImage, IMAGE_COLS, IMAGE_MIMES, IMAGE_MAX_BYTES, putFile,
-  getIdentity, authorizeWrite, hiddenCaseIds,
+  getIdentity, hiddenCaseIds, authorizeCaseWrite, actorLabel, getPresenterSession, myCaseIds,
 } from "../_common.js";
 
 export const SELECT = `SELECT ${IMAGE_COLS} FROM case_images i`;
 
 // 一覧（誰でも閲覧可）。?case=<id> で1つの事件にしぼれる。
-// 非公開にした事件の写真は合言葉が合った人にだけ返す。
+// 非公開にした事件の写真は合言葉が合った人にだけ返す（自分の事件は常に見える）。
 export async function onRequestGet({ request, env }) {
   const caseId = new URL(request.url).searchParams.get("case");
   const order = ` ORDER BY i.sort_order, i.created_at`;
   const stmt = caseId
     ? env.DB.prepare(`${SELECT} WHERE i.case_id = ?${order}`).bind(caseId)
     : env.DB.prepare(`${SELECT}${order}`);
-  const [{ results }, hidden] = await Promise.all([stmt.all(), hiddenCaseIds(env, request)]);
-  return json((results || []).filter((r) => !hidden.has(r.case_id)).map(rowToImage));
+  const [{ results }, hidden, session] = await Promise.all([
+    stmt.all(), hiddenCaseIds(env, request), getPresenterSession(request, env),
+  ]);
+  const mine = await myCaseIds(env, session);
+  return json((results || []).filter((r) => !hidden.has(r.case_id) || mine.has(r.case_id)).map(rowToImage));
 }
 
 // フォーム（multipart/form-data）を読む。caption・並び順は任意、caseId は必須。
@@ -50,13 +53,13 @@ export async function readImageForm(request, env, requireFile) {
   return { fields, file };
 }
 
-// 追加（書き込み権限が必要）
+// 追加（書き込み権限が必要。運営は全事件、問題提起人は自分の事件だけ）
 export async function onRequestPost({ request, env }) {
   const id = await getIdentity(request, env);
-  if (!authorizeWrite(request, env, id)) return json({ error: "forbidden" }, 403);
-
   const r = await readImageForm(request, env, true);
   if (r.error) return json({ error: r.error }, 400);
+  const auth = await authorizeCaseWrite(request, env, id, r.fields.case_id);
+  if (!auth.ok) return json({ error: "forbidden" }, 403);
 
   const iid = newId("i");
   const now = new Date().toISOString();
@@ -68,7 +71,7 @@ export async function onRequestPost({ request, env }) {
     `INSERT INTO case_images (id, case_id, r2_key, file_name, file_size, mime, caption, sort_order, created_by, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).bind(iid, r.fields.case_id, key, r.file.name, r.file.size, r.file.mime, r.fields.caption,
-         (max.m ?? -1) + 1, id.email, now).run();
+         (max.m ?? -1) + 1, actorLabel(id, auth), now).run();
 
   const row = await env.DB.prepare(`${SELECT} WHERE i.id = ?`).bind(iid).first();
   return json(rowToImage(row), 201);

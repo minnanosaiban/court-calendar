@@ -1,5 +1,5 @@
 import {
-  json, rowToCase, putFile, getIdentity, authorizeWrite,
+  json, rowToCase, putFile, getIdentity, authorizeCaseWrite, actorLabel,
   NOTICE_MIMES, NOTICE_MAX_BYTES,
 } from "../../../_common.js";
 import { casesSelect } from "../../cases.js";
@@ -8,12 +8,13 @@ async function loadCaseRow(env, cid) {
   return env.DB.prepare(`${casesSelect()} WHERE c.id = ?`).bind("", cid).first();
 }
 
-// 登録・差し替え（書き込み権限が必要）。事件につき1枚だけなので置き換え専用
+// 登録・差し替え（書き込み権限が必要。運営は全事件、問題提起人は自分の事件だけ）。事件につき1枚だけなので置き換え専用
 export async function onRequestPut({ request, env, params }) {
   const id = await getIdentity(request, env);
-  if (!authorizeWrite(request, env, id)) return json({ error: "forbidden" }, 403);
-
   const cid = params.id;
+  const auth = await authorizeCaseWrite(request, env, id, cid);
+  if (!auth.ok) return json({ error: "forbidden" }, 403);
+
   const cur = await env.DB.prepare(`SELECT notice_r2_key FROM cases WHERE id = ?`).bind(cid).first();
   if (!cur) return json({ error: "not found" }, 404);
 
@@ -32,25 +33,26 @@ export async function onRequestPut({ request, env, params }) {
   const key = await putFile(env, "no", cid, file);
   await env.DB.prepare(
     `UPDATE cases SET notice_r2_key=?, notice_file_name=?, notice_file_size=?, notice_mime=?, updated_by=?, updated_at=? WHERE id=?`
-  ).bind(key, file.name, file.size, file.mime, id.email, new Date().toISOString(), cid).run();
+  ).bind(key, file.name, file.size, file.mime, actorLabel(id, auth), new Date().toISOString(), cid).run();
   if (cur.notice_r2_key && cur.notice_r2_key !== key && env.FILES) await env.FILES.delete(cur.notice_r2_key).catch(() => {});
 
   const row = await loadCaseRow(env, cid);
   return json(rowToCase(row));
 }
 
-// 削除（書き込み権限が必要）。R2のファイルも消す
+// 削除（書き込み権限が必要。運営は全事件、問題提起人は自分の事件だけ）。R2のファイルも消す
 export async function onRequestDelete({ request, env, params }) {
   const id = await getIdentity(request, env);
-  if (!authorizeWrite(request, env, id)) return json({ error: "forbidden" }, 403);
-
   const cid = params.id;
+  const auth = await authorizeCaseWrite(request, env, id, cid);
+  if (!auth.ok) return json({ error: "forbidden" }, 403);
+
   const cur = await env.DB.prepare(`SELECT notice_r2_key FROM cases WHERE id = ?`).bind(cid).first();
   if (!cur) return json({ error: "not found" }, 404);
 
   await env.DB.prepare(
     `UPDATE cases SET notice_r2_key=NULL, notice_file_name=NULL, notice_file_size=NULL, notice_mime=NULL, updated_by=?, updated_at=? WHERE id=?`
-  ).bind(id.email, new Date().toISOString(), cid).run();
+  ).bind(actorLabel(id, auth), new Date().toISOString(), cid).run();
   if (cur.notice_r2_key && env.FILES) await env.FILES.delete(cur.notice_r2_key).catch(() => {});
 
   const row = await loadCaseRow(env, cid);

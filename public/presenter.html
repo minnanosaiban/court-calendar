@@ -60,6 +60,10 @@
     const nextLine = c.archivedAt
       ? `終結：${CC.escapeHtml(CC.jpDate(c.archivedAt))}${c.closeType?"　"+CC.escapeHtml(c.closeType):""}`
       : (next?`<b>次回</b>${CC.escapeHtml(CC.eventLine(next))}`:"まだ期日の登録がありません");
+    // 編集リンクは、運営か、この問題提起人本人としてログイン中のときだけ出す
+    // （カードの外枠は「開く」のクリック対象なので、中のリンクは <a> クリックで見分けて素通しする）
+    const editLink = CC.canEditCase(c.id)
+      ? `<p class="qact"><a href="case-edit.html?id=${encodeURIComponent(c.id)}">＋ 事件情報を編集</a></p>` : "";
     // このページはすでに上でその問題提起人のアイコンを大きく出しているので、カードごとには
     // 繰り返さない（同じ人の事件しか並ばないため、アイコンを重ねても見分けの役に立たず、
     // むしろ画面がアイコンだらけになる。2026-08-26）
@@ -71,6 +75,7 @@
           <div class="tags">${(c.tags||[]).map(t=>`<span class="tag">${CC.escapeHtml(t)}</span>`).join("")}</div>
           <span class="clike"><i class="bi bi-heart-fill" aria-hidden="true"></i>${c.likes||0}</span>
         </div>
+        ${editLink}
       </div>
     </div>`;
   }
@@ -83,13 +88,28 @@
     }
     const icon = p.icon ? `<img class="cicon" src="${CC.escapeAttr(p.icon)}" alt="" style="width:72px;height:72px">`
       : `<span class="cicon-ph" aria-hidden="true" style="width:72px;height:72px;font-size:1.7rem">${CC.escapeHtml((p.nickname||"？").slice(0,1))}</span>`;
+    const selfNote = CC.me.presenterId===presenterId
+      ? `<p class="mut" style="margin-top:6px">ご本人としてログイン中です。<a id="pwChangeLink" style="cursor:pointer;text-decoration:underline">パスワードを変更</a></p>` : "";
     headEl.innerHTML = `<div class="d-head" style="align-items:center">
         ${icon}
         <div>
           <h2 class="d-title" id="presenter-h">${CC.escapeHtml(p.nickname)}さん</h2>
           <p class="mut">${p.caseCount||0}件の事件</p>
+          ${selfNote}
         </div>
       </div>`;
+    const pwLink = document.getElementById("pwChangeLink");
+    if(pwLink) pwLink.addEventListener("click", changePassword);
+  }
+  async function changePassword(){
+    const current = prompt("現在のパスワードを入力してください");
+    if(current==null) return;
+    const next = prompt("新しいパスワード（8文字以上）を入力してください");
+    if(next==null) return;
+    try{
+      await CC.apiPresenterChangePassword(current, next);
+      alert("パスワードを変更しました。");
+    }catch(err){ alert("変更できませんでした：" + (err && err.message || err)); }
   }
 
   function renderList(){
@@ -105,8 +125,9 @@
     clistEl.innerHTML = list.length ? list.map(rowHtml).join("") : `<p class="empty-msg">この問題提起人の事件はまだありません。</p>`;
     clistEl.querySelectorAll("[data-open]").forEach(el=>{
       const go=()=>{ location.href="case?id="+encodeURIComponent(el.dataset.open); };
-      el.addEventListener("click",go);
-      el.addEventListener("keydown",(e)=>{ if(e.key==="Enter") go(); });
+      // 中の「＋ 事件情報を編集」リンクをクリックしたときは、カード自体の「開く」を発動させない
+      el.addEventListener("click",(e)=>{ if(!e.target.closest("a")) go(); });
+      el.addEventListener("keydown",(e)=>{ if(e.key==="Enter" && !e.target.closest("a")) go(); });
     });
   }
 

@@ -1,24 +1,25 @@
 import {
   json, newId, rowToEvent, linesToText, EVENT_COLS, EVENT_FROM, resolveCaseId,
-  getIdentity, authorizeWrite, hiddenCaseIds, viewerHash,
+  getIdentity, hiddenCaseIds, viewerHash, authorizeCaseWrite, actorLabel, getPresenterSession, myCaseIds,
 } from "../_common.js";
 
-// 一覧（誰でも閲覧可）。事件名も JOIN して返す。非公開にした事件の期日は合言葉が合った人にだけ返す。
+// 一覧（誰でも閲覧可）。事件名も JOIN して返す。非公開にした事件の期日は合言葉が合った人にだけ返す
+// （自分の事件は、閲覧キーを知らなくても常に見える）。
 export async function onRequestGet({ request, env }) {
   const viewer = (await viewerHash(request)) || "";
-  const [{ results }, hidden] = await Promise.all([
+  const [{ results }, hidden, session] = await Promise.all([
     env.DB.prepare(`SELECT ${EVENT_COLS} ${EVENT_FROM} ORDER BY e.date, e.time`).bind(viewer).all(),
     hiddenCaseIds(env, request),
+    getPresenterSession(request, env),
   ]);
-  return json((results || []).filter((r) => !hidden.has(r.case_id)).map(rowToEvent));
+  const mine = await myCaseIds(env, session);
+  return json((results || []).filter((r) => !hidden.has(r.case_id) || mine.has(r.case_id)).map(rowToEvent));
 }
 
-// 追加（書き込み権限が必要）。
+// 追加（書き込み権限が必要。運営は全事件、問題提起人は自分の事件だけ）。
 // 事件は caseId か事件名（case）で指定する。あらかじめ登録されている事件でなければ追加できない。
 export async function onRequestPost({ request, env }) {
   const id = await getIdentity(request, env);
-  if (!authorizeWrite(request, env, id)) return json({ error: "forbidden" }, 403);
-
   let body;
   try { body = await request.json(); } catch { return json({ error: "bad json" }, 400); }
 
@@ -26,6 +27,8 @@ export async function onRequestPost({ request, env }) {
   if (!date) return json({ error: "期日は必須です" }, 400);
   const caseId = await resolveCaseId(env, body, id.email);
   if (!caseId) return json({ error: "その事件はまだ登録されていません。先に「事件を追加」で事件を登録してください。" }, 400);
+  const auth = await authorizeCaseWrite(request, env, id, caseId);
+  if (!auth.ok) return json({ error: "forbidden" }, 403);
 
   const ev = {
     id: body.id ? String(body.id) : newId("e"),
@@ -49,7 +52,7 @@ export async function onRequestPost({ request, env }) {
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).bind(ev.id, ev.case_id, ev.date, ev.time, ev.type, ev.court, ev.place, ev.open, ev.report_meeting,
          ev.plaintiff_argument, ev.defendant_argument,
-         id.email, id.email, now).run();
+         actorLabel(id, auth), actorLabel(id, auth), now).run();
 
   const row = await env.DB.prepare(`SELECT ${EVENT_COLS} ${EVENT_FROM} WHERE e.id = ?`).bind("", ev.id).first();
   return json(rowToEvent(row), 201);

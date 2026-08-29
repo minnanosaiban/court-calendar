@@ -1,6 +1,7 @@
 import {
   json, newId, rowToCase, caseFromBody, CASE_COLS,
   getIdentity, authorizeWrite, viewerHash, hiddenCaseIds, redactCaseNo, uniqueCaseName,
+  getPresenterSession, myCaseIds,
 } from "../_common.js";
 
 // 事件の一覧は、いいねの数と「この端末が押したか」を一緒に返す（最初の ? に viewer のハッシュを bind する）
@@ -13,17 +14,21 @@ export function casesSelect() {
       LEFT JOIN presenters p ON p.id = c.presenter_id`;
 }
 
-// 一覧（誰でも閲覧可）。非公開にした事件（view_key あり）は合言葉が合った人にだけ返す。
-// 事件番号は運営（書き込み権限がある人）と、「公開してもよい」とチェックされた事件にだけ返す。
+// 一覧（誰でも閲覧可）。非公開にした事件（view_key あり）は合言葉が合った人にだけ返す
+// （ただし自分の事件は、閲覧キーを知らなくても常に見える）。
+// 事件番号は運営（書き込み権限がある人）と、「公開してもよい」とチェックされた事件、
+// そして自分の事件にだけ返す。
 export async function onRequestGet({ request, env }) {
   const viewer = (await viewerHash(request)) || "";
-  const [{ results }, hidden, wid] = await Promise.all([
+  const [{ results }, hidden, wid, session] = await Promise.all([
     env.DB.prepare(`${casesSelect()} ORDER BY c.name`).bind(viewer).all(),
     hiddenCaseIds(env, request),
     getIdentity(request, env),
+    getPresenterSession(request, env),
   ]);
-  const visible = (results || []).filter((r) => !hidden.has(r.id));
-  return json(redactCaseNo(visible, authorizeWrite(request, env, wid)).map(rowToCase));
+  const mine = await myCaseIds(env, session);
+  const visible = (results || []).filter((r) => !hidden.has(r.id) || mine.has(r.id));
+  return json(redactCaseNo(visible, authorizeWrite(request, env, wid), session && session.presenterId).map(rowToCase));
 }
 
 // 追加（書き込み権限が必要）

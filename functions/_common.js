@@ -135,9 +135,14 @@ export async function uniqueCaseName(env, name, excludeId) {
 // 事件番号（case_no）は既定では運営が事件を見分けるための内部用の欄で、画面にもAPI応答にも出さない。
 // 書き込み権限がある人（＝編集する人）には常にそのまま返す。書き込み権限が無い人には、
 // 「公開してもよい」とチェックされた事件（case_no_public=1）にだけそのまま返し、それ以外は隠す（2026-08-28）。
-export function redactCaseNo(rows, canWrite) {
+// 問題提起人本人（myPresenterId）には、自分の事件だけ公開設定に関わらずそのまま返す
+// （自分で「公開する」にチェックするかどうかを決められるよう、まず自分には見えている必要があるため。2026-08-29）。
+export function redactCaseNo(rows, canWrite, myPresenterId) {
   if (canWrite) return rows;
-  for (const r of rows) { if (!r.case_no_public) r.case_no = null; }
+  for (const r of rows) {
+    const isMine = !!myPresenterId && r.presenter_id === myPresenterId;
+    if (!r.case_no_public && !isMine) r.case_no = null;
+  }
   return rows;
 }
 
@@ -176,16 +181,23 @@ export async function hiddenCaseIds(env, request) {
 }
 
 // ---- 問題提起人（アイコン＋ニックネーム。1人が複数の事件を持てる） ----
-export const PRESENTER_COLS = `id, nickname, icon_r2_key, created_by, updated_by, updated_at`;
+export const PRESENTER_COLS = `id, nickname, icon_r2_key, login_username, login_password_hash, created_by, updated_by, updated_at`;
 
-export function rowToPresenter(r) {
-  return {
+// admin=true のときだけ、ログインID・ログイン発行済みかどうかを含める
+// （ログインIDは個人のメールアドレス等になりうるため、運営以外には見せない）
+export function rowToPresenter(r, admin) {
+  const out = {
     id: r.id,
     nickname: r.nickname,
     icon: r.icon_r2_key ? "/files/" + r.icon_r2_key : "",
     caseCount: r.case_count != null ? Number(r.case_count) : undefined,
     updatedAt: r.updated_at || "",
   };
+  if (admin) {
+    out.loginUsername = r.login_username || "";
+    out.hasLogin = !!r.login_password_hash;
+  }
+  return out;
 }
 
 // ---- 期日 ----
@@ -475,4 +487,97 @@ export function authorizeWrite(request, env, identity) {
     if (identity.email === String(env.OWNER_EMAIL || "").toLowerCase()) return true;
   }
   return false;
+}
+
+// ---- 問題提起人アカウント（2026-08-29） ----
+// 運営（EDIT_PASSWORD／OWNER_EMAIL）とは別枠で、問題提起人が自分の事件だけを編集できるようにする。
+// ログインは「ログインID＋パスワード」（運営が発行）。ログイン後はランダムなトークンを
+// この端末に持たせ（X-Presenter-Token ヘッダ）、以後はそのトークンで本人確認する。
+
+function bytesToHex(bytes) {
+  return [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+function hexToBytes(hex) {
+  const clean = String(hex || "");
+  const out = new Uint8Array(clean.length / 2);
+  for (let i = 0; i < out.length; i++) out[i] = parseInt(clean.substr(i * 2, 2), 16);
+  return out;
+}
+export function randomHex(nBytes) {
+  const b = new Uint8Array(nBytes);
+  crypto.getRandomValues(b);
+  return bytesToHex(b);
+}
+// 運営が「パスワードを再発行」したときに見せる、ランダムな平文パスワード（紛らわしい文字は除く）
+const PW_CHARS = "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz";
+export function generatePassword(len = 12) {
+  const b = new Uint8Array(len);
+  crypto.getRandomValues(b);
+  return [...b].map((x) => PW_CHARS[x % PW_CHARS.length]).join("");
+}
+// PBKDF2-SHA256。ログイン時にしか呼ばない（書き込みリクエストごとには使わない）ので、
+// 反復回数を上げてもレスポンスへの影響は小さい。
+export async function hashPassword(password, saltHex) {
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw", new TextEncoder().encode(String(password || "")), "PBKDF2", false, ["deriveBits"]
+  );
+  const bits = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", salt: hexToBytes(saltHex), iterations: 100000, hash: "SHA-256" },
+    keyMaterial, 256
+  );
+  return bytesToHex(new Uint8Array(bits));
+}
+
+const SESSION_DAYS = 365;
+
+// リクエストの X-Presenter-Token から、ログイン中の問題提起人を返す（無ければ null）
+export async function getPresenterSession(request, env) {
+  const token = request.headers.get("X-Presenter-Token");
+  if (!token) return null;
+  const row = await env.DB.prepare(
+    `SELECT presenter_id, expires_at FROM presenter_sessions WHERE token = ?`
+  ).bind(token).first();
+  if (!row) return null;
+  if (row.expires_at && row.expires_at < new Date().toISOString()) return null;
+  return { presenterId: row.presenter_id };
+}
+
+// ログイン中の問題提起人が持っている事件idの集合（無ければ空集合）
+export async function myCaseIds(env, session) {
+  if (!session) return new Set();
+  const { results } = await env.DB.prepare(`SELECT id FROM cases WHERE presenter_id = ?`).bind(session.presenterId).all();
+  return new Set((results || []).map((r) => r.id));
+}
+
+// 1つの事件に対する書き込み権限の判定。
+//  (A) 運営（authorizeWrite）は常に許可
+//  (B) ログイン中の問題提起人は、自分（presenter_id）の事件だけ許可
+// caseId が無い（＝新しい事件を起こす操作）は、問題提起人には許可しない
+// （新規の事件・問題提起人の"箱"を作るのは引き続き運営のみ。2026-08-29の運用方針）。
+export async function authorizeCaseWrite(request, env, identity, caseId) {
+  if (authorizeWrite(request, env, identity)) return { ok: true, admin: true, presenterId: null };
+  if (!caseId) return { ok: false, admin: false, presenterId: null };
+  const session = await getPresenterSession(request, env);
+  if (!session) return { ok: false, admin: false, presenterId: null };
+  const row = await env.DB.prepare(`SELECT id FROM cases WHERE id = ? AND presenter_id = ?`)
+    .bind(caseId, session.presenterId).first();
+  return { ok: !!row, admin: false, presenterId: session.presenterId };
+}
+
+// 監査用の created_by/updated_by に入れる文字列（運営はメール、問題提起人はそれと分かる印）
+export function actorLabel(identity, auth) {
+  if (identity && identity.email) return identity.email;
+  if (auth && auth.presenterId) return "presenter:" + auth.presenterId;
+  return null;
+}
+
+// ログインに成功したら呼ぶ。トークンを発行して保存し、{token, presenterId, nickname} を返す
+export async function createPresenterSession(env, presenterId) {
+  const token = randomHex(24);
+  const now = new Date();
+  const expires = new Date(now.getTime() + SESSION_DAYS * 24 * 60 * 60 * 1000);
+  await env.DB.prepare(
+    `INSERT INTO presenter_sessions (token, presenter_id, created_at, expires_at) VALUES (?, ?, ?, ?)`
+  ).bind(token, presenterId, now.toISOString(), expires.toISOString()).run();
+  return token;
 }

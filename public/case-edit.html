@@ -96,7 +96,7 @@
             <option value="">（未設定）</option>
             <option value="__new__">＋ 新しい問題提起人を作る…</option>
           </select>
-          <p class="fnote">同じ人（団体）が複数の事件を持つときは、同じ問題提起人を選べばアイコン・ニックネームを使い回せます。</p>
+          <p class="fnote" id="cPresenterHint">同じ人（団体）が複数の事件を持つときは、同じ問題提起人を選べばアイコン・ニックネームを使い回せます。</p>
           <div class="subfield" id="cPresenterNewRow" hidden>
             <div class="cicon-row">
               <input type="text" id="cPresenterNewNickname" placeholder="ニックネーム（例：〇〇支援の会）">
@@ -116,6 +116,20 @@
               <input type="file" id="cPresenterIconFile" accept="image/jpeg,image/webp">
             </div>
             <p class="fnote" id="cPresenterIconNote">JPEG・WebP、5MBまで。正方形に近い画像がきれいに出ます。選ぶとすぐ反映され（「保存」を待ちません）、同じ問題提起人の他の事件のアイコンも変わります。<a id="cPresenterIconRemove" class="cicon-remove" hidden>アイコンを外す</a></p>
+          </div>
+          <!-- ログイン設定（運営専用。問題提起人が自分でログインし、自分の事件を編集できるようにする） -->
+          <div class="subfield" id="cPresenterLoginRow" hidden>
+            <p class="msec" style="margin-top:12px">ログイン設定（運営専用）</p>
+            <div class="cicon-row">
+              <input type="text" id="cPresenterLoginUsername" placeholder="ログインID（例：メールアドレス）">
+              <button type="button" class="btn-save" id="cPresenterLoginUsernameSave">保存</button>
+            </div>
+            <p class="fnote">
+              <a id="cPresenterLoginReset" style="cursor:pointer;text-decoration:underline">パスワードを発行／再発行する</a>
+              <span id="cPresenterLoginRemoveWrap" hidden>　・　<a id="cPresenterLoginRemove" style="cursor:pointer;text-decoration:underline">ログインを外す</a></span>
+            </p>
+            <p class="fnote">発行したログインID・パスワードは、この問題提起人にメール等でお伝えください（この画面には後からパスワードは表示されません）。以後は「問題提起人としてログイン」から、本人が自分の事件を直接編集できます。</p>
+            <p class="fnote" id="cPresenterLoginStatus" hidden></p>
           </div>
           <p class="fnote" id="cPresenterStatus" hidden></p>
         </div>

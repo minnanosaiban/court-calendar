@@ -30,6 +30,9 @@ functions/api/images.js           GET  /api/images        事件の写真の一�
 functions/api/images/[id].js      PUT  /api/images/:id    更新（説明・並び順・ファイル差し替え） / DELETE 削除
 functions/api/posts.js            GET  /api/posts        掲示板の一覧 / POST 投稿
 functions/api/posts/[id].js       DELETE /api/posts/:id  投稿を消す（運営のみ）
+functions/api/presenter-login.js  POST /api/presenter-login    問題提起人のログイン（ログインID＋パスワード）→ トークン発行
+functions/api/presenter-logout.js POST /api/presenter-logout   ログアウト（このトークンを失効）
+functions/api/presenter-password.js PUT /api/presenter-password 自分でパスワードを変更（ログイン中のみ）
 functions/files/[[path]].js       GET  /files/<key>      R2 に置いたファイル（資料・写真・アイコン）を配信（誰でも閲覧可）
 functions/case.js                 GET  /case              事件詳細ページの配信。?id=… のときだけ <head> のOGPタグを書き換える
 schema.sql                        D1 のテーブル定義（最新）
@@ -295,6 +298,42 @@ DBスキーマの変更なし。
 - 編集は「事件情報を編集」モーダルの先頭に専用欄を追加。他の項目と違い、ファイルを選ぶ／「アイコンを外す」
   を押すとその場ですぐ反映する（＝モーダル全体の「保存」ボタンを待たない。写真の並び替えボタンと同じ考え方。
   新規の事件を追加する画面ではこの欄自体を隠す＝先に事件を保存してIDを確定させてから登録する）
+
+### v11：問題提起人アカウント（2026-08-29）
+
+問題提起人（事件を起こした本人）が、運営のパスワードを使わずに自分でログインし、自分の事件の
+詳細ページ（争点・当事者・裁判について・写真・期日・資料・期日案内など）を登録・変更できるようにした。
+`presenters` に `login_username`／`login_password_salt`／`login_password_hash` を追加し、
+ログインセッションを持つ `presenter_sessions` テーブルを新設（`migrate_032_presenter_accounts.sql`）。
+
+- **運用の分担**：新しい事件・問題提起人の"箱"を最初に作るのは引き続き運営（今までどおりメールで
+  依頼を受けて登録）。ログインを発行した後は、その事件の中身の登録・変更は本人が行える。
+  事件の削除・別の問題提起人への付け替え・新規の問題提起人の作成は運営のみ（変わらず）
+- **ログインの発行**：`case-edit.html` で事件を開き、「問題提起人」欄で該当の問題提起人を選ぶと、
+  運営専用の「ログイン設定」が出る。ログインID（メールアドレス等、運営が決めてよい）を保存し、
+  「パスワードを発行／再発行する」を押すと、その場に平文のパスワードが1回だけ表示される
+  （この画面は後から表示し直せない。控えて本人にメール等で伝える）
+- **ログイン**：`login.html` でログインID・パスワードを入力すると、以後はその端末に保存された
+  トークン（`X-Presenter-Token` ヘッダ）で本人と認識される（運営の編集パスワードとは別枠、
+  互いに影響しない）。ログイン後は `presenter.html?id=…`（自分の事件一覧）に飛び、各カードから
+  「事件情報を編集」で `case-edit.html` を開ける。ページ下部の「問題提起人としてログイン」からも
+  `login.html` を開ける
+- **権限の境界**（`functions/_common.js` の `authorizeCaseWrite`）：運営（`EDIT_PASSWORD`／
+  `OWNER_EMAIL`）は全事件を編集可。ログイン中の問題提起人は、自分（`presenter_id`）の事件だけ
+  編集可（events・materials・case_images・期日案内・掲示板設定を含む）。事件の削除、別の
+  問題提起人への付け替え、新規事件の作成は不可（送っても運営専用の扱いのまま変更されない）
+- 事件番号の公開設定（`case_no_public`）は本人の判断に任せる（運営専用にはしていない）。
+  非公開にした事件（`view_key`）・非公開の事件番号も、自分の事件なら閲覧キーを知らなくても
+  常に見える（`redactCaseNo`／`hiddenCaseIds` 呼び出し側で自分の事件を除外している）
+- パスワードは PBKDF2-SHA256（反復10万回、問題提起人ごとのソルト）でハッシュ化して保存。
+  平文パスワードは発行直後の1回しかサーバから返さない。運営がパスワードを再発行／ログインを
+  外すと、その問題提起人の既存のログインセッションはすべて失効する
+- 新しい環境変数は無し（Cloudflare Access もメール送信も使わない、D1だけで完結する仕組み）
+
+**既存のDBを更新する場合**：
+```
+npx wrangler d1 execute court-calendar --remote --file migrate_032_presenter_accounts.sql
+```
 
 ### （過去）events テーブルの列（2026-08-20〜21）
 

@@ -6,10 +6,13 @@ window.CC = (function(){
   const EDITKEY_LS = "court-calendar.editkey";
   const VIEWER_LS  = "court-calendar.viewer";
   const VIEWKEYS_LS = "court-calendar.viewkeys";
+  const PRESENTERTOKEN_LS = "court-calendar.presentertoken";
   const WD = ["日","月","火","水","木","金","土"];
 
   // ---- state ----
   let editKey = localStorage.getItem(EDITKEY_LS) || "";   // 編集パスワード（この端末に保存）
+  // 問題提起人アカウントのログイントークン（この端末に保存。運営の編集パスワードとは別枠）
+  let presenterToken = localStorage.getItem(PRESENTERTOKEN_LS) || "";
   // 非公開にした事件の合言葉。{ 事件id: 合言葉 } の形でこの端末に保存する。
   // /case?id=…&key=… で開いたときだけ、URLの key をここに取り込む（以後はURLに無くても効く）。
   let viewKeys = {};
@@ -29,7 +32,7 @@ window.CC = (function(){
   let posts = [];
   let materials = [];
   let images = [];
-  let me = { email:null, canWrite:false, viaAccess:false, allowAll:false, boardOpen:false, turnstileSiteKey:"" };
+  let me = { email:null, canWrite:false, viaAccess:false, allowAll:false, boardOpen:false, turnstileSiteKey:"", presenterId:"", presenterNickname:"" };
   let boardFormForCase = null;   // 投稿フォームを開いている事件ID
   let tsToken = "";
   let tsScriptPromise = null;
@@ -67,6 +70,7 @@ window.CC = (function(){
   async function api(method, path, body, extra){
     const opt = { method, headers:{ "X-Viewer": viewer } };
     if(editKey) opt.headers["X-Edit-Key"]=editKey;
+    if(presenterToken) opt.headers["X-Presenter-Token"]=presenterToken;
     const vkPairs = Object.keys(viewKeys).map(id=>id+":"+viewKeys[id]).join(",");
     if(vkPairs) opt.headers["X-View-Keys"]=vkPairs;
     if(extra) Object.assign(opt.headers, extra);
@@ -113,13 +117,16 @@ window.CC = (function(){
   const apiUpdateCaseNotice = (id,fd)=> api("PUT","/api/cases/"+encodeURIComponent(id)+"/notice", fd);
   const apiDeleteCaseNotice = (id)=> api("DELETE","/api/cases/"+encodeURIComponent(id)+"/notice");
   const apiPresenterCases = (id)=> api("GET","/api/presenters/"+encodeURIComponent(id)+"/cases");
+  const apiPresenterLogin = (username,password)=> api("POST","/api/presenter-login", {username,password});
+  const apiPresenterLogout = ()=> api("POST","/api/presenter-logout");
+  const apiPresenterChangePassword = (currentPassword,newPassword)=> api("PUT","/api/presenter-password", {currentPassword,newPassword});
   function saveErr(err){
     if(err && err.status===403) return "この操作は許可されていません（閲覧のみの権限です）。";
     return "保存できませんでした：" + (err && err.message || err);
   }
 
   async function load(){
-    try{ me = await apiMe(); }catch(e){ me={email:null,canWrite:false,allowAll:false,boardOpen:false,turnstileSiteKey:""}; }
+    try{ me = await apiMe(); }catch(e){ me={email:null,canWrite:false,allowAll:false,boardOpen:false,turnstileSiteKey:"",presenterId:"",presenterNickname:""}; }
     const [c,pr,e,p,m,im] = await Promise.all([
       apiListCases().catch(()=>[]), apiListPresenters().catch(()=>[]), apiList().catch(()=>[]),
       apiListPosts().catch(()=>[]), apiListMats().catch(()=>[]),
@@ -130,6 +137,30 @@ window.CC = (function(){
   }
   async function reloadCases(){ try{ cases = await apiListCases(); }catch(e){} }
   async function reloadPresenters(){ try{ presenters = await apiListPresenters(); }catch(e){} }
+
+  // 「この事件を編集できるか」＝運営（me.canWrite）か、ログイン中の問題提起人が自分の事件を見ているか
+  function canEditCase(caseId){
+    if(me.canWrite) return true;
+    if(!me.presenterId || !caseId) return false;
+    const c = caseById(caseId);
+    return !!(c && c.presenterId === me.presenterId);
+  }
+
+  // 問題提起人としてログイン／ログアウト（運営の編集パスワードとは別枠）
+  async function presenterLogin(username, password){
+    const r = await apiPresenterLogin(username, password);
+    presenterToken = r.token;
+    localStorage.setItem(PRESENTERTOKEN_LS, presenterToken);
+    me = Object.assign({}, me, { presenterId:r.presenterId, presenterNickname:r.nickname });
+    if(onChange) onChange();
+    return r;
+  }
+  async function presenterLogout(){
+    try{ if(presenterToken) await apiPresenterLogout(); }catch(e){}
+    presenterToken=""; localStorage.removeItem(PRESENTERTOKEN_LS);
+    me = Object.assign({}, me, { presenterId:"", presenterNickname:"" });
+    if(onChange) onChange();
+  }
 
   // ================= 事件 =================
   function caseById(id){ return cases.find(c=>c.id===id) || null; }
@@ -308,7 +339,7 @@ window.CC = (function(){
   // ---- 写真ギャラリー（事件ページ上部だけに出す） ----
   function galleryHtml(caseId){
     const imgs = caseImages(caseId);
-    if(!imgs.length && !me.canWrite) return "";
+    if(!imgs.length && !canEditCase(caseId)) return "";
     let html = "";
     if(imgs.length){
       const items = imgs.map((im)=>`<a class="gal-item" href="${escapeAttr(im.url)}" target="_blank" rel="noopener">
@@ -322,7 +353,7 @@ window.CC = (function(){
     }
     // 写真の追加・並び替え・編集は事件情報の編集ページ（case-edit.html）に一本化した（2026-08-27）。
     // ここ（事件ページ）には「編集」への入口だけを置く（旧・常時展開の管理一覧は廃止）。
-    if(me.canWrite){
+    if(canEditCase(caseId)){
       html += `<p class="qact"><a href="case-edit.html?id=${encodeURIComponent(caseId)}&open=img:new">＋ 写真を編集</a></p>`;
     }
     return html;
@@ -418,7 +449,7 @@ window.CC = (function(){
     // 旧・右下の「事件の詳細を見る」（.d-more）は2026-08-29に廃止：期日案内の隣・タイトル・掲示板の
     // 事件名がいずれもリンクになり、下に重ねて置く必要がなくなったため
     if(full){
-      const editCaseQact = me.canWrite ? `<p class="qact"><a href="case-edit.html?id=${encodeURIComponent(c.id)}">＋ 事件情報を編集</a></p>` : "";
+      const editCaseQact = canEditCase(c.id) ? `<p class="qact"><a href="case-edit.html?id=${encodeURIComponent(c.id)}">＋ 事件情報を編集</a></p>` : "";
       html += callHtml(c) + editCaseQact + relatedCasesHtml(c) + timelineHtml(caseId) + materialsListHtml(caseId);
     } else {
       // ピックアップカードでも、項目ごとのチェックがある「裁判について」「関連裁判」は出す
@@ -521,7 +552,7 @@ window.CC = (function(){
       const place=[ev.court,ev.place].filter(Boolean).join(" ");
       const closed = ev.open===false ? `<span class="round-closed">非公開・要確認</span>` : "";
       const reportNote = ev.reportMeeting ? `<span class="round-note">期日報告会あり</span>` : "";
-      const editLink = me.canWrite ? `<a class="round-edit" href="case-edit.html?id=${encodeURIComponent(caseId)}&open=ev:${encodeURIComponent(ev.id)}">編集</a>` : "";
+      const editLink = canEditCase(caseId) ? `<a class="round-edit" href="case-edit.html?id=${encodeURIComponent(caseId)}&open=ev:${encodeURIComponent(ev.id)}">編集</a>` : "";
       return `<li class="tl-item ${state}">
         <span class="tl-dot" aria-hidden="true"></span>
         <div class="tl-head">
@@ -534,10 +565,10 @@ window.CC = (function(){
     }).join("");
     return `<p class="subhead">タイムライン</p>
       ${rounds.length?`<ol class="tl">${items}</ol>`:`<p class="d-body mut">期日はまだ登録されていません。</p>`}
-      ${me.canWrite?`<p class="qact"><a href="case-edit.html?id=${encodeURIComponent(caseId)}&open=ev:new">＋ 期日を編集</a></p>`:""}`;
+      ${canEditCase(caseId)?`<p class="qact"><a href="case-edit.html?id=${encodeURIComponent(caseId)}&open=ev:new">＋ 期日を編集</a></p>`:""}`;
   }
   function matRowHtml(m, caseId){
-    const edit = me.canWrite ? `<a class="round-edit" href="case-edit.html?id=${encodeURIComponent(caseId)}&open=mat:${encodeURIComponent(m.id)}">編集</a>` : "";
+    const edit = canEditCase(caseId) ? `<a class="round-edit" href="case-edit.html?id=${encodeURIComponent(caseId)}&open=mat:${encodeURIComponent(m.id)}">編集</a>` : "";
     return `<li class="mrow">
       ${m.filedOn?`<span class="mdate">${escapeHtml(dotDate(m.filedOn))}</span>`:""}
       <span class="mmain"><span class="mat-name">${escapeHtml(m.title)}</span>${matButtonsHtml(m)}${edit}</span>
@@ -566,7 +597,7 @@ window.CC = (function(){
     }
     return `<p class="subhead">訴訟資料一覧</p>
       ${body}
-      ${me.canWrite?`<p class="qact"><a href="case-edit.html?id=${encodeURIComponent(caseId)}&open=mat:new">＋ 資料を編集</a></p>`:""}`;
+      ${canEditCase(caseId)?`<p class="qact"><a href="case-edit.html?id=${encodeURIComponent(caseId)}&open=mat:new">＋ 資料を編集</a></p>`:""}`;
   }
 
   // ---- 行ってきたよ掲示板 ----
@@ -595,7 +626,7 @@ window.CC = (function(){
     const mine = casePosts(caseId);
     // 投稿できるのは：スパム対策(Turnstile)設定済みのとき＝誰でも／未設定でも運営は可。
     // 事件が「投稿を制限する」設定のときは、一般の匿名投稿を締めて運営のみにする
-    const canPost = (c && c.boardRestricted ? me.canWrite : (me.boardOpen || me.canWrite)) && rounds.length>0;
+    const canPost = (c && c.boardRestricted ? canEditCase(caseId) : (me.boardOpen || me.canWrite)) && rounds.length>0;
     // フォームを開いている間は、左上・右下どちらのボタンも隠す（フォーム自体は右下の位置に出る）
     const showWriteBtn = canPost && boardFormForCase!==caseId;
     // 問題提起人名は事件名の前に置く（問題提起人が居ない事件では何も足さない・2026-08-29）
@@ -873,10 +904,20 @@ window.CC = (function(){
       el.querySelector("#stImport").addEventListener("click",()=>{
         const fi=document.getElementById("fileInput"); if(fi) fi.click();
       });
+    }else if(me.presenterId){
+      if(opts.hideWhenUnlocked){ el.innerHTML=""; return; }
+      el.innerHTML =
+        `<br>${escapeHtml(me.presenterNickname||"")}さんとしてログイン中です。`+
+        `<br><a id="stMyPage">自分の事件一覧</a><span class="sep">・</span>`+
+        `<a id="stPresenterLogout">ログアウト</a>`;
+      el.querySelector("#stMyPage").addEventListener("click",()=>{ location.href="presenter.html?id="+encodeURIComponent(me.presenterId); });
+      el.querySelector("#stPresenterLogout").addEventListener("click",presenterLogout);
     }else{
       el.innerHTML =
-        ` <a id="stUnlock" title="期日の追加・編集には、パスワードが必要です。"><i class="bi bi-lock" aria-hidden="true"></i> 事務局用</a>`;
+        ` <a id="stUnlock" title="期日の追加・編集には、パスワードが必要です。"><i class="bi bi-lock" aria-hidden="true"></i> 事務局用</a>`+
+        `<span class="sep">・</span><a id="stPresenterLoginLink">問題提起人としてログイン</a>`;
       el.querySelector("#stUnlock").addEventListener("click",unlockEditing);
+      el.querySelector("#stPresenterLoginLink").addEventListener("click",()=>{ location.href="login.html"; });
     }
   }
   async function unlockEditing(){
@@ -957,15 +998,31 @@ window.CC = (function(){
           cPresenterNewSave=$("cPresenterNewSave"), cPresenterIconRow=$("cPresenterIconRow"), cPresenterIconPreview=$("cPresenterIconPreview"),
           cPresenterIconFile=$("cPresenterIconFile"), cPresenterIconRemove=$("cPresenterIconRemove"),
           cPresenterRenameRow=$("cPresenterRenameRow"), cPresenterRenameNickname=$("cPresenterRenameNickname"), cPresenterRenameSave=$("cPresenterRenameSave"),
-          cPresenterStatus=$("cPresenterStatus");
+          cPresenterStatus=$("cPresenterStatus"),
+          cPresenterLoginRow=$("cPresenterLoginRow"), cPresenterLoginUsername=$("cPresenterLoginUsername"),
+          cPresenterLoginUsernameSave=$("cPresenterLoginUsernameSave"), cPresenterLoginReset=$("cPresenterLoginReset"),
+          cPresenterLoginRemoveWrap=$("cPresenterLoginRemoveWrap"), cPresenterLoginRemove=$("cPresenterLoginRemove"),
+          cPresenterLoginStatus=$("cPresenterLoginStatus");
     // 連絡先は入力欄を廃止したが、既存データは保持する（保存のたびに空で上書きしないよう、
     // 編集を開いたときの値をここに覚えておいて、保存時にそのまま送り返す）
     let editingCaseContact="";
     let edCaseId=null;    // 編集対象の事件ID（null＝新規作成）
     let edInited=false;   // フォームを一度充填したか（onChangeのたびに入力中の内容を上書きしないため）
     let edDirty=false;    // 未保存の入力があるか（ページを離れる前の確認に使う）
-    // 問題提起人プルダウンの選択肢を作る（未設定／既存の問題提起人／＋新規作成）
+    let edIsAdmin=true;   // 運営として編集しているか（false＝ログイン中の問題提起人が自分の事件を編集している）
+    // 問題提起人プルダウンの選択肢を作る（未設定／既存の問題提起人／＋新規作成）。
+    // 問題提起人本人が編集しているときは、付け替え・新規作成はできないので自分の分だけ固定で出す
     function renderPresenterOptions(selectedId){
+      const hint=$("cPresenterHint");
+      if(!edIsAdmin){
+        const p = presenterById(selectedId);
+        cPresenterSelect.innerHTML = `<option value="${escapeAttr(selectedId)}" selected>${escapeHtml(p?p.nickname:"")}</option>`;
+        cPresenterSelect.disabled = true;
+        if(hint) hint.textContent = "ニックネーム・アイコンは下で変更できます。付け替えは運営にご連絡ください。";
+        return;
+      }
+      cPresenterSelect.disabled = false;
+      if(hint) hint.textContent = "同じ人（団体）が複数の事件を持つときは、同じ問題提起人を選べばアイコン・ニックネームを使い回せます。";
       const opts = [`<option value="">（未設定）</option>`]
         .concat(presenters.map(p=>`<option value="${escapeAttr(p.id)}"${p.id===selectedId?" selected":""}>${escapeHtml(p.nickname)}${p.caseCount?`（${p.caseCount}件）`:""}</option>`))
         .concat([`<option value="__new__">＋ 新しい問題提起人を作る…</option>`]);
@@ -979,6 +1036,7 @@ window.CC = (function(){
       cPresenterStatus.hidden = true;
       if(v==="__new__"){
         cPresenterNewRow.hidden=false; cPresenterIconRow.hidden=true; cPresenterRenameRow.hidden=true;
+        cPresenterLoginRow.hidden=true;
         cPresenterNewNickname.value="";
       }else if(v){
         cPresenterNewRow.hidden=true; cPresenterIconRow.hidden=false; cPresenterRenameRow.hidden=false;
@@ -988,8 +1046,16 @@ window.CC = (function(){
           ? `<img class="cicon" src="${escapeAttr(p.icon)}" alt="">`
           : `<span class="cicon cicon-ph" aria-hidden="true">${escapeHtml(placeholderChar(p?p.nickname:""))}</span>`;
         cPresenterIconRemove.hidden = !(p && p.icon);
+        // ログイン設定は運営専用（問題提起人本人が自分の付け替え等をできないのと同じ理由）
+        cPresenterLoginRow.hidden = !edIsAdmin;
+        if(edIsAdmin){
+          cPresenterLoginUsername.value = p && p.loginUsername || "";
+          cPresenterLoginRemoveWrap.hidden = !(p && p.hasLogin);
+          cPresenterLoginStatus.hidden = true;
+        }
       }else{
         cPresenterNewRow.hidden=true; cPresenterIconRow.hidden=true; cPresenterRenameRow.hidden=true;
+        cPresenterLoginRow.hidden=true;
       }
     }
     cPresenterSelect.addEventListener("change", updatePresenterFieldUI);
@@ -1052,6 +1118,46 @@ window.CC = (function(){
         cPresenterStatus.hidden=false; cPresenterStatus.textContent="アイコンを外しました。";
         await reloadCases();
       }catch(err){ cPresenterStatus.hidden=false; cPresenterStatus.textContent="外せませんでした：" + (err && err.message || err); }
+    });
+    // ---- ログイン設定（運営専用。問題提起人が自分でログインし、自分の事件を編集できるようにする） ----
+    cPresenterLoginUsernameSave.addEventListener("click", async ()=>{
+      const pid=cPresenterSelect.value;
+      if(!pid || pid==="__new__") return;
+      const p = presenterById(pid);
+      const loginUsername = cPresenterLoginUsername.value.trim();
+      cPresenterLoginStatus.hidden=false; cPresenterLoginStatus.textContent="保存しています…";
+      try{
+        const up = await apiUpdatePresenter(pid, {nickname:p?p.nickname:"", loginUsername});
+        const i=presenters.findIndex(x=>x.id===pid); if(i>=0) presenters[i]=up;
+        cPresenterLoginStatus.textContent="ログインIDを保存しました。";
+      }catch(err){ cPresenterLoginStatus.textContent="保存できませんでした：" + (err && err.message || err); }
+    });
+    cPresenterLoginReset.addEventListener("click", async ()=>{
+      const pid=cPresenterSelect.value;
+      if(!pid || pid==="__new__") return;
+      const p = presenterById(pid);
+      if(!p || !p.loginUsername){ alert("先にログインIDを保存してください。"); return; }
+      if(!confirm("新しいパスワードを発行します。今までのパスワードは使えなくなります。よろしいですか？")) return;
+      cPresenterLoginStatus.hidden=false; cPresenterLoginStatus.textContent="発行しています…";
+      try{
+        const up = await apiUpdatePresenter(pid, {nickname:p.nickname, resetPassword:true});
+        const i=presenters.findIndex(x=>x.id===pid); if(i>=0) presenters[i]=up;
+        cPresenterLoginRemoveWrap.hidden = !up.hasLogin;
+        cPresenterLoginStatus.textContent = `新しいパスワード：${up.newPassword}　※このパスワードは今だけ表示されます。ログインID・パスワードを本人にお伝えください。`;
+      }catch(err){ cPresenterLoginStatus.textContent="発行できませんでした：" + (err && err.message || err); }
+    });
+    cPresenterLoginRemove.addEventListener("click", async ()=>{
+      const pid=cPresenterSelect.value;
+      if(!pid || pid==="__new__") return;
+      const p = presenterById(pid);
+      if(!confirm("この問題提起人のログインを外します（本人はログインできなくなります）。よろしいですか？")) return;
+      cPresenterLoginStatus.hidden=false; cPresenterLoginStatus.textContent="外しています…";
+      try{
+        const up = await apiUpdatePresenter(pid, {nickname:p?p.nickname:"", removeLogin:true});
+        const i=presenters.findIndex(x=>x.id===pid); if(i>=0) presenters[i]=up;
+        cPresenterLoginRemoveWrap.hidden = true;
+        cPresenterLoginStatus.textContent="ログインを外しました。";
+      }catch(err){ cPresenterLoginStatus.textContent="外せませんでした：" + (err && err.message || err); }
     });
     // ---- 期日案内（JPEGのみ。事件につき1枚・差し替え専用。選ぶとすぐ反映される＝presenterアイコンと同じ挙動） ----
     function updateNoticeFieldUI(c){
@@ -1120,7 +1226,7 @@ window.CC = (function(){
       updateNoticeFieldUI(c);
     }
     async function saveCase(){
-      if(!me.canWrite) return;
+      if(!(edCaseId ? canEditCase(edCaseId) : me.canWrite)) return;
       const name=cFields.name.value.trim();
       if(!name){ alert("事件名を入力してください。"); cFields.name.focus(); return; }
       // 関連裁判：1行1事件名→サイトに登録済みの事件のIDに変換する（期日の事件名と同じく、未登録の事件名は指定できない）
@@ -1213,12 +1319,21 @@ window.CC = (function(){
     initCaseEditPage = function(){
       if(!loaded) return;
       const locked=$("ceLocked"), grid=$("ceGrid");
-      if(!me.canWrite){ locked.hidden=false; grid.hidden=true; return; }
+      const params=new URLSearchParams(location.search);
+      const id=params.get("id")||"";
+      // 新しい事件を起こすのは運営のみ（問題提起人は、運営が作った事件の中身だけを編集できる）
+      const allowed = id ? canEditCase(id) : me.canWrite;
+      if(!allowed){
+        locked.hidden=false; grid.hidden=true;
+        locked.querySelector(".empty-msg").textContent = id
+          ? "この事件を編集する権限がありません。"
+          : "新しい事件の登録は運営にご連絡ください。";
+        return;
+      }
+      edIsAdmin = me.canWrite;
       locked.hidden=true; grid.hidden=false;
       if(edInited) return;
       edInited=true;
-      const params=new URLSearchParams(location.search);
-      const id=params.get("id")||"";
       if(id){
         const c=caseById(id);
         if(!c){
@@ -1232,7 +1347,7 @@ window.CC = (function(){
         document.title=c.name+"の編集 ｜ 応援傍聴ナビ";
         $("ceBack").href="case?id="+encodeURIComponent(id);
         $("ceBackLabel").textContent="事件ページに戻る";
-        $("cDelete").style.display="";
+        $("cDelete").style.display = edIsAdmin ? "" : "none";
         fillCaseForm(c);
       }else{
         edCaseId=null;
@@ -1303,7 +1418,7 @@ window.CC = (function(){
       </div>`;
     }
     async function saveImgRow(root, id){
-      if(!me.canWrite || !edCaseId) return;
+      if(!canEditCase(edCaseId)) return;
       const f = root.querySelector(".ef-file").files[0];
       if(!id && !f){ alert("写真ファイルを選んでください。"); return; }
       if(f && f.size>12*1024*1024){ alert("写真は12MBまでです。"); return; }
@@ -1324,7 +1439,7 @@ window.CC = (function(){
       }catch(err){ alert(saveErr(err)); btn.disabled=false; }
     }
     async function deleteImgRow(id){
-      if(!id || !me.canWrite) return;
+      if(!id || !canEditCase(edCaseId)) return;
       if(!confirm("この写真を削除します。よろしいですか？")) return;
       try{
         await apiDeleteImage(id);
@@ -1379,7 +1494,7 @@ window.CC = (function(){
       </div>`;
     }
     async function saveEvRow(root, id){
-      if(!me.canWrite || !edCaseId) return;
+      if(!canEditCase(edCaseId)) return;
       const date=root.querySelector(".ef-date").value;
       if(!date){ alert("期日（日付）を入力してください。"); return; }
       const data={
@@ -1403,7 +1518,7 @@ window.CC = (function(){
       }catch(err){ alert(saveErr(err)); btn.disabled=false; }
     }
     async function deleteEvRow(id){
-      if(!id || !me.canWrite) return;
+      if(!id || !canEditCase(edCaseId)) return;
       if(!confirm("この期日を削除します。この期日への掲示板の報告も一緒に消えます。よろしいですか？")) return;
       try{
         await apiDelete(id);
@@ -1470,7 +1585,7 @@ window.CC = (function(){
       </div>`;
     }
     async function saveMatRow(root, id){
-      if(!me.canWrite || !edCaseId) return;
+      if(!canEditCase(edCaseId)) return;
       const title=root.querySelector(".ef-title").value.trim();
       if(!title){ alert("資料名を入力してください。"); return; }
       const fd=new FormData();
@@ -1504,7 +1619,7 @@ window.CC = (function(){
       }catch(err){ alert(saveErr(err)); btn.disabled=false; }
     }
     async function deleteMatRow(id){
-      if(!id || !me.canWrite) return;
+      if(!id || !canEditCase(edCaseId)) return;
       if(!confirm("この資料を削除します。ファイルも消えます。よろしいですか？")) return;
       try{
         await apiDeleteMat(id);
@@ -1733,6 +1848,7 @@ window.CC = (function(){
     likeHtml, toggleLike, bookmarkHtml, toggleBookmark, isArchived, iconHtml, presenterHeaderHtml,
     apiListPresenters, apiCreatePresenter, apiUpdatePresenter, apiDeletePresenter,
     apiUpdatePresenterIcon, apiDeletePresenterIcon, reloadPresenters, saveErr,
+    canEditCase, presenterLogin, presenterLogout, apiPresenterChangePassword,
     load, renderCaseDetail, renderStatus,
     initCaseEditPage(){ initCaseEditPage(); },
     setOnChange(fn){ onChange = fn; },

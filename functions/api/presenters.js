@@ -11,10 +11,12 @@ export function presentersSelect() {
       FROM presenters`;
 }
 
-// 一覧（誰でも閲覧可。アイコン・ニックネームは公開情報）
-export async function onRequestGet({ env }) {
+// 一覧（誰でも閲覧可。アイコン・ニックネームは公開情報）。
+// ログインIDの設定状況は運営にだけ返す（個人のメールアドレス等になりうるため）
+export async function onRequestGet({ request, env }) {
   const { results } = await env.DB.prepare(`${presentersSelect()} ORDER BY nickname`).all();
-  return json((results || []).map(rowToPresenter));
+  const admin = authorizeWrite(request, env, await getIdentity(request, env));
+  return json((results || []).map((r) => rowToPresenter(r, admin)));
 }
 
 // 追加（書き込み権限が必要）
