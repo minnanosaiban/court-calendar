@@ -447,9 +447,11 @@ window.CC = (function(){
       ? `<img src="${escapeAttr(c.noticeUrl)}" alt="${escapeAttr(c.noticeFileName||"期日案内")}" loading="lazy">`
       : `<iframe src="${escapeAttr(c.noticeUrl)}#toolbar=0&navpanes=0" title="${escapeAttr(c.noticeFileName||"期日案内")}" loading="lazy"></iframe>`;
     // 見出し「期日案内」の隣に「（新しいタブで開く）」を畳み込む（full・!full共通、2026-08-29）。
-    // 空いた右側は、トップ（!full）だけ「事件の詳細を見る」を置く（事件ページ自身では不要）
-    const head = `<span class="notice-lab">期日案内<a class="notice-lab-link" href="${escapeAttr(c.noticeUrl)}" target="_blank" rel="noopener">（新しいタブで開く <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>）</a></span>`
-      + (full ? "" : `<a class="notice-open" href="case?id=${encodeURIComponent(c.id)}">事件の詳細を見る</a>`);
+    // 空いた右側は、トップ（!full）だけ「事件の詳細を見る」を置く（事件ページ自身では不要）。
+    // 狭い画面では縦積みになる（style.css）ため、DOM順は先に「事件の詳細を見る」を置く（本文へ進む
+    // 主導線を上に出す）。広い画面での左右の並び（見出しが左）はstyle.css側のorderで維持する（2026-08-29）
+    const head = (full ? "" : `<a class="notice-open" href="case?id=${encodeURIComponent(c.id)}">事件の詳細を見る</a>`)
+      + `<span class="notice-lab">期日案内<a class="notice-lab-link" href="${escapeAttr(c.noticeUrl)}" target="_blank" rel="noopener">（新しいタブで開く <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>）</a></span>`;
     return `<div class="notice${full?"":" compact"}">
       <div class="notice-head">${head}</div>
       <div class="notice-frame">${body}</div>

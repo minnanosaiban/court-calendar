@@ -201,10 +201,20 @@ a{color:inherit}
    画像はそのまま収める（object-fit:containで欠けさせない）。
    埋め込みが効かない環境に備え「新しいタブで開く」を必ず添える */
 .notice{margin-top:16px}
-.notice-head{display:flex;align-items:baseline;gap:8px;margin-bottom:8px}
+/* 幅が狭いと「期日案内（新しいタブで開く）」と「事件の詳細を見る」が横並びで詰まり合い、
+   互いが折り返した末に単語の途中（「見る」の間など）で改行されて読みにくくなる。
+   狭い画面では素直に縦積みにし、横に並べるのは十分な幅がある画面だけにする（2026-08-29）。
+   縦積みのときはDOM順のまま＝「事件の詳細を見る」が上（本文へ進む主導線を先に出す）。
+   横並びのときは見出しを左、リンクを右に戻す（orderで並べ替える。DOM順は変えない） */
+.notice-head{display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin-bottom:8px}
 .notice-lab{font-size:.7rem;letter-spacing:.14em;color:var(--mut)}
-.notice-open{font-size:.75rem;color:var(--mut);text-decoration:underline;text-underline-offset:3px;margin-left:auto}
+.notice-open{font-size:.75rem;color:var(--mut);text-decoration:underline;text-underline-offset:3px}
 .notice-open .bi{font-size:.7rem}
+@media(min-width:560px){
+  .notice-head{flex-direction:row;align-items:baseline;gap:8px}
+  .notice-lab{order:1}
+  .notice-open{order:2;margin-left:auto}
+}
 /* 見出し「期日案内」の隣に畳み込む「（新しいタブで開く）」リンク（2026-08-29）。
    外部リンクのアイコンが付いているので下線は引かない */
 .notice-lab-link{color:inherit;text-decoration:none}
