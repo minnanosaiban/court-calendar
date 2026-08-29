@@ -630,6 +630,10 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .ce-title{font-family:"Shippori Mincho",serif;font-size:1.6rem;font-weight:600;line-height:1.4;margin-top:24px}
 .ce-case{font-size:.9rem;color:var(--mut);margin-top:2px}
 .editgrid{margin-top:24px}
+/* 権限が無い間は hidden 属性で隠すが、860px以上の .editgrid{display:grid}（下の @media）が
+   これを上書きしてしまう（[hidden] は display:none のはずが grid に化ける）ため、
+   属性セレクタで明示的に勝たせる（2026-08-30） */
+.editgrid[hidden]{display:none}
 .secnav{display:none}
 .editcol{background:var(--card);border-radius:20px;padding:24px}
 .editcol .msec{font-family:"Shippori Mincho",serif;font-size:1.2rem;margin:40px 0 16px;scroll-margin-top:16px}

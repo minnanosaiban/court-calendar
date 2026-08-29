@@ -121,7 +121,13 @@ window.CC = (function(){
   const apiPresenterLogout = ()=> api("POST","/api/presenter-logout");
   const apiPresenterChangePassword = (currentPassword,newPassword)=> api("PUT","/api/presenter-password", {currentPassword,newPassword});
   function saveErr(err){
-    if(err && err.status===403) return "この操作は許可されていません（閲覧のみの権限です）。";
+    if(err && err.status===403){
+      // 問題提起人としてログイン中に403が返るのは、ほぼ「ログインし直す必要がある」場合
+      // （パスワード再発行・ログイン解除などでこの端末のセッションが失効した）。
+      // 一度も権限を持たない人への「閲覧のみです」という案内とは分けて伝える（2026-08-30）
+      if(me.presenterId) return "編集セッションが切れました。お手数ですが、ページ下部からログインし直してください。";
+      return "この操作は許可されていません（閲覧のみの権限です）。";
+    }
     return "保存できませんでした：" + (err && err.message || err);
   }
 
@@ -625,7 +631,7 @@ window.CC = (function(){
     const rounds = caseEvents(caseId);
     const mine = casePosts(caseId);
     // 投稿できるのは：スパム対策(Turnstile)設定済みのとき＝誰でも／未設定でも運営は可。
-    // 事件が「投稿を制限する」設定のときは、一般の匿名投稿を締めて運営のみにする
+    // 事件が「投稿を制限する」設定のときは、一般の匿名投稿を締めて運営とこの事件の問題提起人のみにする
     const canPost = (c && c.boardRestricted ? canEditCase(caseId) : (me.boardOpen || me.canWrite)) && rounds.length>0;
     // フォームを開いている間は、左上・右下どちらのボタンも隠す（フォーム自体は右下の位置に出る）
     const showWriteBtn = canPost && boardFormForCase!==caseId;
