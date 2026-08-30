@@ -141,8 +141,10 @@ a{color:inherit}
 /* トップのピックアップカードだけ：事件名を事件ページへのリンクにする。事件名（.board-name-link）と
    同じく普段は下線を引かず地の文と同じ見た目のまま（2026-08-29）。触れると赤い下線が出て、
    隣のアイコン（問題提起人ページへの別リンク）経由の移動と区別できるようにする（2026-08-30） */
-.d-title-link{text-decoration:underline;text-decoration-color:transparent;text-underline-offset:3px;
-  transition:text-decoration-color .15s ease}
+/* 太さは自動だと文字が大きいぶん(1.6rem)太くなりすぎるので、日付の下線(.pop-date等・.8rem)と
+   同じ1pxに固定する（2026-08-30） */
+.d-title-link{text-decoration:underline;text-decoration-color:transparent;text-decoration-thickness:1px;
+  text-underline-offset:3px;transition:text-decoration-color .15s ease}
 .d-title-link:hover{text-decoration-color:var(--stamp)}
 .d-body{font-size:.9rem;margin-top:8px}
 .mut{color:var(--mut)}
@@ -481,7 +483,15 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .ccard{display:flex;gap:16px;padding:16px;cursor:pointer}
 .ccard:hover{box-shadow:0 2px 12px rgba(0,0,0,.07)}
 .cbody{min-width:0;flex:1}
-.ctitle{font-family:"Shippori Mincho",serif;font-size:1.2rem;font-weight:600;line-height:1.5}
+/* 事件名に触れると赤い下線（.pop-date・.ud・.d-title-linkと同じ扱い）、行末の矢印(.c-arrow)も
+   同時に少し動く。カードの他の部分に触れたときだけ出て、アイコン（問題提起人ページへの別リンク）に
+   触れている間は:has()で除外する＝アイコン経由の移動と区別できる（2026-08-30） */
+.ctitle{font-family:"Shippori Mincho",serif;font-size:1.2rem;font-weight:600;line-height:1.5;
+  text-decoration:underline;text-decoration-color:transparent;text-decoration-thickness:1px;
+  text-underline-offset:3px;transition:text-decoration-color .15s ease}
+.ccard:hover:not(:has(.cicon-link:hover)) .ctitle{text-decoration-color:var(--stamp)}
+.c-arrow{flex:none;align-self:center;color:var(--stamp);font-size:.85rem;transition:transform .15s ease}
+.ccard:hover:not(:has(.cicon-link:hover)) .c-arrow{transform:translateX(3px)}
 .cnext{font-size:.8rem;color:var(--mut);margin-top:4px;font-variant-numeric:tabular-nums}
 .cnext b{color:var(--stamp);font-weight:600;margin-right:.4em}
 .cfoot{display:flex;align-items:center;gap:12px;margin-top:8px}
@@ -740,7 +750,12 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .imove a{color:var(--faint);font-size:.9rem;cursor:pointer;text-decoration:none}
 .imove a:hover{color:var(--ink)}
 .ieditor{background:var(--tint);border-radius:12px;padding:16px;margin:4px 0}
-.ieditor .ihead{font-size:.8rem;color:var(--mut);margin-bottom:12px}
+/* 「閉じる」「この期日を保存」等は枠の右上（見出しと同じ行）に置く。下の「事件情報を保存」との
+   被りを避けるため（2026-08-30。以前は下部.ifootにあった） */
+.ieditor .ihead{font-size:.8rem;color:var(--mut);margin-bottom:12px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px}
+.ihead-actions{display:flex;gap:8px;flex:none}
+.ihead-actions button{font-family:inherit;font-size:.8rem;line-height:inherit;cursor:pointer;border:none;border-radius:999px;padding:6px 16px}
 .ieditor .field input,.ieditor .field textarea,.ieditor .field select{background:#fff}
 .ifoot{display:flex;gap:12px;align-items:center;margin-top:4px}
 .ifoot .spacer{flex:1}

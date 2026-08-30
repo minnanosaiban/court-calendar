@@ -1446,19 +1446,20 @@ window.CC = (function(){
       const isNew = !im;
       const hasR2 = im && im.url;
       return `<div class="ieditor">
-        <div class="ihead">写真を${isNew?"追加":"編集"}</div>
+        <div class="ihead">
+          <span>写真を${isNew?"追加":"編集"}</span>
+          <span class="ihead-actions">
+            <button type="button" class="btn-cancel" data-close>閉じる</button>
+            <button type="button" class="btn-save" data-save="img" data-id="${isNew?"":escapeAttr(im.id)}">この写真を保存</button>
+          </span>
+        </div>
         <div class="field"><label>写真ファイル ${isNew?'<span class="reqmark">＊</span>':""}</label>
           <input type="file" class="ef-file" accept="image/jpeg,image/png,image/webp">
           ${hasR2?`<p class="fnote">いまの写真：<img src="${escapeAttr(im.url)}" alt="" style="width:64px;height:46px;object-fit:cover;border-radius:6px;vertical-align:middle;margin-left:6px">　ファイルを選ぶと差し替わります。</p>`:""}
           <p class="fnote">JPEG・PNG・WebP、12MBまで。証拠写真は人の顔・氏名・住所が写り込んでいないか確認してから登録してください。</p>
         </div>
         <div class="field"><label>説明（1行）</label><input type="text" class="ef-caption" value="${escapeAttr(im?im.caption:"")}" placeholder="例）提訴後の記者会見にて"></div>
-        <div class="ifoot">
-          ${isNew?"":`<button type="button" class="del" data-del="img" data-id="${escapeAttr(im.id)}">この写真を削除</button>`}
-          <span class="spacer"></span>
-          <button type="button" class="btn-cancel" data-close>閉じる</button>
-          <button type="button" class="btn-save" data-save="img" data-id="${isNew?"":escapeAttr(im.id)}">この写真を保存</button>
-        </div>
+        ${isNew?"":`<div class="ifoot"><button type="button" class="del" data-del="img" data-id="${escapeAttr(im.id)}">この写真を削除</button></div>`}
       </div>`;
     }
     async function saveImgRow(root, id){
@@ -1513,7 +1514,13 @@ window.CC = (function(){
         e = { date:"", time:"", type:"", court:src&&src.court||"", place:src&&src.place||"", open:true, reportMeeting:false, plaintiffArgument:[], defendantArgument:[] };
       }
       return `<div class="ieditor">
-        <div class="ihead">期日を${isNew?"追加":"編集"}</div>
+        <div class="ihead">
+          <span>期日を${isNew?"追加":"編集"}</span>
+          <span class="ihead-actions">
+            <button type="button" class="btn-cancel" data-close>閉じる</button>
+            <button type="button" class="btn-save" data-save="ev" data-id="${isNew?"":escapeAttr(ev.id)}">この期日を保存</button>
+          </span>
+        </div>
         <div class="two">
           <div class="field"><label>期日 <span class="reqmark">＊</span></label><input type="date" class="ef-date" value="${escapeAttr(e.date)}"></div>
           <div class="field"><label>時刻</label><input type="time" class="ef-time" value="${escapeAttr(e.time)}"></div>
@@ -1529,12 +1536,7 @@ window.CC = (function(){
         <div class="field"><label>被告の主張</label><span class="lhint">1行に1項目</span><textarea class="ef-defendant" placeholder="例）該当する文書は保有していない">${escapeHtml((e.defendantArgument||[]).join("\n"))}</textarea></div>
         <div class="field"><label class="check"><input type="checkbox" class="ef-open" ${e.open!==false?"checked":""}> だれでも傍聴できます（外すと「非公開・要確認」）</label></div>
         <div class="field"><label class="check"><input type="checkbox" class="ef-report" ${e.reportMeeting?"checked":""}> 期日報告会があります</label></div>
-        <div class="ifoot">
-          ${isNew?"":`<button type="button" class="del" data-del="ev" data-id="${escapeAttr(ev.id)}">この期日を削除</button>`}
-          <span class="spacer"></span>
-          <button type="button" class="btn-cancel" data-close>閉じる</button>
-          <button type="button" class="btn-save" data-save="ev" data-id="${isNew?"":escapeAttr(ev.id)}">この期日を保存</button>
-        </div>
+        ${isNew?"":`<div class="ifoot"><button type="button" class="del" data-del="ev" data-id="${escapeAttr(ev.id)}">この期日を削除</button></div>`}
       </div>`;
     }
     async function saveEvRow(root, id){
@@ -1600,7 +1602,13 @@ window.CC = (function(){
       const hasR2 = !!(mm.fileUrl && mm.fileUrl.startsWith("/files/"));
       const showFileField = me.uploads || hasR2;
       return `<div class="ieditor">
-        <div class="ihead">資料を${isNew?"追加":"編集"}</div>
+        <div class="ihead">
+          <span>資料を${isNew?"追加":"編集"}</span>
+          <span class="ihead-actions">
+            <button type="button" class="btn-cancel" data-close>閉じる</button>
+            <button type="button" class="btn-save" data-save="mat" data-id="${isNew?"":escapeAttr(m.id)}">この資料を保存</button>
+          </span>
+        </div>
         <div class="field"><label>資料名 <span class="reqmark">＊</span></label><input type="text" class="ef-title" value="${escapeAttr(mm.title)}" placeholder="例）訴状、第1準備書面、甲3 ○○"></div>
         <div class="field"><label>提出者側</label>
           <select class="ef-side"><option value=""${!mm.side?" selected":""}>（未選択）</option>${["原告側","被告側","裁判所","その他"].map(s=>`<option${mm.side===s?" selected":""}>${s}</option>`).join("")}</select>
@@ -1620,12 +1628,7 @@ window.CC = (function(){
           <p class="fnote">「本文」ボタンから読めるページになります。原本はPDFなので、本文は補助（検索されやすくする・要点を読みやすくする）目的です。</p>
         </div>
         <div class="field"><label>要約</label><textarea class="ef-summary" placeholder="手で書いた要約、またはAIに作らせて確認した要約">${escapeHtml(mm.summary)}</textarea></div>
-        <div class="ifoot">
-          ${isNew?"":`<button type="button" class="del" data-del="mat" data-id="${escapeAttr(m.id)}">この資料を削除</button>`}
-          <span class="spacer"></span>
-          <button type="button" class="btn-cancel" data-close>閉じる</button>
-          <button type="button" class="btn-save" data-save="mat" data-id="${isNew?"":escapeAttr(m.id)}">この資料を保存</button>
-        </div>
+        ${isNew?"":`<div class="ifoot"><button type="button" class="del" data-del="mat" data-id="${escapeAttr(m.id)}">この資料を削除</button></div>`}
       </div>`;
     }
     async function saveMatRow(root, id){
