@@ -22,22 +22,13 @@ export async function onRequestGet({ request, env }) {
   // （SNSの展開カードやクローラーに漏れないように、書き換えず素の案内文のまま返す）
   if (c.view_key && url.searchParams.get("key") !== c.view_key) return assetRes;
 
-  const img = await env.DB.prepare(
-    `SELECT r2_key FROM case_images WHERE case_id = ? ORDER BY sort_order, created_at LIMIT 1`
-  ).bind(c.id).first();
-  const wideKey = img ? img.r2_key : "";
-  const wideUrl = wideKey ? new URL("/files/" + wideKey, request.url).toString() : "";
-
-  // Teams・Slack など多くのアプリはOG画像を正方形に中央付近でトリミングして小さく出す。
-  // 手作りのカバー画像（ファイル名が ogcard.png のもの）には、同じ場所に正方形版
-  // （ogcard-square.png）を置いておけば、そちらを og:image に使う（無ければ同じ画像を使い回す）。
-  // X（Twitter）は twitter:image を優先して読むので、そちらには常に横長版を渡す。
-  let squareUrl = wideUrl;
-  if (wideKey && wideKey.endsWith("/ogcard.png")) {
-    const squareKey = wideKey.replace(/ogcard\.png$/, "ogcard-square.png");
-    const head = env.FILES ? await env.FILES.head(squareKey).catch(() => null) : null;
-    if (head) squareUrl = new URL("/files/" + squareKey, request.url).toString();
-  }
+  // OGP画像：事件ごとの「傍聴券」カード（直近期日・問題提起人をその場で描画。2026-08-30）。
+  // 手作りでPNGを作って case_images に upload していた旧運用（ogcard.png／正方形版との出し分け）は、
+  // 期日が変わるたびの差し替え作業が要らないこちらに一本化した（card.png.js のコメント参照）。
+  // 非公開事件は、閲覧キーが合っている人にしか出さない規則をそのままカードのURLにも引き継ぐ。
+  const cardUrl = new URL(`/api/cases/${encodeURIComponent(c.id)}/card.png`, request.url);
+  if (c.view_key) cardUrl.searchParams.set("key", c.view_key);
+  const cardImgUrl = cardUrl.toString();
 
   const title = `${c.name} ｜ 応援傍聴ナビ`;
   const description = (c.call_text || "傍聴席に、ひとり増える。それだけで法廷は変わる。").slice(0, 140);
@@ -48,10 +39,10 @@ export async function onRequestGet({ request, env }) {
     `<meta property="og:type" content="article">`,
     `<meta property="og:url" content="${escAttr(request.url)}">`,
     `<meta property="og:site_name" content="応援傍聴ナビ">`,
-    squareUrl ? `<meta property="og:image" content="${escAttr(squareUrl)}">` : "",
-    wideUrl ? `<meta name="twitter:image" content="${escAttr(wideUrl)}">` : "",
-    `<meta name="twitter:card" content="${wideUrl ? "summary_large_image" : "summary"}">`,
-  ].filter(Boolean).join("\n");
+    `<meta property="og:image" content="${escAttr(cardImgUrl)}">`,
+    `<meta name="twitter:image" content="${escAttr(cardImgUrl)}">`,
+    `<meta name="twitter:card" content="summary_large_image">`,
+  ].join("\n");
 
   return new HTMLRewriter()
     .on("title", { element(el) { el.setInnerContent(title); } })

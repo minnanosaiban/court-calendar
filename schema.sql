@@ -48,6 +48,11 @@
 -- v12（2026-08-30）：問題提起人のX（Twitter）アカウントURLを追加。ニックネームの右に
 --   アイコンリンクとして表示する（presenters.x_url、任意）。旧スキーマのDBを更新する場合は
 --   migrate_033_presenter_x_url.sql を実行すること。
+--
+-- v13（2026-08-30）：事件のTwitterカード（OGP画像）を差し替え可能にする（cases.card_r2_key、任意）。
+--   未設定なら、これまでどおり /api/cases/:id/card.png が期日・問題提起人から自動生成する「傍聴券」を
+--   そのまま使う。設定すればそちらを優先して返す（差し替え専用。問題提起人アイコン・期日案内と同じ仕組み）。
+--   旧スキーマのDBを更新する場合は migrate_034_case_card.sql を実行すること。
 
 -- 問題提起人（アイコン＋ニックネーム）。1人が複数の事件を持てる。
 CREATE TABLE IF NOT EXISTS presenters (
@@ -110,6 +115,7 @@ CREATE TABLE IF NOT EXISTS cases (
   notice_file_name TEXT,             -- 元のファイル名
   notice_file_size  INTEGER,
   notice_mime     TEXT,              -- PDFか画像かの判定に使う（application/pdf・image/png・image/jpeg）
+  card_r2_key TEXT,                  -- Twitterカード（OGP画像）の差し替え用R2キー。未設定なら/api/cases/:id/card.pngが自動生成する（任意）
   created_by  TEXT,
   updated_by  TEXT,
   updated_at  TEXT                  -- ISO8601

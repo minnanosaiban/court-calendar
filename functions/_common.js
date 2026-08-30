@@ -30,6 +30,7 @@ export const CASE_COLS = `c.id, c.name, c.presenter_id, p.nickname AS presenter_
                           c.contact, c.press, c.show_press_on_top, c.plaintiff_links, c.defendant_links, c.tags,
                           c.related_case_ids, c.show_related_on_top, c.archived_at, c.close_type,
                           c.board_enabled, c.board_restricted, c.notice_r2_key, c.notice_file_name, c.notice_file_size, c.notice_mime,
+                          c.card_r2_key,
                           c.created_by, c.updated_by, c.updated_at`;
 
 export function rowToCase(r) {
@@ -68,6 +69,7 @@ export function rowToCase(r) {
     noticeUrl: r.notice_r2_key ? "/files/" + r.notice_r2_key : "",
     noticeFileName: r.notice_file_name || "",
     noticeMime: r.notice_mime || "",
+    cardUrl: r.card_r2_key ? "/files/" + r.card_r2_key : "",
     likes: Number(r.likes || 0),
     liked: !!r.liked,
     updatedAt: r.updated_at || "",
@@ -251,6 +253,10 @@ export async function resolveCaseId(env, body, email) {
 // 既存データにPDF・PNGの期日案内が残っている場合、表示（noticeHtml）は引き続き対応する（新規アップロードのみ制限）
 export const NOTICE_MIMES = { "image/jpeg": "jpg" };
 export const NOTICE_MAX_BYTES = 20 * 1024 * 1024;
+
+// ---- 事件のTwitterカード（OGP画像。未設定なら card.png.js が自動生成する） ----
+export const CARD_MIMES = { "image/jpeg": "jpg", "image/png": "png" };
+export const CARD_MAX_BYTES = 8 * 1024 * 1024;
 
 // ---- 訴訟資料 ----
 export const MATERIAL_SIDES = ["原告側", "被告側", "裁判所", "その他"];

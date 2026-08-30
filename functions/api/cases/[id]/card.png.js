@@ -177,7 +177,7 @@ export async function onRequestGet(context) {
   const id = params.id;
 
   const c = await env.DB.prepare(
-    `SELECT c.id, c.name, c.archived_at, c.close_type, c.view_key,
+    `SELECT c.id, c.name, c.archived_at, c.close_type, c.view_key, c.card_r2_key,
             p.nickname AS presenter_nickname, p.icon_r2_key AS presenter_icon_r2_key
        FROM cases c LEFT JOIN presenters p ON p.id = c.presenter_id
       WHERE c.id = ?`
@@ -193,6 +193,22 @@ export async function onRequestGet(context) {
   if (!isPrivate) {
     const hit = await caches.default.match(cacheKey);
     if (hit) return hit;
+  }
+
+  // 手動でカード画像を差し替えていれば（cases.card_r2_key）、自動生成せずそちらをそのまま返す。
+  // URLはどちらの場合も同じ /api/cases/:id/card.png のまま（case.js側の og:image は変更不要）
+  if (c.card_r2_key && env.FILES) {
+    const obj = await env.FILES.get(c.card_r2_key).catch(() => null);
+    if (obj) {
+      const response = new Response(obj.body, {
+        headers: {
+          "content-type": obj.httpMetadata?.contentType || "image/jpeg",
+          "cache-control": isPrivate ? "private, no-store" : "public, max-age=3600",
+        },
+      });
+      if (!isPrivate) context.waitUntil(caches.default.put(cacheKey, response.clone()));
+      return response;
+    }
   }
 
   const today = todayJst();

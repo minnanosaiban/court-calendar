@@ -116,6 +116,8 @@ window.CC = (function(){
   const apiDeletePresenterIcon = (id)=> api("DELETE","/api/presenters/"+encodeURIComponent(id)+"/icon");
   const apiUpdateCaseNotice = (id,fd)=> api("PUT","/api/cases/"+encodeURIComponent(id)+"/notice", fd);
   const apiDeleteCaseNotice = (id)=> api("DELETE","/api/cases/"+encodeURIComponent(id)+"/notice");
+  const apiUpdateCaseCard = (id,fd)=> api("PUT","/api/cases/"+encodeURIComponent(id)+"/card", fd);
+  const apiDeleteCaseCard = (id)=> api("DELETE","/api/cases/"+encodeURIComponent(id)+"/card");
   const apiPresenterCases = (id)=> api("GET","/api/presenters/"+encodeURIComponent(id)+"/cases");
   const apiPresenterLogin = (username,password)=> api("POST","/api/presenter-login", {username,password});
   const apiPresenterLogout = ()=> api("POST","/api/presenter-logout");
@@ -1028,6 +1030,7 @@ window.CC = (function(){
                           defendant:$("cShowDefendantOnTop"), judge:$("cShowJudgeOnTop"), press:$("cShowPressOnTop"),
                           call:$("cShowCallOnTop"), related:$("cShowRelatedOnTop") };
     const cNoticeFile=$("cNoticeFile"), cNoticeRemove=$("cNoticeRemove"), cNoticeNote=$("cNoticeNote"), cNoticeStatus=$("cNoticeStatus");
+    const cCardFile=$("cCardFile"), cCardPreview=$("cCardPreview"), cCardNote=$("cCardNote"), cCardStatus=$("cCardStatus");
     const cPresenterSelect=$("cPresenterSelect"), cPresenterNewRow=$("cPresenterNewRow"), cPresenterNewNickname=$("cPresenterNewNickname"),
           cPresenterNewSave=$("cPresenterNewSave"), cPresenterIconRow=$("cPresenterIconRow"), cPresenterIconPreview=$("cPresenterIconPreview"),
           cPresenterIconFile=$("cPresenterIconFile"), cPresenterIconRemove=$("cPresenterIconRemove"),
@@ -1263,6 +1266,50 @@ window.CC = (function(){
       }catch(err){ cNoticeStatus.hidden=false; cNoticeStatus.textContent="アップロードできませんでした：" + (err && err.message || err); }
       finally{ cNoticeFile.value=""; }
     });
+    // ---- Twitterカード（JPEG・PNG。事件につき1枚・差し替え専用）。
+    // 未設定（既定）のときは自動生成のカード（/api/cases/:id/card.png）をそのままプレビューに出す ----
+    function updateCardFieldUI(c){
+      const has = !!(c && c.cardUrl);
+      const autoUrl = edCaseId ? ("/api/cases/"+encodeURIComponent(edCaseId)+"/card.png") : "";
+      const previewSrc = has ? c.cardUrl : autoUrl;
+      cCardPreview.innerHTML = previewSrc
+        ? `<img src="${escapeAttr(previewSrc)}" alt="" style="width:180px;border-radius:8px;border:1px solid var(--tint)">`
+        : "";
+      cCardNote.innerHTML = (has
+        ? `いまはこの画像に差し替えています。`
+        : `いまは自動生成のカード（直近の期日・問題提起人から自動で作成）が使われています。`)
+        + `画像（JPEG・PNG、1200×630推奨、8MBまで）を選ぶと差し替わります。`
+        + `<a id="cCardRemove" class="cicon-remove" ${has?"":"hidden"}>自動生成に戻す</a>`;
+      // innerHTML で作り直したので、id="cCardRemove" は同じidの新しい要素に置き換わっている。参照を取り直して配線する
+      const removeLink = $("cCardRemove");
+      if(removeLink) removeLink.addEventListener("click", onCardRemove);
+    }
+    async function onCardRemove(){
+      if(!edCaseId) return;
+      if(!confirm("差し替えた画像を外し、自動生成のカードに戻します。よろしいですか？")) return;
+      cCardStatus.hidden=false; cCardStatus.textContent="外しています…";
+      try{
+        const up=await apiDeleteCaseCard(edCaseId);
+        const i=cases.findIndex(x=>x.id===edCaseId); if(i>=0) cases[i]=up;
+        updateCardFieldUI(up);
+        cCardStatus.hidden=false; cCardStatus.textContent="自動生成に戻しました。";
+      }catch(err){ cCardStatus.hidden=false; cCardStatus.textContent="外せませんでした：" + (err && err.message || err); }
+    }
+    cCardFile.addEventListener("change", async ()=>{
+      const f=cCardFile.files[0];
+      if(!f || !edCaseId) return;
+      if(!["image/jpeg","image/png"].includes(f.type)){ alert("カードは JPEG・PNG のみ登録できます。"); cCardFile.value=""; return; }
+      if(f.size>8*1024*1024){ alert("カードは8MBまでです。"); cCardFile.value=""; return; }
+      const fd=new FormData(); fd.append("file", f, f.name);
+      cCardStatus.hidden=false; cCardStatus.textContent="アップロード中…";
+      try{
+        const up=await apiUpdateCaseCard(edCaseId,fd);
+        const i=cases.findIndex(x=>x.id===edCaseId); if(i>=0) cases[i]=up;
+        updateCardFieldUI(up);
+        cCardStatus.hidden=false; cCardStatus.textContent="差し替えました。";
+      }catch(err){ cCardStatus.hidden=false; cCardStatus.textContent="アップロードできませんでした：" + (err && err.message || err); }
+      finally{ cCardFile.value=""; }
+    });
     // 事件番号「公開する」のいまの状態を1行で示す（外れていると、誰に見えているのか分からなかったため。2026-08-30）
     function updateCaseNoPublicNote(){
       cCaseNoPublicNote.textContent = cCaseNoPublic.checked
@@ -1298,6 +1345,7 @@ window.CC = (function(){
       renderPresenterOptions(c.presenterId||"");
       updatePresenterFieldUI();
       updateNoticeFieldUI(c);
+      updateCardFieldUI(c);
     }
     async function saveCase(){
       if(!(edCaseId ? canEditCase(edCaseId) : me.canWrite)) return;
@@ -1439,6 +1487,7 @@ window.CC = (function(){
       // 新規作成のときはまだ事件が無いので、写真・期日・資料の3節ごと隠す
       document.querySelectorAll(".lssec").forEach(s=>{ s.hidden = !edCaseId; });
       $("sec-notice").hidden = !edCaseId;
+      $("sec-card").hidden = !edCaseId;
       openDeepLink();
     };
 
