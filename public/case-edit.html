@@ -31,22 +31,31 @@
     <p class="empty-msg">編集にはパスワードが必要です。ページ下の「事務局用」からロックを解除してください。</p>
   </div>
 
-  <!-- 節の並びは「①まず書くこと（事件名・争点・裁判について）→②記録を足す（期日・資料・写真）
-       →③表示の設定（期日案内・関連裁判・掲示板・終結）」の3群（2026-08-30）。本人が編集画面を
-       開いたとき、いちばん書きたい内容が先に来るようにした（以前は事件ページの掲載順そのままで、
-       運営向けの設定が先頭に来ていた）。写真・期日・資料は複数件の集まりなので、事件情報とは
-       性質が違う＝1件ずつ保存する行内エディタにしている（2026-08-27）。事件番号は「争点・当事者」の
-       先頭に置く（公開チェックが無いかぎり運営専用の内部メモとして扱う・2026-08-28）。
+  <!-- 節の並びは「①本人について（ニックネーム・アイコン・Xアカウント）→②事件について
+       （事件名・事件番号・報道掲載・Twitterカード・争点・当事者・裁判について）→③記録を足す
+       （期日・資料・写真）→④表示の設定（期日案内・関連裁判・掲示板・終結）」の4群（2026-08-30）。
+       本人が編集画面を開いたとき、いちばん書きたい内容が先に来るようにした（以前は事件ページの
+       掲載順そのままで、運営向けの設定が先頭に来ていた）。写真・期日・資料は複数件の集まりなので、
+       事件情報とは性質が違う＝1件ずつ保存する行内エディタにしている（2026-08-27）。事件番号は
+       独立した節に置く（公開チェックが無いかぎり運営専用の内部メモとして扱う・2026-08-28）。
        表示設定のチェック（公開する／トップにも表示する）は .checkrow に入れ、欄名の直下・入力欄の
        上に置く。入力欄の下に置くと、上の入力欄と下の欄名のどちらに属するのか読み取れなかった
        （2026-08-28） -->
   <div class="editgrid" id="ceGrid" hidden>
     <!-- スマホ用「目次∨」。secnav の直前に置く（CSSの隣接セレクタでタップ時だけ secnav を開く） -->
-    <div class="mobtoc" id="ceMobToc"><span class="cur" id="ceMobTocCur">事件名・タグ</span><span class="chev" aria-hidden="true">∨</span></div>
+    <div class="mobtoc" id="ceMobToc"><span class="cur" id="ceMobTocCur">ニックネーム</span><span class="chev" aria-hidden="true">∨</span></div>
     <nav class="secnav" id="ceNav" aria-label="節へ移動">
-      <div class="grp">まず書くこと</div>
-      <div data-sec="sec-name" class="on">事件名・タグ</div>
-      <div data-sec="sec-facts">争点・当事者</div>
+      <div class="grp">本人について</div>
+      <div data-sec="sec-nickname" class="on">ニックネーム</div>
+      <div data-sec="cPresenterIconRow">アイコン</div>
+      <div data-sec="cPresenterXUrlRow">Xアカウント</div>
+      <div class="grp">事件について</div>
+      <div data-sec="sec-name">事件名</div>
+      <div data-sec="sec-caseno">事件番号</div>
+      <div data-sec="sec-press">報道・掲載</div>
+      <div data-sec="sec-card">Twitterカード</div>
+      <div data-sec="sec-points">争点</div>
+      <div data-sec="sec-parties">当事者</div>
       <div data-sec="sec-call">裁判について</div>
       <div class="grp">記録を足す</div>
       <div data-sec="sec-ev">期日<span class="n" id="navEvCount"></span></div>
@@ -61,16 +70,13 @@
     <div>
       <div class="editcol" id="ceForm">
 
-        <p class="msec" id="sec-name">事件名・タグ</p>
+        <!-- 2026-08-30：階層を「本人について（ニックネーム・アイコン・Xアカウント）」→
+             「事件について（事件名・事件番号・報道掲載・Twitterカード・争点・当事者・裁判について）」
+             に組み直した。争点・当事者は各々を独立した節にし、当事者は原告名/原告のリンクのように
+             同じ当事者どうしを並べる形に変更。同じ階層の項目名は .msec（見出し）で揃える -->
+        <p class="msec" id="sec-nickname">ニックネーム</p>
         <div class="field">
-          <label>事件名 <span class="reqmark">＊</span></label>
-          <input type="text" id="cName" placeholder="例）情報公開請求をめぐる訴訟">
-        </div>
-        <!-- 2026-08-30：「アイコン＋ニックネーム」1つにまとめていた欄を、ニックネーム／アイコン／
-             Xアカウント／Twitterカード（「写真」欄の上から移動）に分けて表示するよう整理した -->
-        <div class="field">
-          <label>ニックネーム</label>
-          <select id="cPresenterSelect">
+          <select id="cPresenterSelect" aria-label="ニックネーム">
             <option value="">（未設定）</option>
             <option value="__new__">＋ 新しい問題提起人を作る…</option>
           </select>
@@ -109,63 +115,79 @@
           </div>
           <p class="fnote" id="cPresenterStatus" hidden></p>
         </div>
+
         <div class="field" id="cPresenterIconRow" hidden>
-          <label>アイコン</label>
+          <p class="msec" style="margin-top:0">アイコン</p>
           <div class="cicon-row">
             <span id="cPresenterIconPreview"></span>
-            <input type="file" id="cPresenterIconFile" accept="image/jpeg,image/webp">
+            <input type="file" id="cPresenterIconFile" accept="image/jpeg,image/webp" aria-label="アイコン">
           </div>
           <p class="fnote" id="cPresenterIconNote">JPEG・WebP、5MBまで。正方形に近い画像がきれいに出ます。選ぶとすぐ反映され（「保存」を待ちません）、同じ問題提起人の他の事件のアイコンも変わります。<a id="cPresenterIconRemove" class="cicon-remove" hidden>アイコンを外す</a></p>
         </div>
+
         <!-- X（Twitter）URL（運営・問題提起人本人のどちらも変更できる） -->
         <div class="field" id="cPresenterXUrlRow" hidden>
-          <label>Xアカウント</label>
+          <p class="msec" style="margin-top:0">Xアカウント</p>
           <div class="cicon-row">
             <input type="text" id="cPresenterXUrl" placeholder="例）https://x.com/example">
             <button type="button" class="btn-save" id="cPresenterXUrlSave">変更</button>
           </div>
           <p class="fnote">設定すると、ニックネームの右にXアイコンのリンクが出ます。空欄で保存すると外れます。</p>
         </div>
-        <!-- Twitterカード：事件につき1枚・差し替え専用（問題提起人アイコン・期日案内と同じ仕組み）。
-             未設定（既定）なら /api/cases/:id/card.png が期日・問題提起人から自動で「傍聴券」を描く。
-             新規作成のときはまだ事件が無いので出さない。2026-08-30、「写真」欄の上からここへ移動
-             （問題提起人の表示に関わる項目としてまとめたほうが分かりやすいため） -->
-        <div class="field" id="sec-card" hidden>
-          <label>Twitterカード</label>
-          <div class="cicon-row">
-            <span id="cCardPreview"></span>
-            <input type="file" id="cCardFile" accept="image/jpeg,image/png">
-          </div>
-          <p class="fnote" id="cCardNote">JPEG・PNG、8MBまで。1200×630推奨。選ぶとすぐ反映されます（「保存」を待ちません）。</p>
-          <p class="fnote" id="cCardStatus" hidden></p>
-        </div>
+
+        <p class="msec" id="sec-name">事件名 <span class="reqmark">＊</span></p>
         <div class="field">
-          <label>タグ</label>
-          <span class="lhint">1行に1つ</span>
-          <textarea id="cTags" placeholder="情報公開&#10;行政"></textarea>
+          <input type="text" id="cName" aria-label="事件名" placeholder="例）情報公開請求をめぐる訴訟">
         </div>
 
-        <p class="msec" id="sec-facts">争点・当事者</p>
-        <div class="helpbar">
-          <b>「トップにも表示する」とは</b><br>
-          ここの項目は、ふだん<b>事件ページ</b>にだけ出ます。✓を入れると、この事件がトップページの〈応援ピックアップ〉に選ばれたときに一緒に出ます（ピックアップは直近に開廷した事件が自動で選ばれます）。
-        </div>
+        <p class="msec" id="sec-caseno">事件番号</p>
         <div class="field">
-          <label>事件番号</label>
           <div class="checkrow">
             <label class="check"><input type="checkbox" id="cCaseNoPublic"> 公開する</label>
             <label class="check"><input type="checkbox" id="cShowCaseNoOnTop"> トップにも表示する</label>
           </div>
           <p class="fnote" id="cCaseNoPublicNote" style="margin:0 0 6px"></p>
           <span class="lhint">1行に1件</span>
-          <textarea id="cCaseNo" placeholder="地裁　令和6年(ワ)第12345号&#10;高裁　令和7年(ネ)第1234号"></textarea>
+          <textarea id="cCaseNo" aria-label="事件番号" placeholder="地裁　令和6年(ワ)第12345号&#10;高裁　令和7年(ネ)第1234号"></textarea>
+        </div>
+
+        <p class="msec" id="sec-press">報道・掲載</p>
+        <div class="field">
+          <div class="checkrow"><label class="check"><input type="checkbox" id="cShowPressOnTop"> トップにも表示する</label></div>
+          <span class="lhint">1行に1件。末尾に半角スペース＋URLで記事のリンクを添えられます（任意）</span>
+          <textarea id="cPress" aria-label="報道・掲載" placeholder="例）〇〇新聞で報道されました https://...&#10;労働判例ジャーナル2025.10 No.163に掲載&#10;裁判所への手続きにより特別保存（永久保存）となっています"></textarea>
+        </div>
+
+        <!-- Twitterカード：事件につき1枚・差し替え専用（問題提起人アイコン・期日案内と同じ仕組み）。
+             未設定（既定）なら /api/cases/:id/card.png が期日・問題提起人から自動で「傍聴券」を描く。
+             新規作成のときはまだ事件が無いので出さない -->
+        <div class="field" id="sec-card" hidden>
+          <p class="msec" style="margin-top:0">Twitterカード</p>
+          <div class="cicon-row">
+            <span id="cCardPreview"></span>
+            <input type="file" id="cCardFile" accept="image/jpeg,image/png" aria-label="Twitterカード">
+          </div>
+          <p class="fnote" id="cCardNote">JPEG・PNG、8MBまで。1200×630推奨。選ぶとすぐ反映されます（「保存」を待ちません）。</p>
+          <p class="fnote" id="cCardStatus" hidden></p>
+        </div>
+
+        <p class="msec" id="sec-points">争点</p>
+        <div class="helpbar">
+          <b>「トップにも表示する」とは</b><br>
+          ここの項目は、ふだん<b>事件ページ</b>にだけ出ます。✓を入れると、この事件がトップページの〈応援ピックアップ〉に選ばれたときに一緒に出ます（ピックアップは直近に開廷した事件が自動で選ばれます）。
         </div>
         <div class="field">
-          <label>争点</label>
+          <label>タグ</label>
+          <span class="lhint">1行に1つ</span>
+          <textarea id="cTags" placeholder="情報公開&#10;行政"></textarea>
+        </div>
+        <div class="field">
           <div class="checkrow"><label class="check"><input type="checkbox" id="cShowPointsOnTop"> トップにも表示する</label></div>
           <span class="lhint">1行に1つ</span>
-          <textarea id="cPoints" placeholder="例）◯◯の事実があったか"></textarea>
+          <textarea id="cPoints" aria-label="争点" placeholder="例）◯◯の事実があったか"></textarea>
         </div>
+
+        <p class="msec" id="sec-parties">当事者</p>
         <div class="two">
           <div class="field">
             <label>原告名</label>
@@ -174,17 +196,17 @@
             <textarea id="cPlaintiff" placeholder="例）従業員&#10;代理人　〇〇"></textarea>
           </div>
           <div class="field">
-            <label>被告名</label>
-            <div class="checkrow"><label class="check"><input type="checkbox" id="cShowDefendantOnTop"> トップにも表示する</label></div>
-            <span class="lhint">2行目以降は代理人名など（任意）</span>
-            <textarea id="cDefendant" placeholder="例）〇〇株式会社&#10;代理人　〇〇"></textarea>
+            <label>原告のリンク</label>
+            <span class="lhint">1行に1つ</span>
+            <textarea id="cPlaintiffLinks" placeholder="https://x.com/..."></textarea>
           </div>
         </div>
         <div class="two">
           <div class="field">
-            <label>原告のリンク</label>
-            <span class="lhint">1行に1つ</span>
-            <textarea id="cPlaintiffLinks" placeholder="https://x.com/..."></textarea>
+            <label>被告名</label>
+            <div class="checkrow"><label class="check"><input type="checkbox" id="cShowDefendantOnTop"> トップにも表示する</label></div>
+            <span class="lhint">2行目以降は代理人名など（任意）</span>
+            <textarea id="cDefendant" placeholder="例）〇〇株式会社&#10;代理人　〇〇"></textarea>
           </div>
           <div class="field">
             <label>被告のリンク</label>
@@ -197,12 +219,6 @@
           <div class="checkrow"><label class="check"><input type="checkbox" id="cShowJudgeOnTop"> トップにも表示する</label></div>
           <span class="lhint">1行に1人（審級＋スペース＋名前）。末尾に半角スペース＋URLで「裁判官マップ」等へのリンクを添えられます（任意）</span>
           <textarea id="cJudge" placeholder="地裁　〇〇〇〇裁判官&#10;高裁　〇〇〇〇裁判官 https://saibankan-map.jp/..."></textarea>
-        </div>
-        <div class="field">
-          <label>報道・掲載</label>
-          <div class="checkrow"><label class="check"><input type="checkbox" id="cShowPressOnTop"> トップにも表示する</label></div>
-          <span class="lhint">1行に1件。末尾に半角スペース＋URLで記事のリンクを添えられます（任意）</span>
-          <textarea id="cPress" placeholder="例）〇〇新聞で報道されました https://...&#10;労働判例ジャーナル2025.10 No.163に掲載&#10;裁判所への手続きにより特別保存（永久保存）となっています"></textarea>
         </div>
 
         <p class="msec" id="sec-call">裁判について</p>
