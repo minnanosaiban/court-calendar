@@ -51,7 +51,6 @@
       <div class="grp">記録を足す</div>
       <div data-sec="sec-ev">期日<span class="n" id="navEvCount"></span></div>
       <div data-sec="sec-mat">資料<span class="n" id="navMatCount"></span></div>
-      <div data-sec="sec-card">Twitterカード</div>
       <div data-sec="sec-img">写真<span class="n" id="navImgCount"></span></div>
       <div class="grp">表示の設定</div>
       <div data-sec="sec-notice">期日案内</div>
@@ -67,8 +66,10 @@
           <label>事件名 <span class="reqmark">＊</span></label>
           <input type="text" id="cName" placeholder="例）情報公開請求をめぐる訴訟">
         </div>
+        <!-- 2026-08-30：「アイコン＋ニックネーム」1つにまとめていた欄を、ニックネーム／アイコン／
+             Xアカウント／Twitterカード（「写真」欄の上から移動）に分けて表示するよう整理した -->
         <div class="field">
-          <label>アイコン＋ニックネーム</label>
+          <label>ニックネーム</label>
           <select id="cPresenterSelect">
             <option value="">（未設定）</option>
             <option value="__new__">＋ 新しい問題提起人を作る…</option>
@@ -92,21 +93,6 @@
             </div>
             <p class="fnote">同じニックネームのまま使い続けることもできます。変更すると、この問題提起人の他の事件もまとめて表示名が変わります。</p>
           </div>
-          <div class="subfield" id="cPresenterIconRow" hidden>
-            <div class="cicon-row">
-              <span id="cPresenterIconPreview"></span>
-              <input type="file" id="cPresenterIconFile" accept="image/jpeg,image/webp">
-            </div>
-            <p class="fnote" id="cPresenterIconNote">JPEG・WebP、5MBまで。正方形に近い画像がきれいに出ます。選ぶとすぐ反映され（「保存」を待ちません）、同じ問題提起人の他の事件のアイコンも変わります。<a id="cPresenterIconRemove" class="cicon-remove" hidden>アイコンを外す</a></p>
-          </div>
-          <!-- X（Twitter）URL（運営・問題提起人本人のどちらも変更できる） -->
-          <div class="subfield" id="cPresenterXUrlRow" hidden>
-            <div class="cicon-row">
-              <input type="text" id="cPresenterXUrl" placeholder="例）https://x.com/example">
-              <button type="button" class="btn-save" id="cPresenterXUrlSave">変更</button>
-            </div>
-            <p class="fnote">設定すると、ニックネームの右にXアイコンのリンクが出ます。空欄で保存すると外れます。</p>
-          </div>
           <!-- ログイン設定（運営専用。問題提起人が自分でログインし、自分の事件を編集できるようにする） -->
           <div class="subfield" id="cPresenterLoginRow" hidden>
             <p class="msec" style="margin-top:12px">ログイン設定（運営専用）</p>
@@ -122,6 +108,36 @@
             <p class="fnote" id="cPresenterLoginStatus" hidden></p>
           </div>
           <p class="fnote" id="cPresenterStatus" hidden></p>
+        </div>
+        <div class="field" id="cPresenterIconRow" hidden>
+          <label>アイコン</label>
+          <div class="cicon-row">
+            <span id="cPresenterIconPreview"></span>
+            <input type="file" id="cPresenterIconFile" accept="image/jpeg,image/webp">
+          </div>
+          <p class="fnote" id="cPresenterIconNote">JPEG・WebP、5MBまで。正方形に近い画像がきれいに出ます。選ぶとすぐ反映され（「保存」を待ちません）、同じ問題提起人の他の事件のアイコンも変わります。<a id="cPresenterIconRemove" class="cicon-remove" hidden>アイコンを外す</a></p>
+        </div>
+        <!-- X（Twitter）URL（運営・問題提起人本人のどちらも変更できる） -->
+        <div class="field" id="cPresenterXUrlRow" hidden>
+          <label>Xアカウント</label>
+          <div class="cicon-row">
+            <input type="text" id="cPresenterXUrl" placeholder="例）https://x.com/example">
+            <button type="button" class="btn-save" id="cPresenterXUrlSave">変更</button>
+          </div>
+          <p class="fnote">設定すると、ニックネームの右にXアイコンのリンクが出ます。空欄で保存すると外れます。</p>
+        </div>
+        <!-- Twitterカード：事件につき1枚・差し替え専用（問題提起人アイコン・期日案内と同じ仕組み）。
+             未設定（既定）なら /api/cases/:id/card.png が期日・問題提起人から自動で「傍聴券」を描く。
+             新規作成のときはまだ事件が無いので出さない。2026-08-30、「写真」欄の上からここへ移動
+             （問題提起人の表示に関わる項目としてまとめたほうが分かりやすいため） -->
+        <div class="field" id="sec-card" hidden>
+          <label>Twitterカード</label>
+          <div class="cicon-row">
+            <span id="cCardPreview"></span>
+            <input type="file" id="cCardFile" accept="image/jpeg,image/png">
+          </div>
+          <p class="fnote" id="cCardNote">JPEG・PNG、8MBまで。1200×630推奨。選ぶとすぐ反映されます（「保存」を待ちません）。</p>
+          <p class="fnote" id="cCardStatus" hidden></p>
         </div>
         <div class="field">
           <label>タグ</label>
@@ -214,20 +230,6 @@
             <button type="button" class="addbtn" id="matAddBtn">＋ 資料を追加</button>
           </div>
         </section>
-
-        <!-- Twitterカード：事件につき1枚・差し替え専用（問題提起人アイコン・期日案内と同じ仕組み）。
-             未設定（既定）なら /api/cases/:id/card.png が期日・問題提起人から自動で「傍聴券」を描く。
-             新規作成のときはまだ事件が無いので出さない -->
-        <div class="field" id="sec-card" hidden>
-          <p class="msec">Twitterカード</p>
-          <label>カード画像</label>
-          <div class="cicon-row">
-            <span id="cCardPreview"></span>
-            <input type="file" id="cCardFile" accept="image/jpeg,image/png">
-          </div>
-          <p class="fnote" id="cCardNote">JPEG・PNG、8MBまで。1200×630推奨。選ぶとすぐ反映されます（「保存」を待ちません）。</p>
-          <p class="fnote" id="cCardStatus" hidden></p>
-        </div>
 
         <!-- 写真：1件ずつ保存（新規作成のときはまだ事件が無いので出さない） -->
         <section class="lssec listsec" id="sec-img" data-listsec="img" hidden>
