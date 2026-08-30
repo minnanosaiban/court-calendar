@@ -272,7 +272,13 @@
       if(dayEvents.length){
         if(canHover){
           cell.addEventListener("mouseenter",()=>openPopover(cell,dayEvents));
-          cell.addEventListener("mouseleave",scheduleClosePopover);
+          // タップしかできない環境でhover: hoverと誤判定されると、タップが「乗って即離れる」扱いになり
+          // 開いた直後にこのmouseleaveが飛んで即閉じてしまう。行クリックやスクロールと同じく、開いてから
+          // 400ms未満のmouseleaveは指を離した後の合成イベントとみなして無視する（2026-08-30）
+          cell.addEventListener("mouseleave",()=>{
+            if(Date.now()-popOpenedAt<400) return;
+            scheduleClosePopover();
+          });
         }else{
           cell.addEventListener("click",(e)=>{ e.stopPropagation(); openPopover(cell,dayEvents); });
         }
