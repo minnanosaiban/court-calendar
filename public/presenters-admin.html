@@ -62,13 +62,10 @@
   const statusEl=$("status");
   let openId = null;   // いま編集中の問題提起人ID（同時に1件だけ開く）
 
-  function placeholderChar(nickname){
-    return (nickname||"？").trim().slice(0,1) || "？";
-  }
   function iconHtml(p){
     return p.icon
       ? `<img class="cicon" src="${CC.escapeAttr(p.icon)}" alt="" style="width:40px;height:40px">`
-      : `<span class="cicon cicon-ph" aria-hidden="true" style="width:40px;height:40px">${CC.escapeHtml(placeholderChar(p.nickname))}</span>`;
+      : `<span class="cicon cicon-ph" aria-hidden="true" style="width:40px;height:40px"><i class="bi bi-person" aria-hidden="true"></i></span>`;
   }
 
   function rowHtml(p){

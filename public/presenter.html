@@ -115,7 +115,7 @@
       return;
     }
     const icon = p.icon ? `<img class="cicon" src="${CC.escapeAttr(p.icon)}" alt="" style="width:72px;height:72px">`
-      : `<span class="cicon-ph" aria-hidden="true" style="width:72px;height:72px;font-size:1.7rem">${CC.escapeHtml((p.nickname||"？").slice(0,1))}</span>`;
+      : `<span class="cicon-ph" aria-hidden="true" style="width:72px;height:72px;font-size:1.7rem"><i class="bi bi-person" aria-hidden="true"></i></span>`;
     // 状態（バッジ）と操作（パスワード変更・ログアウト）を同じ行にまとめる（2026-08-30。
     // 以前はここに「パスワードを変更」だけがあり、ログアウトはページ最下部にしかなかった）
     const selfNote = CC.me.presenterId===presenterId

@@ -297,6 +297,10 @@ window.CC = (function(){
   // アイコン未登録のときは、事件名の頭文字を丸い札で代わりに出す。大きさは56px1種類
   function iconHtml(c){
     if(c.presenterIcon) return `<img class="cicon" src="${escapeAttr(c.presenterIcon)}" alt="">`;
+    // 問題提起人は決まっているがまだ写真が無いときは、頭文字ではなく汎用の人物アイコンを仮に出す
+    // （運営が仮でニックネーム・事件名だけ登録した直後の状態を想定。2026-08-30）。
+    // 問題提起人自体が未設定の事件だけ、従来どおり事件名の頭文字で見分ける
+    if(c.presenterId) return `<span class="cicon cicon-ph" aria-hidden="true"><i class="bi bi-person" aria-hidden="true"></i></span>`;
     const ch = placeholderChar(c.name);
     return `<span class="cicon cicon-ph" aria-hidden="true">${escapeHtml(ch)}</span>`;
   }
@@ -1028,6 +1032,7 @@ window.CC = (function(){
           cPresenterNewSave=$("cPresenterNewSave"), cPresenterIconRow=$("cPresenterIconRow"), cPresenterIconPreview=$("cPresenterIconPreview"),
           cPresenterIconFile=$("cPresenterIconFile"), cPresenterIconRemove=$("cPresenterIconRemove"),
           cPresenterRenameRow=$("cPresenterRenameRow"), cPresenterRenameNickname=$("cPresenterRenameNickname"), cPresenterRenameSave=$("cPresenterRenameSave"),
+          cPresenterXUrlRow=$("cPresenterXUrlRow"), cPresenterXUrl=$("cPresenterXUrl"), cPresenterXUrlSave=$("cPresenterXUrlSave"),
           cPresenterStatus=$("cPresenterStatus"),
           cPresenterLoginRow=$("cPresenterLoginRow"), cPresenterLoginUsername=$("cPresenterLoginUsername"),
           cPresenterLoginUsernameSave=$("cPresenterLoginUsernameSave"), cPresenterLoginReset=$("cPresenterLoginReset"),
@@ -1050,12 +1055,15 @@ window.CC = (function(){
         // 選び直せない欄は入力欄の形にしない（disabledのプルダウンだと押せそうに見えたため。2026-08-30）
         cPresenterSelect.hidden = true;
         cPresenterFixed.hidden = false;
+        // プルダウン自体は隠すが、value はこの問題提起人のIDのまま持たせる（ニックネーム・アイコン・
+        // X URLの変更欄は、下の updatePresenterFieldUI() が cPresenterSelect.value を見て動くため。2026-08-30）
+        cPresenterSelect.innerHTML = `<option value="${escapeAttr(selectedId||"")}" selected></option>`;
         const p = presenterById(selectedId);
         cPresenterFixedIcon.innerHTML = p && p.icon
           ? `<img class="cicon-ph" style="border-radius:50%;width:36px;height:36px;object-fit:cover" src="${escapeAttr(p.icon)}" alt="">`
-          : `<span class="cicon-ph" aria-hidden="true">${escapeHtml(placeholderChar(p?p.nickname:""))}</span>`;
+          : `<span class="cicon-ph" aria-hidden="true"><i class="bi bi-person" aria-hidden="true"></i></span>`;
         cPresenterFixedName.textContent = p ? p.nickname : "";
-        if(hint) hint.textContent = "ニックネーム・アイコンは下で変更できます。別の問題提起人への付け替えをご希望の場合は運営にご連絡ください。";
+        if(hint) hint.textContent = "ニックネーム・アイコン・X URLは下で変更できます。別の問題提起人への付け替えをご希望の場合は運営にご連絡ください。";
         return;
       }
       cPresenterSelect.hidden = false;
@@ -1074,7 +1082,7 @@ window.CC = (function(){
       cPresenterStatus.hidden = true;
       if(v==="__new__"){
         cPresenterNewRow.hidden=false; cPresenterIconRow.hidden=true; cPresenterRenameRow.hidden=true;
-        cPresenterLoginRow.hidden=true;
+        cPresenterXUrlRow.hidden=true; cPresenterLoginRow.hidden=true;
         cPresenterNewNickname.value="";
       }else if(v){
         cPresenterNewRow.hidden=true; cPresenterIconRow.hidden=false; cPresenterRenameRow.hidden=false;
@@ -1082,8 +1090,11 @@ window.CC = (function(){
         cPresenterRenameNickname.value = p ? p.nickname : "";
         cPresenterIconPreview.innerHTML = p && p.icon
           ? `<img class="cicon" src="${escapeAttr(p.icon)}" alt="">`
-          : `<span class="cicon cicon-ph" aria-hidden="true">${escapeHtml(placeholderChar(p?p.nickname:""))}</span>`;
+          : `<span class="cicon cicon-ph" aria-hidden="true"><i class="bi bi-person" aria-hidden="true"></i></span>`;
         cPresenterIconRemove.hidden = !(p && p.icon);
+        // X URLはニックネーム・アイコンと同じく、運営・本人のどちらも変更できる
+        cPresenterXUrlRow.hidden = false;
+        cPresenterXUrl.value = p && p.xUrl || "";
         // ログイン設定は運営専用（問題提起人本人が自分の付け替え等をできないのと同じ理由）
         cPresenterLoginRow.hidden = !edIsAdmin;
         if(edIsAdmin){
@@ -1093,7 +1104,7 @@ window.CC = (function(){
         }
       }else{
         cPresenterNewRow.hidden=true; cPresenterIconRow.hidden=true; cPresenterRenameRow.hidden=true;
-        cPresenterLoginRow.hidden=true;
+        cPresenterXUrlRow.hidden=true; cPresenterLoginRow.hidden=true;
       }
     }
     cPresenterSelect.addEventListener("change", updatePresenterFieldUI);
@@ -1126,6 +1137,23 @@ window.CC = (function(){
         await reloadCases();
       }catch(err){ cPresenterStatus.hidden=false; cPresenterStatus.textContent="変更できませんでした：" + (err && err.message || err); }
       finally{ cPresenterRenameSave.disabled=false; }
+    });
+    // X（Twitter）URLの変更（ニックネームと同じく、運営・問題提起人本人のどちらも変更できる）
+    cPresenterXUrlSave.addEventListener("click", async ()=>{
+      const pid=cPresenterSelect.value;
+      if(!pid || pid==="__new__") return;
+      const p = presenterById(pid);
+      const xUrl = cPresenterXUrl.value.trim();
+      cPresenterXUrlSave.disabled=true;
+      cPresenterStatus.hidden=false; cPresenterStatus.textContent="変更しています…";
+      try{
+        const up = await apiUpdatePresenter(pid, {nickname:p?p.nickname:"", xUrl});
+        const i=presenters.findIndex(x=>x.id===pid); if(i>=0) presenters[i]=up;
+        updatePresenterFieldUI();
+        cPresenterStatus.hidden=false; cPresenterStatus.textContent="X URLを変更しました。";
+        await reloadCases();
+      }catch(err){ cPresenterStatus.hidden=false; cPresenterStatus.textContent="変更できませんでした：" + (err && err.message || err); }
+      finally{ cPresenterXUrlSave.disabled=false; }
     });
     cPresenterIconFile.addEventListener("change", async ()=>{
       const f=cPresenterIconFile.files[0];
