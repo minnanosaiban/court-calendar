@@ -139,8 +139,11 @@ a{color:inherit}
   color:var(--mut);text-decoration:underline;text-underline-offset:3px;margin-top:2px}
 .d-title{font-family:"Shippori Mincho",serif;font-size:1.6rem;font-weight:600;line-height:1.4}
 /* トップのピックアップカードだけ：事件名を事件ページへのリンクにする。事件名（.board-name-link）と
-   同じく下線は引かず地の文と同じ見た目のまま（2026-08-29） */
-.d-title-link{text-decoration:none}
+   同じく普段は下線を引かず地の文と同じ見た目のまま（2026-08-29）。触れると赤い下線が出て、
+   隣のアイコン（問題提起人ページへの別リンク）経由の移動と区別できるようにする（2026-08-30） */
+.d-title-link{text-decoration:underline;text-decoration-color:transparent;text-underline-offset:3px;
+  transition:text-decoration-color .15s ease}
+.d-title-link:hover{text-decoration-color:var(--stamp)}
 .d-body{font-size:.9rem;margin-top:8px}
 .mut{color:var(--mut)}
 /* タイトル行 */
