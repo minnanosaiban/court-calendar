@@ -499,13 +499,14 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .pop-row:hover .pop-arrow{transform:translateY(-50%) translateX(3px)}
 .pop-main{display:flex;gap:10px;align-items:flex-start}
 .pop-text{min-width:0;flex:1}
-.pop-date{font-size:.8rem;color:var(--mut);font-variant-numeric:tabular-nums}
+/* 日付「9/18（金） 10:30」に最初から下線を付けておく（hoverで出す方式だと、スマホは
+   触れる＝クリックがほぼ同時に起きるため、動きが表示しきる前にページ遷移してしまい見えなかった。
+   常時表示なら触れる前から「クリックできる場所」だと分かり、スマホでもPCでも同じに効く。2026-08-30） */
+.pop-date{font-size:.8rem;color:var(--mut);font-variant-numeric:tabular-nums;
+  text-decoration:underline;text-decoration-color:var(--stamp);text-underline-offset:3px}
 /* 日付の数字だけ一段大きくして目立たせる（事件名.pop-title=.9remより大きい1.05rem・
-   「今後の期日」.ud b と同じ扱い）。触れると下線が引かれ、クリックできる場所だと分かる（2026-08-30） */
-.pop-date b{color:var(--ink);font-weight:600;font-size:1.05rem;font-family:"Shippori Mincho",serif;
-  text-decoration:underline;text-decoration-color:transparent;text-underline-offset:3px;
-  transition:text-decoration-color .15s ease}
-.pop-row:hover .pop-date b{text-decoration-color:currentColor}
+   「今後の期日」.ud b と同じ扱い） */
+.pop-date b{color:var(--ink);font-weight:600;font-size:1.05rem;font-family:"Shippori Mincho",serif}
 .pop-title{font-size:.9rem;font-weight:500;margin-top:1px;font-family:"Shippori Mincho",serif}
 .pop-meta{font-size:.8rem;color:var(--mut);margin-top:1px}
 /* プレビュー下の操作行：右下に「閉じる×」 */
