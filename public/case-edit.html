@@ -29,16 +29,17 @@
     <span class="ce-title-warn">入力は、公開しても問題ない内容に限定してください。</span>
   </div>
   <div class="ce-case" id="ceCaseName"></div>
+  <div id="ceSelfBar"></div>
 
   <div class="card" id="ceLocked" hidden>
     <p class="empty-msg">編集にはパスワードが必要です。ページ下の「事務局用」からロックを解除してください。</p>
   </div>
 
   <!-- 節の並びは「①本人について（ニックネーム・アイコン・Xアカウント）→②事件について
-       （事件名・事件番号・報道掲載・Twitterカード・争点・当事者・裁判について）→③記録を足す
-       （期日・資料・写真）→④表示の設定（期日案内・関連裁判・掲示板・終結）」の4群（2026-08-30）。
+       （事件名・事件番号・報道掲載・Twitterカード・争点・当事者・裁判について・画像）→③記録を足す
+       （期日・資料）→④表示の設定（期日案内・関連裁判・掲示板・終結）」の4群（2026-08-30）。
        本人が編集画面を開いたとき、いちばん書きたい内容が先に来るようにした（以前は事件ページの
-       掲載順そのままで、運営向けの設定が先頭に来ていた）。写真・期日・資料は複数件の集まりなので、
+       掲載順そのままで、運営向けの設定が先頭に来ていた）。画像・期日・資料は複数件の集まりなので、
        事件情報とは性質が違う＝1件ずつ保存する行内エディタにしている（2026-08-27）。事件番号は
        独立した節に置く（公開チェックが無いかぎり運営専用の内部メモとして扱う・2026-08-28）。
        表示設定のチェック（公開する／トップにも表示する）は .checkrow に入れ、欄名の直下・入力欄の
@@ -60,10 +61,10 @@
       <div data-sec="sec-points">争点</div>
       <div data-sec="sec-parties">当事者</div>
       <div data-sec="sec-call">裁判について</div>
+      <div data-sec="sec-img">画像<span class="n" id="navImgCount"></span></div>
       <div class="grp">記録を足す</div>
       <div data-sec="sec-ev">期日<span class="n" id="navEvCount"></span></div>
       <div data-sec="sec-mat">資料<span class="n" id="navMatCount"></span></div>
-      <div data-sec="sec-img">写真<span class="n" id="navImgCount"></span></div>
       <div class="grp">表示の設定</div>
       <div data-sec="sec-notice">期日案内</div>
       <div data-sec="sec-related">関連裁判</div>
@@ -165,16 +166,29 @@
         </div>
 
         <!-- Twitterカード：事件につき1枚・差し替え専用（問題提起人アイコン・期日案内と同じ仕組み）。
-             未設定（既定）なら /api/cases/:id/card.png が期日・問題提起人から自動で「傍聴券」を描く。
-             新規作成のときはまだ事件が無いので出さない -->
+             未設定（既定）なら /api/cases/:id/card.png・card-square.png が期日・問題提起人から自動で
+             「傍聴券」を描く。正方形版はTeams・Slack等がog:imageを中央トリミングする対策で、横長版と
+             差し替えの仕組みは同じ（2026-08-30）。新規作成のときはまだ事件が無いので出さない -->
         <div class="field" id="sec-card" hidden>
           <p class="msec">Twitterカード</p>
+          <label>横長版（Large）</label>
           <div class="cicon-row">
             <span id="cCardPreview"></span>
-            <input type="file" id="cCardFile" accept="image/jpeg,image/png" aria-label="Twitterカード">
+            <input type="file" id="cCardFile" accept="image/jpeg,image/png" aria-label="Twitterカード（横長）">
           </div>
-          <p class="fnote" id="cCardNote">JPEG・PNG、8MBまで。1200×630推奨。選ぶとすぐ反映されます（「保存」を待ちません）。</p>
+          <p class="fnote" id="cCardNote">JPEG・PNG、8MBまで。1200×630推奨。X（Twitter）で使われます。選ぶとすぐ反映されます（「保存」を待ちません）。</p>
           <p class="fnote" id="cCardStatus" hidden></p>
+
+          <div class="subfield">
+            <label>正方形版</label>
+            <p class="fnote">Teams・Slackなどは横長版を中央で正方形に切り取って表示するため、日付や問題提起人が見切れることがあります。こちらは切り取られずそのまま使われます。</p>
+            <div class="cicon-row">
+              <span id="cCardSquarePreview"></span>
+              <input type="file" id="cCardSquareFile" accept="image/jpeg,image/png" aria-label="Twitterカード（正方形）">
+            </div>
+            <p class="fnote" id="cCardSquareNote">JPEG・PNG、8MBまで。1200×1200推奨。選ぶとすぐ反映されます（「保存」を待ちません）。</p>
+            <p class="fnote" id="cCardSquareStatus" hidden></p>
+          </div>
         </div>
 
         <p class="msec" id="sec-points">争点</p>
@@ -235,9 +249,20 @@
           <textarea id="cCall" style="min-height:200px" placeholder="どんな裁判か、傍聴や支援をお願いする文章など"></textarea>
         </div>
 
+        <!-- 画像：1件ずつ保存（新規作成のときはまだ事件が無いので出さない）。入力欄は「裁判について」
+             の下（2026-08-30。事件ページの表示自体はこれまでどおりタイトルより上のまま） -->
+        <section class="lssec listsec" id="sec-img" data-listsec="img" hidden>
+          <div class="lshead"><p class="msec">画像</p><span class="lscount" id="imgCount"></span><span class="lschev"><i class="bi bi-arrow-bar-down" aria-hidden="true"></i></span></div>
+          <div class="lsbody">
+            <div class="lsnote">画像は1件ずつ、行の「保存」ボタンですぐに登録されます。</div>
+            <div id="imgList"></div>
+            <button type="button" class="addbtn" id="imgAddBtn">＋ 画像を追加</button>
+          </div>
+        </section>
+
         <!-- 期日：1件ずつ保存（新規作成のときはまだ事件が無いので出さない） -->
         <section class="lssec listsec" id="sec-ev" data-listsec="ev" hidden>
-          <div class="lshead"><p class="msec">期日</p><span class="lscount" id="evCount"></span><span class="lschev">▾</span></div>
+          <div class="lshead"><p class="msec">期日</p><span class="lscount" id="evCount"></span><span class="lschev"><i class="bi bi-arrow-bar-down" aria-hidden="true"></i></span></div>
           <div class="lsbody">
             <div id="evList"></div>
             <button type="button" class="addbtn" id="evAddBtn">＋ 期日を追加</button>
@@ -246,20 +271,10 @@
 
         <!-- 資料：1件ずつ保存（新規作成のときはまだ事件が無いので出さない） -->
         <section class="lssec listsec" id="sec-mat" data-listsec="mat" hidden>
-          <div class="lshead"><p class="msec">資料</p><span class="lscount" id="matCount"></span><span class="lschev">▾</span></div>
+          <div class="lshead"><p class="msec">資料</p><span class="lscount" id="matCount"></span><span class="lschev"><i class="bi bi-arrow-bar-down" aria-hidden="true"></i></span></div>
           <div class="lsbody">
             <div id="matList"></div>
             <button type="button" class="addbtn" id="matAddBtn">＋ 資料を追加</button>
-          </div>
-        </section>
-
-        <!-- 写真：1件ずつ保存（新規作成のときはまだ事件が無いので出さない） -->
-        <section class="lssec listsec" id="sec-img" data-listsec="img" hidden>
-          <div class="lshead"><p class="msec">写真</p><span class="lscount" id="imgCount"></span><span class="lschev">▾</span></div>
-          <div class="lsbody">
-            <div class="lsnote">写真・期日・資料は1件ずつ保存されます（下の「事件情報を保存」とは別です）。</div>
-            <div id="imgList"></div>
-            <button type="button" class="addbtn" id="imgAddBtn">＋ 写真を追加</button>
           </div>
         </section>
 
@@ -319,7 +334,9 @@
   "use strict";
   const statusEl=document.getElementById("status");
   function renderAll(){
-    CC.renderStatus(statusEl);
+    // 「Xさんとしてログイン中です」は、ご本人であれば上の自己確認バー（ceSelfBar）に出ているので、
+    // ページ下部（footer）では重ねて出さない（2026-08-30、case.html・presenter.htmlと同じ扱い）
+    CC.renderStatus(statusEl, {hidePresenterSelf:true});
     CC.initCaseEditPage();
   }
   CC.setOnChange(renderAll);

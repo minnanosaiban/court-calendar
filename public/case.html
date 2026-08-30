@@ -24,6 +24,10 @@
 
   <a class="pillbtn backlink" href="cases.html"><i class="bi bi-arrow-left" aria-hidden="true"></i> 事件をさがすに戻る</a>
 
+  <!-- ご本人（この事件の問題提起人）としてログイン中のときだけ出す自己確認バー。画像・タイトルより
+       上、ページの一番上に出す（2026-08-30。以前は事件本体カードの中、タイトルの下にあった） -->
+  <div id="caseSelfBar" style="margin-top:16px"></div>
+
   <section aria-labelledby="case-h" style="margin-top:28px">
     <div id="caseBody"></div>
     <!-- パスワード変更（この事件のご本人としてログイン中のときだけ、caseBody内の自己確認バーから開閉する） -->
@@ -97,7 +101,10 @@
     CC.renderStatus(statusEl, {hidePresenterSelf:true});
     const c=CC.caseById(caseId);
     if(c) document.title = c.name + " ｜ 応援傍聴ナビ";
-    // caseBodyはinnerHTMLごと差し替わるので、中の自己確認バーのリンクは毎回付け直す
+    // 自己確認バーは画像・タイトルより上、ページの一番上に出す（2026-08-30）。
+    // caseSelfBarのinnerHTMLは毎回作り直すので、中のリンクは毎回付け直す
+    const selfBarEl = document.getElementById("caseSelfBar");
+    selfBarEl.innerHTML = c ? CC.caseSelfBarHtml(c, true) : "";
     const myPageLink = document.getElementById("caseSelfMyPage");
     if(myPageLink) myPageLink.addEventListener("click", ()=>{ location.href="presenter?id="+encodeURIComponent(CC.me.presenterId); });
     const pwLink = document.getElementById("caseSelfPwLink");

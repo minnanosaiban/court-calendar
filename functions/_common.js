@@ -30,7 +30,7 @@ export const CASE_COLS = `c.id, c.name, c.presenter_id, p.nickname AS presenter_
                           c.contact, c.press, c.show_press_on_top, c.plaintiff_links, c.defendant_links, c.tags,
                           c.related_case_ids, c.show_related_on_top, c.archived_at, c.close_type,
                           c.board_enabled, c.board_restricted, c.notice_r2_key, c.notice_file_name, c.notice_file_size, c.notice_mime,
-                          c.card_r2_key,
+                          c.card_r2_key, c.card_square_r2_key,
                           c.created_by, c.updated_by, c.updated_at`;
 
 export function rowToCase(r) {
@@ -70,6 +70,7 @@ export function rowToCase(r) {
     noticeFileName: r.notice_file_name || "",
     noticeMime: r.notice_mime || "",
     cardUrl: r.card_r2_key ? "/files/" + r.card_r2_key : "",
+    cardSquareUrl: r.card_square_r2_key ? "/files/" + r.card_square_r2_key : "",
     likes: Number(r.likes || 0),
     liked: !!r.liked,
     updatedAt: r.updated_at || "",
@@ -314,6 +315,7 @@ export const ICON_MIMES = { "image/jpeg": "jpg", "image/webp": "webp" };
 export const ICON_MAX_BYTES = 5 * 1024 * 1024;
 
 export const IMAGE_COLS = `i.id, i.case_id, i.r2_key, i.file_name, i.file_size, i.mime,
+                           i.web_r2_key, i.web_file_name, i.web_file_size, i.web_mime,
                            i.caption, i.sort_order, i.created_at`;
 
 export function rowToImage(r) {
@@ -324,6 +326,10 @@ export function rowToImage(r) {
     fileName: r.file_name || "",
     fileSize: Number(r.file_size || 0),
     mime: r.mime || "",
+    // Web用（このサイトに合うフォント・サイズで作った版。任意）。あれば表示側はこちらを優先する
+    webUrl: r.web_r2_key ? "/files/" + r.web_r2_key : "",
+    webFileName: r.web_file_name || "",
+    webMime: r.web_mime || "",
     caption: r.caption || "",
     sortOrder: Number(r.sort_order || 0),
     createdAt: r.created_at || "",

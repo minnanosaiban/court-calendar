@@ -53,6 +53,18 @@
 --   未設定なら、これまでどおり /api/cases/:id/card.png が期日・問題提起人から自動生成する「傍聴券」を
 --   そのまま使う。設定すればそちらを優先して返す（差し替え専用。問題提起人アイコン・期日案内と同じ仕組み）。
 --   旧スキーマのDBを更新する場合は migrate_034_case_card.sql を実行すること。
+--
+-- v14（2026-08-30）：Twitterカードの正方形版（cases.card_square_r2_key、任意）を追加。Teams・Slackなど
+--   多くのアプリはog:imageを正方形に中央トリミングして小さく出すため、横長版（1200x630）をそのまま
+--   渡すと日付や問題提起人が切れてしまう。/api/cases/:id/card-square.png が1200x1200で自動生成し、
+--   横長版と同じく手動差し替えにも対応する。旧スキーマのDBを更新する場合は
+--   migrate_035_case_card_square.sql を実行すること。
+--
+-- v15（2026-08-30）：事件の写真（case_images）にWeb用バリエーション（web_r2_key ほか、任意）を追加。
+--   既存の写真はスマホでの見やすさを優先したフォント・サイズで作られているため、このサイト（Web）で
+--   見たときに合わせた版を別に登録できるようにした。Web用があればそちらを優先して表示し、無ければ
+--   これまでどおりの写真を使う。旧スキーマのDBを更新する場合は migrate_036_case_images_web.sql を
+--   実行すること。
 
 -- 問題提起人（アイコン＋ニックネーム）。1人が複数の事件を持てる。
 CREATE TABLE IF NOT EXISTS presenters (
@@ -115,7 +127,8 @@ CREATE TABLE IF NOT EXISTS cases (
   notice_file_name TEXT,             -- 元のファイル名
   notice_file_size  INTEGER,
   notice_mime     TEXT,              -- PDFか画像かの判定に使う（application/pdf・image/png・image/jpeg）
-  card_r2_key TEXT,                  -- Twitterカード（OGP画像）の差し替え用R2キー。未設定なら/api/cases/:id/card.pngが自動生成する（任意）
+  card_r2_key TEXT,                  -- Twitterカード（OGP画像・横長）の差し替え用R2キー。未設定なら/api/cases/:id/card.pngが自動生成する（任意）
+  card_square_r2_key TEXT,           -- 同・正方形版。未設定なら/api/cases/:id/card-square.pngが自動生成する（任意）
   created_by  TEXT,
   updated_by  TEXT,
   updated_at  TEXT                  -- ISO8601
@@ -176,6 +189,10 @@ CREATE TABLE IF NOT EXISTS case_images (
   file_name   TEXT,
   file_size   INTEGER,
   mime        TEXT,
+  web_r2_key  TEXT,            -- Web用（このサイトに合うフォント・サイズで作った版）のR2キー。任意
+  web_file_name TEXT,
+  web_file_size INTEGER,
+  web_mime    TEXT,
   caption     TEXT,            -- 写真の説明（1行・任意）
   sort_order  INTEGER NOT NULL DEFAULT 0,  -- 並び順（小さいほど先）
   created_by  TEXT,

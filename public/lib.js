@@ -118,6 +118,8 @@ window.CC = (function(){
   const apiDeleteCaseNotice = (id)=> api("DELETE","/api/cases/"+encodeURIComponent(id)+"/notice");
   const apiUpdateCaseCard = (id,fd)=> api("PUT","/api/cases/"+encodeURIComponent(id)+"/card", fd);
   const apiDeleteCaseCard = (id)=> api("DELETE","/api/cases/"+encodeURIComponent(id)+"/card");
+  const apiUpdateCaseCardSquare = (id,fd)=> api("PUT","/api/cases/"+encodeURIComponent(id)+"/card-square", fd);
+  const apiDeleteCaseCardSquare = (id)=> api("DELETE","/api/cases/"+encodeURIComponent(id)+"/card-square");
   const apiPresenterCases = (id)=> api("GET","/api/presenters/"+encodeURIComponent(id)+"/cases");
   const apiPresenterLogin = (username,password)=> api("POST","/api/presenter-login", {username,password});
   const apiPresenterLogout = ()=> api("POST","/api/presenter-logout");
@@ -327,14 +329,26 @@ window.CC = (function(){
     const xLink = `<a class="presenter-x" href="${escapeAttr(c.presenterXUrl)}" target="_blank" rel="noopener" aria-label="Xで見る"><i class="bi bi-twitter-x" aria-hidden="true"></i></a>`;
     return `<span class="presenter-line">${nameLink}${xLink}</span>`;
   }
-  // 事件ページ（full）で、ご本人（この事件の問題提起人）としてログイン中のときだけ出す自己確認バー。
-  // presenter.htmlの同じ見た目のバーと揃え、自分の事件一覧・パスワード変更・ログアウトをここに集約する
-  // （旧・ページ最下部の「Xさんとしてログイン中です」はcase.html・presenter.htmlのどちらでも
-  // 廃止しここへ一本化。2026-08-30。クリック処理はcaseCardHtmlの外＝呼び出し側のページで、
-  // innerHTML差し替え後に付け直す）
+  // 事件ページ（full）の一番上に出す、編集できる人だけのバー。運営（事務局）・ご本人（この事件の
+  // 問題提起人）としてログイン中のどちらでも「＋ 事件情報を編集」を出す（2026-08-30。以前はdcardの
+  // 中、タイトルの上に小さく置いていたが、写真・掲示板より下でスクロールしないと見えず、初見の人が
+  // 見つけづらかったため、ここへ一本化した）。ご本人のときは、presenter.htmlの同じ見た目のバーと
+  // 揃え、自分の事件一覧・パスワード変更・ログアウトも同じ行に集約する（旧・ページ最下部の
+  // 「Xさんとしてログイン中です」はcase.html・presenter.htmlのどちらでも廃止しここへ一本化。
+  // 画像等より上、ページの一番上に出したいので、caseCardHtmlの中ではなくcase.html側の別要素
+  // （#caseSelfBar）に呼び出し側が直接描く。クリック処理もcase.html側で、innerHTML差し替え後に付け直す）
   function caseSelfBarHtml(c, full){
-    if(!full || !me.presenterId || c.presenterId!==me.presenterId) return "";
+    if(!full || !canEditCase(c.id)) return "";
+    // 他の.selfbar内リンク（下線だけの地味なテキスト）より目立たせたいので、.pillbtn（「戻る」等と
+    // 同じ枠付きボタン）にする（2026-08-30）
+    const editLink = `<a class="pillbtn" href="case-edit.html?id=${encodeURIComponent(c.id)}"><i class="bi bi-pencil-square" aria-hidden="true"></i> 事件情報を編集</a>`;
+    const isSelf = me.presenterId && c.presenterId===me.presenterId;
+    if(!isSelf){
+      // 運営（事務局）としてログイン中：編集リンクだけを出す（「ご本人」の名乗りは不要なため）
+      return `<div class="selfbar">${editLink}</div>`;
+    }
     return `<div class="selfbar"><span class="badge">ご本人としてログイン中</span>`+
+      editLink+`<span class="sep">・</span>`+
       `<a id="caseSelfMyPage">自分の事件一覧</a><span class="sep">・</span>`+
       `<a id="caseSelfPwLink">パスワードを変更</a><span class="sep">・</span>`+
       `<a id="caseSelfLogoutLink">ログアウト</a></div>`;
@@ -368,27 +382,30 @@ window.CC = (function(){
     </div>`;
   }
 
-  // ---- 写真ギャラリー（事件ページ上部だけに出す） ----
+  // ---- 画像ギャラリー（事件ページ上部だけに出す） ----
+  // 画像は事件ページの最上部（タイトルより上）に、これまでどおり独立したカードで出す。
+  // 追加・並び替え・編集はcase-edit.htmlの「画像」節に一本化しており、ここへの入口
+  // （旧「＋ 写真を編集」）は廃止したので、画像が無ければ何も出さない（2026-08-30）
   function galleryHtml(caseId){
     const imgs = caseImages(caseId);
-    if(!imgs.length && !canEditCase(caseId)) return "";
-    let html = "";
-    if(imgs.length){
-      const items = imgs.map((im)=>`<a class="gal-item" href="${escapeAttr(im.url)}" target="_blank" rel="noopener">
-        <img src="${escapeAttr(im.url)}" alt="${escapeAttr(im.caption)}" loading="lazy">
-        ${im.caption?`<span class="gal-cap">${escapeHtml(im.caption)}</span>`:""}
-      </a>`).join("");
-      const dots = imgs.length>1
-        ? `<div class="gal-dots">${imgs.map((_,i)=>`<button type="button" class="${i===0?"on":""}" data-dot="${i}" aria-label="${i+1}枚目の写真"></button>`).join("")}</div>`
-        : "";
-      html += `<div class="gal" data-gal="${escapeAttr(caseId)}"><div class="gal-track">${items}</div>${dots}</div>`;
-    }
-    // 写真の追加・並び替え・編集は事件情報の編集ページ（case-edit.html）に一本化した（2026-08-27）。
-    // ここ（事件ページ）には「編集」への入口だけを置く（旧・常時展開の管理一覧は廃止）。
-    if(canEditCase(caseId)){
-      html += `<p class="qact"><a href="case-edit.html?id=${encodeURIComponent(caseId)}&open=img:new">＋ 写真を編集</a></p>`;
-    }
-    return html;
+    if(!imgs.length) return "";
+    // Web用（このサイトに合うフォント・サイズで作った版）があれば、画面幅に応じて出し分ける
+    // （560px以上＝サイト全体の「スマホ以外」の基準に合わせてWeb用、未満はスマホ用＝元の画像。2026-08-30）。
+    // 実機の種別ではなく画面の横幅で判定する（PCでも狭い幅なら元の画像になる）
+    const items = imgs.map((im)=>{
+      const img = `<img src="${escapeAttr(im.url)}" alt="${escapeAttr(im.caption)}" loading="lazy">`;
+      const picture = im.webUrl
+        ? `<picture><source media="(min-width:560px)" srcset="${escapeAttr(im.webUrl)}">${img}</picture>`
+        : img;
+      return `<a class="gal-item" href="${escapeAttr(im.webUrl || im.url)}" target="_blank" rel="noopener">
+      ${picture}
+      ${im.caption?`<span class="gal-cap">${escapeHtml(im.caption)}</span>`:""}
+    </a>`;
+    }).join("");
+    const dots = imgs.length>1
+      ? `<div class="gal-dots">${imgs.map((_,i)=>`<button type="button" class="${i===0?"on":""}" data-dot="${i}" aria-label="${i+1}枚目の画像"></button>`).join("")}</div>`
+      : "";
+    return `<div class="gal" data-gal="${escapeAttr(caseId)}"><div class="gal-track">${items}</div>${dots}</div>`;
   }
   // ギャラリーの自動送り。ホバー中は止める。件数が1枚なら動かさない
   function wireGallery(gal){
@@ -457,8 +474,13 @@ window.CC = (function(){
     const pressRow = (full || c.showPressOnTop) ? factRow("掲載", c.press.length?`<ul class="pts">${c.press.map(line=>`<li>${linkify(line)}</li>`).join("")}</ul>`:"") : "";
     const facts1 = nextRow+caseNoRow+pointsRow+plaintiffRow+defendantRow+judgeRow+pressRow;
 
-    // 写真・掲示板・事件本体（dcard）は、1つの塊として続けて出す（箱の中に箱、を解消するため）。
-    // 継ぎ目は角丸にせず、塊の外側（写真の上／事件本体の下）だけ角丸にする（詳しくは style.css）
+    // 画像・掲示板・事件本体（dcard）は、1つの塊として続けて出す（箱の中に箱、を解消するため）。
+    // 継ぎ目は角丸にせず、塊の外側（画像の上／事件本体の下）だけ角丸にする（詳しくは style.css）。
+    // 表示はこれまでどおり画像がタイトルより上（2026-08-30、一度「裁判について」の下に動かしたが
+    // 差し戻した。「裁判について」の下に置くのは入力欄＝case-edit.htmlの節の並びの方）。
+    // 「＋ 事件情報を編集」はページ最上部の自己確認バー（caseSelfBarHtml）に一本化した（2026-08-30。
+    // 以前はここ＝dcardの一番上にも小さく出していたが、写真・掲示板より下でスクロールしないと
+    // 見えず、初見の人が見つけづらかったため廃止）
     const galHtml = full ? galleryHtml(caseId) : "";
     const galCard = galHtml ? `<div class="card gal-card">${galHtml}</div>` : "";
     let html = galCard + boardHtml(caseId, full) + `
@@ -471,7 +493,6 @@ window.CC = (function(){
               : `<a class="d-title-link" href="case?id=${encodeURIComponent(c.id)}">${escapeHtml(c.name)}</a>`
             } ${likeHtml(c)}</h2>
             ${presenterNameHtml(c)}
-            ${caseSelfBarHtml(c, full)}
           </div>
         </div>
         ${tagsHtml(c)}
@@ -482,8 +503,7 @@ window.CC = (function(){
     // 旧・右下の「事件の詳細を見る」（.d-more）は2026-08-29に廃止：期日案内の隣・タイトル・掲示板の
     // 事件名がいずれもリンクになり、下に重ねて置く必要がなくなったため
     if(full){
-      const editCaseQact = canEditCase(c.id) ? `<p class="qact"><a href="case-edit.html?id=${encodeURIComponent(c.id)}">＋ 事件情報を編集</a></p>` : "";
-      html += callHtml(c) + editCaseQact + relatedCasesHtml(c) + timelineHtml(caseId) + materialsListHtml(caseId);
+      html += callHtml(c) + relatedCasesHtml(c) + timelineHtml(caseId) + materialsListHtml(caseId);
     } else {
       // ピックアップカードでも、項目ごとのチェックがある「裁判について」「関連裁判」は出す
       // （編集リンク・タイムライン・訴訟資料一覧は事件ページだけの機能なのでここには出さない）
@@ -597,8 +617,8 @@ window.CC = (function(){
       </li>`;
     }).join("");
     return `<p class="subhead">タイムライン</p>
-      ${rounds.length?`<ol class="tl">${items}</ol>`:`<p class="d-body mut">期日はまだ登録されていません。</p>`}
-      ${canEditCase(caseId)?`<p class="qact"><a href="case-edit.html?id=${encodeURIComponent(caseId)}&open=ev:new">＋ 期日を編集</a></p>`:""}`;
+      ${canEditCase(caseId)?`<p class="qact"><a href="case-edit.html?id=${encodeURIComponent(caseId)}&open=ev:new">＋ 期日を編集</a></p>`:""}
+      ${rounds.length?`<ol class="tl">${items}</ol>`:`<p class="d-body mut">期日はまだ登録されていません。</p>`}`;
   }
   function matRowHtml(m, caseId){
     const edit = canEditCase(caseId) ? `<a class="round-edit" href="case-edit.html?id=${encodeURIComponent(caseId)}&open=mat:${encodeURIComponent(m.id)}">編集</a>` : "";
@@ -629,8 +649,8 @@ window.CC = (function(){
       ).join("");
     }
     return `<p class="subhead">訴訟資料一覧</p>
-      ${body}
-      ${canEditCase(caseId)?`<p class="qact"><a href="case-edit.html?id=${encodeURIComponent(caseId)}&open=mat:new">＋ 資料を編集</a></p>`:""}`;
+      ${canEditCase(caseId)?`<p class="qact"><a href="case-edit.html?id=${encodeURIComponent(caseId)}&open=mat:new">＋ 資料を編集</a></p>`:""}
+      ${body}`;
   }
 
   // ---- 行ってきたよ掲示板 ----
@@ -849,7 +869,7 @@ window.CC = (function(){
   function wireCaseDetail(container, caseId, opts){
     const rerender=()=>renderCaseDetail(container, caseId, opts);
     container.querySelectorAll("[data-gal]").forEach(gal=>wireGallery(gal));
-    // 写真・期日・資料の追加・編集・並び替えは、すべて事件情報の編集ページ（case-edit.html）への
+    // 画像・期日・資料の追加・編集・並び替えは、すべて事件情報の編集ページ（case-edit.html）への
     // 普通のリンクになった（2026-08-27）。ここでのJSでの配線は不要
     container.querySelectorAll("[data-like]").forEach(b=>{
       b.addEventListener("click",()=>toggleLike(b.dataset.like, b));
@@ -980,7 +1000,7 @@ window.CC = (function(){
   }
 
   // ================= モーダル：AIによる要約のポップアップのみ（閲覧専用） =================
-  // 写真・事件情報・期日・資料の編集は、2026-08-27にすべて全画面の編集ページ（case-edit.html）へ
+  // 画像・事件情報・期日・資料の編集は、2026-08-27にすべて全画面の編集ページ（case-edit.html）へ
   // 移した（旧・タブ切替の1つの窓は廃止）。要約ポップアップだけは読み取り専用でどのページにも
   // 出うるため、引き続きここでHTMLを作って先に差し込む
   const EXTRA_MODALS = `
@@ -1002,7 +1022,7 @@ window.CC = (function(){
   // ---- 入力欄（textarea）は書いた分だけ自動で伸ばす（2026-08-27） ----
   // 2行の覗き窓＋内側スクロールで長文を編集させない。プログラムから値を入れたとき（fill○○）は
   // inputイベントが出ないので、値を入れた直後に autosizeAll() を呼び直す（非表示の間は
-  // scrollHeight が 0 になるため、必ず表示してから測る）。事件情報の編集ページ・写真/期日/資料の
+  // scrollHeight が 0 になるため、必ず表示してから測る）。事件情報の編集ページ・画像/期日/資料の
   // 行内エディタ、どちらからも使う共通ユーティリティ
   function autosize(el){ el.style.height="auto"; el.style.height=(el.scrollHeight+2)+"px"; }
   function wireAutosize(root){
@@ -1033,6 +1053,7 @@ window.CC = (function(){
                           call:$("cShowCallOnTop"), related:$("cShowRelatedOnTop") };
     const cNoticeFile=$("cNoticeFile"), cNoticeRemove=$("cNoticeRemove"), cNoticeNote=$("cNoticeNote"), cNoticeStatus=$("cNoticeStatus");
     const cCardFile=$("cCardFile"), cCardPreview=$("cCardPreview"), cCardNote=$("cCardNote"), cCardStatus=$("cCardStatus");
+    const cCardSquareFile=$("cCardSquareFile"), cCardSquarePreview=$("cCardSquarePreview"), cCardSquareNote=$("cCardSquareNote"), cCardSquareStatus=$("cCardSquareStatus");
     const cPresenterSelect=$("cPresenterSelect"), cPresenterNewRow=$("cPresenterNewRow"), cPresenterNewNickname=$("cPresenterNewNickname"),
           cPresenterNewSave=$("cPresenterNewSave"), cPresenterIconRow=$("cPresenterIconRow"), cPresenterIconPreview=$("cPresenterIconPreview"),
           cPresenterIconFile=$("cPresenterIconFile"), cPresenterIconRemove=$("cPresenterIconRemove"),
@@ -1272,7 +1293,7 @@ window.CC = (function(){
         ? `<img src="${escapeAttr(previewSrc)}" alt="" style="width:180px;border-radius:8px;border:1px solid var(--tint)">`
         : "";
       cCardNote.innerHTML = (has
-        ? `いまはこの画像に差し替えています。`
+        ? ``
         : `いまは自動生成のカード（直近の期日・問題提起人から自動で作成）が使われています。`)
         + `画像（JPEG・PNG、1200×630推奨、8MBまで）を選ぶと差し替わります。`
         + `<a id="cCardRemove" class="cicon-remove" ${has?"":"hidden"}>自動生成に戻す</a>`;
@@ -1305,6 +1326,50 @@ window.CC = (function(){
         cCardStatus.hidden=false; cCardStatus.textContent="差し替えました。";
       }catch(err){ cCardStatus.hidden=false; cCardStatus.textContent="アップロードできませんでした：" + (err && err.message || err); }
       finally{ cCardFile.value=""; }
+    });
+    // ---- Twitterカードの正方形版（JPEG・PNG。事件につき1枚・差し替え専用）。
+    // 未設定（既定）のときは自動生成のカード（/api/cases/:id/card-square.png）をそのままプレビューに出す。
+    // 横長版（cCardFile等）と全く同じ作り ----
+    function updateCardSquareFieldUI(c){
+      const has = !!(c && c.cardSquareUrl);
+      const autoUrl = edCaseId ? ("/api/cases/"+encodeURIComponent(edCaseId)+"/card-square.png") : "";
+      const previewSrc = has ? c.cardSquareUrl : autoUrl;
+      cCardSquarePreview.innerHTML = previewSrc
+        ? `<img src="${escapeAttr(previewSrc)}" alt="" style="width:120px;border-radius:8px;border:1px solid var(--tint)">`
+        : "";
+      cCardSquareNote.innerHTML = (has
+        ? ``
+        : `いまは自動生成のカード（直近の期日・問題提起人から自動で作成）が使われています。`)
+        + `画像（JPEG・PNG、1200×1200推奨、8MBまで）を選ぶと差し替わります。`
+        + `<a id="cCardSquareRemove" class="cicon-remove" ${has?"":"hidden"}>自動生成に戻す</a>`;
+      const removeLink = $("cCardSquareRemove");
+      if(removeLink) removeLink.addEventListener("click", onCardSquareRemove);
+    }
+    async function onCardSquareRemove(){
+      if(!edCaseId) return;
+      if(!confirm("差し替えた画像を外し、自動生成のカードに戻します。よろしいですか？")) return;
+      cCardSquareStatus.hidden=false; cCardSquareStatus.textContent="外しています…";
+      try{
+        const up=await apiDeleteCaseCardSquare(edCaseId);
+        const i=cases.findIndex(x=>x.id===edCaseId); if(i>=0) cases[i]=up;
+        updateCardSquareFieldUI(up);
+        cCardSquareStatus.hidden=false; cCardSquareStatus.textContent="自動生成に戻しました。";
+      }catch(err){ cCardSquareStatus.hidden=false; cCardSquareStatus.textContent="外せませんでした：" + (err && err.message || err); }
+    }
+    cCardSquareFile.addEventListener("change", async ()=>{
+      const f=cCardSquareFile.files[0];
+      if(!f || !edCaseId) return;
+      if(!["image/jpeg","image/png"].includes(f.type)){ alert("カードは JPEG・PNG のみ登録できます。"); cCardSquareFile.value=""; return; }
+      if(f.size>8*1024*1024){ alert("カードは8MBまでです。"); cCardSquareFile.value=""; return; }
+      const fd=new FormData(); fd.append("file", f, f.name);
+      cCardSquareStatus.hidden=false; cCardSquareStatus.textContent="アップロード中…";
+      try{
+        const up=await apiUpdateCaseCardSquare(edCaseId,fd);
+        const i=cases.findIndex(x=>x.id===edCaseId); if(i>=0) cases[i]=up;
+        updateCardSquareFieldUI(up);
+        cCardSquareStatus.hidden=false; cCardSquareStatus.textContent="差し替えました。";
+      }catch(err){ cCardSquareStatus.hidden=false; cCardSquareStatus.textContent="アップロードできませんでした：" + (err && err.message || err); }
+      finally{ cCardSquareFile.value=""; }
     });
     // 事件番号「公開する」のいまの状態を1行で示す（外れていると、誰に見えているのか分からなかったため。2026-08-30）
     function updateCaseNoPublicNote(){
@@ -1342,6 +1407,7 @@ window.CC = (function(){
       updatePresenterFieldUI();
       updateNoticeFieldUI(c);
       updateCardFieldUI(c);
+      updateCardSquareFieldUI(c);
     }
     async function saveCase(){
       if(!(edCaseId ? canEditCase(edCaseId) : me.canWrite)) return;
@@ -1426,7 +1492,7 @@ window.CC = (function(){
     $("cDelete").addEventListener("click",deleteCase);
     const ceForm=$("ceForm");
     wireAutosize(ceForm);
-    // 写真・期日・資料の行内エディタ（.ieditor）は保存・削除・閉じるがそれぞれ独立して完結するので、
+    // 画像・期日・資料の行内エディタ（.ieditor）は保存・削除・閉じるがそれぞれ独立して完結するので、
     // その中の入力は「事件情報」側の未保存扱い（edDirty）に含めない（含めると、行を保存・キャンセル
     // しただけで「事件情報に未保存の変更がある」という誤った警告が出てしまう）
     ceForm.addEventListener("input",(e)=>{ if(!e.target.closest(".ieditor")) edDirty=true; });
@@ -1468,6 +1534,19 @@ window.CC = (function(){
         $("ceBack").href="case?id="+encodeURIComponent(id);
         $("ceBackLabel").textContent="事件ページに戻る";
         $("cDelete").style.display = edIsAdmin ? "" : "none";
+        // ご本人（この事件の問題提起人）としてログイン中のときだけ出す自己確認バー。
+        // 「パスワードを変更」はこの画面には無い（presenter.html・case.htmlにある）ので、
+        // 自分の事件一覧・ログアウトだけの簡易版にする（2026-08-30。以前は下部フッターにだけあった）
+        const selfBarEl = $("ceSelfBar");
+        if(!edIsAdmin && me.presenterId){
+          selfBarEl.innerHTML = `<div class="selfbar"><span class="badge">ご本人としてログイン中</span>`+
+            `<a id="ceSelfMyPage">自分の事件一覧</a><span class="sep">・</span>`+
+            `<a id="ceSelfLogout">ログアウト</a></div>`;
+          $("ceSelfMyPage").addEventListener("click", ()=>{ location.href="presenter?id="+encodeURIComponent(me.presenterId); });
+          $("ceSelfLogout").addEventListener("click", async ()=>{ await presenterLogout(); location.href="index.html"; });
+        }else{
+          selfBarEl.innerHTML = "";
+        }
         fillCaseForm(c);
       }else{
         edCaseId=null;
@@ -1480,14 +1559,14 @@ window.CC = (function(){
       }
       autosizeAll(ceForm);   // gridはこの時点で表示済みなので同期で測れる
       renderImgList(); renderEvList(); renderMatList();
-      // 新規作成のときはまだ事件が無いので、写真・期日・資料の3節ごと隠す
+      // 新規作成のときはまだ事件が無いので、画像・期日・資料の3節ごと隠す
       document.querySelectorAll(".lssec").forEach(s=>{ s.hidden = !edCaseId; });
       $("sec-notice").hidden = !edCaseId;
       $("sec-card").hidden = !edCaseId;
       openDeepLink();
     };
 
-    // ================= 写真・期日・資料（1件ずつ、行を開いてその場で編集する。2026-08-27） =================
+    // ================= 画像・期日・資料（1件ずつ、行を開いてその場で編集する。2026-08-27） =================
     // 事件情報の保存とは別に、1件ごとにその場で保存する。開けるのは同時に1件だけ
     // （どれかを開くと、他の行・他の節で開いていたエディタは閉じる）。
     function closeEditor(){
@@ -1504,17 +1583,17 @@ window.CC = (function(){
       return root;
     }
 
-    // ---- 写真 ----
+    // ---- 画像 ----
     function renderImgList(){
       const imgs = edCaseId ? caseImages(edCaseId) : [];
       const html = imgs.map((im,i)=>`<div class="irow" data-kind="img" data-id="${escapeAttr(im.id)}">
-          <img class="ithumb" src="${escapeAttr(im.url)}" alt="">
+          <img class="ithumb" src="${escapeAttr(im.webUrl || im.url)}" alt="">
           <span class="ititle">${im.caption?escapeHtml(im.caption):`<span class="mut">（説明なし）</span>`}</span>
           <span class="imove">
             ${i>0?`<a data-imgmove="${escapeAttr(im.id)}" data-dir="-1" title="前へ">↑</a>`:""}
             ${i<imgs.length-1?`<a data-imgmove="${escapeAttr(im.id)}" data-dir="1" title="後ろへ">↓</a>`:""}
           </span>
-        </div>`).join("") || `<p class="d-body mut">まだ写真はありません。</p>`;
+        </div>`).join("") || `<p class="d-body mut">まだ画像はありません。</p>`;
       $("imgList").innerHTML = html;
       $("imgCount").textContent = imgs.length + "件";
       $("navImgCount").textContent = imgs.length || "";
@@ -1522,32 +1601,44 @@ window.CC = (function(){
     function imgEditorHtml(im){
       const isNew = !im;
       const hasR2 = im && im.url;
+      const hasWeb = im && im.webUrl;
       return `<div class="ieditor">
         <div class="ihead">
-          <span>写真を${isNew?"追加":"編集"}</span>
+          <span>画像を${isNew?"追加":"編集"}</span>
           <span class="ihead-actions">
             <button type="button" class="btn-cancel" data-close>閉じる</button>
-            <button type="button" class="btn-save" data-save="img" data-id="${isNew?"":escapeAttr(im.id)}">この写真を保存</button>
+            <button type="button" class="btn-save" data-save="img" data-id="${isNew?"":escapeAttr(im.id)}">この画像を保存</button>
           </span>
         </div>
-        <div class="field"><label>写真ファイル ${isNew?'<span class="reqmark">＊</span>':""}</label>
+        <div class="field"><label>画像ファイル ${isNew?'<span class="reqmark">＊</span>':""}</label>
           <input type="file" class="ef-file" accept="image/jpeg,image/png,image/webp">
-          ${hasR2?`<p class="fnote">いまの写真：<img src="${escapeAttr(im.url)}" alt="" style="width:64px;height:46px;object-fit:cover;border-radius:6px;vertical-align:middle;margin-left:6px">　ファイルを選ぶと差し替わります。</p>`:""}
-          <p class="fnote">JPEG・PNG・WebP、12MBまで。証拠写真は人の顔・氏名・住所が写り込んでいないか確認してから登録してください。</p>
+          ${hasR2?`<p class="fnote">いまの画像：<img src="${escapeAttr(im.url)}" alt="" style="width:64px;height:46px;object-fit:cover;border-radius:6px;vertical-align:middle;margin-left:6px">　ファイルを選ぶと差し替わります。</p>`:""}
+          <p class="fnote">JPEG・PNG・WebP、12MBまで。証拠画像は人の顔・氏名・住所が写り込んでいないか確認してから登録してください。</p>
+        </div>
+        <div class="field"><label>Web用画像（任意）</label>
+          <input type="file" class="ef-web-file" accept="image/jpeg,image/png,image/webp">
+          ${hasWeb?`<p class="fnote">いまのWeb用：<img src="${escapeAttr(im.webUrl)}" alt="" style="width:64px;height:46px;object-fit:cover;border-radius:6px;vertical-align:middle;margin-left:6px">　ファイルを選ぶと差し替わります。</p>
+          <label class="check"><input type="checkbox" class="ef-web-remove"> 保存時にWeb用を外す（元の画像だけに戻ります）</label>`:""}
+          <p class="fnote">このサイトに合うフォント・サイズで作った版があれば登録できます。あれば事件ページの表示はこちらを優先します。JPEG・PNG・WebP、12MBまで。</p>
         </div>
         <div class="field"><label>説明（1行）</label><input type="text" class="ef-caption" value="${escapeAttr(im?im.caption:"")}" placeholder="例）提訴後の記者会見にて"></div>
-        ${isNew?"":`<div class="ifoot"><button type="button" class="del" data-del="img" data-id="${escapeAttr(im.id)}">この写真を削除</button></div>`}
+        ${isNew?"":`<div class="ifoot"><button type="button" class="del" data-del="img" data-id="${escapeAttr(im.id)}">この画像を削除</button></div>`}
       </div>`;
     }
     async function saveImgRow(root, id){
       if(!canEditCase(edCaseId)) return;
       const f = root.querySelector(".ef-file").files[0];
-      if(!id && !f){ alert("写真ファイルを選んでください。"); return; }
-      if(f && f.size>12*1024*1024){ alert("写真は12MBまでです。"); return; }
+      if(!id && !f){ alert("画像ファイルを選んでください。"); return; }
+      if(f && f.size>12*1024*1024){ alert("画像は12MBまでです。"); return; }
+      const wf = root.querySelector(".ef-web-file").files[0];
+      if(wf && wf.size>12*1024*1024){ alert("Web用画像は12MBまでです。"); return; }
+      const webRemove = root.querySelector(".ef-web-remove");
       const fd=new FormData();
       fd.append("caseId", edCaseId);
       fd.append("caption", root.querySelector(".ef-caption").value.trim());
       if(f) fd.append("file", f, f.name);
+      if(wf) fd.append("webFile", wf, wf.name);
+      if(webRemove && webRemove.checked) fd.append("removeWeb", "1");
       const btn=root.querySelector("[data-save]"); btn.disabled=true;
       try{
         if(id){
@@ -1562,7 +1653,7 @@ window.CC = (function(){
     }
     async function deleteImgRow(id){
       if(!id || !canEditCase(edCaseId)) return;
-      if(!confirm("この写真を削除します。よろしいですか？")) return;
+      if(!confirm("この画像を削除します。よろしいですか？")) return;
       try{
         await apiDeleteImage(id);
         images=images.filter(x=>x.id!==id);
@@ -1972,7 +2063,7 @@ window.CC = (function(){
     likeHtml, toggleLike, bookmarkHtml, toggleBookmark, isArchived, iconHtml, presenterHeaderHtml,
     apiListPresenters, apiCreatePresenter, apiUpdatePresenter, apiDeletePresenter,
     apiUpdatePresenterIcon, apiDeletePresenterIcon, reloadPresenters, saveErr,
-    canEditCase, presenterLogin, presenterLogout, apiPresenterChangePassword,
+    canEditCase, presenterLogin, presenterLogout, apiPresenterChangePassword, caseSelfBarHtml,
     load, renderCaseDetail, renderStatus,
     initCaseEditPage(){ initCaseEditPage(); },
     setOnChange(fn){ onChange = fn; },

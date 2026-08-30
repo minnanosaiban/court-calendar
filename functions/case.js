@@ -25,10 +25,18 @@ export async function onRequestGet({ request, env }) {
   // OGP画像：事件ごとの「傍聴券」カード（直近期日・問題提起人をその場で描画。2026-08-30）。
   // 手作りでPNGを作って case_images に upload していた旧運用（ogcard.png／正方形版との出し分け）は、
   // 期日が変わるたびの差し替え作業が要らないこちらに一本化した（card.png.js のコメント参照）。
+  // Teams・Slackなど多くのアプリはog:imageを正方形に中央トリミングして小さく出すため、横長版を
+  // そのまま渡すと日付や問題提起人が切れる（2026-08-30に発覚）。og:imageには正方形版
+  // （card-square.png.js）、X（Twitter）が優先して読むtwitter:imageには横長版を渡す
+  // （旧・ogcard.png／ogcard-square.pngの出し分けと同じ考え方）。
   // 非公開事件は、閲覧キーが合っている人にしか出さない規則をそのままカードのURLにも引き継ぐ。
-  const cardUrl = new URL(`/api/cases/${encodeURIComponent(c.id)}/card.png`, request.url);
-  if (c.view_key) cardUrl.searchParams.set("key", c.view_key);
-  const cardImgUrl = cardUrl.toString();
+  function cardUrlFor(path) {
+    const u = new URL(`/api/cases/${encodeURIComponent(c.id)}/${path}`, request.url);
+    if (c.view_key) u.searchParams.set("key", c.view_key);
+    return u.toString();
+  }
+  const cardWideUrl = cardUrlFor("card.png");
+  const cardSquareUrl = cardUrlFor("card-square.png");
 
   const title = `${c.name} ｜ 応援傍聴ナビ`;
   const description = (c.call_text || "傍聴席に、ひとり増える。それだけで法廷は変わる。").slice(0, 140);
@@ -39,8 +47,8 @@ export async function onRequestGet({ request, env }) {
     `<meta property="og:type" content="article">`,
     `<meta property="og:url" content="${escAttr(request.url)}">`,
     `<meta property="og:site_name" content="応援傍聴ナビ">`,
-    `<meta property="og:image" content="${escAttr(cardImgUrl)}">`,
-    `<meta name="twitter:image" content="${escAttr(cardImgUrl)}">`,
+    `<meta property="og:image" content="${escAttr(cardSquareUrl)}">`,
+    `<meta name="twitter:image" content="${escAttr(cardWideUrl)}">`,
     `<meta name="twitter:card" content="summary_large_image">`,
   ].join("\n");
 
