@@ -125,7 +125,7 @@
     headEl.innerHTML = `<div class="d-head" style="align-items:center">
         ${icon}
         <div>
-          <h2 class="d-title" id="presenter-h">${CC.escapeHtml(p.nickname)}さん</h2>
+          <h2 class="d-title" id="presenter-h">${CC.escapeHtml(p.nickname)}さん${p.xUrl?`<a class="presenter-x" style="margin-left:6px" href="${CC.escapeAttr(p.xUrl)}" target="_blank" rel="noopener" aria-label="Xで見る"><i class="bi bi-twitter-x" aria-hidden="true"></i></a>`:""}</h2>
           <p class="mut">${p.caseCount||0}件の事件</p>
           ${selfNote}
         </div>
@@ -184,7 +184,9 @@
   function renderAll(){
     renderHead();
     renderList();
-    CC.renderStatus(statusEl);
+    // 「Xさんとしてログイン中です」は、ご本人であれば上のselfbar（renderHead内）に出ているので、
+    // ページ下部（footer）では重ねて出さない（2026-08-30、case.htmlと同じ扱いに揃えた）
+    CC.renderStatus(statusEl, {hidePresenterSelf:true});
   }
   CC.setOnChange(renderAll);
 

@@ -328,12 +328,14 @@ window.CC = (function(){
     return `<span class="presenter-line">${nameLink}${xLink}</span>`;
   }
   // 事件ページ（full）で、ご本人（この事件の問題提起人）としてログイン中のときだけ出す自己確認バー。
-  // presenter.htmlの同じ見た目のバーと揃え、パスワード変更・ログアウトをここに集約する
-  // （旧・ページ最下部の「Xさんとしてログイン中です」はcase.htmlでは廃止しここへ一本化。2026-08-30。
-  // クリック処理はcaseCardHtmlの外＝呼び出し側のページで、innerHTML差し替え後に付け直す）
+  // presenter.htmlの同じ見た目のバーと揃え、自分の事件一覧・パスワード変更・ログアウトをここに集約する
+  // （旧・ページ最下部の「Xさんとしてログイン中です」はcase.html・presenter.htmlのどちらでも
+  // 廃止しここへ一本化。2026-08-30。クリック処理はcaseCardHtmlの外＝呼び出し側のページで、
+  // innerHTML差し替え後に付け直す）
   function caseSelfBarHtml(c, full){
     if(!full || !me.presenterId || c.presenterId!==me.presenterId) return "";
     return `<div class="selfbar"><span class="badge">ご本人としてログイン中</span>`+
+      `<a id="caseSelfMyPage">自分の事件一覧</a><span class="sep">・</span>`+
       `<a id="caseSelfPwLink">パスワードを変更</a><span class="sep">・</span>`+
       `<a id="caseSelfLogoutLink">ログアウト</a></div>`;
   }
@@ -1041,7 +1043,6 @@ window.CC = (function(){
           cPresenterLoginUsernameSave=$("cPresenterLoginUsernameSave"), cPresenterLoginReset=$("cPresenterLoginReset"),
           cPresenterLoginRemoveWrap=$("cPresenterLoginRemoveWrap"), cPresenterLoginRemove=$("cPresenterLoginRemove"),
           cPresenterLoginStatus=$("cPresenterLoginStatus"),
-          cPresenterFixed=$("cPresenterFixed"), cPresenterFixedIcon=$("cPresenterFixedIcon"), cPresenterFixedName=$("cPresenterFixedName"),
           cCaseNoPublicNote=$("cCaseNoPublicNote");
     // 連絡先は入力欄を廃止したが、既存データは保持する（保存のたびに空で上書きしないよう、
     // 編集を開いたときの値をここに覚えておいて、保存時にそのまま送り返す）
@@ -1055,23 +1056,18 @@ window.CC = (function(){
     function renderPresenterOptions(selectedId){
       const hint=$("cPresenterHint");
       if(!edIsAdmin){
-        // 選び直せない欄は入力欄の形にしない（disabledのプルダウンだと押せそうに見えたため。2026-08-30）
+        // 選び直せない欄は入力欄の形にしない（disabledのプルダウンだと押せそうに見えたため。2026-08-30）。
+        // 身元表示（アイコン＋ニックネームの札）は出さない。下のニックネーム欄に現在の値が
+        // そのまま入るので、それ自体が身元表示を兼ねる（2026-08-30、二重表示をやめた）
         cPresenterSelect.hidden = true;
-        cPresenterFixed.hidden = false;
         // プルダウン自体は隠すが、value はこの問題提起人のIDのまま持たせる（ニックネーム・アイコン・
         // X URLの変更欄は、下の updatePresenterFieldUI() が cPresenterSelect.value を見て動くため。2026-08-30）
         cPresenterSelect.innerHTML = `<option value="${escapeAttr(selectedId||"")}" selected></option>`;
-        const p = presenterById(selectedId);
-        cPresenterFixedIcon.innerHTML = p && p.icon
-          ? `<img class="cicon-ph" style="border-radius:50%;width:36px;height:36px;object-fit:cover" src="${escapeAttr(p.icon)}" alt="">`
-          : `<span class="cicon-ph" aria-hidden="true"><i class="bi bi-person" aria-hidden="true"></i></span>`;
-        cPresenterFixedName.textContent = p ? p.nickname : "";
-        if(hint) hint.textContent = "ニックネーム・アイコン・X URLは下で変更できます。別の問題提起人への付け替えをご希望の場合は運営にご連絡ください。";
+        if(hint) hint.hidden = true;
         return;
       }
       cPresenterSelect.hidden = false;
-      cPresenterFixed.hidden = true;
-      if(hint) hint.textContent = "同じ人（団体）が複数の事件を持つときは、同じ問題提起人を選べばアイコン・ニックネームを使い回せます。";
+      if(hint){ hint.hidden = false; hint.textContent = "同じ人（団体）が複数の事件を持つときは、同じ問題提起人を選べばアイコン・ニックネームを使い回せます。"; }
       const opts = [`<option value="">（未設定）</option>`]
         .concat(presenters.map(p=>`<option value="${escapeAttr(p.id)}"${p.id===selectedId?" selected":""}>${escapeHtml(p.nickname)}${p.caseCount?`（${p.caseCount}件）`:""}</option>`))
         .concat([`<option value="__new__">＋ 新しい問題提起人を作る…</option>`]);

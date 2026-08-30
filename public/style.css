@@ -702,6 +702,10 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 /* 編集ページだけ少し広く使う（長文編集が主役のため。他ページは720pxのまま） */
 .wrap-wide{max-width:960px}
 .ce-title{font-family:"Shippori Mincho",serif;font-size:1.6rem;font-weight:600;line-height:1.4;margin-top:24px}
+/* タイトルの隣に「入力は公開情報」の注意を添える（2026-08-30）。折り返しても崩れないよう
+   align-items:baseline＋flex-wrap（.ce-title 側の margin-top は行が2つに分かれても保つ） */
+.ce-title-row{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 14px}
+.ce-title-warn{font-size:.8rem;color:var(--stamp)}
 .ce-case{font-size:.9rem;color:var(--mut);margin-top:2px}
 .editgrid{margin-top:24px}
 /* 権限が無い間は hidden 属性で隠すが、860px以上の .editgrid{display:grid}（下の @media）が
@@ -720,18 +724,6 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 /* 節ナビの小見出し（「まず書くこと」等）。クリック対象ではないので secnav div とは分けて軽く扱う（2026-08-30） */
 .grp{font-size:.68rem;letter-spacing:.06em;color:var(--faint);margin:14px 0 4px;padding-left:12px}
 .grp:first-child{margin-top:0}
-/* 「トップにも表示する」のまとめ説明（節の先頭に1回だけ置く。2026-08-30） */
-.helpbar{background:#eef3f6;border-left:3px solid var(--edit);border-radius:0 8px 8px 0;
-  padding:10px 14px;font-size:.8rem;color:var(--mut);line-height:1.8;margin-bottom:18px}
-/* 変更できない「問題提起人」欄（問題提起人本人がログイン中のとき）。入力欄の形をやめ、
-   選べない・押せないことが一目で分かるようにする（2026-08-30） */
-.fixedval{display:flex;align-items:center;gap:12px;background:var(--tint);border-radius:12px;padding:10px 14px}
-.fixedval .cicon-ph{width:36px;height:36px;font-size:.95rem}
-/* .fixedval に display:flex を書いた時点で、CSS上は常に hidden 属性より勝ってしまう
-   （[hidden]はUAスタイルシート側にしかなく、著者スタイルシートの通常宣言が常に優先されるため。
-   #1で見つかった .editgrid と同じ理由）。属性セレクタで明示的に上書きする（2026-08-30） */
-.fixedval[hidden]{display:none}
-
 /* ---- 写真・期日・資料（1件ずつ、行を開いてその場で編集する節）----
    件数が多くなりうる（実データで写真13・期日8・資料18件）ので、畳んだ一覧＋その場エディタにして
    事件情報の本文が埋もれないようにする（2026-08-27） */

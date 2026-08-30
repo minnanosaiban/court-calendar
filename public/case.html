@@ -93,11 +93,13 @@
     }
     CC.renderCaseDetail(caseBody, caseId || legacyName, {full:true});
     // 「Xさんとしてログイン中です」は、この事件のご本人であれば上の自己確認バーに出ているので、
-    // ページ下部（footer）では重ねて出さない（presenter.htmlは逆に両方出したままにしている）
+    // ページ下部（footer）では重ねて出さない（presenter.htmlも2026-08-30から同じ扱いに揃えた）
     CC.renderStatus(statusEl, {hidePresenterSelf:true});
     const c=CC.caseById(caseId);
     if(c) document.title = c.name + " ｜ 応援傍聴ナビ";
     // caseBodyはinnerHTMLごと差し替わるので、中の自己確認バーのリンクは毎回付け直す
+    const myPageLink = document.getElementById("caseSelfMyPage");
+    if(myPageLink) myPageLink.addEventListener("click", ()=>{ location.href="presenter?id="+encodeURIComponent(CC.me.presenterId); });
     const pwLink = document.getElementById("caseSelfPwLink");
     if(pwLink) pwLink.addEventListener("click", openPwCard);
     const logoutLink = document.getElementById("caseSelfLogoutLink");
