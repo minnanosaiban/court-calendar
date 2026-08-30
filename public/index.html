@@ -152,7 +152,8 @@
   function popoverHtmlFor(dayEvents){
     const rows=dayEvents.map(ev=>{
       const d=CC.parseYmd(ev.date);
-      const dateLine=`${d.getMonth()+1}/${d.getDate()}（${CC.WD[d.getDay()]}） ${ev.time||""}`.trim();
+      // 日付の数字だけ一段大きくして目立たせる（「今後の期日」.ud b と同じ扱い。2026-08-30）
+      const dateLine=`<b>${d.getMonth()+1}/${d.getDate()}</b>（${CC.WD[d.getDay()]}）${ev.time?" "+CC.escapeHtml(ev.time):""}`;
       const place=[ev.court,ev.place].filter(Boolean).join(" ");
       const c=CC.caseById(ev.caseId);
       return `<div class="pop-row" data-case="${CC.escapeAttr(ev.caseId)}">
@@ -160,7 +161,7 @@
         <div class="pop-main">
           ${c?CC.presenterHeaderHtml(c):""}
           <div class="pop-text">
-            <p class="pop-date">${CC.escapeHtml(dateLine)}</p>
+            <p class="pop-date">${dateLine}</p>
             <p class="pop-title">${CC.escapeHtml(ev.case)}</p>
             <p class="pop-meta">${CC.escapeHtml([ev.type,place].filter(Boolean).join(" ／ "))} ${CC.bookmarkHtml(ev)}</p>
           </div>

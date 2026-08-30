@@ -499,7 +499,11 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .pop-row:hover .pop-arrow{transform:translateY(-50%) translateX(3px)}
 .pop-main{display:flex;gap:10px;align-items:flex-start}
 .pop-text{min-width:0;flex:1}
-.pop-date{font-size:.8rem;color:var(--mut);font-variant-numeric:tabular-nums}
+.pop-date{font-size:.8rem;color:var(--mut);font-variant-numeric:tabular-nums;transition:transform .15s ease}
+/* 日付の数字だけ一段大きくして目立たせる（事件名.pop-title=.9remより大きい1.05rem・
+   「今後の期日」.ud b と同じ扱い）。触れると矢印(.pop-arrow)と同じく少し右へ動く（2026-08-30） */
+.pop-date b{color:var(--ink);font-weight:600;font-size:1.05rem;font-family:"Shippori Mincho",serif}
+.pop-row:hover .pop-date{transform:translateX(3px)}
 .pop-title{font-size:.9rem;font-weight:500;margin-top:1px;font-family:"Shippori Mincho",serif}
 .pop-meta{font-size:.8rem;color:var(--mut);margin-top:1px}
 /* プレビュー下の操作行：右下に「閉じる×」 */
@@ -556,8 +560,11 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .footer-mail a{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
 .request-frog{position:absolute;right:16px;bottom:16px;width:72px;height:auto;pointer-events:none}
 /* 「すでに掲載されている方へ」＝問題提起人ログインへの入口。「掲載をご希望の方へ」の続きとして
-   同じ枠の下部に置く（フッターのひっそりした行からは外した。2026-08-30） */
+   同じ枠の下部に置く（フッターのひっそりした行からは外した。2026-08-30）。
+   この区画が伸びたぶん最後の注記（.fnote）がマスコット画像の位置まで来るので、.footer-mail と
+   同じだけ右を空けて絵と文字が重ならないようにする */
 .login-invite{margin-top:20px;padding-top:16px;border-top:1px solid rgba(185,50,38,.15)}
+.login-invite .fnote{padding-right:88px}
 /* 「ログイン」の文字は「掲載をご希望の方へ」(.subhead) と同じ大きさ・書体に揃える
    （.pillbtn は他のページ内リンクでも使い回すクラスなので、ここだけ上書きする） */
 .login-invite .pillbtn{margin-top:8px;font-family:"Shippori Mincho",serif;font-size:1.2rem}
@@ -789,6 +796,7 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
   .rows{grid-template-columns:6em 1fr}
   .footer-request{padding:32px}
   .footer-mail{padding-right:120px}
+  .login-invite .fnote{padding-right:120px}
   .request-frog{right:24px;bottom:24px;width:104px}
 }
 @media(min-width:860px){
