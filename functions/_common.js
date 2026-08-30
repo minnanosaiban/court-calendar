@@ -23,6 +23,7 @@ export function textToLines(s) {
 // ---- 事件 ----
 // presenters は LEFT JOIN で引く（p. で参照。FROM 句は casesSelect() 側で JOIN する）
 export const CASE_COLS = `c.id, c.name, c.presenter_id, p.nickname AS presenter_nickname, p.icon_r2_key AS presenter_icon_r2_key,
+                          p.x_url AS presenter_x_url,
                           c.case_no, c.case_no_public, c.show_case_no_on_top,
                           c.plaintiff_name, c.show_plaintiff_on_top, c.defendant_name, c.show_defendant_on_top,
                           c.judge, c.show_judge_on_top, c.points, c.show_points_on_top, c.call_text, c.show_call_on_top,
@@ -38,6 +39,7 @@ export function rowToCase(r) {
     presenterId: r.presenter_id || "",
     presenterNickname: r.presenter_nickname || "",
     presenterIcon: r.presenter_icon_r2_key ? "/files/" + r.presenter_icon_r2_key : "",
+    presenterXUrl: r.presenter_x_url || "",
     caseNo: r.case_no || "",
     caseNoPublic: r.case_no_public === 1 || r.case_no_public === true,
     showCaseNoOnTop: r.show_case_no_on_top === 1 || r.show_case_no_on_top === true,
@@ -181,7 +183,7 @@ export async function hiddenCaseIds(env, request) {
 }
 
 // ---- 問題提起人（アイコン＋ニックネーム。1人が複数の事件を持てる） ----
-export const PRESENTER_COLS = `id, nickname, icon_r2_key, login_username, login_password_hash, created_by, updated_by, updated_at`;
+export const PRESENTER_COLS = `id, nickname, icon_r2_key, x_url, login_username, login_password_hash, created_by, updated_by, updated_at`;
 
 // admin=true のときだけ、ログインID・ログイン発行済みかどうかを含める
 // （ログインIDは個人のメールアドレス等になりうるため、運営以外には見せない）
@@ -190,6 +192,7 @@ export function rowToPresenter(r, admin) {
     id: r.id,
     nickname: r.nickname,
     icon: r.icon_r2_key ? "/files/" + r.icon_r2_key : "",
+    xUrl: r.x_url || "",
     caseCount: r.case_count != null ? Number(r.case_count) : undefined,
     updatedAt: r.updated_at || "",
   };

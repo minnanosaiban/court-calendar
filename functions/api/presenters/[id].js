@@ -1,5 +1,5 @@
 import {
-  json, rowToPresenter, getIdentity, authorizeWrite,
+  json, rowToPresenter, getIdentity, authorizeWrite, isHttpUrl,
   getPresenterSession, generatePassword, randomHex, hashPassword,
 } from "../../_common.js";
 import { presentersSelect } from "../presenters.js";
@@ -14,7 +14,7 @@ export async function onRequestGet({ request, env, params }) {
 }
 
 // 更新（書き込み権限が必要。運営は全員、本人はログイン中の自分のプロフィールのみ）。
-// ニックネームの変更はどちらもできる。ログインID・パスワードの発行/はく奪は運営のみ（body の
+// ニックネーム・X URLの変更はどちらもできる。ログインID・パスワードの発行/はく奪は運営のみ（body の
 // loginUsername／resetPassword／removeLogin。resetPassword=true のときだけ新しいパスワードを
 // 平文で1回だけ返す＝運営が本人に伝える用。他人のセッションを想定して、変更時は既存のログイン
 // セッションを全部失効させる）
@@ -32,6 +32,12 @@ export async function onRequestPut({ request, env, params }) {
 
   let sql = `UPDATE presenters SET nickname=?, updated_by=?, updated_at=?`;
   const bind = [nickname, admin ? id.email : ("presenter:" + params.id), new Date().toISOString()];
+  if (typeof body.xUrl === "string") {
+    const xUrl = body.xUrl.trim();
+    if (xUrl && !isHttpUrl(xUrl)) return json({ error: "X URLの形式が正しくありません" }, 400);
+    sql += `, x_url=?`;
+    bind.push(xUrl || null);
+  }
   let newPassword = null;
   let revokeSessions = false;
   if (admin) {

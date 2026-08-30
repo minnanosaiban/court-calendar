@@ -44,12 +44,17 @@
 --   EDIT_PASSWORD／OWNER_EMAIL とは別枠。ログイン発行・削除・パスワード再発行は運営のみ、
 --   ログイン後の事件内容の登録・変更は本人のみ）。旧スキーマのDBを更新する場合は
 --   migrate_032_presenter_accounts.sql を実行すること。
+--
+-- v12（2026-08-30）：問題提起人のX（Twitter）アカウントURLを追加。ニックネームの右に
+--   アイコンリンクとして表示する（presenters.x_url、任意）。旧スキーマのDBを更新する場合は
+--   migrate_033_presenter_x_url.sql を実行すること。
 
 -- 問題提起人（アイコン＋ニックネーム）。1人が複数の事件を持てる。
 CREATE TABLE IF NOT EXISTS presenters (
   id          TEXT PRIMARY KEY,
   nickname    TEXT NOT NULL,        -- 表示名（旧 cases.host を引き継ぐ）
   icon_r2_key TEXT,                 -- アイコン画像（正方形推奨）のR2オブジェクトキー。/api/presenters/:id/icon で登録・削除
+  x_url       TEXT,                 -- X（Twitter）アカウントのURL（任意。ニックネームの右にアイコンリンクとして表示）
   login_username      TEXT,         -- ログインID（運営が設定。メールアドレス等・任意の文字列。未発行ならNULL）
   login_password_salt TEXT,         -- パスワードのソルト（16byte・16進）
   login_password_hash TEXT,         -- PBKDF2-SHA256 ハッシュ（16進）。平文は保存しない

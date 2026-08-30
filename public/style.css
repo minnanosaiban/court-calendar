@@ -137,6 +137,13 @@ a{color:inherit}
    幅が狭く長い名前が省略されてしまうため、タイトルの下の広い幅で全文出す（2026-08-26） */
 .presenter-name{display:block;font-family:"Zen Kaku Gothic New",sans-serif;font-size:.8rem;
   color:var(--mut);text-decoration:underline;text-underline-offset:3px;margin-top:2px}
+/* Xアカウント登録時だけ、ニックネームの右にXアイコンのリンクを添える箱（2026-08-30）。
+   .presenter-nameは元がdisplay:blockだが、この箱の中ではflexアイテムとして横並びになるので、
+   自身のmargin-topは打ち消して箱側に持たせる */
+.presenter-line{display:inline-flex;align-items:center;gap:6px;margin-top:2px}
+.presenter-line .presenter-name{margin-top:0}
+.presenter-x{color:var(--mut);font-size:.85rem;line-height:1}
+.presenter-x:hover{color:var(--ink)}
 .d-title{font-family:"Shippori Mincho",serif;font-size:1.6rem;font-weight:600;line-height:1.4}
 /* トップのピックアップカードだけ：事件名を事件ページへのリンクにする。事件名（.board-name-link）と
    同じく普段は下線を引かず地の文と同じ見た目のまま（2026-08-29）。触れると赤い下線が出て、
@@ -354,6 +361,7 @@ a{color:inherit}
 /* 問題提起人名（本来は.d-titleの下に置く前提でdisplay:block）を、掲示板枠では事件名と同じ行に
    並べて出す（2026-08-29）。字下げ用のmargin-topも打ち消す */
 .board-name .presenter-name{display:inline;margin-top:0}
+.board-name .presenter-line{display:inline-flex;margin-top:0}
 /* 報告は吹き出しで「声」として並べる */
 .bubble{background:#fff;border-radius:12px;padding:12px 16px;margin-top:12px;position:relative;font-size:.9rem}
 /* しっぽ（三角形）は本体の左端ぴったり（left:-6px）だと、境目に薄い線が出る（三角の斜辺のアンチエイリアス）。

@@ -315,7 +315,11 @@ window.CC = (function(){
   // 閲覧者向けの表示なので敬称「さん」を付ける（管理画面のプルダウン等、運営者向けの表示には付けない）
   function presenterNameHtml(c){
     if(!c.presenterId || !c.presenterNickname) return "";
-    return `<a class="presenter-name" href="presenter?id=${encodeURIComponent(c.presenterId)}">${escapeHtml(c.presenterNickname)}さん</a>`;
+    const nameLink = `<a class="presenter-name" href="presenter?id=${encodeURIComponent(c.presenterId)}">${escapeHtml(c.presenterNickname)}さん</a>`;
+    // Xアカウントを登録している問題提起人だけ、ニックネームの右にXアイコンのリンクを添える（2026-08-30）
+    if(!c.presenterXUrl) return nameLink;
+    const xLink = `<a class="presenter-x" href="${escapeAttr(c.presenterXUrl)}" target="_blank" rel="noopener" aria-label="Xで見る"><i class="bi bi-twitter-x" aria-hidden="true"></i></a>`;
+    return `<span class="presenter-line">${nameLink}${xLink}</span>`;
   }
   // 事件ページ（full）で、ご本人（この事件の問題提起人）としてログイン中のときだけ出す自己確認バー。
   // presenter.htmlの同じ見た目のバーと揃え、パスワード変更・ログアウトをここに集約する
