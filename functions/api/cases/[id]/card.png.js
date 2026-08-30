@@ -137,10 +137,21 @@ function buildTree(c) {
     right.push(h("img", { key: "av", src: c.iconDataUri, width: 112, height: 112, style: { borderRadius: "50%", border: `3px solid ${RING}` } }));
   }
   if (c.presenterNickname) {
-    right.push(h("div", { key: "nick", style: { display: "flex", marginTop: c.iconDataUri ? 20 : 0, fontFamily: GO_R, fontSize: 26, color: GRAY, textAlign: "center" } }, c.presenterNickname + "さん"));
+    // 問題提起人がいる事件は「◯◯さん」「を応援！」の2行で締める（ハンコは出さない。2026-08-30）。
+    // 1行の文字列にすると「応援」の真ん中で折り返ってしまうことがあるため、あらかじめ2行に分けている
+    right.push(h(
+      "div",
+      { key: "nick", style: { display: "flex", flexDirection: "column", alignItems: "center", marginTop: c.iconDataUri ? 20 : 0, fontFamily: GO_R, fontSize: 26, color: GRAY, textAlign: "center" } },
+      [
+        h("div", { key: "n1", style: { display: "flex" } }, c.presenterNickname + "さん"),
+        h("div", { key: "n2", style: { display: "flex" } }, "を応援！"),
+      ]
+    ));
+  } else {
+    // 問題提起人が未設定の事件は、右側にサイトのハンコだけを出しておく
+    right.push(h("div", { key: "sp", style: { display: "flex", height: 36 } }));
+    right.push(stamp(52));
   }
-  right.push(h("div", { key: "sp", style: { display: "flex", height: 36 } }));
-  right.push(stamp(52));
 
   const ticket = h(
     "div",
