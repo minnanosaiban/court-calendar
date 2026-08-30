@@ -317,6 +317,16 @@ window.CC = (function(){
     if(!c.presenterId || !c.presenterNickname) return "";
     return `<a class="presenter-name" href="presenter?id=${encodeURIComponent(c.presenterId)}">${escapeHtml(c.presenterNickname)}さん</a>`;
   }
+  // 事件ページ（full）で、ご本人（この事件の問題提起人）としてログイン中のときだけ出す自己確認バー。
+  // presenter.htmlの同じ見た目のバーと揃え、パスワード変更・ログアウトをここに集約する
+  // （旧・ページ最下部の「Xさんとしてログイン中です」はcase.htmlでは廃止しここへ一本化。2026-08-30。
+  // クリック処理はcaseCardHtmlの外＝呼び出し側のページで、innerHTML差し替え後に付け直す）
+  function caseSelfBarHtml(c, full){
+    if(!full || !me.presenterId || c.presenterId!==me.presenterId) return "";
+    return `<div class="selfbar"><span class="badge">ご本人としてログイン中</span>`+
+      `<a id="caseSelfPwLink">パスワードを変更</a><span class="sep">・</span>`+
+      `<a id="caseSelfLogoutLink">ログアウト</a></div>`;
+  }
   // 仮アイコンに使う頭文字。「【サンプル】」「【控訴審】」のような先頭の囲みは、どの事件でも同じ文字になって
   // 見分けの役に立たないので読み飛ばし、囲みの後ろの頭文字を拾う（囲みだけで中身が無い名前は元の頭文字に戻す）
   function placeholderChar(name){
@@ -449,6 +459,7 @@ window.CC = (function(){
               : `<a class="d-title-link" href="case?id=${encodeURIComponent(c.id)}">${escapeHtml(c.name)}</a>`
             } ${likeHtml(c)}</h2>
             ${presenterNameHtml(c)}
+            ${caseSelfBarHtml(c, full)}
           </div>
         </div>
         ${tagsHtml(c)}
@@ -918,6 +929,9 @@ window.CC = (function(){
       });
     }else if(me.presenterId){
       if(opts.hideWhenUnlocked){ el.innerHTML=""; return; }
+      // 事件ページ（case.html）は同じ内容を上部の自己確認バー（caseSelfBarHtml）に集約したので、
+      // ここでは出さない（2026-08-30）
+      if(opts.hidePresenterSelf){ el.innerHTML=""; return; }
       el.innerHTML =
         `<br>${escapeHtml(me.presenterNickname||"")}さんとしてログイン中です。`+
         `<br><a id="stMyPage">自分の事件一覧</a><span class="sep">・</span>`+

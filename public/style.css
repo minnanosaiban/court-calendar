@@ -558,7 +558,9 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 /* 「すでに掲載されている方へ」＝問題提起人ログインへの入口。「掲載をご希望の方へ」の続きとして
    同じ枠の下部に置く（フッターのひっそりした行からは外した。2026-08-30） */
 .login-invite{margin-top:20px;padding-top:16px;border-top:1px solid rgba(185,50,38,.15)}
-.login-invite .pillbtn{margin-top:8px}
+/* 「ログイン」の文字は「掲載をご希望の方へ」(.subhead) と同じ大きさ・書体に揃える
+   （.pillbtn は他のページ内リンクでも使い回すクラスなので、ここだけ上書きする） */
+.login-invite .pillbtn{margin-top:8px;font-family:"Shippori Mincho",serif;font-size:1.2rem}
 
 /* ---- modal ---- */
 .overlay{position:fixed;inset:0;background:rgba(28,26,22,.34);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
