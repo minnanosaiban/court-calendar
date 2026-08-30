@@ -201,6 +201,17 @@
         if(Date.now()-popOpenedAt<400) return;
         location.href="case?id="+encodeURIComponent(row.dataset.case);
       });
+      // スマホには「ホバー」が無いので、矢印(.pop-arrow)・日付の下線は:hoverだけでは触れる前に見えない。
+      // 触れている間だけ.touchingを付けて同じ見た目を出す（アイコンに触れたときは、行ではなく
+      // アイコンの別リンクなので付けない＝クリックの場合と同じ区別）。マウスでも押した瞬間に付くが、
+      // マウスは:hoverで先に見えているので実害はない（2026-08-30）
+      row.addEventListener("pointerdown",(e)=>{
+        if(e.target.closest(".cicon-link")) return;
+        row.classList.add("touching");
+      });
+      ["pointerup","pointercancel","pointerleave"].forEach(evt=>
+        row.addEventListener(evt,()=>row.classList.remove("touching"))
+      );
     });
     dayPop.querySelectorAll("[data-bookmark]").forEach(b=>{
       b.addEventListener("click",(e)=>{

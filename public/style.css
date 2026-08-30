@@ -495,15 +495,19 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .pop-row + .pop-row{margin-top:4px;border-top:1px solid var(--tint);padding-top:12px}
 .pop-arrow{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--stamp);font-size:.85rem;
   transition:transform .15s ease}
-/* カードに触れると矢印が少し右へ動く（クリックできる目印。2026-08-30） */
-.pop-row:hover .pop-arrow{transform:translateY(-50%) translateX(3px)}
+/* カードに触れると矢印が少し右へ動く（クリックできる目印）。スマホには「ホバー」が無いので、
+   触れている間だけ付く.touchingでも同じように動かす（.touchingはJS側でアイコンに触れたときは
+   付けない。:hoverはCSSだけでは子のアイコンに乗っても付いてしまうので、:has()でアイコンに
+   マウスが乗っている間は除外する＝アイコンは別リンクだと、動きが出ないことで分かる。2026-08-30） */
+.pop-row:hover:not(:has(.cicon-link:hover)) .pop-arrow,.pop-row.touching .pop-arrow{transform:translateY(-50%) translateX(3px)}
 .pop-main{display:flex;gap:10px;align-items:flex-start}
 .pop-text{min-width:0;flex:1}
-/* 日付「9/18（金） 10:30」に最初から下線を付けておく（hoverで出す方式だと、スマホは
-   触れる＝クリックがほぼ同時に起きるため、動きが表示しきる前にページ遷移してしまい見えなかった。
-   常時表示なら触れる前から「クリックできる場所」だと分かり、スマホでもPCでも同じに効く。2026-08-30） */
 .pop-date{font-size:.8rem;color:var(--mut);font-variant-numeric:tabular-nums;
-  text-decoration:underline;text-decoration-color:var(--stamp);text-underline-offset:3px}
+  text-decoration:underline;text-decoration-color:transparent;text-underline-offset:3px;
+  transition:text-decoration-color .15s ease}
+/* 矢印と同じく、触れている間だけ日付「9/18（金） 10:30」に下線が引かれる
+   （アイコン経由の移動と区別するための目印。2026-08-30） */
+.pop-row:hover:not(:has(.cicon-link:hover)) .pop-date,.pop-row.touching .pop-date{text-decoration-color:var(--stamp)}
 /* 日付の数字だけ一段大きくして目立たせる（事件名.pop-title=.9remより大きい1.05rem・
    「今後の期日」.ud b と同じ扱い） */
 .pop-date b{color:var(--ink);font-weight:600;font-size:1.05rem;font-family:"Shippori Mincho",serif}
@@ -530,16 +534,22 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 /* flex:1 が無いと、事件名の短い行では矢印(.u-arrow)が文字のすぐ右で止まってしまい、
    行ごとに矢印の位置が揃わなかった。残りの幅を持たせて、矢印を常にカード右端に揃える（2026-08-30） */
 .ubody{min-width:0;flex:1}
-.ud{color:var(--mut);font-size:.8rem;font-variant-numeric:tabular-nums}
+.ud{color:var(--mut);font-size:.8rem;font-variant-numeric:tabular-nums;
+  text-decoration:underline;text-decoration-color:transparent;text-underline-offset:3px;
+  transition:text-decoration-color .15s ease}
 /* 日付の数字だけ一段大きくして目立たせる（事件名.9remより大きい1.05rem・2026-08-27） */
 .ud b{color:var(--ink);font-weight:600;font-size:1.05rem;font-family:"Shippori Mincho",serif}
+/* カードに触れると、矢印(.u-arrow)と同じく日付に赤い下線が引かれる（.pop-dateと同じ扱い。
+   アイコンに乗っている間は:has()で除外＝アイコンは別リンクだと分かる。
+   まずPC（:hover）から。スマホの「触れている間」対応は次の段階で。2026-08-30） */
+.u:hover:not(:has(.cicon-link:hover)) .ud{text-decoration-color:var(--stamp)}
 /* 事件名。ルールが無く body の15pxをそのまま継承していたので、本文段（.9rem）に載せる（2026-08-27） */
 .ut{font-size:.9rem}
 .um{color:var(--mut);font-size:.8rem;overflow:hidden;text-overflow:ellipsis}
 .u-empty{color:var(--mut);font-size:.9rem;padding:24px 12px;text-align:center}
 /* 行末の矢印。.pop-arrowと同じく、カードに触れると少し右へ動く（クリックできる目印。2026-08-30） */
 .u-arrow{flex:none;align-self:center;color:var(--stamp);font-size:.85rem;transition:transform .15s ease}
-.u:hover .u-arrow{transform:translateX(3px)}
+.u:hover:not(:has(.cicon-link:hover)) .u-arrow{transform:translateX(3px)}
 
 /* ---- footer最終行：ソースコードリンク＋事務局用ステータスを1行に並べる（2026-08-25） ---- */
 .status-row{margin-top:8px;color:var(--mut);font-size:.8rem;line-height:1.9}
