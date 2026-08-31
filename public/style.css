@@ -466,6 +466,11 @@ a{color:inherit}
   font-size:.7rem;color:var(--ink);text-decoration:none;line-height:1.5}
 .pillbtn:hover{border-color:#c9c6bc}
 .pillbtn i{color:var(--stamp);margin-left:.4em;line-height:1}
+/* 「事件情報を編集」など、あなた専用の操作は他の .pillbtn（戻る等、地味なナビ）と紛れないよう、
+   編集操作専用の色 --edit で地を塗って区別する（.selfbar .badge と同じ薄い青。2026-08-31） */
+.pillbtn-edit{background:#eef3f6;border-color:#eef3f6;color:var(--edit)}
+.pillbtn-edit:hover{border-color:#dbe6ee}
+.pillbtn-edit i{color:var(--edit)}
 
 /* ---- タグ（事件詳細の下・「事件をさがす」の絞り込みと各行） ---- */
 .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}

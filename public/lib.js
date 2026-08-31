@@ -340,8 +340,10 @@ window.CC = (function(){
   function caseSelfBarHtml(c, full){
     if(!full || !canEditCase(c.id)) return "";
     // 他の.selfbar内リンク（下線だけの地味なテキスト）より目立たせたいので、.pillbtn（「戻る」等と
-    // 同じ枠付きボタン）にする（2026-08-30）
-    const editLink = `<a class="pillbtn" href="case-edit.html?id=${encodeURIComponent(c.id)}"><i class="bi bi-pencil-square" aria-hidden="true"></i> 事件情報を編集</a>`;
+    // 同じ枠付きボタン）にする（2026-08-30）。ただし地の色まで「戻る」等と同じだと、すぐ上の
+    // 「事件をさがすに戻る」と見分けがつかず、ナビの帯として素通りされてしまう。編集操作専用の色
+    // --edit で地を塗った pillbtn-edit にして、あなた専用の操作だと分かるようにする（2026-08-31）
+    const editLink = `<a class="pillbtn pillbtn-edit" href="case-edit.html?id=${encodeURIComponent(c.id)}"><i class="bi bi-pencil-square" aria-hidden="true"></i> 事件情報を編集</a>`;
     const isSelf = me.presenterId && c.presenterId===me.presenterId;
     if(!isSelf){
       // 運営（事務局）としてログイン中：編集リンクだけを出す（「ご本人」の名乗りは不要なため）
