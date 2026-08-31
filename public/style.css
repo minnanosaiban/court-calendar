@@ -474,7 +474,9 @@ a{color:inherit}
    小さいと判断）。ラベルは常に見える文字として円の外・下に置く（title属性でのホバー表示だと、
    ブラウザ既定の枠線つきツールチップが出てしまい「罫線より余白で区切る」というサイトの方針と
    合わないため、title属性はやめてこちらにした。読み上げ用のaria-labelは残す） */
-.edit-fab{margin-left:auto;flex:none;display:flex;flex-direction:column;align-items:center;
+/* .selfbar a{text-decoration:underline} より詳しく指定して、下線を確実に消す
+   （.edit-fab単体だと.selfbar aと詳しさが同点で、後者の下線が勝ってしまうため） */
+.selfbar .edit-fab{margin-left:auto;flex:none;display:flex;flex-direction:column;align-items:center;
   gap:4px;text-decoration:none}
 .edit-fab-circle{display:grid;place-content:center;width:48px;height:48px;border-radius:50%;
   background:var(--stamp);color:#fff}
