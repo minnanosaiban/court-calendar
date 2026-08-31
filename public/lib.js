@@ -344,7 +344,7 @@ window.CC = (function(){
     // 文字リンクは左側にまとめ、editLinkはDOM順の最後に置いてmargin-left:autoで単独で右へ
     // 押し出す（2026-08-31。以前は.pillbtnの横並びだったが、すぐ上の「事件をさがすに戻る」と
     // 見分けがつかず、ナビの帯として素通りされてしまっていた）
-    const editLink = `<a class="edit-fab" href="case-edit.html?id=${encodeURIComponent(c.id)}" aria-label="事件情報を編集" title="事件情報を編集"><i class="bi bi-pencil-square" aria-hidden="true"></i></a>`;
+    const editLink = `<a class="edit-fab" href="case-edit.html?id=${encodeURIComponent(c.id)}" aria-label="事件情報を編集"><span class="edit-fab-circle"><i class="bi bi-pencil-square" aria-hidden="true"></i></span><span class="edit-fab-label">編集</span></a>`;
     const isSelf = me.presenterId && c.presenterId===me.presenterId;
     if(!isSelf){
       // 運営（事務局）としてログイン中：編集リンクだけを出す（「ご本人」の名乗りは不要なため）

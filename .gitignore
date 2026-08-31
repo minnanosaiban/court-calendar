@@ -13,3 +13,9 @@ backup_*.sql
 # 非公開にする事件の実データを直接 INSERT する一度きりのスクリプト（本番データを含むので公開しない）。
 # 通常の migrate_NNN_*.sql（スキーマ変更だけ・データは含まない）とは分けてこの名前にする。
 local_*.sql
+
+# scripts/case_slides の生成物（画像本体・実行のたびに変わる一時ファイル）。
+# ソースはSLIDES/ROWSの定義側にあるので、これらは残さない。
+scripts/case_slides/out/
+scripts/case_slides/plan.json
+scripts/case_slides/update.sql

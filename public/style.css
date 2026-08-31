@@ -164,7 +164,8 @@ a{color:inherit}
 /* 問題提起人が自分としてログイン中の目印（presenter.html）。状態（バッジ）と操作
    （パスワード変更・ログアウト）を同じ行にまとめる（2026-08-30） */
 .selfbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:.85rem;color:var(--mut);margin-top:8px}
-.selfbar .badge{background:#eef3f6;color:var(--edit);border-radius:999px;padding:2px 12px;font-size:.78rem}
+/* .edit-fab（右端の編集ボタン）と同じ赤系に揃える（2026-08-31。以前は編集操作専用の青 --edit だった） */
+.selfbar .badge{background:rgba(185,50,38,.1);color:var(--stamp);border-radius:999px;padding:2px 12px;font-size:.78rem}
 .selfbar a{cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .selfbar .sep{color:var(--faint)}
 /* いいね：タイトルに続けて置く。押すと朱色で塗る。
@@ -466,14 +467,20 @@ a{color:inherit}
   font-size:.7rem;color:var(--ink);text-decoration:none;line-height:1.5}
 .pillbtn:hover{border-color:#c9c6bc}
 .pillbtn i{color:var(--stamp);margin-left:.4em;line-height:1}
-/* 「事件情報を編集」は .selfbar の右端に置く、正円のアイコンボタン。地味な .pillbtn（戻る等）の
-   並びに紛れないよう、形も色も変える。色はサイトの主役の朱色（--stamp、ロゴのスタンプと同じ）で
-   塗って目立たせる（2026-08-31。--stampは.btn-del等「削除」リンクの文字色にも使っているが、あちらは
-   下線付きの地味なテキストで形も文脈も違うので、取り違えの実害は小さいと判断） */
-.edit-fab{margin-left:auto;flex:none;display:grid;place-content:center;width:44px;height:44px;
-  border-radius:50%;background:var(--stamp);color:#fff;text-decoration:none}
-.edit-fab i{font-size:1.15rem;line-height:1}
-.edit-fab:hover{background:#9c2a20}
+/* 「事件情報を編集」は .selfbar の右端に置く、正円のアイコンボタン＋下に添えたラベル。地味な
+   .pillbtn（戻る等）の並びに紛れないよう、形も色も変える。色はサイトの主役の朱色（--stamp、
+   ロゴのスタンプと同じ）で塗って目立たせる（2026-08-31。--stampは.btn-del等「削除」リンクの
+   文字色にも使っているが、あちらは下線付きの地味なテキストで形も文脈も違うので、取り違えの実害は
+   小さいと判断）。ラベルは常に見える文字として円の外・下に置く（title属性でのホバー表示だと、
+   ブラウザ既定の枠線つきツールチップが出てしまい「罫線より余白で区切る」というサイトの方針と
+   合わないため、title属性はやめてこちらにした。読み上げ用のaria-labelは残す） */
+.edit-fab{margin-left:auto;flex:none;display:flex;flex-direction:column;align-items:center;
+  gap:4px;text-decoration:none}
+.edit-fab-circle{display:grid;place-content:center;width:48px;height:48px;border-radius:50%;
+  background:var(--stamp);color:#fff}
+.edit-fab-circle i{font-size:1.1rem;line-height:1}
+.edit-fab-label{font-size:.7rem;line-height:1;letter-spacing:.02em;color:var(--stamp)}
+.edit-fab:hover .edit-fab-circle{background:#9c2a20}
 
 /* ---- タグ（事件詳細の下・「事件をさがす」の絞り込みと各行） ---- */
 .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
