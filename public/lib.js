@@ -339,21 +339,21 @@ window.CC = (function(){
   // （#caseSelfBar）に呼び出し側が直接描く。クリック処理もcase.html側で、innerHTML差し替え後に付け直す）
   function caseSelfBarHtml(c, full){
     if(!full || !canEditCase(c.id)) return "";
-    // 他の.selfbar内リンク（下線だけの地味なテキスト）より目立たせたいので、.pillbtn（「戻る」等と
-    // 同じ枠付きボタン）にする（2026-08-30）。ただし地の色まで「戻る」等と同じだと、すぐ上の
-    // 「事件をさがすに戻る」と見分けがつかず、ナビの帯として素通りされてしまう。編集操作専用の色
-    // --edit で地を塗った pillbtn-edit にして、あなた専用の操作だと分かるようにする（2026-08-31）
-    const editLink = `<a class="pillbtn pillbtn-edit" href="case-edit.html?id=${encodeURIComponent(c.id)}"><i class="bi bi-pencil-square" aria-hidden="true"></i> 事件情報を編集</a>`;
+    // 他の.selfbar内リンク（下線だけの地味なテキスト）と同じ並びだと素通りされてしまうので、
+    // .edit-fab（右端に寄せた正円のアイコンボタン）にして目立たせる。バッジ・自分の事件一覧等の
+    // 文字リンクは左側にまとめ、editLinkはDOM順の最後に置いてmargin-left:autoで単独で右へ
+    // 押し出す（2026-08-31。以前は.pillbtnの横並びだったが、すぐ上の「事件をさがすに戻る」と
+    // 見分けがつかず、ナビの帯として素通りされてしまっていた）
+    const editLink = `<a class="edit-fab" href="case-edit.html?id=${encodeURIComponent(c.id)}" aria-label="事件情報を編集" title="事件情報を編集"><i class="bi bi-pencil-square" aria-hidden="true"></i></a>`;
     const isSelf = me.presenterId && c.presenterId===me.presenterId;
     if(!isSelf){
       // 運営（事務局）としてログイン中：編集リンクだけを出す（「ご本人」の名乗りは不要なため）
       return `<div class="selfbar">${editLink}</div>`;
     }
     return `<div class="selfbar"><span class="badge">ご本人としてログイン中</span>`+
-      editLink+`<span class="sep">・</span>`+
       `<a id="caseSelfMyPage">自分の事件一覧</a><span class="sep">・</span>`+
       `<a id="caseSelfPwLink">パスワードを変更</a><span class="sep">・</span>`+
-      `<a id="caseSelfLogoutLink">ログアウト</a></div>`;
+      `<a id="caseSelfLogoutLink">ログアウト</a>`+editLink+`</div>`;
   }
   // 仮アイコンに使う頭文字。「【サンプル】」「【控訴審】」のような先頭の囲みは、どの事件でも同じ文字になって
   // 見分けの役に立たないので読み飛ばし、囲みの後ろの頭文字を拾う（囲みだけで中身が無い名前は元の頭文字に戻す）

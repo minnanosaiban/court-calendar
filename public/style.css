@@ -466,11 +466,14 @@ a{color:inherit}
   font-size:.7rem;color:var(--ink);text-decoration:none;line-height:1.5}
 .pillbtn:hover{border-color:#c9c6bc}
 .pillbtn i{color:var(--stamp);margin-left:.4em;line-height:1}
-/* 「事件情報を編集」など、あなた専用の操作は他の .pillbtn（戻る等、地味なナビ）と紛れないよう、
-   編集操作専用の色 --edit で地を塗って区別する（.selfbar .badge と同じ薄い青。2026-08-31） */
-.pillbtn-edit{background:#eef3f6;border-color:#eef3f6;color:var(--edit)}
-.pillbtn-edit:hover{border-color:#dbe6ee}
-.pillbtn-edit i{color:var(--edit)}
+/* 「事件情報を編集」は .selfbar の右端に置く、正円のアイコンボタン。地味な .pillbtn（戻る等）の
+   並びに紛れないよう、形も色も変える。色はサイトの主役の朱色（--stamp、ロゴのスタンプと同じ）で
+   塗って目立たせる（2026-08-31。--stampは.btn-del等「削除」リンクの文字色にも使っているが、あちらは
+   下線付きの地味なテキストで形も文脈も違うので、取り違えの実害は小さいと判断） */
+.edit-fab{margin-left:auto;flex:none;display:grid;place-content:center;width:44px;height:44px;
+  border-radius:50%;background:var(--stamp);color:#fff;text-decoration:none}
+.edit-fab i{font-size:1.15rem;line-height:1}
+.edit-fab:hover{background:#9c2a20}
 
 /* ---- タグ（事件詳細の下・「事件をさがす」の絞り込みと各行） ---- */
 .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
