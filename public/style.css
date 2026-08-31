@@ -44,6 +44,9 @@ a{color:inherit}
 .masthead h1 a{color:inherit;text-decoration:none}
 .masthead h1 a:hover{opacity:.75}
 .masthead p{font-size:.8rem;color:var(--mut);letter-spacing:.02em;margin-top:2px}
+/* スマホ幅だけで改行したい箇所に <br class="mobile-break"> を挟む（例：キャッチコピー） */
+.mobile-break{display:none}
+@media(max-width:559.98px){.mobile-break{display:inline}}
 /* 「←トップに戻る」は .pillbtn（「事件をさがす→」等）と同じ見た目にする（HTML側は
    class="pillbtn backlink"）。.pillbtn の margin 一括指定より後に置き、上だけ上書きする */
 .pillbtn.backlink{margin-top:24px}

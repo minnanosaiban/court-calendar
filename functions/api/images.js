@@ -31,8 +31,10 @@ function readImageFile(form, key, label) {
 }
 
 // フォーム（multipart/form-data）を読む。caption・並び順は任意、caseId は必須。
-// file は新規追加では必須（写真は本文と違い、常にファイルが要る）。差し替え時は無くてもよい。
-// webFile はWeb用バリエーション（任意・常に省略可）。removeWeb="1" ならWeb用だけを外す
+// file（スマホ用）・webFile（Web用）はどちらも常に省略可。ただし新規追加（requireFile=true）では
+// どちらか一方は必須（写真は本文と違い、常にファイルが要る）。片方しか無い場合の扱い（もう一方にも
+// 同じ画像を使う）はonRequestPost側で行う（ここでは欄ごとの内容をそのまま返すだけにする。2026-08-30）。
+// removeWeb="1" ならWeb用だけを外す
 export async function readImageForm(request, env, requireFile) {
   let form;
   try { form = await request.formData(); } catch { return { error: "bad form" }; }
@@ -53,11 +55,13 @@ export async function readImageForm(request, env, requireFile) {
   if (!env.FILES && (form.get("file") || form.get("webFile"))) {
     return { error: "写真のアップロード（R2）はまだ使えません" };
   }
-  const main = readImageFile(form, "file", "写真");
+  const main = readImageFile(form, "file", "スマホ用画像");
   if (main.error) return { error: main.error };
-  if (!main.file && requireFile) return { error: "写真ファイルを選んでください" };
   const web = readImageFile(form, "webFile", "Web用画像");
   if (web.error) return { error: web.error };
+  if (requireFile && !main.file && !web.file) {
+    return { error: "Web用画像・スマホ用画像のどちらか一方を選んでください" };
+  }
 
   return { fields, file: main.file, webFile: web.file, removeWeb: get("removeWeb") === "1" };
 }
@@ -72,16 +76,20 @@ export async function onRequestPost({ request, env }) {
 
   const iid = newId("i");
   const now = new Date().toISOString();
-  const key = await putFile(env, "i", iid, r.file);
-  const webKey = r.webFile ? await putFile(env, "iw", iid, r.webFile) : null;
+  // どちらか片方しか入れなかったときは、同じ画像を両方の欄に使う（アップロードは1回だけ、
+  // R2キーを両方の列から参照する＝複製はしない）。両方入れたときはそれぞれ別に保存する（2026-08-30）
+  const mainFile = r.file || r.webFile;
+  const webFile = r.webFile || r.file;
+  const key = await putFile(env, "i", iid, mainFile);
+  const webKey = (r.file && r.webFile) ? await putFile(env, "iw", iid, r.webFile) : key;
   const max = await env.DB.prepare(`SELECT COALESCE(MAX(sort_order), -1) AS m FROM case_images WHERE case_id = ?`)
     .bind(r.fields.case_id).first();
 
   await env.DB.prepare(
     `INSERT INTO case_images (id, case_id, r2_key, file_name, file_size, mime, web_r2_key, web_file_name, web_file_size, web_mime, caption, sort_order, created_by, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-  ).bind(iid, r.fields.case_id, key, r.file.name, r.file.size, r.file.mime,
-         webKey, r.webFile ? r.webFile.name : null, r.webFile ? r.webFile.size : null, r.webFile ? r.webFile.mime : null,
+  ).bind(iid, r.fields.case_id, key, mainFile.name, mainFile.size, mainFile.mime,
+         webKey, webFile.name, webFile.size, webFile.mime,
          r.fields.caption, (max.m ?? -1) + 1, actorLabel(id, auth), now).run();
 
   const row = await env.DB.prepare(`${SELECT} WHERE i.id = ?`).bind(iid).first();

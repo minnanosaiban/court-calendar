@@ -20,22 +20,31 @@ export async function onRequestPut({ request, env, params }) {
   const sets = ["caption=?", "sort_order=?"];
   const bind = [f.caption, sortOrder];
   let oldR2Key = null, oldWebR2Key = null;
+  let finalR2Key = cur.r2_key, finalWebR2Key = cur.web_r2_key;
 
   if (r.file) {
     const key = await putFile(env, "i", iid, r.file);
     sets.push("r2_key=?", "file_name=?", "file_size=?", "mime=?");
     bind.push(key, r.file.name, r.file.size, r.file.mime);
     oldR2Key = cur.r2_key !== key ? cur.r2_key : null;
+    finalR2Key = key;
   }
   if (r.webFile) {
     const webKey = await putFile(env, "iw", iid, r.webFile);
     sets.push("web_r2_key=?", "web_file_name=?", "web_file_size=?", "web_mime=?");
     bind.push(webKey, r.webFile.name, r.webFile.size, r.webFile.mime);
     oldWebR2Key = cur.web_r2_key !== webKey ? cur.web_r2_key : null;
+    finalWebR2Key = webKey;
   } else if (r.removeWeb) {
     sets.push("web_r2_key=NULL", "web_file_name=NULL", "web_file_size=NULL", "web_mime=NULL");
     oldWebR2Key = cur.web_r2_key || null;
+    finalWebR2Key = null;
   }
+
+  // r2_key・web_r2_key が同じファイルを指している場合がある（新規追加時に片方だけ入力したケース）。
+  // 差し替え・削除の後も、もう一方の列がまだそのキーを参照しているなら消さない（2026-08-30）
+  if (oldR2Key && oldR2Key === finalWebR2Key) oldR2Key = null;
+  if (oldWebR2Key && oldWebR2Key === finalR2Key) oldWebR2Key = null;
 
   await env.DB.prepare(`UPDATE case_images SET ${sets.join(", ")} WHERE id=?`).bind(...bind, iid).run();
   if (oldR2Key && env.FILES) await env.FILES.delete(oldR2Key).catch(() => {});
@@ -54,7 +63,8 @@ export async function onRequestDelete({ request, env, params }) {
   const auth = await authorizeCaseWrite(request, env, id, cur.case_id);
   if (!auth.ok) return json({ error: "forbidden" }, 403);
   await env.DB.prepare(`DELETE FROM case_images WHERE id = ?`).bind(iid).run();
-  if (cur.r2_key && env.FILES) await env.FILES.delete(cur.r2_key).catch(() => {});
-  if (cur.web_r2_key && env.FILES) await env.FILES.delete(cur.web_r2_key).catch(() => {});
+  // r2_key・web_r2_key が同じキーを指すことがあるので重複削除しない
+  const keys = new Set([cur.r2_key, cur.web_r2_key].filter(Boolean));
+  if (env.FILES) await Promise.all([...keys].map((k) => env.FILES.delete(k).catch(() => {})));
   return json({ ok: true });
 }

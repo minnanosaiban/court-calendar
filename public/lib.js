@@ -1610,16 +1610,17 @@ window.CC = (function(){
             <button type="button" class="btn-save" data-save="img" data-id="${isNew?"":escapeAttr(im.id)}">この画像を保存</button>
           </span>
         </div>
-        <div class="field"><label>画像ファイル ${isNew?'<span class="reqmark">＊</span>':""}</label>
-          <input type="file" class="ef-file" accept="image/jpeg,image/png,image/webp">
-          ${hasR2?`<p class="fnote">いまの画像：<img src="${escapeAttr(im.url)}" alt="" style="width:64px;height:46px;object-fit:cover;border-radius:6px;vertical-align:middle;margin-left:6px">　ファイルを選ぶと差し替わります。</p>`:""}
-          <p class="fnote">JPEG・PNG・WebP、12MBまで。証拠画像は人の顔・氏名・住所が写り込んでいないか確認してから登録してください。</p>
-        </div>
-        <div class="field"><label>Web用画像（任意）</label>
+        ${isNew?`<p class="fnote">Web用画像・スマホ用画像のどちらか一方は必ず選んでください。</p>`:""}
+        <div class="field"><label>Web用画像</label>
           <input type="file" class="ef-web-file" accept="image/jpeg,image/png,image/webp">
           ${hasWeb?`<p class="fnote">いまのWeb用：<img src="${escapeAttr(im.webUrl)}" alt="" style="width:64px;height:46px;object-fit:cover;border-radius:6px;vertical-align:middle;margin-left:6px">　ファイルを選ぶと差し替わります。</p>
-          <label class="check"><input type="checkbox" class="ef-web-remove"> 保存時にWeb用を外す（元の画像だけに戻ります）</label>`:""}
-          <p class="fnote">このサイトに合うフォント・サイズで作った版があれば登録できます。あれば事件ページの表示はこちらを優先します。JPEG・PNG・WebP、12MBまで。</p>
+          <label class="check"><input type="checkbox" class="ef-web-remove"> 保存時にWeb用を外す（スマホ用画像だけに戻ります）</label>`:""}
+          <p class="fnote">このサイトに合うフォント・サイズで作った版。あれば事件ページの表示（画面幅560px以上）はこちらを優先します。JPEG・PNG・WebP、12MBまで。</p>
+        </div>
+        <div class="field"><label>スマホ用画像</label>
+          <input type="file" class="ef-file" accept="image/jpeg,image/png,image/webp">
+          ${hasR2?`<p class="fnote">いまのスマホ用：<img src="${escapeAttr(im.url)}" alt="" style="width:64px;height:46px;object-fit:cover;border-radius:6px;vertical-align:middle;margin-left:6px">　ファイルを選ぶと差し替わります。</p>`:""}
+          <p class="fnote">JPEG・PNG・WebP、12MBまで。証拠画像は人の顔・氏名・住所が写り込んでいないか確認してから登録してください。</p>
         </div>
         <div class="field"><label>説明（1行）</label><input type="text" class="ef-caption" value="${escapeAttr(im?im.caption:"")}" placeholder="例）提訴後の記者会見にて"></div>
         ${isNew?"":`<div class="ifoot"><button type="button" class="del" data-del="img" data-id="${escapeAttr(im.id)}">この画像を削除</button></div>`}
@@ -1628,9 +1629,9 @@ window.CC = (function(){
     async function saveImgRow(root, id){
       if(!canEditCase(edCaseId)) return;
       const f = root.querySelector(".ef-file").files[0];
-      if(!id && !f){ alert("画像ファイルを選んでください。"); return; }
-      if(f && f.size>12*1024*1024){ alert("画像は12MBまでです。"); return; }
       const wf = root.querySelector(".ef-web-file").files[0];
+      if(!id && !f && !wf){ alert("Web用画像・スマホ用画像のどちらか一方を選んでください。"); return; }
+      if(f && f.size>12*1024*1024){ alert("スマホ用画像は12MBまでです。"); return; }
       if(wf && wf.size>12*1024*1024){ alert("Web用画像は12MBまでです。"); return; }
       const webRemove = root.querySelector(".ef-web-remove");
       const fd=new FormData();
