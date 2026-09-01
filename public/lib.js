@@ -1095,10 +1095,10 @@ window.CC = (function(){
         t.classList.toggle("solo", !!(lf && lf.hidden));
       });
     }
-    const TIER_LABELS={min:"最小限掲載", std:"標準的掲載", detail:"詳細な掲載"};
-    // 選択カード・「すべての項目を表示する」から呼ぶ。掲載レベルを確定し、隠していた選択画面から
-    // フォーム本体に切り替える。値はどのレベルでもフォームの裏に残ったままなので、あとから
-    // レベルを上げても入力済みの内容は消えない
+    const TIER_CARDS=[["ceTierMin","min"],["ceTierStd","std"],["ceTierDetail","detail"]];
+    // 選択カードから呼ぶ。掲載レベルを確定し、下の入力欄をそのレベルに合わせて出し分ける。
+    // カード自体はタブのように選び直せるまま出し続ける（隠さない）。値はどのレベルでも
+    // フォームの裏に残ったままなので、選び直しても入力済みの内容は消えない
     function applyTier(tier){
       edTier=tier;
       applyTierGates();
@@ -1106,11 +1106,10 @@ window.CC = (function(){
       document.querySelectorAll(".lssec").forEach(s=>{ s.hidden = !edCaseId || !tierAllows(s.dataset.tierMin); });
       $("sec-notice").hidden = !edCaseId || !tierAllows($("sec-notice").dataset.tierMin);
       $("sec-card").hidden = !edCaseId || !tierAllows($("sec-card").dataset.tierMin);
-      $("ceTierPick").hidden=true;
       $("ceGrid").hidden=false;
       autosizeAll($("ceForm"));   // グリッドが表示されたこの時点で測る（隠れているとscrollHeightが0になるため）
-      $("ceTierNote").hidden = (tier==="detail");
-      $("ceTierLabel").textContent = TIER_LABELS[tier];
+      // いま選んでいるカードを目立たせる（タブのon状態と同じ考え方）
+      TIER_CARDS.forEach(([elId,t])=>{ $(elId).classList.toggle("on", t===tier); });
       // リロード・共有時に同じ掲載レベルへ戻れるようURLへ反映する
       const url=new URL(location.href);
       url.searchParams.set("tier", tier);
@@ -1544,13 +1543,13 @@ window.CC = (function(){
     ceForm.addEventListener("input",(e)=>{ if(!e.target.closest(".ieditor")) edDirty=true; });
     ceForm.addEventListener("change",(e)=>{ if(!e.target.closest(".ieditor")) edDirty=true; });
     window.addEventListener("beforeunload",(e)=>{ if(edDirty){ e.preventDefault(); e.returnValue=""; } });
-    // 掲載レベルの選択カード（クリック・Enterキーどちらでも選べる。cases.htmlの事件カードと同じ配線）
-    [["ceTierMin","min"],["ceTierStd","std"],["ceTierDetail","detail"]].forEach(([elId,tier])=>{
+    // 掲載レベルの選択カード（クリック・Enterキーどちらでも選べる。cases.htmlの事件カードと同じ配線）。
+    // タブのようにいつでも選び直せるので、常時ここで配線しておく
+    TIER_CARDS.forEach(([elId,tier])=>{
       const el=$(elId);
       el.addEventListener("click", ()=>applyTier(tier));
       el.addEventListener("keydown",(e)=>{ if(e.key==="Enter") applyTier(tier); });
     });
-    $("ceTierEscalate").addEventListener("click", ()=>applyTier("detail"));
     // ページの初期化。CC.load() 後にページ側から呼ぶ。編集ロック解除（onChange）でも呼ばれるが、
     // フォームの充填は一度だけ（アイコン即時反映などの onChange で入力中の内容を上書きしない）
     initCaseEditPage = function(){
@@ -1611,17 +1610,18 @@ window.CC = (function(){
         fillCaseForm({});
       }
       renderImgList(); renderEvList(); renderMatList();
-      // 掲載レベルの決定（2026-09-01）。既存事件の編集で、掲載レベル指定（?tier=）も期日・資料等への
-      // 深いリンク（?open=）も無ければ、「最小限／標準的／詳細」の選択カードをまず出す。新規作成・
-      // 深いリンクからは選ばせず、従来どおりフル項目（詳細）にする。autosize・画像/期日案内等の
+      // 掲載レベルの決定（2026-09-01）。既存事件の編集で、期日・資料等への深いリンク（?open=）で
+      // 来たのでなければ、「最小限／標準的／詳細」の選択カードをタブのように出したままにする
+      // （新規作成・深いリンクからは選ばせず、従来どおりフル項目＝詳細にする）。URLに掲載レベル
+      // 指定（?tier=）があれば、その節をカードの下に最初から出す。autosize・画像/期日案内等の
       // 表示切り替えは applyTier() の中で行う（グリッドが実際に表示されるタイミングで測るため）
-      if(id){
-        const openParam=params.get("open");
+      const openParam=params.get("open");
+      if(id && !openParam){
+        tierPick.hidden=false;
         const urlTier=params.get("tier");
-        const initialTier = TIER_ORDER.hasOwnProperty(urlTier) ? urlTier : (openParam ? "detail" : null);
-        if(initialTier){ applyTier(initialTier); }
-        else{ grid.hidden=true; tierPick.hidden=false; }
+        if(TIER_ORDER.hasOwnProperty(urlTier)) applyTier(urlTier);
       }else{
+        tierPick.hidden=true;
         applyTier("detail");
       }
       openDeepLink();

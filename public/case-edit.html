@@ -24,13 +24,13 @@
 
   <a class="pillbtn backlink" id="ceBack" href="index.html"><i class="bi bi-arrow-left" aria-hidden="true"></i> <span id="ceBackLabel">戻る</span></a>
 
-  <div id="ceSelfBar"></div>
+  <!-- case.html の自己確認バー（#caseSelfBar）と同じ余白に揃える（2026-09-01） -->
+  <div id="ceSelfBar" style="margin-top:16px"></div>
 
   <div class="ce-title-row">
     <div class="ce-title" id="ceTitle">事件情報を編集</div>
     <span class="ce-title-warn">入力は、公開しても問題ない内容に限定してください。</span>
   </div>
-  <p class="fnote" id="ceTierNote" hidden>「<span id="ceTierLabel"></span>」の入力画面です。<a id="ceTierEscalate" style="cursor:pointer;text-decoration:underline">すべての項目を表示する</a></p>
   <div class="ce-case" id="ceCaseName"></div>
 
   <div class="card" id="ceLocked" hidden>
@@ -38,12 +38,13 @@
   </div>
 
   <!-- 掲載レベルの選択（2026-09-01）：赤の編集ボタンから来た人が、詳細な入力欄に迷わないよう、
-       まず「最小限／標準的／詳細」のどれで入力するか選んでもらう。既存の項目値はどれを選んでも
-       フォームの裏に残ったまま（保存で消えることはない）。選んだあとの画面にも「すべての項目を
-       表示する」を出し、いつでも増やせるようにする。事件を新規作成するとき・期日等の個別編集への
-       深いリンク（?open=）で来たときは選ばせず、従来どおりフル項目にする（initCaseEditPage 参照） -->
+       まず「最小限／標準的／詳細」のどれで入力するか選んでもらう。カード自体はタブのように
+       ずっと出したままにし、下の入力欄はどれを選んでいるかで表示する節が変わる（選び直しても
+       既存の項目値はフォームの裏に残ったままで、保存で消えることはない）。事件を新規作成するとき・
+       期日等の個別編集への深いリンク（?open=）で来たときは選ばせず、従来どおりフル項目にする
+       （initCaseEditPage 参照） -->
   <div id="ceTierPick" hidden>
-    <p class="fnote">どのくらい詳しく載せますか。あとから増やすこともできます。</p>
+    <p class="fnote">どのくらい詳しく載せますか。あとでいつでも切り替えられます。</p>
     <div class="clist">
       <div class="card ccard ccard-noicon" id="ceTierMin" role="link" tabindex="0">
         <div class="cbody">
