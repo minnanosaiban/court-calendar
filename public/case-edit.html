@@ -92,7 +92,7 @@
       <div data-sec="sec-name">事件名</div>
       <div data-sec="sec-caseno" data-tier-min="detail">事件番号</div>
       <div data-sec="sec-press" data-tier-min="std">報道・掲載</div>
-      <div data-sec="sec-card" data-tier-min="detail">Twitterカード</div>
+      <div data-sec="sec-card">Twitterカード</div>
       <div data-sec="sec-points" data-tier-min="std">争点</div>
       <div data-sec="sec-parties" data-tier-min="std">当事者</div>
       <div data-sec="sec-call" data-tier-min="std">裁判について</div>
@@ -103,7 +103,7 @@
       <div class="grp">表示の設定</div>
       <div data-sec="sec-notice" data-tier-min="std">期日案内</div>
       <div data-sec="sec-related" data-tier-min="detail">関連裁判</div>
-      <div data-sec="sec-board">掲示板</div>
+      <div data-sec="sec-board" data-tier-min="std">掲示板</div>
       <div data-sec="sec-close" data-tier-min="detail">終結</div>
     </nav>
     <div>
@@ -204,7 +204,7 @@
              未設定（既定）なら /api/cases/:id/card.png・card-square.png が期日・問題提起人から自動で
              「傍聴券」を描く。正方形版はTeams・Slack等がog:imageを中央トリミングする対策で、横長版と
              差し替えの仕組みは同じ（2026-08-30）。新規作成のときはまだ事件が無いので出さない -->
-        <div class="field" id="sec-card" data-tier-min="detail" hidden>
+        <div class="field" id="sec-card" hidden>
           <p class="msec">Twitterカード</p>
           <label>横長版（Large）</label>
           <div class="cicon-row">
@@ -335,11 +335,11 @@
           <p class="fnote">同じ事実に関連する別争点の訴訟など。どちらか一方に登録すれば、両方の事件ページに表示されます。</p>
         </div>
 
-        <p class="msec" id="sec-board">掲示板</p>
-        <div class="field">
+        <p class="msec" id="sec-board" data-tier-min="std">掲示板</p>
+        <div class="field" data-tier-min="std">
           <label class="check"><input type="checkbox" id="cBoardEnabled" checked> 「傍聴に行ってきたよ！掲示板」を表示する</label>
         </div>
-        <div class="field">
+        <div class="field" data-tier-min="std">
           <label class="check"><input type="checkbox" id="cBoardRestricted"> 投稿を制限する（一般の投稿は受け付けず、運営とこの事件の問題提起人のみ投稿できます）</label>
         </div>
 
