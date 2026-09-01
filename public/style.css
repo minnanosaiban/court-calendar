@@ -503,6 +503,13 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .tabs span{padding-bottom:8px;cursor:pointer;border-bottom:2px solid transparent}
 .tabs span.on{color:var(--ink);font-weight:500;border-bottom-color:var(--ink)}
 .clist{display:grid;gap:12px;margin-top:16px}
+/* 掲載レベルの選択カードは3枚を横に並べる（860px未満は他の編集ページ同様、縦積みのまま。
+   2026-09-01）。中の.ccardは元が横長カード用のflexなので、ここでは縦に積んで矢印を右下に置く */
+@media(min-width:860px){
+  #ceTierPick .clist{grid-template-columns:repeat(3,1fr)}
+  #ceTierPick .ccard{flex-direction:column;align-items:flex-start}
+  #ceTierPick .c-arrow{align-self:flex-end;margin-top:-8px}
+}
 /* 期日をさがす：並べ替えの切り替え（期日が古い順⇄新しい順）。タブの下・一覧の上に右寄せで置く */
 .sortrow{display:flex;justify-content:flex-end;gap:16px;flex-wrap:wrap;margin:8px 4px 12px}
 .sortlink{display:inline-flex;align-items:center;gap:4px;font-size:.8rem;color:var(--mut);cursor:pointer}
