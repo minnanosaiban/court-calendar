@@ -378,10 +378,15 @@ window.CC = (function(){
     const shareUrl = location.origin + "/case?id=" + encodeURIComponent(c.id);
     const text = encodeURIComponent(c.name);
     const u = encodeURIComponent(shareUrl);
+    // LINEはURLに openExternalBrowser=1 を付けると、受け取った側が内蔵ブラウザでなく端末の
+    // 標準ブラウザで開ける（LINE公式の仕組み）。写真選択や閲覧キー(localStorage)がLINEの
+    // 内蔵ブラウザで不安定になる問題を避けられるため、LINE共有リンクにだけ付ける
+    // （X向けリンクやコピー用リンクでは意味を持たないパラメータなので付けない）。
+    const lineUrl = encodeURIComponent(shareUrl + "&openExternalBrowser=1");
     return `<div class="share">
       <span class="share-lab">シェア</span>
       <a href="https://twitter.com/intent/tweet?text=${text}&url=${u}" target="_blank" rel="noopener" title="Xでシェア" aria-label="Xでシェア"><i class="bi bi-twitter-x" aria-hidden="true"></i></a>
-      <a href="https://social-plugins.line.me/lineit/share?url=${u}" target="_blank" rel="noopener" title="LINEで送る" aria-label="LINEで送る"><i class="bi bi-line" aria-hidden="true"></i></a>
+      <a href="https://social-plugins.line.me/lineit/share?url=${lineUrl}" target="_blank" rel="noopener" title="LINEで送る" aria-label="LINEで送る"><i class="bi bi-line" aria-hidden="true"></i></a>
       <button type="button" class="share-copy" data-copylink="${escapeAttr(shareUrl)}" title="リンクをコピー" aria-label="リンクをコピー"><i class="bi bi-link-45deg" aria-hidden="true"></i></button>
     </div>`;
   }
