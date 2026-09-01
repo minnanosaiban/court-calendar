@@ -28,11 +28,44 @@
     <div class="ce-title" id="ceTitle">事件情報を編集</div>
     <span class="ce-title-warn">入力は、公開しても問題ない内容に限定してください。</span>
   </div>
+  <p class="fnote" id="ceTierNote" hidden>「<span id="ceTierLabel"></span>」の入力画面です。<a id="ceTierEscalate" style="cursor:pointer;text-decoration:underline">すべての項目を表示する</a></p>
   <div class="ce-case" id="ceCaseName"></div>
   <div id="ceSelfBar"></div>
 
   <div class="card" id="ceLocked" hidden>
     <p class="empty-msg">編集にはパスワードが必要です。ページ下の「事務局用」からロックを解除してください。</p>
+  </div>
+
+  <!-- 掲載レベルの選択（2026-09-01）：赤の編集ボタンから来た人が、詳細な入力欄に迷わないよう、
+       まず「最小限／標準的／詳細」のどれで入力するか選んでもらう。既存の項目値はどれを選んでも
+       フォームの裏に残ったまま（保存で消えることはない）。選んだあとの画面にも「すべての項目を
+       表示する」を出し、いつでも増やせるようにする。事件を新規作成するとき・期日等の個別編集への
+       深いリンク（?open=）で来たときは選ばせず、従来どおりフル項目にする（initCaseEditPage 参照） -->
+  <div id="ceTierPick" hidden>
+    <p class="fnote">どのくらい詳しく載せますか。あとから増やすこともできます。</p>
+    <div class="clist">
+      <div class="card ccard ccard-noicon" id="ceTierMin" role="link" tabindex="0">
+        <div class="cbody">
+          <div class="ctitle">最小限掲載の入力へ</div>
+          <p class="fnote">事件名と期日だけ。まずは載せたい方に。</p>
+        </div>
+        <i class="bi bi-chevron-double-right c-arrow" aria-hidden="true"></i>
+      </div>
+      <div class="card ccard ccard-noicon" id="ceTierStd" role="link" tabindex="0">
+        <div class="cbody">
+          <div class="ctitle">標準的掲載の入力へ</div>
+          <p class="fnote">争点・当事者・裁判についてなど、よくある内容も載せたい方に。</p>
+        </div>
+        <i class="bi bi-chevron-double-right c-arrow" aria-hidden="true"></i>
+      </div>
+      <div class="card ccard ccard-noicon" id="ceTierDetail" role="link" tabindex="0">
+        <div class="cbody">
+          <div class="ctitle">詳細な掲載の入力へ</div>
+          <p class="fnote">画像・資料・関連裁判なども含め、すべての項目を使いたい方に。</p>
+        </div>
+        <i class="bi bi-chevron-double-right c-arrow" aria-hidden="true"></i>
+      </div>
+    </div>
   </div>
 
   <!-- 節の並びは「①本人について（ニックネーム・アイコン・Xアカウント）→②事件について
@@ -52,24 +85,24 @@
       <div class="grp">本人について</div>
       <div data-sec="sec-nickname" class="on">ニックネーム</div>
       <div data-sec="cPresenterIconRow">アイコン</div>
-      <div data-sec="cPresenterXUrlRow">Xアカウント</div>
+      <div data-sec="cPresenterXUrlRow" data-tier-min="std">Xアカウント</div>
       <div class="grp">事件について</div>
       <div data-sec="sec-name">事件名</div>
-      <div data-sec="sec-caseno">事件番号</div>
-      <div data-sec="sec-press">報道・掲載</div>
-      <div data-sec="sec-card">Twitterカード</div>
-      <div data-sec="sec-points">争点</div>
-      <div data-sec="sec-parties">当事者</div>
-      <div data-sec="sec-call">裁判について</div>
-      <div data-sec="sec-img">画像<span class="n" id="navImgCount"></span></div>
+      <div data-sec="sec-caseno" data-tier-min="detail">事件番号</div>
+      <div data-sec="sec-press" data-tier-min="std">報道・掲載</div>
+      <div data-sec="sec-card" data-tier-min="detail">Twitterカード</div>
+      <div data-sec="sec-points" data-tier-min="std">争点</div>
+      <div data-sec="sec-parties" data-tier-min="std">当事者</div>
+      <div data-sec="sec-call" data-tier-min="std">裁判について</div>
+      <div data-sec="sec-img" data-tier-min="detail">画像<span class="n" id="navImgCount"></span></div>
       <div class="grp">記録を足す</div>
       <div data-sec="sec-ev">期日<span class="n" id="navEvCount"></span></div>
-      <div data-sec="sec-mat">資料<span class="n" id="navMatCount"></span></div>
+      <div data-sec="sec-mat" data-tier-min="detail">資料<span class="n" id="navMatCount"></span></div>
       <div class="grp">表示の設定</div>
-      <div data-sec="sec-notice">期日案内</div>
-      <div data-sec="sec-related">関連裁判</div>
+      <div data-sec="sec-notice" data-tier-min="std">期日案内</div>
+      <div data-sec="sec-related" data-tier-min="detail">関連裁判</div>
       <div data-sec="sec-board">掲示板</div>
-      <div data-sec="sec-close">終結</div>
+      <div data-sec="sec-close" data-tier-min="detail">終結</div>
     </nav>
     <div>
       <div class="editcol" id="ceForm">
@@ -107,7 +140,7 @@
             <p class="fnote">変更すると、この問題提起人の他の事件もまとめて表示名が変わります。</p>
           </div>
           <!-- ログイン設定（運営専用。問題提起人が自分でログインし、自分の事件を編集できるようにする） -->
-          <div class="subfield" id="cPresenterLoginRow" hidden>
+          <div class="subfield" id="cPresenterLoginRow" data-tier-min="detail" hidden>
             <p class="msec" style="margin-top:12px">ログイン設定（運営専用）</p>
             <div class="cicon-row">
               <input type="text" id="cPresenterLoginUsername" placeholder="ログインID（例：メールアドレス）">
@@ -133,7 +166,7 @@
         </div>
 
         <!-- X（Twitter）URL（運営・問題提起人本人のどちらも変更できる） -->
-        <div class="field" id="cPresenterXUrlRow" hidden>
+        <div class="field" id="cPresenterXUrlRow" data-tier-min="std" hidden>
           <p class="msec">Xアカウント</p>
           <div class="cicon-row">
             <input type="text" id="cPresenterXUrl" placeholder="例）https://x.com/example">
@@ -147,8 +180,8 @@
           <input type="text" id="cName" aria-label="事件名" placeholder="例）情報公開請求をめぐる訴訟">
         </div>
 
-        <p class="msec" id="sec-caseno">事件番号</p>
-        <div class="field">
+        <p class="msec" id="sec-caseno" data-tier-min="detail">事件番号</p>
+        <div class="field" data-tier-min="detail">
           <div class="checkrow">
             <label class="check"><input type="checkbox" id="cCaseNoPublic"> 公開する</label>
             <label class="check"><input type="checkbox" id="cShowCaseNoOnTop"> トップにも表示する</label>
@@ -158,8 +191,8 @@
           <textarea id="cCaseNo" aria-label="事件番号" placeholder="地裁　令和6年(ワ)第12345号&#10;高裁　令和7年(ネ)第1234号"></textarea>
         </div>
 
-        <p class="msec" id="sec-press">報道・掲載</p>
-        <div class="field">
+        <p class="msec" id="sec-press" data-tier-min="std">報道・掲載</p>
+        <div class="field" data-tier-min="std">
           <div class="checkrow"><label class="check"><input type="checkbox" id="cShowPressOnTop"> トップにも表示する</label></div>
           <span class="lhint">1行に1件。末尾に半角スペース＋URLで記事のリンクを添えられます（任意）</span>
           <textarea id="cPress" aria-label="報道・掲載" placeholder="例）〇〇新聞で報道されました https://...&#10;労働判例ジャーナル2025.10 No.163に掲載&#10;裁判所への手続きにより特別保存（永久保存）となっています"></textarea>
@@ -169,7 +202,7 @@
              未設定（既定）なら /api/cases/:id/card.png・card-square.png が期日・問題提起人から自動で
              「傍聴券」を描く。正方形版はTeams・Slack等がog:imageを中央トリミングする対策で、横長版と
              差し替えの仕組みは同じ（2026-08-30）。新規作成のときはまだ事件が無いので出さない -->
-        <div class="field" id="sec-card" hidden>
+        <div class="field" id="sec-card" data-tier-min="detail" hidden>
           <p class="msec">Twitterカード</p>
           <label>横長版（Large）</label>
           <div class="cicon-row">
@@ -191,27 +224,27 @@
           </div>
         </div>
 
-        <p class="msec" id="sec-points">争点</p>
-        <div class="field">
+        <p class="msec" id="sec-points" data-tier-min="std">争点</p>
+        <div class="field" data-tier-min="std">
           <label>タグ</label>
           <span class="lhint">1行に1つ</span>
           <textarea id="cTags" placeholder="情報公開&#10;行政"></textarea>
         </div>
-        <div class="field">
+        <div class="field" data-tier-min="std">
           <div class="checkrow"><label class="check"><input type="checkbox" id="cShowPointsOnTop"> トップにも表示する</label></div>
           <span class="lhint">1行に1つ</span>
           <textarea id="cPoints" aria-label="争点" placeholder="例）◯◯の事実があったか"></textarea>
         </div>
 
-        <p class="msec" id="sec-parties">当事者</p>
-        <div class="two">
+        <p class="msec" id="sec-parties" data-tier-min="std">当事者</p>
+        <div class="two two-links" data-tier-min="std">
           <div class="field">
             <label>原告名</label>
             <div class="checkrow"><label class="check"><input type="checkbox" id="cShowPlaintiffOnTop"> トップにも表示する</label></div>
             <span class="lhint">2行目以降は代理人名など（任意）</span>
             <textarea id="cPlaintiff" placeholder="例）従業員&#10;代理人　〇〇"></textarea>
           </div>
-          <div class="field">
+          <div class="field" data-tier-min="detail">
             <label>原告のリンク</label>
             <!-- 左（原告名）の「トップにも表示する」チェック分と高さを揃えるためのダミー（2026-08-30） -->
             <div class="checkrow" aria-hidden="true" style="visibility:hidden"><label class="check"><input type="checkbox" disabled tabindex="-1"> トップにも表示する</label></div>
@@ -219,14 +252,14 @@
             <textarea id="cPlaintiffLinks" placeholder="https://x.com/..."></textarea>
           </div>
         </div>
-        <div class="two">
+        <div class="two two-links" data-tier-min="std">
           <div class="field">
             <label>被告名</label>
             <div class="checkrow"><label class="check"><input type="checkbox" id="cShowDefendantOnTop"> トップにも表示する</label></div>
             <span class="lhint">2行目以降は代理人名など（任意）</span>
             <textarea id="cDefendant" placeholder="例）〇〇株式会社&#10;代理人　〇〇"></textarea>
           </div>
-          <div class="field">
+          <div class="field" data-tier-min="detail">
             <label>被告のリンク</label>
             <!-- 左（被告名）の「トップにも表示する」チェック分と高さを揃えるためのダミー（2026-08-30） -->
             <div class="checkrow" aria-hidden="true" style="visibility:hidden"><label class="check"><input type="checkbox" disabled tabindex="-1"> トップにも表示する</label></div>
@@ -234,15 +267,15 @@
             <textarea id="cDefendantLinks" placeholder="https://x.com/..."></textarea>
           </div>
         </div>
-        <div class="field">
+        <div class="field" data-tier-min="std">
           <label>裁判官</label>
           <div class="checkrow"><label class="check"><input type="checkbox" id="cShowJudgeOnTop"> トップにも表示する</label></div>
           <span class="lhint">1行に1人（審級＋スペース＋名前）。末尾に半角スペース＋URLで「裁判官マップ」等へのリンクを添えられます（任意）</span>
           <textarea id="cJudge" placeholder="地裁　〇〇〇〇裁判官&#10;高裁　〇〇〇〇裁判官 https://saibankan-map.jp/..."></textarea>
         </div>
 
-        <p class="msec" id="sec-call">裁判について</p>
-        <div class="field">
+        <p class="msec" id="sec-call" data-tier-min="std">裁判について</p>
+        <div class="field" data-tier-min="std">
           <label>本文</label>
           <div class="checkrow"><label class="check"><input type="checkbox" id="cShowCallOnTop"> トップにも表示する</label></div>
           <span class="lhint">空行を挟むと段落を分けられます</span>
@@ -251,7 +284,7 @@
 
         <!-- 画像：1件ずつ保存（新規作成のときはまだ事件が無いので出さない）。入力欄は「裁判について」
              の下（2026-08-30。事件ページの表示自体はこれまでどおりタイトルより上のまま） -->
-        <section class="lssec listsec" id="sec-img" data-listsec="img" hidden>
+        <section class="lssec listsec" id="sec-img" data-listsec="img" data-tier-min="detail" hidden>
           <div class="lshead"><p class="msec">画像</p><span class="lscount" id="imgCount"></span><span class="lschev"><i class="bi bi-arrow-bar-down" aria-hidden="true"></i></span></div>
           <div class="lsbody">
             <div class="lsnote">画像は1件ずつ、行の「保存」ボタンですぐに登録されます。</div>
@@ -270,7 +303,7 @@
         </section>
 
         <!-- 資料：1件ずつ保存（新規作成のときはまだ事件が無いので出さない） -->
-        <section class="lssec listsec" id="sec-mat" data-listsec="mat" hidden>
+        <section class="lssec listsec" id="sec-mat" data-listsec="mat" data-tier-min="detail" hidden>
           <div class="lshead"><p class="msec">資料</p><span class="lscount" id="matCount"></span><span class="lschev"><i class="bi bi-arrow-bar-down" aria-hidden="true"></i></span></div>
           <div class="lsbody">
             <div id="matList"></div>
@@ -281,7 +314,7 @@
         <!-- 期日案内：事件につき1枚・差し替え専用（問題提起人アイコンと同じ仕組み）。JPEGのみ
              （2026-08-28：ファイルサイズが小さく済むJPEGに限定。PDF・PNGは既存データの表示のみ対応）。
              新規作成のときはまだ事件が無いので出さない -->
-        <div class="field" id="sec-notice" hidden>
+        <div class="field" id="sec-notice" data-tier-min="std" hidden>
           <p class="msec">期日案内</p>
           <label>案内チラシ（JPEG）</label>
           <div class="cicon-row">
@@ -291,8 +324,8 @@
           <p class="fnote" id="cNoticeStatus" hidden></p>
         </div>
 
-        <p class="msec" id="sec-related">関連裁判</p>
-        <div class="field">
+        <p class="msec" id="sec-related" data-tier-min="detail">関連裁判</p>
+        <div class="field" data-tier-min="detail">
           <label>関連裁判</label>
           <div class="checkrow"><label class="check"><input type="checkbox" id="cShowRelatedOnTop"> トップにも表示する</label></div>
           <span class="lhint">登録済みの事件名を1行に1つ</span>
@@ -308,8 +341,8 @@
           <label class="check"><input type="checkbox" id="cBoardRestricted"> 投稿を制限する（一般の投稿は受け付けず、運営とこの事件の問題提起人のみ投稿できます）</label>
         </div>
 
-        <p class="msec" id="sec-close">終結<span class="lhint">終結した事件のみ入れる</span></p>
-        <div class="two">
+        <p class="msec" id="sec-close" data-tier-min="detail">終結<span class="lhint">終結した事件のみ入れる</span></p>
+        <div class="two" data-tier-min="detail">
           <div class="field"><label>終結日</label><input type="date" id="cArchivedAt"></div>
           <div class="field"><label>終結の種類</label><input type="text" id="cCloseType" placeholder="例）判決、和解、取下げ"></div>
         </div>
@@ -366,6 +399,9 @@
     // （2026-08-30）
     const threshold=innerHeight/3;
     items.forEach((d,i)=>{
+      // 掲載レベルで隠している節（d.hidden）は、隠れているぶんrectのtopが0のままで常に
+      // 「もう過ぎた」と誤判定されてしまうので、ハイライト対象から外す（2026-09-01）
+      if(d.hidden) return;
       const t=document.getElementById(d.dataset.sec);
       if(t && t.getBoundingClientRect().top<threshold) cur=i;
     });

@@ -703,6 +703,9 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
    最小の高さは3行ぶん（それまでの56px＝2行の覗き窓では、複数行の内容が見渡せなかった。2026-08-27） */
 .field textarea{resize:vertical;min-height:76px;overflow:hidden}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+/* 掲載レベル選択（最小限／標準的）で右側のリンク欄を隠しているあいだ、空の列を残さず単列にする
+   （case-edit.htmlの当事者欄。2026-09-01） */
+.two.solo{grid-template-columns:1fr}
 /* 保存ボタンは下に固定する（2026-08-27。長いフォームの途中でも保存できるように）。
    罫線は使わない方針だが、流れる本文との境目にだけ薄い1本を敷く（.pop-foot と同じ扱い） */
 .mfoot{position:sticky;bottom:0;z-index:3;background:var(--card);border-top:1px solid var(--tint);
@@ -727,6 +730,8 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .ce-title-row{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 14px}
 .ce-title-warn{font-size:.8rem;color:var(--stamp)}
 .ce-case{font-size:.9rem;color:var(--mut);margin-top:2px}
+/* 掲載レベルの選択カード（.editgrid と同じ上余白で揃える。2026-09-01） */
+#ceTierPick{margin-top:24px}
 .editgrid{margin-top:24px}
 /* 権限が無い間は hidden 属性で隠すが、860px以上の .editgrid{display:grid}（下の @media）が
    これを上書きしてしまう（[hidden] は display:none のはずが grid に化ける）ため、

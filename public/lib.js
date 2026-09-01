@@ -1074,6 +1074,48 @@ window.CC = (function(){
     let edInited=false;   // フォームを一度充填したか（onChangeのたびに入力中の内容を上書きしないため）
     let edDirty=false;    // 未保存の入力があるか（ページを離れる前の確認に使う）
     let edIsAdmin=true;   // 運営として編集しているか（false＝ログイン中の問題提起人が自分の事件を編集している）
+
+    // ================= 掲載レベル（最小限／標準的／詳細、2026-09-01） =================
+    // 既存事件の編集で「赤の編集」から来たとき、慣れていない人が詳細な入力欄に迷わないよう、
+    // まずどこまで入力するか選んでもらう。data-tier-min="std"/"detail" を持つ節・欄は、選んだ
+    // 掲載レベルがそれ未満だと隠す（値そのものはフォームの裏に残り続けるので保存で消えない）。
+    // 新規作成・?open=の深いリンクからは選ばせず、常に detail（フル項目）扱いにする
+    let edTier=null;   // null＝未選択（選択カードを出したまま）
+    const TIER_ORDER={min:0, std:1, detail:2};
+    function tierAllows(min){ return !min || (!!edTier && TIER_ORDER[edTier]>=TIER_ORDER[min]); }
+    // data-tier-min を持つ節・nav項目を、選んだ掲載レベルだけで一律に隠す／出す。
+    // presenter選択の有無・新規作成かどうかで別途隠している欄（Xアカウント・ログイン設定・
+    // 画像/期日案内/Twitterカード等）は、この後 updatePresenterFieldUI() 等がそちらの条件と
+    // 掲載レベルの両方を見て上書きするので、ここで先に触れても問題ない
+    function applyTierGates(){
+      document.querySelectorAll("[data-tier-min]").forEach(el=>{ el.hidden = !tierAllows(el.dataset.tierMin); });
+      // 当事者欄：原告/被告のリンク欄を隠しているあいだは、空の列を残さず単列にする
+      document.querySelectorAll(".two-links").forEach(t=>{
+        const lf = t.querySelector("[data-tier-min]");
+        t.classList.toggle("solo", !!(lf && lf.hidden));
+      });
+    }
+    const TIER_LABELS={min:"最小限掲載", std:"標準的掲載", detail:"詳細な掲載"};
+    // 選択カード・「すべての項目を表示する」から呼ぶ。掲載レベルを確定し、隠していた選択画面から
+    // フォーム本体に切り替える。値はどのレベルでもフォームの裏に残ったままなので、あとから
+    // レベルを上げても入力済みの内容は消えない
+    function applyTier(tier){
+      edTier=tier;
+      applyTierGates();
+      updatePresenterFieldUI();   // Xアカウント・ログイン設定はpresenter選択の有無と掲載レベルの両方で決まる
+      document.querySelectorAll(".lssec").forEach(s=>{ s.hidden = !edCaseId || !tierAllows(s.dataset.tierMin); });
+      $("sec-notice").hidden = !edCaseId || !tierAllows($("sec-notice").dataset.tierMin);
+      $("sec-card").hidden = !edCaseId || !tierAllows($("sec-card").dataset.tierMin);
+      $("ceTierPick").hidden=true;
+      $("ceGrid").hidden=false;
+      autosizeAll($("ceForm"));   // グリッドが表示されたこの時点で測る（隠れているとscrollHeightが0になるため）
+      $("ceTierNote").hidden = (tier==="detail");
+      $("ceTierLabel").textContent = TIER_LABELS[tier];
+      // リロード・共有時に同じ掲載レベルへ戻れるようURLへ反映する
+      const url=new URL(location.href);
+      url.searchParams.set("tier", tier);
+      history.replaceState(null, "", url);
+    }
     // 問題提起人プルダウンの選択肢を作る（未設定／既存の問題提起人／＋新規作成）。
     // 問題提起人本人が編集しているときは、付け替え・新規作成はできないので自分の分だけ固定で出す
     function renderPresenterOptions(selectedId){
@@ -1114,11 +1156,13 @@ window.CC = (function(){
           ? `<img class="cicon" src="${escapeAttr(p.icon)}" alt="">`
           : `<span class="cicon cicon-ph" aria-hidden="true"><i class="bi bi-person" aria-hidden="true"></i></span>`;
         cPresenterIconRemove.hidden = !(p && p.icon);
-        // X URLはニックネーム・アイコンと同じく、運営・本人のどちらも変更できる
-        cPresenterXUrlRow.hidden = false;
+        // X URLはニックネーム・アイコンと同じく、運営・本人のどちらも変更できる（掲載レベルが
+        // 「標準的」以上のときだけ出す）
+        cPresenterXUrlRow.hidden = !tierAllows(cPresenterXUrlRow.dataset.tierMin);
         cPresenterXUrl.value = p && p.xUrl || "";
-        // ログイン設定は運営専用（問題提起人本人が自分の付け替え等をできないのと同じ理由）
-        cPresenterLoginRow.hidden = !edIsAdmin;
+        // ログイン設定は運営専用（問題提起人本人が自分の付け替え等をできないのと同じ理由）。
+        // 掲載レベルが「詳細」でないときも隠す
+        cPresenterLoginRow.hidden = !edIsAdmin || !tierAllows(cPresenterLoginRow.dataset.tierMin);
         if(edIsAdmin){
           cPresenterLoginUsername.value = p && p.loginUsername || "";
           cPresenterLoginRemoveWrap.hidden = !(p && p.hasLogin);
@@ -1500,17 +1544,24 @@ window.CC = (function(){
     ceForm.addEventListener("input",(e)=>{ if(!e.target.closest(".ieditor")) edDirty=true; });
     ceForm.addEventListener("change",(e)=>{ if(!e.target.closest(".ieditor")) edDirty=true; });
     window.addEventListener("beforeunload",(e)=>{ if(edDirty){ e.preventDefault(); e.returnValue=""; } });
+    // 掲載レベルの選択カード（クリック・Enterキーどちらでも選べる。cases.htmlの事件カードと同じ配線）
+    [["ceTierMin","min"],["ceTierStd","std"],["ceTierDetail","detail"]].forEach(([elId,tier])=>{
+      const el=$(elId);
+      el.addEventListener("click", ()=>applyTier(tier));
+      el.addEventListener("keydown",(e)=>{ if(e.key==="Enter") applyTier(tier); });
+    });
+    $("ceTierEscalate").addEventListener("click", ()=>applyTier("detail"));
     // ページの初期化。CC.load() 後にページ側から呼ぶ。編集ロック解除（onChange）でも呼ばれるが、
     // フォームの充填は一度だけ（アイコン即時反映などの onChange で入力中の内容を上書きしない）
     initCaseEditPage = function(){
       if(!loaded) return;
-      const locked=$("ceLocked"), grid=$("ceGrid");
+      const locked=$("ceLocked"), grid=$("ceGrid"), tierPick=$("ceTierPick");
       const params=new URLSearchParams(location.search);
       const id=params.get("id")||"";
       // 新しい事件を起こすのは運営のみ（問題提起人は、運営が作った事件の中身だけを編集できる）
       const allowed = id ? canEditCase(id) : me.canWrite;
       if(!allowed){
-        locked.hidden=false; grid.hidden=true;
+        locked.hidden=false; grid.hidden=true; tierPick.hidden=true;
         // この画面（case-edit.html）には「掲載をご希望の方へ」の枠が無いので、ログインへの
         // 入口をここにも添える（セッション切れ・ブックマークからの再訪などで来ることがあるため。2026-08-30）
         locked.querySelector(".empty-msg").innerHTML = id
@@ -1519,13 +1570,13 @@ window.CC = (function(){
         return;
       }
       edIsAdmin = me.canWrite;
-      locked.hidden=true; grid.hidden=false;
+      locked.hidden=true;
       if(edInited) return;
       edInited=true;
       if(id){
         const c=caseById(id);
         if(!c){
-          grid.hidden=true; locked.hidden=false;
+          grid.hidden=true; tierPick.hidden=true; locked.hidden=false;
           locked.querySelector(".empty-msg").textContent="その事件は見つかりませんでした。";
           return;
         }
@@ -1559,12 +1610,20 @@ window.CC = (function(){
         $("cDelete").style.display="none";
         fillCaseForm({});
       }
-      autosizeAll(ceForm);   // gridはこの時点で表示済みなので同期で測れる
       renderImgList(); renderEvList(); renderMatList();
-      // 新規作成のときはまだ事件が無いので、画像・期日・資料の3節ごと隠す
-      document.querySelectorAll(".lssec").forEach(s=>{ s.hidden = !edCaseId; });
-      $("sec-notice").hidden = !edCaseId;
-      $("sec-card").hidden = !edCaseId;
+      // 掲載レベルの決定（2026-09-01）。既存事件の編集で、掲載レベル指定（?tier=）も期日・資料等への
+      // 深いリンク（?open=）も無ければ、「最小限／標準的／詳細」の選択カードをまず出す。新規作成・
+      // 深いリンクからは選ばせず、従来どおりフル項目（詳細）にする。autosize・画像/期日案内等の
+      // 表示切り替えは applyTier() の中で行う（グリッドが実際に表示されるタイミングで測るため）
+      if(id){
+        const openParam=params.get("open");
+        const urlTier=params.get("tier");
+        const initialTier = TIER_ORDER.hasOwnProperty(urlTier) ? urlTier : (openParam ? "detail" : null);
+        if(initialTier){ applyTier(initialTier); }
+        else{ grid.hidden=true; tierPick.hidden=false; }
+      }else{
+        applyTier("detail");
+      }
       openDeepLink();
     };
 
@@ -1580,6 +1639,7 @@ window.CC = (function(){
       afterEl.insertAdjacentHTML("afterend", html);
       const root = afterEl.nextElementSibling;
       wireAutosize(root); autosizeAll(root);
+      applyTierGates();   // 期日エディタの主張欄・報告会チェックなど、掲載レベル未満の欄を隠す
       const first = root.querySelector("input,textarea,select");
       if(first) first.focus();
       return root;
@@ -1703,10 +1763,10 @@ window.CC = (function(){
           <div class="field"><label>裁判所</label><input type="text" class="ef-court" value="${escapeAttr(e.court)}" placeholder="例）東京地方裁判所"></div>
           <div class="field"><label>法廷</label><input type="text" class="ef-place" value="${escapeAttr(e.place)}" placeholder="例）610号法廷"></div>
         </div>
-        <div class="field"><label>原告の主張</label><span class="lhint">1行に1項目</span><textarea class="ef-plaintiff" placeholder="例）不開示決定の取消しを求める">${escapeHtml((e.plaintiffArgument||[]).join("\n"))}</textarea></div>
-        <div class="field"><label>被告の主張</label><span class="lhint">1行に1項目</span><textarea class="ef-defendant" placeholder="例）該当する文書は保有していない">${escapeHtml((e.defendantArgument||[]).join("\n"))}</textarea></div>
+        <div class="field" data-tier-min="detail"><label>原告の主張</label><span class="lhint">1行に1項目</span><textarea class="ef-plaintiff" placeholder="例）不開示決定の取消しを求める">${escapeHtml((e.plaintiffArgument||[]).join("\n"))}</textarea></div>
+        <div class="field" data-tier-min="detail"><label>被告の主張</label><span class="lhint">1行に1項目</span><textarea class="ef-defendant" placeholder="例）該当する文書は保有していない">${escapeHtml((e.defendantArgument||[]).join("\n"))}</textarea></div>
         <div class="field"><label class="check"><input type="checkbox" class="ef-open" ${e.open!==false?"checked":""}> だれでも傍聴できます（外すと「非公開・要確認」）</label></div>
-        <div class="field"><label class="check"><input type="checkbox" class="ef-report" ${e.reportMeeting?"checked":""}> 期日報告会があります</label></div>
+        <div class="field" data-tier-min="detail"><label class="check"><input type="checkbox" class="ef-report" ${e.reportMeeting?"checked":""}> 期日報告会があります</label></div>
         ${isNew?"":`<div class="ifoot"><button type="button" class="del" data-del="ev" data-id="${escapeAttr(ev.id)}">この期日を削除</button></div>`}
       </div>`;
     }
