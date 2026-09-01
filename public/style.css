@@ -520,8 +520,8 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
    引いて示す（カードは選び直せるタブとして常に出し続けるので、色の面ではなく線1本の差にした。
    2026-09-01） */
 #ceTierPick .ccard{background:var(--tint)}
-#ceTierPick .ccard.on{box-shadow:inset 0 0 0 1.5px var(--stamp)}
-#ceTierPick .ccard.on:hover{box-shadow:inset 0 0 0 1.5px var(--stamp),0 2px 12px rgba(0,0,0,.07)}
+#ceTierPick .ccard.on{box-shadow:inset 0 0 0 .5px var(--stamp)}
+#ceTierPick .ccard.on:hover{box-shadow:inset 0 0 0 .5px var(--stamp),0 2px 12px rgba(0,0,0,.07)}
 /* 期日をさがす：並べ替えの切り替え（期日が古い順⇄新しい順）。タブの下・一覧の上に右寄せで置く */
 .sortrow{display:flex;justify-content:flex-end;gap:16px;flex-wrap:wrap;margin:8px 4px 12px}
 .sortlink{display:inline-flex;align-items:center;gap:4px;font-size:.8rem;color:var(--mut);cursor:pointer}
@@ -722,6 +722,11 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
    最小の高さは3行ぶん（それまでの56px＝2行の覗き窓では、複数行の内容が見渡せなかった。2026-08-27） */
 .field textarea{resize:vertical;min-height:76px;overflow:hidden}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+/* .editgrid[hidden]と同じ理由（2026-08-30のコメント参照）：.twoにdisplay:gridを指定しているため、
+   属性セレクタで明示的に勝たせないと hidden 属性が効かず display:grid のまま残ってしまう。
+   当事者欄（原告名/被告名の.two.two-links）が掲載レベルで隠しているのに表示され続けていた
+   バグの原因（2026-09-01） */
+.two[hidden]{display:none}
 /* 掲載レベル選択（最小限／標準的）で右側のリンク欄を隠しているあいだ、空の列を残さず単列にする
    （case-edit.htmlの当事者欄。2026-09-01） */
 .two.solo{grid-template-columns:1fr}
