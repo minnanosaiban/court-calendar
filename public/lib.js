@@ -1636,13 +1636,13 @@ window.CC = (function(){
       // 掲載レベルの決定（2026-09-01）。既存事件の編集で、期日・資料等への深いリンク（?open=）で
       // 来たのでなければ、「最小限／標準的／詳細」の選択カードをタブのように出したままにする
       // （新規作成・深いリンクからは選ばせず、従来どおりフル項目＝詳細にする）。URLに掲載レベル
-      // 指定（?tier=）があれば、その節をカードの下に最初から出す。autosize・画像/期日案内等の
+      // 指定（?tier=）があればそれを、無ければ「最小限」を初期状態にする。autosize・画像/期日案内等の
       // 表示切り替えは applyTier() の中で行う（グリッドが実際に表示されるタイミングで測るため）
       const openParam=params.get("open");
       if(id && !openParam){
         tierPick.hidden=false;
         const urlTier=params.get("tier");
-        if(TIER_ORDER.hasOwnProperty(urlTier)) applyTier(urlTier);
+        applyTier(TIER_ORDER.hasOwnProperty(urlTier) ? urlTier : "min");
       }else{
         tierPick.hidden=true;
         applyTier("detail");
