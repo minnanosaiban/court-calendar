@@ -710,6 +710,11 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
   border:1px solid #e6e4dd;border-radius:12px;padding:8px 12px;background:#fff;
 }
 .field input[type=file]{font-size:.8rem}
+/* 案内チラシ欄：ブラウザ既定の「選択されていません」が、隣の「いまの案内：…」表示と紛らわしいため
+   隠す。文字色を透明にしてから、選択ボタン（::file-selector-button）だけ文字色を戻す
+   （2026-09-01。Chromeでの見え方を確認して採用。ボタンの見た目自体は変えない） */
+#cNoticeFile{color:transparent}
+#cNoticeFile::file-selector-button{color:var(--ink)}
 /* 事件情報モーダルのアイコン欄：現在のアイコン（丸い札）＋ファイル選択を横に並べる */
 .cicon-row{display:flex;align-items:center;gap:12px}
 .cicon-row input[type=file]{flex:1;min-width:0}
