@@ -1655,6 +1655,12 @@ window.CC = (function(){
           addBtn.insertAdjacentHTML("beforebegin", def.editorHtml(null));
           const root=addBtn.previousElementSibling;
           wireAutosize(root); autosizeAll(root);
+          // 挿入したのが直前の applyTier() より後なので、この新規入力欄（期日の原告の主張・
+          // 被告の主張など）だけ掲載レベルの出し分けがまだ効いていない。この行だけに絞ってかけ直す
+          // （document全体に applyTierGates() をかけ直すと、Xアカウント欄などpresenter選択の
+          // 有無と両方で決めている欄まで上書きしてしまうため。2026-09-01。他のカードへ切り替えて
+          // から最小限へ戻すと直って見えたのは、そのとき初めてこの欄にも出し分けがかかるため）
+          root.querySelectorAll("[data-tier-min]").forEach(el=>{ el.hidden = !tierAllows(el.dataset.tierMin); });
         });
       }else{
         tierPick.hidden=true;
