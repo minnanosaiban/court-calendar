@@ -104,7 +104,6 @@
       <div data-sec="sec-notice" data-tier-min="std">期日案内</div>
       <div data-sec="sec-related" data-tier-min="detail">関連裁判</div>
       <div data-sec="sec-board" data-tier-min="std">掲示板</div>
-      <div data-sec="sec-close" data-tier-min="detail">終結</div>
     </nav>
     <div>
       <div class="editcol" id="ceForm">
@@ -295,12 +294,20 @@
           </div>
         </section>
 
-        <!-- 期日：1件ずつ保存（新規作成のときはまだ事件が無いので出さない） -->
+        <!-- 期日：1件ずつ保存（新規作成のときはまだ事件が無いので出さない）。終結（終結日・終結の種類）は
+             期日の一種として扱い、独立した節にせずこの中に含める（2026-09-01） -->
         <section class="lssec listsec" id="sec-ev" data-listsec="ev" hidden>
           <div class="lshead"><p class="msec">期日</p><span class="lscount" id="evCount"></span><span class="lschev"><i class="bi bi-arrow-bar-down" aria-hidden="true"></i></span></div>
           <div class="lsbody">
             <div id="evList"></div>
             <button type="button" class="addbtn" id="evAddBtn">＋ 期日を追加</button>
+            <div class="subfield" data-tier-min="detail">
+              <p class="msec" style="margin-top:12px">終結<span class="lhint">終結した事件のみ入れる</span></p>
+              <div class="two">
+                <div class="field"><label>終結日</label><input type="date" id="cArchivedAt"></div>
+                <div class="field"><label>終結の種類</label><input type="text" id="cCloseType" placeholder="例）判決、和解、取下げ"></div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -341,12 +348,6 @@
         </div>
         <div class="field" data-tier-min="std">
           <label class="check"><input type="checkbox" id="cBoardRestricted"> 投稿を制限する（一般の投稿は受け付けず、運営とこの事件の問題提起人のみ投稿できます）</label>
-        </div>
-
-        <p class="msec" id="sec-close" data-tier-min="detail">終結<span class="lhint">終結した事件のみ入れる</span></p>
-        <div class="two" data-tier-min="detail">
-          <div class="field"><label>終結日</label><input type="date" id="cArchivedAt"></div>
-          <div class="field"><label>終結の種類</label><input type="text" id="cCloseType" placeholder="例）判決、和解、取下げ"></div>
         </div>
 
       </div>

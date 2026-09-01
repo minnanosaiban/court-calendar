@@ -1588,13 +1588,13 @@ window.CC = (function(){
         $("cDelete").style.display = edIsAdmin ? "" : "none";
         // ご本人（この事件の問題提起人）としてログイン中のときだけ出す自己確認バー。
         // 「パスワードを変更」はこの画面には無い（presenter.html・case.htmlにある）ので、
-        // 自分の事件一覧・ログアウトだけの簡易版にする（2026-08-30。以前は下部フッターにだけあった）
+        // ログアウトだけの簡易版にする（2026-08-30。以前は下部フッターにだけあった）。
+        // アイコンはcase.htmlの見出しと同じ「問題提起人ページ（＝自分の事件一覧）へのリンク」
+        // なので、バッジの左に置いて「自分の事件一覧」の文字リンクは廃止する（2026-09-01）
         const selfBarEl = $("ceSelfBar");
         if(!edIsAdmin && me.presenterId){
-          selfBarEl.innerHTML = `<div class="selfbar"><span class="badge">ご本人としてログイン中</span>`+
-            `<a id="ceSelfMyPage">自分の事件一覧</a><span class="sep">・</span>`+
+          selfBarEl.innerHTML = `<div class="selfbar">${presenterHeaderHtml(c)}<span class="badge">ログイン中</span>`+
             `<a id="ceSelfLogout">ログアウト</a></div>`;
-          $("ceSelfMyPage").addEventListener("click", ()=>{ location.href="presenter?id="+encodeURIComponent(me.presenterId); });
           $("ceSelfLogout").addEventListener("click", async ()=>{ await presenterLogout(); location.href="index.html"; });
         }else{
           selfBarEl.innerHTML = "";
