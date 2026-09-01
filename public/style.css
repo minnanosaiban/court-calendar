@@ -164,8 +164,9 @@ a{color:inherit}
 /* 問題提起人が自分としてログイン中の目印（presenter.html）。状態（バッジ）と操作
    （パスワード変更・ログアウト）を同じ行にまとめる（2026-08-30） */
 .selfbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:.85rem;color:var(--mut);margin-top:8px}
-/* .edit-fab（右端の編集ボタン）と同じ赤系に揃える（2026-08-31。以前は編集操作専用の青 --edit だった） */
-.selfbar .badge{background:rgba(185,50,38,.1);color:var(--stamp);border-radius:999px;padding:2px 12px;font-size:.78rem}
+/* 文字色だけ.edit-fab（右端の編集ボタン）と同じ赤系に揃える。以前は薄い赤の背景で囲んだピル型
+   だったが、枠っぽく見えるため外し、地の文に朱色の文字だけを乗せる形にした（2026-09-01） */
+.selfbar .badge{color:var(--stamp);font-size:.78rem}
 .selfbar a{cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .selfbar .sep{color:var(--faint)}
 /* case-edit.htmlだけ、バッジ「ログイン中」の下にログアウト・パスワード変更を並べる2行構成にする
@@ -746,6 +747,10 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .ce-title-row{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 14px}
 .ce-title-warn{font-size:.8rem;color:var(--stamp)}
 .ce-case{font-size:.9rem;color:var(--mut);margin-top:2px}
+/* case-edit.htmlでは事件名をタイトルの上に置く（2026-09-01）。事件名がタイトルに寄り添うよう、
+   間の余白は上（事件名側）に持たせ、直後のタイトルは詰める */
+#ceCaseName{margin-top:24px}
+#ceCaseName + .ce-title-row .ce-title{margin-top:2px}
 /* 掲載レベルの選択カード（.editgrid と同じ上余白で揃える。2026-09-01） */
 #ceTierPick{margin-top:24px}
 .editgrid{margin-top:24px}
