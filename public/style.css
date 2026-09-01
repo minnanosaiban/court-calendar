@@ -335,6 +335,19 @@ a{color:inherit}
 .btn.on .bi{color:#fff}
 .btn.copied{color:#2f7d4f;border-color:#2f7d4f}
 .btn.copied .bi{color:#2f7d4f}
+/* .md：「コピーする／ダウンロード」の2択を出す小さなメニュー（2026-09-01）。.btnsの中で浮くよう
+   position:relativeの入れ物（.mdwrap）に対して絶対配置する。[hidden]は既定のdisplay:noneに任せ、
+   表示側だけ:not([hidden])で指定する（.twoで一度踏んだ「display指定がhiddenに勝ってしまう」
+   不具合と同じ轍を踏まないため） */
+.mdwrap{position:relative;display:inline-flex}
+.mdmenu{position:absolute;top:calc(100% + 4px);left:0;z-index:5;background:var(--card);
+  border-radius:12px;box-shadow:0 14px 40px rgba(0,0,0,.2);padding:4px;min-width:150px}
+.mdmenu:not([hidden]){display:flex;flex-direction:column}
+.mdmenu button{display:flex;align-items:center;gap:6px;font-size:.8rem;color:var(--ink);
+  background:none;border:none;border-radius:8px;padding:8px 10px;cursor:pointer;text-align:left;
+  font-family:inherit;line-height:1.5;white-space:nowrap}
+.mdmenu button:hover{background:var(--tint)}
+.mdmenu .bi{font-size:.85rem;color:var(--mut)}
 /* 原告/被告の主張（タイムラインの節の中、資料の上） */
 .args{display:grid;gap:12px;margin-top:12px}
 @media(min-width:560px){.args{grid-template-columns:1fr 1fr}}

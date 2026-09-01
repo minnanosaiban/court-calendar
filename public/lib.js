@@ -563,15 +563,27 @@ window.CC = (function(){
     if(/^image\//.test(m.mime||"") || /\.(png|jpe?g|gif|webp)(\?|#|$)/.test(u)) return "bi-image";
     return "bi-box-arrow-up-right";
   }
+  // .md（コピー・ダウンロード共通）の中身：事件名／提出者側／資料名のメタ行＋本文
+  function mdExportText(m){
+    const c = caseById(m.caseId);
+    const meta = [c?c.name:"", [m.side,m.kind].filter(Boolean).join("・"), m.title].filter(Boolean).join("／");
+    return meta ? `${meta}\n\n${m.body}` : m.body;
+  }
   // PDF・テキスト・要約の3つのボタン。無いものはグレーのまま押せない（「この資料には無い」ことが分かるように）
   function matButtonsHtml(m){
     const icon = matIcon(m);
     const pdf = m.fileUrl
       ? `<a class="btn pdf" href="${escapeAttr(m.fileUrl)}" target="_blank" rel="noopener"><i class="bi ${icon}" aria-hidden="true"></i>.pdf</a>`
       : `<span class="btn off"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>.pdf</span>`;
-    // 本文はページを開かず、その場でクリップボードにコピーする（再利用・AIへの貼り付け用。中身はMarkdownを貼り付けたもの）
+    // 本文（Markdown）は、その場でクリップボードにコピーするか、.mdファイルとしてダウンロードするかを
+    // 選べるようにする（2026-09-01。以前はクリックで即コピーのみだった）。押すと2択の小さなメニューを
+    // 出す（外側をクリックすると閉じる。配線はwireCaseDetail）
     const body = m.body
-      ? `<button type="button" class="btn" data-copybody="${escapeAttr(m.id)}"><i class="bi bi-clipboard" aria-hidden="true"></i>.md</button>`
+      ? `<span class="mdwrap"><button type="button" class="btn" data-mdtoggle><i class="bi bi-clipboard" aria-hidden="true"></i>.md</button>`+
+        `<span class="mdmenu" hidden>`+
+        `<button type="button" data-mdcopy="${escapeAttr(m.id)}"><i class="bi bi-clipboard" aria-hidden="true"></i>コピーする</button>`+
+        `<button type="button" data-mddownload="${escapeAttr(m.id)}"><i class="bi bi-download" aria-hidden="true"></i>ダウンロード</button>`+
+        `</span></span>`
       : `<span class="btn off"><i class="bi bi-clipboard" aria-hidden="true"></i>.md</span>`;
     // 要約はその場で展開せず、ポップアップ（モーダル）で開く
     const sum = m.summary
@@ -900,21 +912,41 @@ window.CC = (function(){
         }
       });
     });
-    container.querySelectorAll("[data-copybody]").forEach(b=>{
-      b.addEventListener("click",async ()=>{
-        const m = materialById(b.dataset.copybody); if(!m) return;
-        const c = caseById(m.caseId);
-        const meta = [c?c.name:"", [m.side,m.kind].filter(Boolean).join("・"), m.title].filter(Boolean).join("／");
-        const text = meta ? `${meta}\n\n${m.body}` : m.body;
+    // .md：押すと「コピーする／ダウンロード」の小さなメニューを開く（2026-09-01）
+    container.querySelectorAll("[data-mdtoggle]").forEach(b=>{
+      b.addEventListener("click",(e)=>{
+        e.stopPropagation();
+        const menu=b.nextElementSibling;
+        const willOpen=menu.hidden;
+        document.querySelectorAll(".mdmenu").forEach(x=>{ if(x!==menu) x.hidden=true; });
+        menu.hidden=!willOpen;
+      });
+    });
+    container.querySelectorAll("[data-mdcopy]").forEach(b=>{
+      b.addEventListener("click",async (e)=>{
+        e.stopPropagation();
+        const m = materialById(b.dataset.mdcopy); if(!m) return;
         try{
-          await navigator.clipboard.writeText(text);
+          await navigator.clipboard.writeText(mdExportText(m));
           const orig=b.innerHTML;
           b.innerHTML=`<i class="bi bi-check2" aria-hidden="true"></i>コピーしました`;
-          b.classList.add("copied");
-          setTimeout(()=>{ b.innerHTML=orig; b.classList.remove("copied"); },1500);
+          setTimeout(()=>{ b.closest(".mdmenu").hidden=true; b.innerHTML=orig; },900);
         }catch(err){
           alert("コピーできませんでした。");
         }
+      });
+    });
+    container.querySelectorAll("[data-mddownload]").forEach(b=>{
+      b.addEventListener("click",(e)=>{
+        e.stopPropagation();
+        const m = materialById(b.dataset.mddownload); if(!m) return;
+        const blob = new Blob([mdExportText(m)], {type:"text/markdown;charset=utf-8"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href=url; a.download=(m.title||"material")+".md";
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(()=>URL.revokeObjectURL(url), 1000);
+        b.closest(".mdmenu").hidden=true;
       });
     });
     container.querySelectorAll("[data-openpost]").forEach(a=>{
@@ -1012,8 +1044,8 @@ window.CC = (function(){
   <div class="modal sum-modal">
     <div class="mhead" id="sumModalTitle"></div>
     <div class="mbody">
-      <p class="msec">AIによる要約</p>
       <p class="sum-text" id="sumModalText"></p>
+      <p class="fnote" id="sumModalSource" hidden></p>
     </div>
     <div class="mfoot">
       <span class="spacer"></span>
@@ -1870,7 +1902,7 @@ window.CC = (function(){
       if(isNew){
         const rounds=caseEvents(edCaseId), today=todayStr();
         let def=""; rounds.forEach(e=>{ if(e.date<=today) def=e.id; });
-        mm = { title:"", side:"", eventId:def, filedOn:"", url:"", claims:[], body:"", summary:"", fileUrl:"", fileName:"" };
+        mm = { title:"", side:"", eventId:def, filedOn:"", url:"", claims:[], body:"", summary:"", summaryModel:"", summaryDate:"", fileUrl:"", fileName:"" };
       }
       const hasR2 = !!(mm.fileUrl && mm.fileUrl.startsWith("/files/"));
       const showFileField = me.uploads || hasR2;
@@ -1901,6 +1933,11 @@ window.CC = (function(){
           <p class="fnote">「本文」ボタンから読めるページになります。原本はPDFなので、本文は補助（検索されやすくする・要点を読みやすくする）目的です。</p>
         </div>
         <div class="field"><label>要約</label><textarea class="ef-summary" placeholder="手で書いた要約、またはAIに作らせて確認した要約">${escapeHtml(mm.summary)}</textarea></div>
+        <div class="two">
+          <div class="field"><label>要約を作ったAI（任意）</label><input type="text" class="ef-summarymodel" value="${escapeAttr(mm.summaryModel)}" placeholder="例）Claude Opus5"></div>
+          <div class="field"><label>作った年月日（任意）</label><input type="text" class="ef-summarydate" value="${escapeAttr(mm.summaryDate)}" placeholder="例）2026.09.01"></div>
+        </div>
+        <p class="fnote">どちらか一方でも入れると、要約ポップアップの下に「AI要約　${escapeHtml(mm.summaryModel||"Claude Opus5")}　${escapeHtml(mm.summaryDate||"2026.09.01")}」のように出所を添えます。手で書いた要約なら空のままにしてください。</p>
         ${isNew?"":`<div class="ifoot"><button type="button" class="del" data-del="mat" data-id="${escapeAttr(m.id)}">この資料を削除</button></div>`}
       </div>`;
     }
@@ -1918,6 +1955,8 @@ window.CC = (function(){
       fd.append("claims", root.querySelector(".ef-claims").value);
       fd.append("body", root.querySelector(".ef-body").value);
       fd.append("summary", root.querySelector(".ef-summary").value);
+      fd.append("summaryModel", root.querySelector(".ef-summarymodel").value.trim());
+      fd.append("summaryDate", root.querySelector(".ef-summarydate").value.trim());
       const fEl=root.querySelector(".ef-file");
       const f=fEl && fEl.files[0];
       if(f){
@@ -2042,6 +2081,12 @@ window.CC = (function(){
     const m = materialById(id); if(!m || !m.summary) return;
     $("sumModalTitle").textContent = m.title;
     $("sumModalText").textContent = m.summary;
+    // 出所（AIモデル・作成日）は、手で書いた要約と区別するためどちらか一方でも入っているときだけ、
+    // 要約の下に小さく添える（見出し「AIによる要約」はここへ統合して廃止した。2026-09-01）
+    const src = $("sumModalSource");
+    const srcText = ["AI要約", m.summaryModel, m.summaryDate].filter(Boolean).join("　");
+    src.hidden = !(m.summaryModel || m.summaryDate);
+    src.textContent = src.hidden ? "" : srcText;
     sumOverlay.classList.add("show");
   }
   function closeSummaryModal(){ sumOverlay.classList.remove("show"); }
@@ -2147,6 +2192,12 @@ window.CC = (function(){
   // ---- 要約ポップアップ（sumOverlay）の配線（両ページ共通） ----
   document.addEventListener("keydown",(e)=>{
     if(e.key==="Escape" && sumOverlay.classList.contains("show")) closeSummaryModal();
+  });
+  // ---- .mdメニュー（コピー／ダウンロード選択、2026-09-01）：外側をクリックしたら閉じる ----
+  document.addEventListener("click",(e)=>{
+    document.querySelectorAll(".mdmenu:not([hidden])").forEach(menu=>{
+      if(!menu.closest(".mdwrap").contains(e.target)) menu.hidden=true;
+    });
   });
   const fileInputEl = document.getElementById("fileInput");
   if(fileInputEl){

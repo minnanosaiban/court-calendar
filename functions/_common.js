@@ -266,6 +266,7 @@ export const MATERIAL_MAX_BYTES = 20 * 1024 * 1024;
 
 export const MATERIAL_COLS = `m.id, m.case_id, m.event_id, m.title, m.side, m.filed_on,
                               m.url, m.r2_key, m.file_name, m.file_size, m.mime, m.claims, m.body, m.summary,
+                              m.summary_model, m.summary_date,
                               m.created_at, m.updated_at`;
 
 // 資料の「ファイルのURL」に入れてよい形：https/http の絶対URL、またはこのサイト内の /docs/… （public/docs/ に置いたPDF）
@@ -291,6 +292,8 @@ export function rowToMaterial(r) {
     claims: textToLines(r.claims),
     body: r.body || "",
     summary: r.summary || "",
+    summaryModel: r.summary_model || "",
+    summaryDate: r.summary_date || "",
     createdAt: r.created_at || "",
   };
 }

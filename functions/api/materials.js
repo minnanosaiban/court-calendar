@@ -61,6 +61,8 @@ export async function readMaterialForm(request, env) {
     claims: linesToText(get("claims")),
     body,
     summary: get("summary"),
+    summary_model: get("summaryModel"),
+    summary_date: get("summaryDate"),
   };
 
   let file = null;
@@ -94,10 +96,12 @@ export async function onRequestPost({ request, env }) {
   await env.DB.prepare(
     `INSERT INTO materials (id, case_id, event_id, title, side, filed_on, url,
                             r2_key, file_name, file_size, mime, claims, body, summary,
+                            summary_model, summary_date,
                             hidden, created_by, updated_by, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)`
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)`
   ).bind(mid, f.case_id, f.event_id, f.title, f.side, f.filed_on, f.url,
          r2.key, r2.name, r2.size, r2.mime, f.claims, f.body, f.summary,
+         f.summary_model, f.summary_date,
          actorLabel(id, auth), actorLabel(id, auth), now, now).run();
 
   const row = await env.DB.prepare(`${SELECT} AND m.id = ?`).bind(mid).first();
