@@ -332,28 +332,30 @@ window.CC = (function(){
   // 事件ページ（full）の一番上に出す、編集できる人だけのバー。運営（事務局）・ご本人（この事件の
   // 問題提起人）としてログイン中のどちらでも「＋ 事件情報を編集」を出す（2026-08-30。以前はdcardの
   // 中、タイトルの上に小さく置いていたが、写真・掲示板より下でスクロールしないと見えず、初見の人が
-  // 見つけづらかったため、ここへ一本化した）。ご本人のときは、presenter.htmlの同じ見た目のバーと
-  // 揃え、自分の事件一覧・パスワード変更・ログアウトも同じ行に集約する（旧・ページ最下部の
-  // 「Xさんとしてログイン中です」はcase.html・presenter.htmlのどちらでも廃止しここへ一本化。
-  // 画像等より上、ページの一番上に出したいので、caseCardHtmlの中ではなくcase.html側の別要素
-  // （#caseSelfBar）に呼び出し側が直接描く。クリック処理もcase.html側で、innerHTML差し替え後に付け直す）
+  // 見つけづらかったため、ここへ一本化した）。ご本人のときは、case-edit.htmlの自己確認バーと
+  // 同じ見た目（アイコン＋「ログイン中」バッジ＋その下にログアウト・パスワード変更）に揃える
+  // （2026-09-01。以前は文字リンクの「自分の事件一覧」を並べていたが、アイコン自体が同じ
+  // リンク先（presenter.html）を兼ねるので廃止した）。旧・ページ最下部の「Xさんとしてログイン中
+  // です」はcase.html・presenter.htmlのどちらでも廃止しここへ一本化。画像等より上、ページの
+  // 一番上に出したいので、caseCardHtmlの中ではなくcase.html側の別要素（#caseSelfBar）に
+  // 呼び出し側が直接描く。クリック処理もcase.html側で、innerHTML差し替え後に付け直す）
   function caseSelfBarHtml(c, full){
     if(!full || !canEditCase(c.id)) return "";
     // 他の.selfbar内リンク（下線だけの地味なテキスト）と同じ並びだと素通りされてしまうので、
-    // .edit-fab（右端に寄せた正円のアイコンボタン）にして目立たせる。バッジ・自分の事件一覧等の
-    // 文字リンクは左側にまとめ、editLinkはDOM順の最後に置いてmargin-left:autoで単独で右へ
-    // 押し出す（2026-08-31。以前は.pillbtnの横並びだったが、すぐ上の「事件をさがすに戻る」と
-    // 見分けがつかず、ナビの帯として素通りされてしまっていた）
+    // .edit-fab（右端に寄せた正円のアイコンボタン）にして目立たせる。アイコン・バッジ等は左側に
+    // まとめ、editLinkはDOM順の最後に置いてmargin-left:autoで単独で右へ押し出す（2026-08-31。
+    // 以前は.pillbtnの横並びだったが、すぐ上の「事件をさがすに戻る」と見分けがつかず、ナビの帯
+    // として素通りされてしまっていた）
     const editLink = `<a class="edit-fab" href="case-edit.html?id=${encodeURIComponent(c.id)}" aria-label="事件情報を編集"><span class="edit-fab-circle"><i class="bi bi-pencil-square" aria-hidden="true"></i></span><span class="edit-fab-label">編集</span></a>`;
     const isSelf = me.presenterId && c.presenterId===me.presenterId;
     if(!isSelf){
       // 運営（事務局）としてログイン中：編集リンクだけを出す（「ご本人」の名乗りは不要なため）
       return `<div class="selfbar">${editLink}</div>`;
     }
-    return `<div class="selfbar"><span class="badge">ご本人としてログイン中</span>`+
-      `<a id="caseSelfMyPage">自分の事件一覧</a><span class="sep">・</span>`+
-      `<a id="caseSelfPwLink">パスワードを変更</a><span class="sep">・</span>`+
-      `<a id="caseSelfLogoutLink">ログアウト</a>`+editLink+`</div>`;
+    return `<div class="selfbar">${presenterHeaderHtml(c)}<div class="selfbar-body">`+
+      `<span class="badge">ログイン中</span>`+
+      `<div><a id="caseSelfLogoutLink">ログアウト</a><span class="sep">・</span><a id="caseSelfPwLink">パスワード変更</a></div>`+
+      `</div>${editLink}</div>`;
   }
   // 仮アイコンに使う頭文字。「【サンプル】」「【控訴審】」のような先頭の囲みは、どの事件でも同じ文字になって
   // 見分けの役に立たないので読み飛ばし、囲みの後ろの頭文字を拾う（囲みだけで中身が無い名前は元の頭文字に戻す）
@@ -1643,6 +1645,17 @@ window.CC = (function(){
         tierPick.hidden=false;
         const urlTier=params.get("tier");
         applyTier(TIER_ORDER.hasOwnProperty(urlTier) ? urlTier : "min");
+        // 画像・期日・資料は、節を開いた状態にし、「追加」の新規入力欄も最初から出しておく
+        // （クリック待ちにしない。2026-09-01。深いリンク（?open=）で来たときは openDeepLink() 側が
+        // 個別に1件だけ開くので、二重に開かないようこちらは通らない）
+        ["img","ev","mat"].forEach(kind=>{
+          const def=LIST[kind];
+          document.getElementById("sec-"+kind).classList.add("open");
+          const addBtn=$(def.addBtn);
+          addBtn.insertAdjacentHTML("beforebegin", def.editorHtml(null));
+          const root=addBtn.previousElementSibling;
+          wireAutosize(root); autosizeAll(root);
+        });
       }else{
         tierPick.hidden=true;
         applyTier("detail");

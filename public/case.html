@@ -105,8 +105,8 @@
     // caseSelfBarのinnerHTMLは毎回作り直すので、中のリンクは毎回付け直す
     const selfBarEl = document.getElementById("caseSelfBar");
     selfBarEl.innerHTML = c ? CC.caseSelfBarHtml(c, true) : "";
-    const myPageLink = document.getElementById("caseSelfMyPage");
-    if(myPageLink) myPageLink.addEventListener("click", ()=>{ location.href="presenter?id="+encodeURIComponent(CC.me.presenterId); });
+    // 「自分の事件一覧」への文字リンクは廃止した。caseSelfBarHtml内のアイコン
+    // （.cicon-link、presenterHeaderHtml）が同じリンク先を兼ねる（2026-09-01）
     const pwLink = document.getElementById("caseSelfPwLink");
     if(pwLink) pwLink.addEventListener("click", openPwCard);
     const logoutLink = document.getElementById("caseSelfLogoutLink");

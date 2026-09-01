@@ -169,11 +169,13 @@ a{color:inherit}
 .selfbar .badge{color:var(--stamp);font-size:.78rem}
 .selfbar a{cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .selfbar .sep{color:var(--faint)}
-/* case-edit.htmlだけ、バッジ「ログイン中」の下にログアウト・パスワード変更を並べる2行構成にする
-   （2026-09-01）。アイコンは2行ぶんの高さに見合うよう、通常の.cicon（56px）より少し大きくする */
+/* ご本人としてログイン中のバー：case.html（#caseSelfBar）・case-edit.html（#ceSelfBar）で
+   共通の見た目にする（アイコン＋バッジ「ログイン中」の下にログアウト・パスワード変更を並べる
+   2行構成。presenter.htmlは見出し側に別サイズのアイコンを出しているので対象外。2026-09-01）。
+   アイコンは2行ぶんの高さに見合うよう、通常の.cicon（56px）より少し大きくする */
 .selfbar-body{display:flex;flex-direction:column;gap:4px}
-#ceSelfBar .cicon,#ceSelfBar .cicon-ph{width:64px;height:64px}
-#ceSelfBar .cicon-ph{font-size:1.5rem}
+.selfbar .cicon,.selfbar .cicon-ph{width:64px;height:64px}
+.selfbar .cicon-ph{font-size:1.5rem}
 /* いいね：タイトルに続けて置く。押すと朱色で塗る。
    枠・背景は持たず、タイトルに寄り添う"添え物"にする（2026-08-24。それまでは枠線のピル型だった）。
    押した状態はハートの塗り（bi-heart-fill）と朱色で示すので、面で囲う必要がない。
