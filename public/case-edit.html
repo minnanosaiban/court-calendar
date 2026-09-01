@@ -27,6 +27,30 @@
   <!-- case.html の自己確認バー（#caseSelfBar）と同じ余白に揃える（2026-09-01） -->
   <div id="ceSelfBar" style="margin-top:16px"></div>
 
+  <!-- パスワード変更（case.html・presenter.htmlと同じページ内フォーム。自己確認バーの
+       「パスワード変更」から開閉する。2026-09-01） -->
+  <div class="card" id="pwCard" hidden style="margin-top:16px;padding:20px 22px;max-width:420px">
+    <p class="msec" style="margin-top:0">パスワードの変更</p>
+    <div class="field">
+      <label>いまのパスワード</label>
+      <input type="password" id="pwCurrent" autocomplete="current-password">
+    </div>
+    <div class="field">
+      <label>新しいパスワード</label>
+      <input type="password" id="pwNew" autocomplete="new-password">
+      <p class="fnote">8文字以上にしてください。</p>
+    </div>
+    <div class="field">
+      <label>新しいパスワード（確認）</label>
+      <input type="password" id="pwConfirm" autocomplete="new-password">
+    </div>
+    <p class="fnote" id="pwStatus" hidden></p>
+    <div class="formfoot">
+      <button type="button" class="btn-cancel" id="pwCancel">キャンセル</button>
+      <button type="button" class="btn-save" id="pwSubmit">変更する</button>
+    </div>
+  </div>
+
   <div class="ce-title-row">
     <div class="ce-title" id="ceTitle">事件情報を編集</div>
     <span class="ce-title-warn">入力は、公開しても問題ない内容に限定してください。</span>

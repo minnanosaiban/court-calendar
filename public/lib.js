@@ -1550,6 +1550,26 @@ window.CC = (function(){
       el.addEventListener("click", ()=>applyTier(tier));
       el.addEventListener("keydown",(e)=>{ if(e.key==="Enter") applyTier(tier); });
     });
+    // パスワード変更（自己確認バーの「パスワード変更」から開くページ内フォーム。
+    // case.html・presenter.htmlと同じ仕組み。2026-09-01）
+    const pwCard=$("pwCard"), pwCurrent=$("pwCurrent"), pwNew=$("pwNew"), pwConfirm=$("pwConfirm"), pwStatus=$("pwStatus");
+    function showPwStatus(t){ pwStatus.hidden=false; pwStatus.textContent=t; }
+    function openPwCard(){
+      pwCurrent.value=""; pwNew.value=""; pwConfirm.value=""; pwStatus.hidden=true;
+      pwCard.hidden=false;
+      pwCurrent.focus();
+    }
+    $("pwCancel").addEventListener("click",()=>{ pwCard.hidden=true; });
+    $("pwSubmit").addEventListener("click", async ()=>{
+      const current=pwCurrent.value, next=pwNew.value, confirm2=pwConfirm.value;
+      if(!next || next.length<8){ showPwStatus("新しいパスワードは8文字以上にしてください。"); return; }
+      if(next!==confirm2){ showPwStatus("新しいパスワード（確認）が一致しません。"); return; }
+      try{
+        await apiPresenterChangePassword(current, next);
+        pwCard.hidden=true;
+        alert("パスワードを変更しました。");
+      }catch(err){ showPwStatus("変更できませんでした：" + (err && err.message || err)); }
+    });
     // ページの初期化。CC.load() 後にページ側から呼ぶ。編集ロック解除（onChange）でも呼ばれるが、
     // フォームの充填は一度だけ（アイコン即時反映などの onChange で入力中の内容を上書きしない）
     initCaseEditPage = function(){
@@ -1587,15 +1607,18 @@ window.CC = (function(){
         $("ceBackLabel").textContent="事件ページに戻る";
         $("cDelete").style.display = edIsAdmin ? "" : "none";
         // ご本人（この事件の問題提起人）としてログイン中のときだけ出す自己確認バー。
-        // 「パスワードを変更」はこの画面には無い（presenter.html・case.htmlにある）ので、
-        // ログアウトだけの簡易版にする（2026-08-30。以前は下部フッターにだけあった）。
-        // アイコンはcase.htmlの見出しと同じ「問題提起人ページ（＝自分の事件一覧）へのリンク」
-        // なので、バッジの左に置いて「自分の事件一覧」の文字リンクは廃止する（2026-09-01）
+        // アイコンはcase.htmlの見出しと同じ「問題提起人ページ（＝自分の事件一覧）へのリンク」なので
+        // バッジの左に置き、「自分の事件一覧」の文字リンクは廃止する（2026-09-01）。バッジ「ログイン中」
+        // の下にログアウト・パスワード変更を並べる2行構成にし、アイコンは2行ぶんの高さに見合うよう
+        // 少し大きくする（#ceSelfBar .cicon、style.css側）
         const selfBarEl = $("ceSelfBar");
         if(!edIsAdmin && me.presenterId){
-          selfBarEl.innerHTML = `<div class="selfbar">${presenterHeaderHtml(c)}<span class="badge">ログイン中</span>`+
-            `<a id="ceSelfLogout">ログアウト</a></div>`;
+          selfBarEl.innerHTML = `<div class="selfbar">${presenterHeaderHtml(c)}<div class="selfbar-body">`+
+            `<span class="badge">ログイン中</span>`+
+            `<div><a id="ceSelfLogout">ログアウト</a><span class="sep">・</span><a id="ceSelfPwLink">パスワード変更</a></div>`+
+            `</div></div>`;
           $("ceSelfLogout").addEventListener("click", async ()=>{ await presenterLogout(); location.href="index.html"; });
+          $("ceSelfPwLink").addEventListener("click", openPwCard);
         }else{
           selfBarEl.innerHTML = "";
         }
