@@ -113,6 +113,7 @@
       <div data-sec="cPresenterXUrlRow" data-tier-min="std">Xアカウント</div>
       <div class="grp">事件について</div>
       <div data-sec="sec-name">事件名</div>
+      <div data-sec="sec-privacy">アクセス制限</div>
       <div data-sec="sec-caseno" data-tier-min="detail">事件番号</div>
       <div data-sec="sec-press" data-tier-min="std">報道・掲載</div>
       <div data-sec="sec-card">Twitterカード</div>
@@ -204,6 +205,26 @@
         <p class="msec" id="sec-name">事件名 <span class="reqmark">＊</span></p>
         <div class="field">
           <input type="text" id="cName" aria-label="事件名" placeholder="例）情報公開請求をめぐる訴訟">
+        </div>
+
+        <!-- アクセス制限（閲覧キー）：2026-09-02。事件ページ・一覧・問題提起人一覧・サイトマップ等、
+             すべての公開経路を一括で隠す・見せるスイッチなので、掲載レベルに関わらず常に出す
+             （事件名の直後＝いちばん見落としてほしくない場所）。キーは空欄で✓を入れると
+             自動生成し、「作り直す」でいつでも別の値に変えられる（作り直すと古いURLは無効になる）。
+             実際の共有は事件ページの「シェア」→「リンクをコピー」から（shareHtml()がisPrivateなら
+             このキーを自動で付ける） -->
+        <p class="msec" id="sec-privacy">アクセス制限</p>
+        <div class="field">
+          <label class="check"><input type="checkbox" id="cIsPrivate"> この事件を非公開にする（閲覧キーを知っている人にだけ見せる）</label>
+          <p class="fnote" id="cIsPrivateNote"></p>
+          <div class="subfield" id="cViewKeyRow" hidden>
+            <label>閲覧キー（合言葉）</label>
+            <div class="cicon-row">
+              <input type="text" id="cViewKey" aria-label="閲覧キー" placeholder="空欄のまま保存すると自動で作られます">
+              <button type="button" class="btn-save" id="cViewKeyRegen">作り直す</button>
+            </div>
+            <p class="fnote">「作り直す」を押すと新しいキーになり、それまでのURLは見られなくなります（受け取った人に新しいURLを配り直す必要があります）。実際に送るURLは、保存後にこの事件のページの「シェア」→「リンクをコピー」から取れます（このキーが自動で付きます）。</p>
+          </div>
         </div>
 
         <p class="msec" id="sec-caseno" data-tier-min="detail">事件番号</p>

@@ -24,6 +24,7 @@ export function textToLines(s) {
 // presenters は LEFT JOIN で引く（p. で参照。FROM 句は casesSelect() 側で JOIN する）
 export const CASE_COLS = `c.id, c.name, c.presenter_id, p.nickname AS presenter_nickname, p.icon_r2_key AS presenter_icon_r2_key,
                           p.x_url AS presenter_x_url,
+                          c.view_key,
                           c.case_no, c.case_no_public, c.show_case_no_on_top,
                           c.plaintiff_name, c.show_plaintiff_on_top, c.defendant_name, c.show_defendant_on_top,
                           c.judge, c.show_judge_on_top, c.points, c.show_points_on_top, c.call_text, c.show_call_on_top,
@@ -41,6 +42,11 @@ export function rowToCase(r) {
     presenterNickname: r.presenter_nickname || "",
     presenterIcon: r.presenter_icon_r2_key ? "/files/" + r.presenter_icon_r2_key : "",
     presenterXUrl: r.presenter_x_url || "",
+    // 閲覧キー（view_key）：この行がここまで来ている時点で、呼び出し側（一覧の絞り込み・
+    // authorizeCaseWrite等）で「見せてよい」判定は既に済んでいる（非公開でキーが合っていない
+    // 行はそもそもrowToCaseに渡る前に除かれる）。なので生の値をそのまま返してよい（2026-09-02）。
+    isPrivate: !!r.view_key,
+    viewKey: r.view_key || "",
     caseNo: r.case_no || "",
     caseNoPublic: r.case_no_public === 1 || r.case_no_public === true,
     showCaseNoOnTop: r.show_case_no_on_top === 1 || r.show_case_no_on_top === true,
@@ -85,6 +91,11 @@ export function caseFromBody(body) {
   return {
     name: String(body.name || "").trim(),
     presenter_id: String(body.presenterId || "").trim() || null,
+    // 非公開にする場合、キーが空欄で送られてきたら（新規に非公開へ切り替えたときなど）
+    // ここでサーバー側が生成する（本来は編集画面がクライアント側で埋めて送るので、ここに
+    // 来るのは主にAPIを直接叩いた場合の保険）。generatePassword()は下の方で定義しているが、
+    // 関数宣言は巻き上げられるので参照して問題ない
+    view_key: body.isPrivate === true ? (String(body.viewKey || "").trim() || generatePassword(12)) : null,
     case_no: String(body.caseNo || "").trim(),
     case_no_public: body.caseNoPublic === true ? 1 : 0,
     show_case_no_on_top: body.showCaseNoOnTop === true ? 1 : 0,

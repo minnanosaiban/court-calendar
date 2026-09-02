@@ -55,11 +55,17 @@ window.CC = (function(){
   function byDate(a,b){ return a.date===b.date ? byTime(a,b) : a.date.localeCompare(b.date); }
   function escapeHtml(s){ return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
   function escapeAttr(s){ return String(s||"").replace(/"/g,"&quot;"); }
-  // 1行のテキストに https://... が含まれていればリンクにする（必ず先にエスケープしてから当てはめる）。
-  // リンクの直後に「外部サイトを開く」アイコンを添える（報道がWEB記事のときの目印）
+  // 1行のテキストの末尾に「半角スペース＋URL」があれば、URLの文字列自体は表示せず、
+  // 末尾に「外部サイトを開く」アイコンだけのリンクを添える（裁判官・当事者の行末リンクと同じ考え方・
+  // 同じ見た目）。以前はURL文字列をそのままリンク化していたが、長いURLだと折り返してアイコンと
+  // 重なって見えることがあった（2026-09-02）
   function linkify(s){
-    return escapeHtml(s).replace(/(https?:\/\/[^\s]+)/g,
-      '<a href="$1" target="_blank" rel="noopener">$1 <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>');
+    const raw = String(s||"");
+    const m = raw.match(/[\s　](https?:\/\/\S+)$/);
+    if(!m) return escapeHtml(raw);
+    const text = raw.slice(0, m.index).trim();
+    return escapeHtml(text)
+      + ` <a class="jlink" href="${escapeAttr(m[1])}" target="_blank" rel="noopener" title="外部サイトを見る" aria-label="外部サイトを見る"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>`;
   }
   function cssEsc(s){ return String(s).replace(/"/g,'\\"'); }
   function jpDate(s){ const d=parseYmd(s); return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${WD[d.getDay()]}）`; }
@@ -373,9 +379,12 @@ window.CC = (function(){
            : `<span class="tag">${escapeHtml(t)}</span>`
     ).join("")+`</div>`;
   }
-  // シェア（事件ページのみ）：X・LINE はリンクを新しいタブで開くだけ、リンクをコピーだけJSが要る
+  // シェア（事件ページのみ）：X・LINE はリンクを新しいタブで開くだけ、リンクをコピーだけJSが要る。
+  // 非公開にした事件（isPrivate）は、閲覧キーを付けないと共有先で開けないURLになってしまうため、
+  // ここに来ているcはすでに閲覧できている＝キーを知っている前提で、共有リンクにも同じキーを付ける（2026-09-02）
   function shareHtml(c){
-    const shareUrl = location.origin + "/case?id=" + encodeURIComponent(c.id);
+    const keyQs = c.isPrivate && c.viewKey ? "&key=" + encodeURIComponent(c.viewKey) : "";
+    const shareUrl = location.origin + "/case?id=" + encodeURIComponent(c.id) + keyQs;
     const text = encodeURIComponent(c.name);
     const u = encodeURIComponent(shareUrl);
     // LINEはURLに openExternalBrowser=1 を付けると、受け取った側が内蔵ブラウザでなく端末の
@@ -1106,6 +1115,17 @@ window.CC = (function(){
           cPresenterLoginRemoveWrap=$("cPresenterLoginRemoveWrap"), cPresenterLoginRemove=$("cPresenterLoginRemove"),
           cPresenterLoginStatus=$("cPresenterLoginStatus"),
           cCaseNoPublicNote=$("cCaseNoPublicNote");
+    const cIsPrivate=$("cIsPrivate"), cIsPrivateNote=$("cIsPrivateNote"),
+          cViewKeyRow=$("cViewKeyRow"), cViewKey=$("cViewKey"), cViewKeyRegen=$("cViewKeyRegen");
+    // 閲覧キーの自動生成：presenterのパスワード発行（サーバー側 generatePassword()）と同じ文字種
+    // （紛らわしい0/O/1/lなどを除いた56種）・同じ長さ（12文字）にそろえる（2026-09-02）
+    const VIEWKEY_CHARS="23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz";
+    function generateViewKey(len){
+      len=len||12;
+      const b=new Uint8Array(len);
+      crypto.getRandomValues(b);
+      return [...b].map(x=>VIEWKEY_CHARS[x % VIEWKEY_CHARS.length]).join("");
+    }
     // 連絡先は入力欄を廃止したが、既存データは保持する（保存のたびに空で上書きしないよう、
     // 編集を開いたときの値をここに覚えておいて、保存時にそのまま送り返す）
     let editingCaseContact="";
@@ -1462,8 +1482,30 @@ window.CC = (function(){
         : "いまはサイトに出ていません。「公開する」に✓を入れると事件ページに表示されます（この欄はご本人と運営にだけ見えています）。";
     }
     cCaseNoPublic.addEventListener("change", updateCaseNoPublicNote);
+    // アクセス制限（閲覧キー）の状態表示・出し分け（2026-09-02）
+    function updateIsPrivateNote(){
+      cIsPrivateNote.textContent = cIsPrivate.checked
+        ? "非公開です。閲覧キーを知っている人にだけ表示されます（一覧・問題提起人の情報も含めて隠れます）。"
+        : "公開されています（誰でも見られます）。";
+    }
+    cIsPrivate.addEventListener("change", ()=>{
+      if(!cIsPrivate.checked){
+        // 公開に戻すときは値を捨てる：次に非公開へ戻すときに、古い（人に知られたかもしれない）
+        // キーをうっかり再利用しないため、必ず新しいキーを作らせる
+        cViewKey.value="";
+      }else if(!cViewKey.value.trim()){
+        cViewKey.value=generateViewKey();
+      }
+      cViewKeyRow.hidden = !cIsPrivate.checked;
+      updateIsPrivateNote();
+    });
+    cViewKeyRegen.addEventListener("click", ()=>{ cViewKey.value=generateViewKey(); });
     function fillCaseForm(c){
       cFields.name.value=c.name||""; cFields.caseNo.value=c.caseNo||"";
+      cIsPrivate.checked = c.isPrivate===true;
+      cViewKey.value = c.isPrivate ? (c.viewKey||"") : "";
+      cViewKeyRow.hidden = !cIsPrivate.checked;
+      updateIsPrivateNote();
       cCaseNoPublic.checked = c.caseNoPublic===true;
       updateCaseNoPublicNote();
       cShowOnTop.caseNo.checked = c.showCaseNoOnTop===true;
@@ -1525,7 +1567,9 @@ window.CC = (function(){
         }catch(err){ alert(saveErr(err)); return; }
       }
       const data={
-        name, presenterId, caseNo:cFields.caseNo.value.trim(), caseNoPublic:cCaseNoPublic.checked,
+        name, presenterId,
+        isPrivate:cIsPrivate.checked, viewKey:cViewKey.value.trim(),
+        caseNo:cFields.caseNo.value.trim(), caseNoPublic:cCaseNoPublic.checked,
         showCaseNoOnTop:cShowOnTop.caseNo.checked, showPointsOnTop:cShowOnTop.points.checked,
         showPlaintiffOnTop:cShowOnTop.plaintiff.checked, showDefendantOnTop:cShowOnTop.defendant.checked,
         showJudgeOnTop:cShowOnTop.judge.checked, showPressOnTop:cShowOnTop.press.checked,

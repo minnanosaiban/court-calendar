@@ -32,7 +32,7 @@ export async function onRequestPut({ request, env, params }) {
   const actor = actorLabel(id, auth);
   const res = await env.DB.prepare(
     `UPDATE cases
-        SET name=?, presenter_id=?, case_no=?, case_no_public=?, show_case_no_on_top=?,
+        SET name=?, presenter_id=?, view_key=?, case_no=?, case_no_public=?, show_case_no_on_top=?,
             plaintiff_name=?, show_plaintiff_on_top=?, defendant_name=?, show_defendant_on_top=?,
             judge=?, show_judge_on_top=?, points=?, show_points_on_top=?, call_text=?, show_call_on_top=?,
             contact=?, press=?, show_press_on_top=?,
@@ -40,7 +40,7 @@ export async function onRequestPut({ request, env, params }) {
             related_case_ids=?, show_related_on_top=?, archived_at=?, close_type=?, board_enabled=?, board_restricted=?,
             updated_by=?, updated_at=?
       WHERE id=?`
-  ).bind(c.name, c.presenter_id, c.case_no, c.case_no_public, c.show_case_no_on_top,
+  ).bind(c.name, c.presenter_id, c.view_key, c.case_no, c.case_no_public, c.show_case_no_on_top,
          c.plaintiff_name, c.show_plaintiff_on_top, c.defendant_name, c.show_defendant_on_top,
          c.judge, c.show_judge_on_top, c.points, c.show_points_on_top, c.call_text, c.show_call_on_top,
          c.contact, c.press, c.show_press_on_top,
