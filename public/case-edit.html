@@ -124,6 +124,7 @@
       <div class="grp">記録を足す</div>
       <div data-sec="sec-ev">期日<span class="n" id="navEvCount"></span></div>
       <div data-sec="sec-mat" data-tier-min="detail">資料<span class="n" id="navMatCount"></span></div>
+      <div data-sec="sec-closure" data-tier-min="detail">終結</div>
       <div class="grp">表示の設定</div>
       <div data-sec="sec-notice" data-tier-min="std">期日案内</div>
       <div data-sec="sec-related" data-tier-min="detail">関連裁判</div>
@@ -342,20 +343,12 @@
           </div>
         </section>
 
-        <!-- 期日：1件ずつ保存（新規作成のときはまだ事件が無いので出さない）。終結（終結日・終結の種類）は
-             期日の一種として扱い、独立した節にせずこの中に含める（2026-09-01） -->
+        <!-- 期日：1件ずつ保存（新規作成のときはまだ事件が無いので出さない） -->
         <section class="lssec listsec" id="sec-ev" data-listsec="ev" hidden>
           <div class="lshead"><p class="msec">期日</p><span class="lscount" id="evCount"></span><span class="lschev"><i class="bi bi-arrow-bar-down" aria-hidden="true"></i></span></div>
           <div class="lsbody">
             <div id="evList"></div>
             <button type="button" class="addbtn" id="evAddBtn">＋ 期日を追加</button>
-            <div class="subfield subfield-plain" data-tier-min="detail">
-              <p class="msec" style="margin-top:12px">終結<span class="lhint">終結した事件のみ入れる</span></p>
-              <div class="two">
-                <div class="field"><label>終結日</label><input type="date" id="cArchivedAt"></div>
-                <div class="field"><label>終結の種類</label><input type="text" id="cCloseType" placeholder="例）判決、和解、取下げ"></div>
-              </div>
-            </div>
           </div>
         </section>
 
@@ -367,6 +360,19 @@
             <button type="button" class="addbtn" id="matAddBtn">＋ 資料を追加</button>
           </div>
         </section>
+
+        <!-- 終結：以前は期日の一種として.lssecの中に含めていたが（2026-09-01）、グレー地の箱
+             （.subfield）をやめたことで期日の一部という見た目の根拠がなくなったため、資料の下に
+             独立した節として出す（2026-09-02）。他の事件情報と同じく「事件情報を保存」でまとめて
+             保存する値なので、期日・資料と違って事件がまだ無くても（新規作成でも）出してよい
+             （data-tier-minだけで出し分ける。edCaseIdでの出し分けは不要） -->
+        <p class="msec" id="sec-closure" data-tier-min="detail">終結<span class="lhint">終結した事件のみ入れる</span></p>
+        <div class="field" data-tier-min="detail">
+          <div class="two">
+            <div class="field"><label>終結日</label><input type="date" id="cArchivedAt"></div>
+            <div class="field"><label>終結の種類</label><input type="text" id="cCloseType" placeholder="例）判決、和解、取下げ"></div>
+          </div>
+        </div>
 
         <!-- 期日案内：事件につき1枚・差し替え専用（問題提起人アイコンと同じ仕組み）。JPEGのみ
              （2026-08-28：ファイルサイズが小さく済むJPEGに限定。PDF・PNGは既存データの表示のみ対応）。
