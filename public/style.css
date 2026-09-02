@@ -725,10 +725,12 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
    高さを38.4pxにそろえるため。詳しくは DESIGN_SYSTEM.md「3. 部品の大きさ」） */
 .cicon-row button{flex:none;white-space:nowrap;font-family:inherit;font-size:.9rem;cursor:pointer;
   border:1px solid transparent;border-radius:999px;padding:8px 20px}
-/* 変更・保存・作成（2文字）は正円にする（2026-09-02）。.cicon-row buttonと同じ高さ38.4pxを幅にも
-   使い、paddingでなく固定サイズ＋flexで中央寄せする。文字は円に収まるよう.9rem→.78remに縮める */
-.btn-round{width:38.4px;height:38.4px;padding:0;font-size:.78rem;
-  display:inline-flex;align-items:center;justify-content:center;border-radius:50%}
+/* 変更・保存・作成（2文字）は正円にする（2026-09-02）。paddingでなく固定サイズ＋flexで中央寄せする。
+   円の直径は「同じ役割の部品どうしは同じ高さ」（DESIGN_SYSTEM.md）にそろえて、置かれる文脈ごとの
+   本来の高さ（.cicon-row=38.4px・.ihead-actions=35.7px）に合わせる。文字は円に収まるよう縮める */
+.btn-round{padding:0;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;border-radius:50%}
+.cicon-row .btn-round{width:38.4px;height:38.4px;font-size:.78rem}
+.ihead-actions .btn-round{width:35.7px;height:35.7px;font-size:.72rem}
 /* 選んだ問題提起人に属する操作（ニックネームの新規作成・アイコン）は、事件そのものの入力欄と
    区別できるよう、薄い地に載せて1つのまとまりに見せる（2026-08-26） */
 .subfield{background:var(--tint);border-radius:12px;padding:12px;margin-top:8px}
@@ -830,7 +832,7 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .imove a{color:var(--faint);font-size:.9rem;cursor:pointer;text-decoration:none}
 .imove a:hover{color:var(--ink)}
 .ieditor{background:var(--tint);border-radius:12px;padding:16px;margin:4px 0}
-/* 「閉じる」「この期日を保存」等は枠の右上（見出しと同じ行）に置く。下の「事件情報を保存」との
+/* 「閉じる」「保存」は枠の右上（見出しと同じ行）に置く。下の「事件情報を保存」との
    被りを避けるため（2026-08-30。以前は下部.ifootにあった） */
 .ieditor .ihead{font-size:.8rem;color:var(--mut);margin-bottom:12px;
   display:flex;align-items:center;justify-content:space-between;gap:12px}

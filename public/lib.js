@@ -1783,7 +1783,7 @@ window.CC = (function(){
           <span>画像を${isNew?"追加":"編集"}</span>
           <span class="ihead-actions">
             <button type="button" class="btn-cancel" data-close>閉じる</button>
-            <button type="button" class="btn-save" data-save="img" data-id="${isNew?"":escapeAttr(im.id)}">この画像を保存</button>
+            <button type="button" class="btn-save btn-round" data-save="img" data-id="${isNew?"":escapeAttr(im.id)}">保存</button>
           </span>
         </div>
         ${isNew?`<p class="fnote">Web用画像・スマホ用画像のどちらか一方は必ず選んでください。</p>`:""}
@@ -1863,7 +1863,7 @@ window.CC = (function(){
           <span>期日を${isNew?"追加":"編集"}</span>
           <span class="ihead-actions">
             <button type="button" class="btn-cancel" data-close>閉じる</button>
-            <button type="button" class="btn-save" data-save="ev" data-id="${isNew?"":escapeAttr(ev.id)}">この期日を保存</button>
+            <button type="button" class="btn-save btn-round" data-save="ev" data-id="${isNew?"":escapeAttr(ev.id)}">保存</button>
           </span>
         </div>
         <div class="two">
@@ -1951,7 +1951,7 @@ window.CC = (function(){
           <span>資料を${isNew?"追加":"編集"}</span>
           <span class="ihead-actions">
             <button type="button" class="btn-cancel" data-close>閉じる</button>
-            <button type="button" class="btn-save" data-save="mat" data-id="${isNew?"":escapeAttr(m.id)}">この資料を保存</button>
+            <button type="button" class="btn-save btn-round" data-save="mat" data-id="${isNew?"":escapeAttr(m.id)}">保存</button>
           </span>
         </div>
         <div class="field"><label>資料名 <span class="reqmark">＊</span></label><input type="text" class="ef-title" value="${escapeAttr(mm.title)}" placeholder="例）訴状、第1準備書面、甲3 ○○"></div>

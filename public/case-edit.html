@@ -153,13 +153,13 @@
           <!-- 問題提起人本人がログイン中は、選べない欄をプルダウンの形にしない（下でJSが出し分ける）。
                本人ログイン時は、身元表示は出さず下のニックネーム欄の値がそのまま身元を示す（2026-08-30） -->
           <p class="fnote" id="cPresenterHint">同じ人（団体）が複数の事件を持つときは、同じ問題提起人を選べばアイコン・ニックネームを使い回せます。</p>
-          <div class="subfield" id="cPresenterNewRow" hidden>
+          <div class="subfield subfield-plain" id="cPresenterNewRow" hidden>
             <div class="cicon-row">
               <input type="text" id="cPresenterNewNickname" placeholder="ニックネーム（例：〇〇支援の会）">
               <button type="button" class="btn-save btn-round" id="cPresenterNewSave">作成</button>
             </div>
           </div>
-          <div class="subfield" id="cPresenterRenameRow" hidden>
+          <div class="subfield subfield-plain" id="cPresenterRenameRow" hidden>
             <div class="cicon-row">
               <input type="text" id="cPresenterRenameNickname" placeholder="ニックネーム">
               <button type="button" class="btn-save btn-round" id="cPresenterRenameSave">変更</button>
@@ -167,7 +167,7 @@
             <p class="fnote">変更すると、この問題提起人の他の事件もまとめて表示名が変わります。</p>
           </div>
           <!-- ログイン設定（運営専用。問題提起人が自分でログインし、自分の事件を編集できるようにする） -->
-          <div class="subfield" id="cPresenterLoginRow" data-tier-min="detail" hidden>
+          <div class="subfield subfield-plain" id="cPresenterLoginRow" data-tier-min="detail" hidden>
             <p class="msec" style="margin-top:12px">ログイン設定（運営専用）</p>
             <div class="cicon-row">
               <input type="text" id="cPresenterLoginUsername" placeholder="ログインID（例：メールアドレス）">
@@ -233,9 +233,9 @@
             <label class="check"><input type="checkbox" id="cCaseNoPublic"> 公開する</label>
             <label class="check"><input type="checkbox" id="cShowCaseNoOnTop"> トップにも表示する</label>
           </div>
-          <p class="fnote" id="cCaseNoPublicNote" style="margin:0 0 6px"></p>
           <span class="lhint">1行に1件</span>
           <textarea id="cCaseNo" aria-label="事件番号" placeholder="地裁　令和6年(ワ)第12345号&#10;高裁　令和7年(ネ)第1234号"></textarea>
+          <p class="fnote" id="cCaseNoPublicNote"></p>
         </div>
 
         <p class="msec" id="sec-press" data-tier-min="std">報道・掲載</p>
@@ -249,12 +249,11 @@
              未設定（既定）なら /api/cases/:id/card.png・card-square.png が期日・問題提起人から自動で
              「傍聴券」を描く。正方形版はTeams・Slack等がog:imageを中央トリミングする対策で、横長版と
              差し替えの仕組みは同じ（2026-08-30）。新規作成のときはまだ事件が無いので出さない。
-             説明は横長版・正方形版で繰り返さず、見出し直下に1本だけ置く（2026-09-02）。
+             説明は横長版・正方形版で繰り返さず、正方形版の枠の下に1本だけ置く（2026-09-02）。
              「自動生成に戻す」は見出しの隣に置き、差し替え済みのときだけ出す（updateCardFieldUI等が
              hidden を切り替える。以前は説明文の中に埋めていた） -->
         <div class="field" id="sec-card" hidden>
           <p class="msec">Twitterカード</p>
-          <p class="fnote">いまは自動生成のカード（直近の期日・問題提起人から自動で作成）が使われています。画像（JPEG・PNG、1200×1200推奨、8MBまで）を選ぶと差し替わります。</p>
 
           <label>横長版<span id="cCardRemoveWrap" hidden>（<a id="cCardRemove" class="cicon-remove">自動生成に戻す</a>）</span></label>
           <div class="cicon-row">
@@ -269,6 +268,7 @@
               <span id="cCardSquarePreview"></span>
               <input type="file" id="cCardSquareFile" accept="image/jpeg,image/png" aria-label="Twitterカード（正方形）">
             </div>
+            <p class="fnote">Twitterカードの画像は自動生成されます。画像を変更することもできます。（JPEG・PNG、1200×1200推奨、8MBまで）</p>
             <p class="fnote" id="cCardSquareStatus" hidden></p>
           </div>
         </div>
