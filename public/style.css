@@ -737,8 +737,10 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .subfield .fnote{margin-top:8px}
 .subfield .fnote:first-child{margin-top:0}
 /* 灰色地は「別の操作のまとまり」を示す目的（上のコメント）なので、単に間隔だけ欲しい場所
-   （閲覧キー・Twitterカード正方形版・終結）には付けない（2026-09-02） */
-.subfield-plain{background:none}
+   （閲覧キー・Twitterカード正方形版・終結）には付けない（2026-09-02）。paddingも消さないと、
+   中の内容だけ左右に12pxずつ引っ込んで、同じ列の他の欄と縦の線がそろわなくなる
+   （実機で発覚。横長版の.cicon-rowと正方形版の.cicon-rowで左右端が12pxずれていた） */
+.subfield-plain{background:none;padding:0}
 .cicon-remove{color:var(--edit);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .fnote{color:var(--mut);font-size:.8rem;margin-top:4px;line-height:1.7}
 .fnote a{text-underline-offset:3px}
