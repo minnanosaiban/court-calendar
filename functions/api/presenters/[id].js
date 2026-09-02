@@ -1,15 +1,26 @@
 import {
   json, rowToPresenter, getIdentity, authorizeWrite, isHttpUrl,
   getPresenterSession, generatePassword, randomHex, hashPassword,
+  hiddenCaseIds, myCaseIds,
 } from "../../_common.js";
 import { presentersSelect } from "../presenters.js";
 
 // 単体取得（誰でも閲覧可。presenter.html のヘッダー表示用）。
-// ログインIDの設定状況は運営にだけ返す
+// ログインIDの設定状況は運営にだけ返す。
+// 一覧（/api/presenters）と同じ理由で、非公開にした事件しか持たない問題提起人は
+// 運営以外には「そんな人はいない」扱い（404）にする（IDを直接知られても中身は見せない）。
 export async function onRequestGet({ request, env, params }) {
   const row = await env.DB.prepare(`${presentersSelect()} WHERE presenters.id = ?`).bind(params.id).first();
   if (!row) return json({ error: "not found" }, 404);
   const admin = authorizeWrite(request, env, await getIdentity(request, env));
+  if (!admin && Number(row.case_count) > 0) {
+    const [hidden, session] = await Promise.all([hiddenCaseIds(env, request), getPresenterSession(request, env)]);
+    const mine = await myCaseIds(env, session);
+    const { results: caseRows } = await env.DB.prepare(`SELECT id FROM cases WHERE presenter_id = ?`).bind(params.id).all();
+    const visibleCount = (caseRows || []).filter((c) => !hidden.has(c.id) || mine.has(c.id)).length;
+    if (visibleCount === 0) return json({ error: "not found" }, 404);
+    row.case_count = visibleCount;
+  }
   return json(rowToPresenter(row, admin));
 }
 
