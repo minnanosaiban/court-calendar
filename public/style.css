@@ -725,11 +725,18 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
    高さを38.4pxにそろえるため。詳しくは DESIGN_SYSTEM.md「3. 部品の大きさ」） */
 .cicon-row button{flex:none;white-space:nowrap;font-family:inherit;font-size:.9rem;cursor:pointer;
   border:1px solid transparent;border-radius:999px;padding:8px 20px}
+/* 変更・保存・作成（2文字）は正円にする（2026-09-02）。.cicon-row buttonと同じ高さ38.4pxを幅にも
+   使い、paddingでなく固定サイズ＋flexで中央寄せする。文字は円に収まるよう.9rem→.78remに縮める */
+.btn-round{width:38.4px;height:38.4px;padding:0;font-size:.78rem;
+  display:inline-flex;align-items:center;justify-content:center;border-radius:50%}
 /* 選んだ問題提起人に属する操作（ニックネームの新規作成・アイコン）は、事件そのものの入力欄と
    区別できるよう、薄い地に載せて1つのまとまりに見せる（2026-08-26） */
 .subfield{background:var(--tint);border-radius:12px;padding:12px;margin-top:8px}
 .subfield .fnote{margin-top:8px}
 .subfield .fnote:first-child{margin-top:0}
+/* 灰色地は「別の操作のまとまり」を示す目的（上のコメント）なので、単に間隔だけ欲しい場所
+   （閲覧キー・Twitterカード正方形版・終結）には付けない（2026-09-02） */
+.subfield-plain{background:none}
 .cicon-remove{color:var(--edit);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .fnote{color:var(--mut);font-size:.8rem;margin-top:4px;line-height:1.7}
 .fnote a{text-underline-offset:3px}

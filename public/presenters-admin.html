@@ -37,7 +37,7 @@
       <p class="msec" style="margin-top:0">新しい問題提起人を作る</p>
       <div class="cicon-row">
         <input type="text" id="paNewNickname" placeholder="ニックネーム（例：〇〇支援の会）">
-        <button type="button" class="btn-save" id="paNewSave">作成</button>
+        <button type="button" class="btn-save btn-round" id="paNewSave">作成</button>
       </div>
       <p class="fnote">事件に紐づけるのは、その事件の「事件情報を編集」画面から行います。ここでは問題提起人の"箱"だけを先に作れます。</p>
     </div>
@@ -88,7 +88,7 @@
         <label>ニックネーム</label>
         <div class="cicon-row">
           <input type="text" id="paNickname" value="${CC.escapeAttr(p.nickname)}">
-          <button type="button" class="btn-save" id="paNicknameSave">変更</button>
+          <button type="button" class="btn-save btn-round" id="paNicknameSave">変更</button>
         </div>
       </div>
       <div class="field">
@@ -103,7 +103,7 @@
         <label>X（Twitter）URL</label>
         <div class="cicon-row">
           <input type="text" id="paXUrl" value="${CC.escapeAttr(p.xUrl||"")}" placeholder="例）https://x.com/example">
-          <button type="button" class="btn-save" id="paXUrlSave">変更</button>
+          <button type="button" class="btn-save btn-round" id="paXUrlSave">変更</button>
         </div>
         <p class="fnote">設定すると、ニックネームの右にXアイコンのリンクが出ます。空欄で保存すると外れます。</p>
       </div>
@@ -111,7 +111,7 @@
         <p class="msec" style="margin-top:12px">ログイン設定（運営専用）</p>
         <div class="cicon-row">
           <input type="text" id="paLoginUsername" value="${CC.escapeAttr(p.loginUsername||"")}" placeholder="ログインID（例：メールアドレス）">
-          <button type="button" class="btn-save" id="paLoginUsernameSave">保存</button>
+          <button type="button" class="btn-save btn-round" id="paLoginUsernameSave">保存</button>
         </div>
         <p class="fnote">
           <a id="paLoginReset" style="cursor:pointer;text-decoration:underline">パスワードを発行／再発行する</a>${loginRemove}

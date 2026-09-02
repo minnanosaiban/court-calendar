@@ -156,13 +156,13 @@
           <div class="subfield" id="cPresenterNewRow" hidden>
             <div class="cicon-row">
               <input type="text" id="cPresenterNewNickname" placeholder="ニックネーム（例：〇〇支援の会）">
-              <button type="button" class="btn-save" id="cPresenterNewSave">作成</button>
+              <button type="button" class="btn-save btn-round" id="cPresenterNewSave">作成</button>
             </div>
           </div>
           <div class="subfield" id="cPresenterRenameRow" hidden>
             <div class="cicon-row">
               <input type="text" id="cPresenterRenameNickname" placeholder="ニックネーム">
-              <button type="button" class="btn-save" id="cPresenterRenameSave">変更</button>
+              <button type="button" class="btn-save btn-round" id="cPresenterRenameSave">変更</button>
             </div>
             <p class="fnote">変更すると、この問題提起人の他の事件もまとめて表示名が変わります。</p>
           </div>
@@ -171,7 +171,7 @@
             <p class="msec" style="margin-top:12px">ログイン設定（運営専用）</p>
             <div class="cicon-row">
               <input type="text" id="cPresenterLoginUsername" placeholder="ログインID（例：メールアドレス）">
-              <button type="button" class="btn-save" id="cPresenterLoginUsernameSave">保存</button>
+              <button type="button" class="btn-save btn-round" id="cPresenterLoginUsernameSave">保存</button>
             </div>
             <p class="fnote">
               <a id="cPresenterLoginReset" style="cursor:pointer;text-decoration:underline">パスワードを発行／再発行する</a>
@@ -197,7 +197,7 @@
           <p class="msec">Xアカウント</p>
           <div class="cicon-row">
             <input type="text" id="cPresenterXUrl" placeholder="例）https://x.com/example">
-            <button type="button" class="btn-save" id="cPresenterXUrlSave">変更</button>
+            <button type="button" class="btn-save btn-round" id="cPresenterXUrlSave">変更</button>
           </div>
           <p class="fnote">設定すると、ニックネームの右にXアイコンのリンクが出ます。空欄で保存すると外れます。</p>
         </div>
@@ -217,7 +217,7 @@
         <div class="field">
           <label class="check"><input type="checkbox" id="cIsPrivate"> この事件を非公開にする（閲覧キーを知っている人にだけ見せる）</label>
           <p class="fnote" id="cIsPrivateNote"></p>
-          <div class="subfield" id="cViewKeyRow" hidden>
+          <div class="subfield subfield-plain" id="cViewKeyRow" hidden>
             <label>閲覧キー（合言葉）</label>
             <div class="cicon-row">
               <input type="text" id="cViewKey" aria-label="閲覧キー" placeholder="空欄のまま保存すると自動で作られます">
@@ -248,25 +248,27 @@
         <!-- Twitterカード：事件につき1枚・差し替え専用（問題提起人アイコン・期日案内と同じ仕組み）。
              未設定（既定）なら /api/cases/:id/card.png・card-square.png が期日・問題提起人から自動で
              「傍聴券」を描く。正方形版はTeams・Slack等がog:imageを中央トリミングする対策で、横長版と
-             差し替えの仕組みは同じ（2026-08-30）。新規作成のときはまだ事件が無いので出さない -->
+             差し替えの仕組みは同じ（2026-08-30）。新規作成のときはまだ事件が無いので出さない。
+             説明は横長版・正方形版で繰り返さず、見出し直下に1本だけ置く（2026-09-02）。
+             「自動生成に戻す」は見出しの隣に置き、差し替え済みのときだけ出す（updateCardFieldUI等が
+             hidden を切り替える。以前は説明文の中に埋めていた） -->
         <div class="field" id="sec-card" hidden>
           <p class="msec">Twitterカード</p>
-          <label>横長版（Large）</label>
+          <p class="fnote">いまは自動生成のカード（直近の期日・問題提起人から自動で作成）が使われています。画像（JPEG・PNG、1200×1200推奨、8MBまで）を選ぶと差し替わります。</p>
+
+          <label>横長版<span id="cCardRemoveWrap" hidden>（<a id="cCardRemove" class="cicon-remove">自動生成に戻す</a>）</span></label>
           <div class="cicon-row">
             <span id="cCardPreview"></span>
             <input type="file" id="cCardFile" accept="image/jpeg,image/png" aria-label="Twitterカード（横長）">
           </div>
-          <p class="fnote" id="cCardNote">JPEG・PNG、8MBまで。1200×630推奨。X（Twitter）で使われます。選ぶとすぐ反映されます（「保存」を待ちません）。</p>
           <p class="fnote" id="cCardStatus" hidden></p>
 
-          <div class="subfield">
-            <label>正方形版</label>
-            <p class="fnote">Teams・Slackなどは横長版を中央で正方形に切り取って表示するため、日付や問題提起人が見切れることがあります。こちらは切り取られずそのまま使われます。</p>
+          <div class="subfield subfield-plain">
+            <label>正方形版<span id="cCardSquareRemoveWrap" hidden>（<a id="cCardSquareRemove" class="cicon-remove">自動生成に戻す</a>）</span></label>
             <div class="cicon-row">
               <span id="cCardSquarePreview"></span>
               <input type="file" id="cCardSquareFile" accept="image/jpeg,image/png" aria-label="Twitterカード（正方形）">
             </div>
-            <p class="fnote" id="cCardSquareNote">JPEG・PNG、8MBまで。1200×1200推奨。選ぶとすぐ反映されます（「保存」を待ちません）。</p>
             <p class="fnote" id="cCardSquareStatus" hidden></p>
           </div>
         </div>
@@ -347,7 +349,7 @@
           <div class="lsbody">
             <div id="evList"></div>
             <button type="button" class="addbtn" id="evAddBtn">＋ 期日を追加</button>
-            <div class="subfield" data-tier-min="detail">
+            <div class="subfield subfield-plain" data-tier-min="detail">
               <p class="msec" style="margin-top:12px">終結<span class="lhint">終結した事件のみ入れる</span></p>
               <div class="two">
                 <div class="field"><label>終結日</label><input type="date" id="cArchivedAt"></div>

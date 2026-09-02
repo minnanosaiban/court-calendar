@@ -1102,8 +1102,8 @@ window.CC = (function(){
                           defendant:$("cShowDefendantOnTop"), judge:$("cShowJudgeOnTop"), press:$("cShowPressOnTop"),
                           call:$("cShowCallOnTop"), related:$("cShowRelatedOnTop") };
     const cNoticeFile=$("cNoticeFile"), cNoticeRemove=$("cNoticeRemove"), cNoticeNote=$("cNoticeNote"), cNoticeStatus=$("cNoticeStatus");
-    const cCardFile=$("cCardFile"), cCardPreview=$("cCardPreview"), cCardNote=$("cCardNote"), cCardStatus=$("cCardStatus");
-    const cCardSquareFile=$("cCardSquareFile"), cCardSquarePreview=$("cCardSquarePreview"), cCardSquareNote=$("cCardSquareNote"), cCardSquareStatus=$("cCardSquareStatus");
+    const cCardFile=$("cCardFile"), cCardPreview=$("cCardPreview"), cCardRemove=$("cCardRemove"), cCardRemoveWrap=$("cCardRemoveWrap"), cCardStatus=$("cCardStatus");
+    const cCardSquareFile=$("cCardSquareFile"), cCardSquarePreview=$("cCardSquarePreview"), cCardSquareRemove=$("cCardSquareRemove"), cCardSquareRemoveWrap=$("cCardSquareRemoveWrap"), cCardSquareStatus=$("cCardSquareStatus");
     const cPresenterSelect=$("cPresenterSelect"), cPresenterNewRow=$("cPresenterNewRow"), cPresenterNewNickname=$("cPresenterNewNickname"),
           cPresenterNewSave=$("cPresenterNewSave"), cPresenterIconRow=$("cPresenterIconRow"), cPresenterIconPreview=$("cPresenterIconPreview"),
           cPresenterIconFile=$("cPresenterIconFile"), cPresenterIconRemove=$("cPresenterIconRemove"),
@@ -1388,7 +1388,9 @@ window.CC = (function(){
       finally{ cNoticeFile.value=""; }
     });
     // ---- Twitterカード（JPEG・PNG。事件につき1枚・差し替え専用）。
-    // 未設定（既定）のときは自動生成のカード（/api/cases/:id/card.png）をそのままプレビューに出す ----
+    // 未設定（既定）のときは自動生成のカード（/api/cases/:id/card.png）をそのままプレビューに出す。
+    // 説明文は見出し直下に1本だけ（静的HTML）なので、ここでは差し替え済みかどうかで
+    // 「自動生成に戻す」リンクの表示・非表示だけ切り替える（2026-09-02、以前はnoteごと作り直していた） ----
     function updateCardFieldUI(c){
       const has = !!(c && c.cardUrl);
       const autoUrl = edCaseId ? ("/api/cases/"+encodeURIComponent(edCaseId)+"/card.png") : "";
@@ -1396,15 +1398,9 @@ window.CC = (function(){
       cCardPreview.innerHTML = previewSrc
         ? `<img src="${escapeAttr(previewSrc)}" alt="" style="width:180px;border-radius:8px;border:1px solid var(--tint)">`
         : "";
-      cCardNote.innerHTML = (has
-        ? ``
-        : `いまは自動生成のカード（直近の期日・問題提起人から自動で作成）が使われています。`)
-        + `画像（JPEG・PNG、1200×630推奨、8MBまで）を選ぶと差し替わります。`
-        + `<a id="cCardRemove" class="cicon-remove" ${has?"":"hidden"}>自動生成に戻す</a>`;
-      // innerHTML で作り直したので、id="cCardRemove" は同じidの新しい要素に置き換わっている。参照を取り直して配線する
-      const removeLink = $("cCardRemove");
-      if(removeLink) removeLink.addEventListener("click", onCardRemove);
+      cCardRemoveWrap.hidden = !has;
     }
+    cCardRemove.addEventListener("click", onCardRemove);
     async function onCardRemove(){
       if(!edCaseId) return;
       if(!confirm("差し替えた画像を外し、自動生成のカードに戻します。よろしいですか？")) return;
@@ -1441,14 +1437,9 @@ window.CC = (function(){
       cCardSquarePreview.innerHTML = previewSrc
         ? `<img src="${escapeAttr(previewSrc)}" alt="" style="width:120px;border-radius:8px;border:1px solid var(--tint)">`
         : "";
-      cCardSquareNote.innerHTML = (has
-        ? ``
-        : `いまは自動生成のカード（直近の期日・問題提起人から自動で作成）が使われています。`)
-        + `画像（JPEG・PNG、1200×1200推奨、8MBまで）を選ぶと差し替わります。`
-        + `<a id="cCardSquareRemove" class="cicon-remove" ${has?"":"hidden"}>自動生成に戻す</a>`;
-      const removeLink = $("cCardSquareRemove");
-      if(removeLink) removeLink.addEventListener("click", onCardSquareRemove);
+      cCardSquareRemoveWrap.hidden = !has;
     }
+    cCardSquareRemove.addEventListener("click", onCardSquareRemove);
     async function onCardSquareRemove(){
       if(!edCaseId) return;
       if(!confirm("差し替えた画像を外し、自動生成のカードに戻します。よろしいですか？")) return;
