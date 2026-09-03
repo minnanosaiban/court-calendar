@@ -112,7 +112,7 @@ hotline の `DESIGN_SYSTEM.md` と同じ位置づけ（今後の手直しで一�
 | **12px** | 箱の中の箱（`.bubble` `.arg` `.pform` `.cell` `.u` `.pop-row`、入力欄） |
 | **20px** | カード・モーダル・浮かぶ面（`.card` `.modal` `.daypop` `.gal`） |
 | **999px** | ピル型（ボタン・タグ）と、端を丸めた棒（`.bar` `.leg i` `.ubar`） |
-| **50%** | 円（`.tl-dot` `.cell .n` `.share` `.cicon`＝事件アイコン） |
+| **50%** | 円（`.tl-dot` `.cell .n` `.share` `.gal-dots button` `.cicon`＝事件アイコン） |
 
 細い棒（高さ3px・幅4px）は 2px/3px を指定していたが、実効値は高さの半分で頭打ちになるので
 意味の分かる `999px`（＝端を丸める）に統一した。
