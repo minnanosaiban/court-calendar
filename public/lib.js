@@ -420,32 +420,43 @@ window.CC = (function(){
       ${im.caption?`<span class="gal-cap">${escapeHtml(im.caption)}</span>`:""}
     </a>`;
     }).join("");
-    const dots = imgs.length>1
-      ? `<div class="gal-dots">${imgs.map((_,i)=>`<button type="button" class="${i===0?"on":""}" data-dot="${i}" aria-label="${i+1}枚目の画像"></button>`).join("")}</div>`
-      : "";
-    return `<div class="gal" data-gal="${escapeAttr(caseId)}"><div class="gal-track">${items}</div>${dots}</div>`;
+    return `<div class="gal" data-gal="${escapeAttr(caseId)}"><div class="gal-track">${items}</div></div>`;
   }
-  // ギャラリーの自動送り。ホバー中は止める。件数が1枚なら動かさない
+  // ギャラリーの自動送り。1枚ずつ丸ごと入れ替えるのではなく、次の画像が右端に少し見切れた
+  // 状態から1枚分だけ左へ流す（chapro.jpのカルーセルを参考に2026-09-03変更）。無限ループは
+  // 元の並びを複製してtrackの後ろに続け、一周し終えたところでトランジション無しに先頭へ
+  // 瞬時に戻すことで、見た目には途切れず流れ続けているようにしている。ホバー中は止める。
+  // 件数が1枚なら動かさない
   function wireGallery(gal){
     const track = gal.querySelector(".gal-track");
-    const items = gal.querySelectorAll(".gal-item");
-    const dots = gal.querySelectorAll(".gal-dots button");
-    if(items.length<=1) return;
+    const original = Array.from(gal.querySelectorAll(".gal-item"));
+    const n = original.length;
+    if(n<=1) return;
+    original.forEach(it=>track.appendChild(it.cloneNode(true)));
     let idx=0, timer=null;
-    function show(i){
-      idx=(i+items.length)%items.length;
-      track.style.transform = `translateX(-${idx*100}%)`;
-      dots.forEach((d,j)=>d.classList.toggle("on", j===idx));
+    function stepPx(){
+      const gap = parseFloat(getComputedStyle(track).columnGap) || 0;
+      return track.children[0].getBoundingClientRect().width + gap;
     }
+    function place(withTransition){
+      track.style.transition = withTransition ? "" : "none";
+      track.style.transform = `translateX(-${idx*stepPx()}px)`;
+      if(!withTransition){ track.getBoundingClientRect(); track.style.transition = ""; }
+    }
+    track.addEventListener("transitionend",(e)=>{
+      if(e.propertyName!=="transform") return;
+      if(idx===n){ idx=0; place(false); }
+    });
     // 最初の1回だけ早めに送って「動くカードだ」と伝わるようにする（開いた直後は静止して見えるため）。2回目以降は通常の間隔
     function start(){
       stop();
-      timer=setTimeout(()=>{ show(idx+1); timer=setInterval(()=>show(idx+1),4500); }, 1500);
+      timer=setTimeout(()=>{ idx++; place(true); timer=setInterval(()=>{ idx++; place(true); },4500); }, 1500);
     }
     function stop(){ if(timer){ clearTimeout(timer); clearInterval(timer); } timer=null; }
-    dots.forEach(d=>d.addEventListener("click",(e)=>{ e.preventDefault(); show(Number(d.dataset.dot)); start(); }));
+    window.addEventListener("resize",()=>place(false));
     gal.addEventListener("mouseenter",stop);
     gal.addEventListener("mouseleave",start);
+    place(false);
     start();
   }
   async function moveImage(id, dir){
