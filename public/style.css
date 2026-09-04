@@ -29,6 +29,9 @@ body{
   font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
   font-size:15px;line-height:1.85;-webkit-font-smoothing:antialiased;
   font-feature-settings:"palt" 1;
+  /* .gal（写真ギャラリー）が100vwで.wrapの外まではみ出す際、スクロールバー分の誤差で
+     横スクロールが出ないようにする（2026-09-05） */
+  overflow-x:hidden;
 }
 .mincho{font-family:"Shippori Mincho","Yu Mincho","Hiragino Mincho ProN",serif}
 .wrap{max-width:720px;margin:0 auto;padding:32px 16px 72px}
@@ -78,7 +81,12 @@ a{color:inherit}
    枠をやめて写真1枚1枚を自分の形のカードとして浮かせる方式に変更した（wireCaseDetail参照）。
    さらに外側の白いカード（旧.gal-card）も外し、地の上に直接置いている。カードに入れると左右の
    チラ見せがカードの内側で切れてしまい、参考にしたhotline/agm・chapro.jpのような広がりが出ないため */
-.gal{margin:0 0 24px}
+/* .wrap（720px）の中に置いたままだと、slidesPerView 1.2で確保できる左右チラ見えが
+   ごくわずかになり、見本にしたhotline/agm・chapro.jpほどの余裕が出ない。位置は.wrap内の
+   ままで、幅だけビューポート基準で.wrapの外まで広げる定番の「はみ出し」技法で対応する
+   （2026-09-05）。ビューポート基準の100vwはスクロールバー分だけ実際の表示幅よりわずかに
+   広くなり得るため、bodyにoverflow-x:hiddenを添えて横スクロールを防ぐ */
+.gal{width:100vw;max-width:1200px;margin:0 0 24px 50%;transform:translateX(-50%)}
 .gal .swiper-slide{opacity:.5;transform:scale(.92);transition:opacity .4s ease, transform .4s ease}
 .gal .swiper-slide-active{opacity:1;transform:scale(1)}
 .gal-item{position:relative;display:block}
