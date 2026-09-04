@@ -404,13 +404,16 @@ window.CC = (function(){
   // 画像は事件ページの最上部（タイトルより上）に、これまでどおり独立したカードで出す。
   // 追加・並び替え・編集はcase-edit.htmlの「画像」節に一本化しており、ここへの入口
   // （旧「＋ 写真を編集」）は廃止したので、画像が無ければ何も出さない（2026-08-30）
+  // 2枚以上あるときは中央の1枚を大きく・左右をチラ見せするカルーセルにする。実装は
+  // hotline（agmページの質問カルーセル）と同じSwiper.js（CDN、case.htmlでだけ読み込む）を使う。
+  // 1枚だけの事件では、チラ見せする隣が無いのでカルーセル化せず、素の1枚を出す（2026-09-05）
   function galleryHtml(caseId){
     const imgs = caseImages(caseId);
     if(!imgs.length) return "";
     // Web用（このサイトに合うフォント・サイズで作った版）があれば、画面幅に応じて出し分ける
     // （560px以上＝サイト全体の「スマホ以外」の基準に合わせてWeb用、未満はスマホ用＝元の画像。2026-08-30）。
     // 実機の種別ではなく画面の横幅で判定する（PCでも狭い幅なら元の画像になる）
-    const items = imgs.map((im)=>{
+    const itemHtml = (im)=>{
       const img = `<img src="${escapeAttr(im.url)}" alt="${escapeAttr(im.caption)}" loading="lazy">`;
       const picture = im.webUrl
         ? `<picture><source media="(min-width:560px)" srcset="${escapeAttr(im.webUrl)}">${img}</picture>`
@@ -419,34 +422,28 @@ window.CC = (function(){
       ${picture}
       ${im.caption?`<span class="gal-cap">${escapeHtml(im.caption)}</span>`:""}
     </a>`;
-    }).join("");
-    const dots = imgs.length>1
-      ? `<div class="gal-dots">${imgs.map((_,i)=>`<button type="button" class="${i===0?"on":""}" data-dot="${i}" aria-label="${i+1}枚目の画像"></button>`).join("")}</div>`
-      : "";
-    return `<div class="gal" data-gal="${escapeAttr(caseId)}"><div class="gal-track">${items}</div>${dots}</div>`;
+    };
+    if(imgs.length===1) return `<div class="gal">${itemHtml(imgs[0])}</div>`;
+    const slides = imgs.map(im=>`<div class="swiper-slide">${itemHtml(im)}</div>`).join("");
+    return `<div class="gal swiper" data-gal="${escapeAttr(caseId)}">
+      <div class="swiper-wrapper">${slides}</div>
+      <div class="swiper-pagination"></div>
+    </div>`;
   }
-  // ギャラリーの自動送り。ホバー中は止める。件数が1枚なら動かさない
+  // Swiperの初期化（2枚以上のときだけ .gal.swiper が出るので、それだけを拾う）。
+  // 設定値はhotline側（docs/js/qa-carousel.js）と同じ考え方：中央寄せ・ループ・自動送り。
+  // pauseOnMouseEnterだけはhotline側に無いオプションだが、旧実装（ホバー中は止める）を引き継ぐため付けている
   function wireGallery(gal){
-    const track = gal.querySelector(".gal-track");
-    const items = gal.querySelectorAll(".gal-item");
-    const dots = gal.querySelectorAll(".gal-dots button");
-    if(items.length<=1) return;
-    let idx=0, timer=null;
-    function show(i){
-      idx=(i+items.length)%items.length;
-      track.style.transform = `translateX(-${idx*100}%)`;
-      dots.forEach((d,j)=>d.classList.toggle("on", j===idx));
-    }
-    // 最初の1回だけ早めに送って「動くカードだ」と伝わるようにする（開いた直後は静止して見えるため）。2回目以降は通常の間隔
-    function start(){
-      stop();
-      timer=setTimeout(()=>{ show(idx+1); timer=setInterval(()=>show(idx+1),4500); }, 1500);
-    }
-    function stop(){ if(timer){ clearTimeout(timer); clearInterval(timer); } timer=null; }
-    dots.forEach(d=>d.addEventListener("click",(e)=>{ e.preventDefault(); show(Number(d.dataset.dot)); start(); }));
-    gal.addEventListener("mouseenter",stop);
-    gal.addEventListener("mouseleave",start);
-    start();
+    new Swiper(gal, {
+      slidesPerView: 1.3,
+      spaceBetween: 16,
+      centeredSlides: true,
+      loop: true,
+      autoplay: { delay: 4500, disableOnInteraction: false, pauseOnMouseEnter: true },
+      speed: 700,
+      pagination: { el: gal.querySelector(".swiper-pagination"), clickable: true },
+      breakpoints: { 768: { slidesPerView: 2, spaceBetween: 24 } }
+    });
   }
   async function moveImage(id, dir){
     const im = images.find(x=>x.id===id); if(!im) return;
