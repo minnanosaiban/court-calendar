@@ -431,23 +431,22 @@ window.CC = (function(){
     </div>`;
   }
   // Swiperの初期化（2枚以上のときだけ .gal.swiper が出るので、それだけを拾う）。
-  // 設定値はhotline側（docs/js/qa-carousel.js）と同じ考え方：中央寄せ・ループ・自動送り。
-  // hotline側は breakpoints で768px以上だけslidesPerViewを2.2まで上げているが、hotlineの
-  // カルーセルの入れ物（.qa-carousel、最大56rem=896px）と違い、court-calendarは.wrapが
-  // 720pxで頭打ちのまま（560px以上でも大きく広がらない）ため、同じ理屈でbreakpointを設けると
-  // カードがかえって縮んでしまっていた（2026-09-05に気づき、breakpoint自体を廃止）。
-  // 画面幅を問わず1.5枚ぶんの表示に統一（1.2は中央が入れ物いっぱいに広がりすぎ、2は逆に
-  // 左右のチラ見せに押されて小さくなりすぎたため、間を取った。2026-09-05）
+  // 設定値はhotline側（docs/js/qa-carousel.js）とそろえた：中央寄せ・ループ・自動送り、
+  // 768px未満はslidesPerView 1.3、768px以上は2.2（.gal自体も.wrapの外まで広げているので、
+  // 768px以上でだけ枚数を増やす意味がある。2026-09-05、hotline側のagmページを実測してそろえた。
+  // 一度、画面幅を問わず1.5に固定していたが、狭い画面で大きすぎ・広い画面で小さすぎと
+  // 両方から出てしまっていたのはこのbreakpointを外していたのが原因だった）
   // pauseOnMouseEnterだけはhotline側に無いオプションだが、旧実装（ホバー中は止める）を引き継ぐため付けている
   function wireGallery(gal){
     new Swiper(gal, {
-      slidesPerView: 1.5,
+      slidesPerView: 1.3,
       spaceBetween: 16,
       centeredSlides: true,
       loop: true,
       autoplay: { delay: 4500, disableOnInteraction: false, pauseOnMouseEnter: true },
       speed: 700,
-      pagination: { el: gal.querySelector(".swiper-pagination"), clickable: true }
+      pagination: { el: gal.querySelector(".swiper-pagination"), clickable: true },
+      breakpoints: { 768: { slidesPerView: 2.2, spaceBetween: 28 } }
     });
   }
   async function moveImage(id, dir){
