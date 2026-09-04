@@ -431,6 +431,10 @@ a{color:inherit}
 
 .qact{margin-top:16px;font-size:.8rem;color:var(--mut)}
 .qact a{color:var(--edit);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+/* 訴訟資料一覧の「PDF/mdをまとめてダウンロード」。見た目は各資料の.pdf/.md/要約ボタン（.btn）と
+   そろえ、2つ並ぶ時は折り返せるようにする（2026-09-04） */
+.mbulk{margin-top:16px;display:flex;gap:8px;flex-wrap:wrap}
+.mbulk .btn:disabled{opacity:.5;cursor:default}
 .empty-msg{color:var(--mut);font-size:.9rem;padding:24px 16px;text-align:center}
 
 /* ---- calendar ---- */
@@ -812,7 +816,6 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .lssec.open .lschev{transform:rotate(180deg)}
 .lsbody{display:none;margin-top:12px}
 .lssec.open .lsbody{display:block}
-.lsnote{font-size:.8rem;color:var(--mut);background:var(--tint);border-radius:12px;padding:8px 12px;margin-bottom:12px}
 .irow{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;cursor:pointer;font-size:.9rem}
 .irow:hover{background:var(--tint)}
 .irow.editing{background:var(--tint)}

@@ -80,6 +80,9 @@
 
 <!-- 期日・事件情報・資料・写真の編集モーダルは lib.js が1つの窓として生成する（EXTRA_MODALS） -->
 
+<!-- 訴訟資料一覧の「まとめてダウンロード」でzipを作るのに使う（このページでだけ使うので、
+     全ページ共通のlib.jsではなくここで読み込む。2026-09-04） -->
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="lib.js"></script>
 <script>
 (function(){

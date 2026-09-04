@@ -580,6 +580,20 @@ window.CC = (function(){
     if(/^image\//.test(m.mime||"") || /\.(png|jpe?g|gif|webp)(\?|#|$)/.test(u)) return "bi-image";
     return "bi-box-arrow-up-right";
   }
+  // 「PDFをまとめてダウンロード」でzipに入れる拡張子。ボタンの見た目は常に「.pdf」だが、
+  // 中身は画像（証拠写真など）のこともあるため、URL・mimeから実際の拡張子を拾う。
+  // どちらも分からない時だけ .pdf にする（.pdfボタンの名前どおりの既定）
+  function matFileExt(m){
+    const u=(m.fileUrl||"").toLowerCase();
+    const fromUrl = u.match(/\.([a-z0-9]{2,4})(?:\?|#|$)/);
+    if(fromUrl) return "."+fromUrl[1];
+    if(/^image\//.test(m.mime||"")) return "."+(m.mime.split("/")[1]||"jpg");
+    return ".pdf";
+  }
+  // zipのフォルダ名・ファイル名に使えない文字（スラッシュ等）だけ置き換える
+  function sanitizeFileName(s){
+    return String(s||"").replace(/[\\/:*?"<>|\x00-\x1f]/g,"_").trim() || "資料";
+  }
   // .md（コピー・ダウンロード共通）の中身：事件名／提出者側／資料名のメタ行＋本文
   function mdExportText(m){
     const c = caseById(m.caseId);
@@ -681,9 +695,73 @@ window.CC = (function(){
         `<p class="mside-h ${SIDE_CLASS[side]||""}">${escapeHtml(side)}</p><ul class="mlist">${groups[side].map(m=>matRowHtml(m,caseId)).join("")}</ul>`
       ).join("");
     }
+    // 「まとめてダウンロード」：PDF一式・md一式をそれぞれzipにして落とす（2026-09-04）。
+    // zipの中は提出者側（原告側／被告側／…）のフォルダに分かれる＝上の一覧の見出しと同じ束ね方
+    // （bulkDownloadZip参照）。該当ファイルが1件も無い側のボタンは出さない
+    const hasPdf = mats.some(m=>m.fileUrl);
+    const hasMd = mats.some(m=>m.body);
+    const bulkHtml = (hasPdf || hasMd) ? `<p class="mbulk">`+
+      (hasPdf?`<button type="button" class="btn" data-bulkzip="pdf" data-case="${escapeAttr(caseId)}"><i class="bi bi-file-earmark-zip" aria-hidden="true"></i><span class="zlabel">PDFをまとめてダウンロード</span></button>`:"")+
+      (hasMd?`<button type="button" class="btn" data-bulkzip="md" data-case="${escapeAttr(caseId)}"><i class="bi bi-file-earmark-zip" aria-hidden="true"></i><span class="zlabel">.mdをまとめてダウンロード</span></button>`:"")+
+      `</p>` : "";
     return `<p class="subhead">訴訟資料一覧</p>
       ${canEditCase(caseId)?`<p class="qact"><a href="case-edit.html?id=${encodeURIComponent(caseId)}&open=mat:new">＋ 資料を編集</a></p>`:""}
+      ${bulkHtml}
       ${body}`;
+  }
+  // 訴訟資料をまとめてzipでダウンロードする（kind: "pdf" または "md"）。
+  // フォルダ分けは一覧の見出しと同じ提出者側（m.side||"その他"）。ファイル名は
+  // 「提出日_資料名.拡張子」（同名衝突は末尾に(2)等を振って避ける）。
+  // ファイル本体は同一オリジンの /files/ から取るので追加の認証ヘッダは不要
+  // （閲覧キーで守られる非公開事件でも、そもそもこのページを開けた時点でURLは判明している）
+  async function bulkDownloadZip(caseId, kind, btn){
+    if(typeof JSZip === "undefined"){
+      alert("zip作成用の部品を読み込めませんでした。通信環境をご確認のうえ、再読み込みしてください。");
+      return;
+    }
+    const c = caseById(caseId);
+    const mats = caseMaterials(caseId).filter(m => kind==="pdf" ? m.fileUrl : m.body);
+    if(!mats.length) return;
+    const label = btn.querySelector(".zlabel");
+    const orig = label ? label.textContent : "";
+    btn.disabled = true;
+    if(label) label.textContent = "作成中…";
+    try{
+      // 先にファイル名を確定させる（zipへ書き込む順・非同期のfetch順に左右されないように）
+      const used = {};
+      const entries = mats.map(m=>{
+        const side = m.side || "その他";
+        const ext = kind==="pdf" ? matFileExt(m) : ".md";
+        const base = (m.filedOn ? dotDate(m.filedOn)+"_" : "") + sanitizeFileName(m.title);
+        used[side] = used[side] || new Set();
+        let name = base + ext, i = 2;
+        while(used[side].has(name)){ name = `${base}(${i})${ext}`; i++; }
+        used[side].add(name);
+        return { m, side, name };
+      });
+      const zip = new JSZip();
+      if(kind==="pdf"){
+        await Promise.all(entries.map(async ({m, side, name})=>{
+          const res = await fetch(m.fileUrl);
+          if(!res.ok) throw new Error(`${m.title}の取得に失敗しました`);
+          zip.folder(side).file(name, await res.arrayBuffer());
+        }));
+      }else{
+        entries.forEach(({m, side, name})=> zip.folder(side).file(name, mdExportText(m)));
+      }
+      const blob = await zip.generateAsync({type:"blob"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${sanitizeFileName(c ? c.name : "訴訟資料")}_${kind==="pdf"?"PDF":"md"}.zip`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 4000);
+    }catch(err){
+      alert("まとめてダウンロードできませんでした：" + (err && err.message || err));
+    }finally{
+      btn.disabled = false;
+      if(label) label.textContent = orig;
+    }
   }
 
   // ---- 行ってきたよ掲示板 ----
@@ -965,6 +1043,9 @@ window.CC = (function(){
         setTimeout(()=>URL.revokeObjectURL(url), 1000);
         b.closest(".mdmenu").hidden=true;
       });
+    });
+    container.querySelectorAll("[data-bulkzip]").forEach(b=>{
+      b.addEventListener("click",()=> bulkDownloadZip(b.dataset.case, b.dataset.bulkzip, b));
     });
     container.querySelectorAll("[data-openpost]").forEach(a=>{
       a.addEventListener("click",()=>{ boardFormForCase=a.dataset.openpost; rerender(); });
