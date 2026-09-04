@@ -633,6 +633,8 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .site-footer a{color:var(--mut);text-decoration:underline;text-underline-offset:3px}
 .site-footer .sep{margin:0 .5em;color:#d5d3cc;text-decoration:none}
 .site-footer .disc{margin-top:8px}
+/* 免責文のうち「情報が古い・変わる可能性がある」点だけ、朱色の下線で目立たせる（2026-09-04） */
+.disc-warn{color:var(--stamp);text-decoration:underline;text-underline-offset:3px}
 /* 「掲載をご希望の方へ」は薄い朱色のカードに入れ（掲示板 .bpanel と同じ背景トーン）、
    免責文・ソースコード欄と面で分ける。右下にマスコット画像を添える（2026-08-26）。
    padding は「3枚の内側の余白」（.dcard 等）と同じくスマホ24px／560px以上32pxにそろえる */
