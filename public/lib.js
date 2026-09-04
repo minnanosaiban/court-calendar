@@ -436,11 +436,12 @@ window.CC = (function(){
   // カルーセルの入れ物（.qa-carousel、最大56rem=896px）と違い、court-calendarは.wrapが
   // 720pxで頭打ちのまま（560px以上でも大きく広がらない）ため、同じ理屈でbreakpointを設けると
   // カードがかえって縮んでしまっていた（2026-09-05に気づき、breakpoint自体を廃止）。
-  // 画面幅を問わず1.2枚ぶんの表示に統一し、中央のカードを大きく保つ
+  // 画面幅を問わず1.5枚ぶんの表示に統一（1.2は中央が入れ物いっぱいに広がりすぎ、2は逆に
+  // 左右のチラ見せに押されて小さくなりすぎたため、間を取った。2026-09-05）
   // pauseOnMouseEnterだけはhotline側に無いオプションだが、旧実装（ホバー中は止める）を引き継ぐため付けている
   function wireGallery(gal){
     new Swiper(gal, {
-      slidesPerView: 1.2,
+      slidesPerView: 1.5,
       spaceBetween: 16,
       centeredSlides: true,
       loop: true,

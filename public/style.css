@@ -81,12 +81,13 @@ a{color:inherit}
    枠をやめて写真1枚1枚を自分の形のカードとして浮かせる方式に変更した（wireCaseDetail参照）。
    さらに外側の白いカード（旧.gal-card）も外し、地の上に直接置いている。カードに入れると左右の
    チラ見せがカードの内側で切れてしまい、参考にしたhotline/agm・chapro.jpのような広がりが出ないため */
-/* .wrap（720px）の中に置いたままだと、slidesPerView 1.2で確保できる左右チラ見えが
-   ごくわずかになり、見本にしたhotline/agm・chapro.jpほどの余裕が出ない。位置は.wrap内の
-   ままで、幅だけビューポート基準で.wrapの外まで広げる定番の「はみ出し」技法で対応する
-   （2026-09-05）。ビューポート基準の100vwはスクロールバー分だけ実際の表示幅よりわずかに
-   広くなり得るため、bodyにoverflow-x:hiddenを添えて横スクロールを防ぐ */
-.gal{width:100vw;max-width:1200px;margin:0 0 24px 50%;transform:translateX(-50%)}
+/* .wrap（720px）の中に置いたままだと、左右チラ見えがごくわずかになり、見本にしたhotline/agm・
+   chapro.jpほどの余裕が出ない。位置は.wrap内のままで、幅だけビューポート基準で.wrapの外まで
+   広げる定番の「はみ出し」技法で対応する（2026-09-05）。上限は960px＝.wrap-wideと同じ値にそろえた
+   （最初1200pxにしていたが、hotline側の入れ物（56rem=896px）より広すぎてカードが大きくなりすぎたため）。
+   ビューポート基準の100vwはスクロールバー分だけ実際の表示幅よりわずかに広くなり得るため、
+   bodyにoverflow-x:hiddenを添えて横スクロールを防ぐ */
+.gal{width:100vw;max-width:960px;margin:0 0 24px 50%;transform:translateX(-50%)}
 .gal .swiper-slide{opacity:.5;transform:scale(.92);transition:opacity .4s ease, transform .4s ease}
 .gal .swiper-slide-active{opacity:1;transform:scale(1)}
 .gal-item{position:relative;display:block}
