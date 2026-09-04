@@ -475,7 +475,7 @@ window.CC = (function(){
     // ファクトシート：最近の期日・手続・事件番号・争点・原告・被告・裁判官・掲載（値がある行だけ出す）。
     // 事件番号〜掲載は、既定では事件ページ（full=true）でだけ出す。トップのピックアップカードにも
     // 出すかどうかは項目ごとのチェックボックス（showXxxOnTop）で選べる（2026-08-28、事件番号は
-    // さらに「公開する」もチェックされている場合だけ）。詳しい情報が知りたい人は「事件の詳細を見る」
+    // さらに「公開する」もチェックされている場合だけ）。詳しい情報が知りたい人は「詳細を見る」
     // から先へ進んでもらう（2026-08-27）
     const nextRow = next
       ? factRow("期日",
@@ -518,14 +518,18 @@ window.CC = (function(){
         ${facts1?`<dl class="facts">${facts1}</dl>`:""}
         ${noticeHtml(c, full)}`;
 
-    // 旧・右下の「事件の詳細を見る」（.d-more）は2026-08-29に廃止：期日案内の隣・タイトル・掲示板の
-    // 事件名がいずれもリンクになり、下に重ねて置く必要がなくなったため
     if(full){
       html += callHtml(c) + relatedCasesHtml(c) + timelineHtml(caseId) + materialsListHtml(caseId);
     } else {
       // ピックアップカードでも、項目ごとのチェックがある「裁判について」「関連裁判」は出す
       // （編集リンク・タイムライン・訴訟資料一覧は事件ページだけの機能なのでここには出さない）
       html += (c.showCallOnTop ? callHtml(c) : "") + (c.showRelatedOnTop ? relatedCasesHtml(c) : "");
+      // 「詳細を見る」はカードの一番下・右下に置く（2026-09-04。タイトル・掲示板の事件名も
+      // 事件ページへのリンクになってはいるが、本文を最後まで読んだ人が迷わず進める入口として、
+      // カードの締めにも改めて置く）。見た目は掲示板の「報告を書く」（.bwrite）と同じ朱色の枠線ピルに
+      // そろえる（別クラスに分けず .bwrite をそのまま流用：見た目を完全に一致させ、意匠がずれる
+      // 心配をなくすため。中身は data-openpost の投稿ボタンではなく素のリンク）
+      html += `<p class="bwrite"><a href="case?id=${encodeURIComponent(c.id)}"><i class="bi bi-arrow-right" aria-hidden="true"></i>詳細を見る</a></p>`;
     }
     html += `</div>`;
     return html;
@@ -549,11 +553,10 @@ window.CC = (function(){
       ? `<img src="${escapeAttr(c.noticeUrl)}" alt="${escapeAttr(c.noticeFileName||"期日案内")}" loading="lazy">`
       : `<iframe src="${escapeAttr(c.noticeUrl)}#toolbar=0&navpanes=0" title="${escapeAttr(c.noticeFileName||"期日案内")}" loading="lazy"></iframe>`;
     // 見出し「期日案内」の隣に「（新しいタブで開く）」を畳み込む（full・!full共通、2026-08-29）。
-    // 空いた右側は、トップ（!full）だけ「事件の詳細を見る」を置く（事件ページ自身では不要）。
-    // 狭い画面では縦積みになる（style.css）ため、DOM順は先に「事件の詳細を見る」を置く（本文へ進む
-    // 主導線を上に出す）。広い画面での左右の並び（見出しが左）はstyle.css側のorderで維持する（2026-08-29）
-    const head = (full ? "" : `<a class="notice-open" href="case?id=${encodeURIComponent(c.id)}">事件の詳細を見る</a>`)
-      + `<span class="notice-lab">期日案内<a class="notice-lab-link" href="${escapeAttr(c.noticeUrl)}" target="_blank" rel="noopener">（新しいタブで開く <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>）</a></span>`;
+    // 「詳細を見る」は以前ここ（見出しの右）に置いていたが、2026-09-04にカード最下部・右下へ
+    // 移設した（caseCardHtml参照。チラシが無い事件にも出したいため、チラシの有無で出たり消えたり
+    // するここからは切り離した）
+    const head = `<span class="notice-lab">期日案内<a class="notice-lab-link" href="${escapeAttr(c.noticeUrl)}" target="_blank" rel="noopener">（新しいタブで開く <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>）</a></span>`;
     return `<div class="notice${full?"":" compact"}">
       <div class="notice-head">${head}</div>
       <div class="notice-frame">${body}</div>

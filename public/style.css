@@ -244,20 +244,8 @@ a{color:inherit}
    画像はそのまま収める（object-fit:containで欠けさせない）。
    埋め込みが効かない環境に備え「新しいタブで開く」を必ず添える */
 .notice{margin-top:16px}
-/* 幅が狭いと「期日案内（新しいタブで開く）」と「事件の詳細を見る」が横並びで詰まり合い、
-   互いが折り返した末に単語の途中（「見る」の間など）で改行されて読みにくくなる。
-   狭い画面では素直に縦積みにし、横に並べるのは十分な幅がある画面だけにする（2026-08-29）。
-   縦積みのときはDOM順のまま＝「事件の詳細を見る」が上（本文へ進む主導線を先に出す）。
-   横並びのときは見出しを左、リンクを右に戻す（orderで並べ替える。DOM順は変えない） */
-.notice-head{display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin-bottom:8px}
+.notice-head{margin-bottom:8px}
 .notice-lab{font-size:.7rem;letter-spacing:.14em;color:var(--mut)}
-.notice-open{font-size:.75rem;color:var(--mut);text-decoration:underline;text-underline-offset:3px}
-.notice-open .bi{font-size:.7rem}
-@media(min-width:560px){
-  .notice-head{flex-direction:row;align-items:baseline;gap:8px}
-  .notice-lab{order:1}
-  .notice-open{order:2;margin-left:auto}
-}
 /* 見出し「期日案内」の隣に畳み込む「（新しいタブで開く）」リンク（2026-08-29）。
    外部リンクのアイコンが付いているので下線は引かない */
 .notice-lab-link{color:inherit;text-decoration:none}
@@ -319,6 +307,8 @@ a{color:inherit}
 .mrow{display:flex;gap:12px;padding:8px 0;border-top:1px solid var(--tint)}
 .mrow:first-child{border-top:none}
 .mdate{flex:none;width:6.2em;color:var(--mut);font-size:.8rem;font-variant-numeric:tabular-nums;padding-top:1px}
+/* スマホ幅では提出日の列を削り、資料名＋ボタン列（.mmain）をなるべく1行に収める（2026-09-04） */
+@media(max-width:559.98px){.mdate{display:none}}
 .mmain{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;min-width:0}
 /* PDF・本文・要約のボタン列。無いものはグレーで押せない */
 .btns{display:flex;gap:8px;flex-wrap:wrap}
@@ -401,7 +391,9 @@ a{color:inherit}
 .bubble .del{color:var(--mut);font-size:.8rem;margin-left:.5em;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .board-empty{color:var(--mut);font-size:.9rem;margin-top:12px}
 .board-empty a{color:var(--ink);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
-/* 右下（既定の位置）。左上にも同じボタンを .bwrite-top で重ねて置く（book/boardHtml参照） */
+/* 右下（既定の位置）。左上にも同じボタンを .bwrite-top で重ねて置く（book/boardHtml参照）。
+   ピックアップカード最下部の「詳細を見る」（caseCardHtml）も、投稿ボタンではなくリンクだが
+   見た目をそろえるためこのクラスをそのまま流用している（2026-09-04） */
 .bwrite{margin-top:12px;text-align:right}
 .bwrite-top{text-align:left}
 /* 掲示板の主役は白い吹き出しなので、ボタンには塗り・影を持たせず枠線だけにして競合を避ける。
