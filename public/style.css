@@ -73,6 +73,16 @@ a{color:inherit}
 /* ---- case detail card ---- */
 .dcard{padding:24px}
 .dcard + .dcard{margin-top:12px}
+/* スマホは幅が狭く、「ページ自体の左右余白（.wrapの16px）」と「カード自体の内側余白」が
+   二重取りになって本文の実質幅を余計に削っていた。hotlineの.agm-section（グレー帯の節。
+   C:\minnanosaiban\hotline\docs\css\02-layout.css）と同じ考え方で、カード自体の左右paddingは
+   0にして本文をページの余白位置（＝他の要素と同じ左端）にそろえ、白い背景色だけをbox-shadowで
+   画面端まで塗り広げる（実際の幅は変えないので、.galの100vwはみ出しと違い横スクロールの心配がない。
+   角丸も画面端では見えなくなるので0にする。2026-09-05） */
+@media(max-width:559.98px){
+  .dcard,.bpanel + .dcard{padding-left:0;padding-right:0;border-radius:0;
+    box-shadow:-50vw 0 0 0 var(--card),50vw 0 0 0 var(--card)}
+}
 
 /* ---- 写真ギャラリー（事件ページの最上部だけ）----
    中央の1枚を大きく、左右の写真をチラ見せする「めくれるカード」演出。実装はhotline（agmページの
@@ -362,6 +372,12 @@ a{color:inherit}
    大きめの見出しをとる。内側の余白は .dcard と同じ値にそろえる（事件名との左端をそろえるため）。
    写真がカードでなくなった2026-09-05以降、掲示板が常に「塊」の先頭なので、上だけ角丸で固定 */
 .bpanel{margin-top:0;margin-bottom:0;background:rgba(185,50,38,.055);border-radius:20px 20px 0 0;padding:24px}
+/* スマホは.dcardと同じ理由・同じ手法。左右のpaddingを0にして内側の余白をなくし、
+   背景色だけ画面端まで塗り広げる（2026-09-05。box-shadowの色はbackgroundと同じrgbaを使う） */
+@media(max-width:559.98px){
+  .bpanel{padding-left:0;padding-right:0;border-radius:0;
+    box-shadow:-50vw 0 0 0 rgba(185,50,38,.055),50vw 0 0 0 rgba(185,50,38,.055)}
+}
 .bhead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
 .btitle{font-family:"Shippori Mincho",serif;font-size:1.6rem;font-weight:600;line-height:1.4}
 .bt-red{color:var(--stamp)}
