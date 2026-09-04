@@ -489,16 +489,17 @@ window.CC = (function(){
     const pressRow = (full || c.showPressOnTop) ? factRow("掲載", c.press.length?`<ul class="pts">${c.press.map(line=>`<li>${linkify(line)}</li>`).join("")}</ul>`:"") : "";
     const facts1 = nextRow+caseNoRow+pointsRow+plaintiffRow+defendantRow+judgeRow+pressRow;
 
-    // 画像・掲示板・事件本体（dcard）は、1つの塊として続けて出す（箱の中に箱、を解消するため）。
-    // 継ぎ目は角丸にせず、塊の外側（画像の上／事件本体の下）だけ角丸にする（詳しくは style.css）。
+    // 掲示板・事件本体（dcard）は、1つの塊として続けて出す（箱の中に箱、を解消するため）。
+    // 継ぎ目は角丸にせず、塊の外側（掲示板の上／事件本体の下）だけ角丸にする（詳しくは style.css）。
+    // 写真は塊の外＝白いカードに入れず、地の上に直接置く（2026-09-05。カードに入れると左右の
+    // チラ見せがカードの内側で切れて窮屈になるため。hotline/agmの質問カルーセルと同じ見せ方）。
     // 表示はこれまでどおり画像がタイトルより上（2026-08-30、一度「裁判について」の下に動かしたが
     // 差し戻した。「裁判について」の下に置くのは入力欄＝case-edit.htmlの節の並びの方）。
     // 「＋ 事件情報を編集」はページ最上部の自己確認バー（caseSelfBarHtml）に一本化した（2026-08-30。
     // 以前はここ＝dcardの一番上にも小さく出していたが、写真・掲示板より下でスクロールしないと
     // 見えず、初見の人が見つけづらかったため廃止）
     const galHtml = full ? galleryHtml(caseId) : "";
-    const galCard = galHtml ? `<div class="card gal-card">${galHtml}</div>` : "";
-    let html = galCard + boardHtml(caseId, full) + `
+    let html = galHtml + boardHtml(caseId, full) + `
       <div class="card dcard">
         <div class="d-head">
           ${presenterHeaderHtml(c)}

@@ -61,16 +61,11 @@ a{color:inherit}
 /* ---- cards ---- */
 .card{background:var(--card);border-radius:20px}
 
-/* ---- 写真・掲示板・事件本体は「ひとつの塊」として続けて出す（事件ページ／トップの最近の期日カード共通）。
-   隙間を空けず、継ぎ目（写真の下・掲示板・事件本体の上）は角丸にしない。塊の外側（写真の上・事件本体の下）だけ丸める。
-   3つの内側の余白（padding）は同じ値にそろえる。ずれていると、写真・掲示板見出し・事件名の左端が縦にそろわない ---- */
-.gal-card{padding:24px;margin-bottom:0;border-radius:20px 20px 0 0}
-.gal-card + .bpanel{border-radius:0}
+/* ---- 掲示板と事件本体は「ひとつの塊」として続けて出す（事件ページ／トップの最近の期日カード共通）。
+   隙間を空けず、継ぎ目（掲示板の下・事件本体の上）は角丸にしない。塊の外側（掲示板の上・事件本体の下）だけ丸める。
+   2つの内側の余白（padding）は同じ値にそろえる。ずれていると、掲示板見出しと事件名の左端が縦にそろわない。
+   写真（.gal）は2026-09-05にこの塊から外し、カードに入れず地の上に直接置くようにした ---- */
 .bpanel + .dcard{border-radius:0 0 20px 20px;margin-top:0}
-/* 掲示板を非表示にした事件では、写真の直後に事件本体が来る（2026-08-26）。
-   この並びだと .dcard が既定の .card（四隅とも丸い）に戻り、継ぎ目に角丸が出てしまうため、
-   .bpanel + .dcard と同じ扱いにする */
-.gal-card + .dcard{border-radius:0 0 20px 20px;margin-top:0}
 
 /* ---- case detail card ---- */
 .dcard{padding:24px}
@@ -80,8 +75,10 @@ a{color:inherit}
    中央の1枚を大きく、左右の写真をチラ見せする「めくれるカード」演出。実装はhotline（agmページの
    質問カルーセル、C:\minnanosaiban\hotline\docs\css\13-carousel.css）と同じSwiper.js（CDN）を使う。
    以前は枠(.gal)を16:9に固定してその中に写真をobject-fit:coverで詰め込んでいたが、2026-09-05、
-   枠をやめて写真1枚1枚を自分の形のカードとして浮かせる方式に変更した（wireCaseDetail参照） */
-.gal{margin:0}
+   枠をやめて写真1枚1枚を自分の形のカードとして浮かせる方式に変更した（wireCaseDetail参照）。
+   さらに外側の白いカード（旧.gal-card）も外し、地の上に直接置いている。カードに入れると左右の
+   チラ見せがカードの内側で切れてしまい、参考にしたhotline/agm・chapro.jpのような広がりが出ないため */
+.gal{margin:0 0 24px}
 .gal .swiper-slide{opacity:.5;transform:scale(.92);transition:opacity .4s ease, transform .4s ease}
 .gal .swiper-slide-active{opacity:1;transform:scale(1)}
 .gal-item{position:relative;display:block}
@@ -352,9 +349,8 @@ a{color:inherit}
 /* うっすら朱色の面でくくって独立した「場」に見せる（カレンダーの「期日がある日」と同じ色 .cell.has）。
    見出しの「行ってきたよ」は朱印と同じ赤 */
 /* 掲示板はこのサイトの主役。事件本体の箱（dcard）の外に出して独立した箱にし（箱の中に箱を解消）、
-   大きめの見出しをとる。内側の余白は .dcard・.gal-card と同じ値にそろえる（左端をそろえるため）。
-   既定（写真が無いとき＝先頭）は上だけ角丸、写真の直後（.gal-card + .bpanel）に来るときは
-   写真側の上で丸まっているので四角のまま */
+   大きめの見出しをとる。内側の余白は .dcard と同じ値にそろえる（事件名との左端をそろえるため）。
+   写真がカードでなくなった2026-09-05以降、掲示板が常に「塊」の先頭なので、上だけ角丸で固定 */
 .bpanel{margin-top:0;margin-bottom:0;background:rgba(185,50,38,.055);border-radius:20px 20px 0 0;padding:24px}
 .bhead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
 .btitle{font-family:"Shippori Mincho",serif;font-size:1.6rem;font-weight:600;line-height:1.4}
@@ -895,10 +891,10 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
   .cell{padding:12px 0 8px}
   .cell .n{width:30px;height:30px;font-size:.88rem}
   .calcard{padding:24px 16px 16px}
-  /* 「ひとつの塊」の3枚（写真・掲示板・事件本体）は同じ padding にそろえる（左端をそろえるため） */
+  /* 「ひとつの塊」の2枚（掲示板・事件本体）は同じ padding にそろえる（左端をそろえるため） */
   .dcard{padding:32px}
-  .gal-card{padding:32px}
   .bpanel{padding:32px}
+  .gal{margin-bottom:32px}
   .tl-item{padding-left:32px}
   .tl-item::before{left:7px}
   .tl-dot{width:15px;height:15px;top:6px}
