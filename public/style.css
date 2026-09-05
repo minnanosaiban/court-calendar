@@ -839,7 +839,7 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .imove a{color:var(--faint);font-size:.9rem;cursor:pointer;text-decoration:none}
 .imove a:hover{color:var(--ink)}
 .ieditor{background:var(--tint);border-radius:12px;padding:16px;margin:4px 0}
-/* 「閉じる」「保存」は枠の右上（見出しと同じ行）に置く。下の「事件情報を保存」との
+/* 「閉じる」「保存」は枠の右上（見出しと同じ行）に置く。下の保存バーの「保存」との
    被りを避けるため（2026-08-30。以前は下部.ifootにあった） */
 .ieditor .ihead{font-size:.8rem;color:var(--mut);margin-bottom:12px;
   display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -867,6 +867,10 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .savebar .btn-del{background:none;border:none;color:var(--stamp);font-size:.8rem;margin-right:auto;
   text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:4px 0}
 .savebar button:disabled{opacity:.5;cursor:default}
+/* 「保存」は主操作なので、他の保存ボタン（.btn-save、地色）とは別に朱色の正円にして目立たせる
+   （.edit-fabと同じ考え方・同じ朱色。2026-09-05） */
+.savebar .btn-round{flex:none;width:56px;height:56px;padding:0;border-radius:50%;background:var(--stamp);color:#fff}
+.savebar .btn-round:hover{background:#9c2a20}
 @media(min-width:560px){
   .editcol{padding:32px}
 }
