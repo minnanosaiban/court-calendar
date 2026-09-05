@@ -540,10 +540,10 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
   #ceTierPick .c-arrow{align-self:flex-end;margin-top:-8px}
 }
 /* 掲載レベルの選択カードは3枚とも常にグレー地にし、いま選んでいるカードだけ内側に朱色の細線を
-   引いて示していたが（2026-09-01）、選んでいるカードをもっと一目で分かるようにするため、
-   2026-09-05にうすい赤の背景（.cell.has・.bpanelと同じ色）も敷くよう変更した */
+   引いて示す（カードは選び直せるタブとして常に出し続けるので、色の面ではなく線1本の差にした。
+   2026-09-01。うすい赤の背景も敷く案を2026-09-05に試したが、もとの細線だけの見た目に戻した） */
 #ceTierPick .ccard{background:var(--tint)}
-#ceTierPick .ccard.on{background:rgba(185,50,38,.055);box-shadow:inset 0 0 0 .5px var(--stamp)}
+#ceTierPick .ccard.on{box-shadow:inset 0 0 0 .5px var(--stamp)}
 #ceTierPick .ccard.on:hover{box-shadow:inset 0 0 0 .5px var(--stamp),0 2px 12px rgba(0,0,0,.07)}
 /* 期日をさがす：並べ替えの切り替え（期日が古い順⇄新しい順）。タブの下・一覧の上に右寄せで置く */
 .sortrow{display:flex;justify-content:flex-end;gap:16px;flex-wrap:wrap;margin:8px 4px 12px}
@@ -849,7 +849,9 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .imove{flex:none;display:flex;gap:8px}
 .imove a{color:var(--faint);font-size:.9rem;cursor:pointer;text-decoration:none}
 .imove a:hover{color:var(--ink)}
-.ieditor{background:var(--tint);border-radius:12px;padding:16px;margin:4px 0}
+/* 画像・期日・資料（とニックネームの管理画面）を追加・編集するときのグレー地の箱。
+   グレー地だけだと外形が読み取りにくいため、細い黒枠で外枠を囲む（2026-09-05） */
+.ieditor{background:var(--tint);border:1px solid var(--ink);border-radius:12px;padding:16px;margin:4px 0}
 /* 「閉じる」「保存」は枠の右上（見出しと同じ行）に置く。下の保存バーの「保存」との
    被りを避けるため（2026-08-30。以前は下部.ifootにあった） */
 .ieditor .ihead{font-size:.8rem;color:var(--mut);margin-bottom:12px;
