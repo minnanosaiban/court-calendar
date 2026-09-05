@@ -1515,10 +1515,13 @@ window.CC = (function(){
     }
     cCaseNoPublic.addEventListener("change", updateCaseNoPublicNote);
     // アクセス制限（閲覧キー）の状態表示・出し分け（2026-09-02）
+    // 公開時（未チェック）は「公開されています」の一文を出さない（チェックボックス自体で
+    // 状態が分かるため。2026-09-05）。非公開時だけ、隠れる範囲の注記を出す
     function updateIsPrivateNote(){
+      cIsPrivateNote.hidden = !cIsPrivate.checked;
       cIsPrivateNote.textContent = cIsPrivate.checked
         ? "非公開です。閲覧キーを知っている人にだけ表示されます（一覧・問題提起人の情報も含めて隠れます）。"
-        : "公開されています（誰でも見られます）。";
+        : "";
     }
     cIsPrivate.addEventListener("change", ()=>{
       if(!cIsPrivate.checked){

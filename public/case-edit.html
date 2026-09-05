@@ -95,11 +95,12 @@
 
   <!-- 節の並びは本人指示により2026-09-05に次の5群へ再編：
        ①本人について（ニックネーム・アイコン・Xアカウント）
-       ②基本情報（事件名・争点・当事者・事件番号）
-       ③情報へのアクセス（アクセス制限・掲示板・Twitterカード・期日案内）
+       ②情報へのアクセス（アクセス制限・掲示板・Twitterカード・期日案内）
+       ③基本情報（事件名・争点・当事者・事件番号）
        ④裁判の説明（裁判について・画像・報道・掲載・関連裁判）
        ⑤裁判記録（期日・資料・終結）
-       （以前は「本人について→事件について→記録を足す→表示の設定」の4群だった・2026-08-30）。
+       （情報へのアクセスと基本情報は、同日中に本人指示で順序を入れ替えて現在の並びに確定。
+       さらに以前は「本人について→事件について→記録を足す→表示の設定」の4群だった・2026-08-30）。
        画像・期日・資料は複数件の集まりなので、事件情報とは性質が違う＝1件ずつ保存する
        行内エディタにしている（2026-08-27）。事件番号は独立した節に置く（公開チェックが
        無いかぎり運営専用の内部メモとして扱う・2026-08-28）。表示設定のチェック（公開する）は
@@ -114,16 +115,16 @@
       <div data-sec="sec-nickname" class="on">ニックネーム</div>
       <div data-sec="cPresenterIconRow">アイコン</div>
       <div data-sec="cPresenterXUrlRow" data-tier-min="std">Xアカウント</div>
-      <div class="grp">基本情報</div>
-      <div data-sec="sec-name">事件名</div>
-      <div data-sec="sec-points" data-tier-min="std">争点</div>
-      <div data-sec="sec-parties" data-tier-min="std">当事者</div>
-      <div data-sec="sec-caseno" data-tier-min="detail">事件番号</div>
       <div class="grp">情報へのアクセス</div>
       <div data-sec="sec-privacy">アクセス制限</div>
       <div data-sec="sec-board" data-tier-min="std">掲示板</div>
       <div data-sec="sec-card">Twitterカード</div>
       <div data-sec="sec-notice" data-tier-min="std">期日案内</div>
+      <div class="grp">基本情報</div>
+      <div data-sec="sec-name">事件名</div>
+      <div data-sec="sec-points" data-tier-min="std">争点</div>
+      <div data-sec="sec-parties" data-tier-min="std">当事者</div>
+      <div data-sec="sec-caseno" data-tier-min="detail">事件番号</div>
       <div class="grp">裁判の説明</div>
       <div data-sec="sec-call" data-tier-min="std">裁判について</div>
       <div data-sec="sec-img" data-tier-min="detail">画像<span class="n" id="navImgCount"></span></div>
@@ -198,63 +199,6 @@
           <p class="fnote">設定すると、ニックネームの右にXアイコンのリンクが出ます。空欄で保存すると外れます。</p>
         </div>
 
-        <p class="msec" id="sec-name">事件名 <span class="reqmark">＊</span></p>
-        <div class="field">
-          <input type="text" id="cName" aria-label="事件名" placeholder="例）情報公開請求をめぐる訴訟">
-        </div>
-
-        <p class="msec" id="sec-points" data-tier-min="std">争点</p>
-        <div class="field" data-tier-min="std">
-          <label>タグ</label>
-          <span class="lhint">1行に1つ</span>
-          <textarea id="cTags" placeholder="情報公開&#10;行政"></textarea>
-        </div>
-        <div class="field" data-tier-min="std">
-          <span class="lhint">1行に1つ</span>
-          <textarea id="cPoints" aria-label="争点" placeholder="例）◯◯の事実があったか"></textarea>
-        </div>
-
-        <p class="msec" id="sec-parties" data-tier-min="std">当事者</p>
-        <div class="two two-links" data-tier-min="std">
-          <div class="field">
-            <label>原告名</label>
-            <span class="lhint">2行目以降は代理人名など（任意）</span>
-            <textarea id="cPlaintiff" placeholder="例）従業員&#10;代理人　〇〇"></textarea>
-          </div>
-          <div class="field" data-tier-min="detail">
-            <label>原告のリンク</label>
-            <span class="lhint">1行に1つ</span>
-            <textarea id="cPlaintiffLinks" placeholder="https://x.com/..."></textarea>
-          </div>
-        </div>
-        <div class="two two-links" data-tier-min="std">
-          <div class="field">
-            <label>被告名</label>
-            <span class="lhint">2行目以降は代理人名など（任意）</span>
-            <textarea id="cDefendant" placeholder="例）〇〇株式会社&#10;代理人　〇〇"></textarea>
-          </div>
-          <div class="field" data-tier-min="detail">
-            <label>被告のリンク</label>
-            <span class="lhint">1行に1つ</span>
-            <textarea id="cDefendantLinks" placeholder="https://x.com/..."></textarea>
-          </div>
-        </div>
-        <div class="field" data-tier-min="std">
-          <label>裁判官</label>
-          <span class="lhint">1行に1人（審級＋スペース＋名前）。末尾に半角スペース＋URLで「裁判官マップ」等へのリンクを添えられます（任意）</span>
-          <textarea id="cJudge" placeholder="地裁　〇〇〇〇裁判官&#10;高裁　〇〇〇〇裁判官 https://saibankan-map.jp/..."></textarea>
-        </div>
-
-        <p class="msec" id="sec-caseno" data-tier-min="detail">事件番号</p>
-        <div class="field" data-tier-min="detail">
-          <div class="checkrow">
-            <label class="check"><input type="checkbox" id="cCaseNoPublic"> 公開する</label>
-          </div>
-          <span class="lhint">1行に1件</span>
-          <textarea id="cCaseNo" aria-label="事件番号" placeholder="地裁　令和6年(ワ)第12345号&#10;高裁　令和7年(ネ)第1234号"></textarea>
-          <p class="fnote" id="cCaseNoPublicNote"></p>
-        </div>
-
         <!-- アクセス制限（閲覧キー）：2026-09-02。事件ページ・一覧・問題提起人一覧・サイトマップ等、
              すべての公開経路を一括で隠す・見せるスイッチなので、掲載レベルに関わらず常に出す
              （「情報へのアクセス」群の先頭・2026-09-05）。キーは空欄で✓を入れると
@@ -322,6 +266,63 @@
           </div>
           <p class="fnote" id="cNoticeNote">JPEG、20MBまで。支援者向けの「裁判期日一覧のご案内」のようなチラシを想定しています。選ぶとすぐ反映され（「保存」を待ちません）、事件ページとトップに埋め込み表示されます。<a id="cNoticeRemove" class="cicon-remove" hidden>外す</a></p>
           <p class="fnote" id="cNoticeStatus" hidden></p>
+        </div>
+
+        <p class="msec" id="sec-name">事件名 <span class="reqmark">＊</span></p>
+        <div class="field">
+          <input type="text" id="cName" aria-label="事件名" placeholder="例）情報公開請求をめぐる訴訟">
+        </div>
+
+        <p class="msec" id="sec-points" data-tier-min="std">争点</p>
+        <div class="field" data-tier-min="std">
+          <label>タグ</label>
+          <span class="lhint">1行に1つ</span>
+          <textarea id="cTags" placeholder="情報公開&#10;行政"></textarea>
+        </div>
+        <div class="field" data-tier-min="std">
+          <span class="lhint">1行に1つ</span>
+          <textarea id="cPoints" aria-label="争点" placeholder="例）◯◯の事実があったか"></textarea>
+        </div>
+
+        <p class="msec" id="sec-parties" data-tier-min="std">当事者</p>
+        <div class="two two-links" data-tier-min="std">
+          <div class="field">
+            <label>原告名</label>
+            <span class="lhint">2行目以降は代理人名など（任意）</span>
+            <textarea id="cPlaintiff" placeholder="例）従業員&#10;代理人　〇〇"></textarea>
+          </div>
+          <div class="field" data-tier-min="detail">
+            <label>原告のリンク</label>
+            <span class="lhint">1行に1つ</span>
+            <textarea id="cPlaintiffLinks" placeholder="https://x.com/..."></textarea>
+          </div>
+        </div>
+        <div class="two two-links" data-tier-min="std">
+          <div class="field">
+            <label>被告名</label>
+            <span class="lhint">2行目以降は代理人名など（任意）</span>
+            <textarea id="cDefendant" placeholder="例）〇〇株式会社&#10;代理人　〇〇"></textarea>
+          </div>
+          <div class="field" data-tier-min="detail">
+            <label>被告のリンク</label>
+            <span class="lhint">1行に1つ</span>
+            <textarea id="cDefendantLinks" placeholder="https://x.com/..."></textarea>
+          </div>
+        </div>
+        <div class="field" data-tier-min="std">
+          <label>裁判官</label>
+          <span class="lhint">1行に1人（審級＋スペース＋名前）。末尾に半角スペース＋URLで「裁判官マップ」等へのリンクを添えられます（任意）</span>
+          <textarea id="cJudge" placeholder="地裁　〇〇〇〇裁判官&#10;高裁　〇〇〇〇裁判官 https://saibankan-map.jp/..."></textarea>
+        </div>
+
+        <p class="msec" id="sec-caseno" data-tier-min="detail">事件番号</p>
+        <div class="field" data-tier-min="detail">
+          <div class="checkrow">
+            <label class="check"><input type="checkbox" id="cCaseNoPublic"> 公開する</label>
+          </div>
+          <span class="lhint">1行に1件</span>
+          <textarea id="cCaseNo" aria-label="事件番号" placeholder="地裁　令和6年(ワ)第12345号&#10;高裁　令和7年(ネ)第1234号"></textarea>
+          <p class="fnote" id="cCaseNoPublicNote"></p>
         </div>
 
         <p class="msec" id="sec-call" data-tier-min="std">裁判について</p>
