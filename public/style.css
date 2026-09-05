@@ -99,6 +99,11 @@ a{color:inherit}
    ビューポート基準の100vwはスクロールバー分だけ実際の表示幅よりわずかに広くなり得るため、
    bodyにoverflow-x:hiddenを添えて横スクロールを防ぐ */
 .gal{width:100vw;max-width:1120px;margin:0 0 24px 50%;transform:translateX(-50%)}
+/* 1枚だけのとき（Swiperを使わない・galleryHtml参照）は、上のフルブリード幅を使わず
+   本文と同じ.wrapの列幅（720px）に収める。フルブリードのままだと1枚だけ極端に大きく
+   見えてしまっていた（複数枚のときはSwiperのslidesPerViewで1枚あたりの幅が自然に
+   抑えられるが、1枚だけの場合はその抑えが効かないため・2026-09-05） */
+.gal.gal-single{width:auto;max-width:720px;margin:0 auto 24px;transform:none}
 .gal .swiper-slide{opacity:.5;transform:scale(.92);transition:opacity .4s ease, transform .4s ease}
 .gal .swiper-slide-active{opacity:1;transform:scale(1)}
 .gal-item{position:relative;display:block}
@@ -591,6 +596,12 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .pop-date b{color:var(--ink);font-weight:600;font-size:1.05rem;font-family:"Shippori Mincho",serif}
 .pop-title{font-size:.9rem;font-weight:500;margin-top:1px;font-family:"Shippori Mincho",serif}
 .pop-meta{font-size:.8rem;color:var(--mut);margin-top:1px}
+/* 種別／場所（CC.typePlaceHtml、.pop-meta と .um で共通）。PCは全角スラッシュでつないだ1行のまま、
+   スマホは読みやすいよう種別・場所をそれぞれ改行して2行にする（2026-09-05） */
+@media(max-width:559.98px){
+  .tp-sep{display:none}
+  .tp-type{display:block}
+}
 /* プレビュー下の操作行：右下に「閉じる×」 */
 .pop-foot{display:flex;justify-content:flex-end;align-items:center;gap:16px;margin-top:4px;padding:8px 12px 4px;border-top:1px solid var(--tint)}
 .pop-close{font-size:.8rem;color:var(--mut);background:none;border:none;cursor:pointer;padding:4px}

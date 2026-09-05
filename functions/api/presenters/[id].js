@@ -93,7 +93,7 @@ export async function onRequestDelete({ request, env, params }) {
   if (!authorizeWrite(request, env, id)) return json({ error: "forbidden" }, 403);
 
   const cnt = await env.DB.prepare(`SELECT COUNT(*) AS n FROM cases WHERE presenter_id = ?`).bind(params.id).first();
-  if (cnt && cnt.n > 0) return json({ error: "この問題提起人には事件が紐づいています。先に事件側の紐付けを外してください。" }, 409);
+  if (cnt && cnt.n > 0) return json({ error: "このニックネームには事件が紐づいています。先に事件側の紐付けを外してください。" }, 409);
 
   const cur = await env.DB.prepare(`SELECT icon_r2_key FROM presenters WHERE id = ?`).bind(params.id).first();
   if (!cur) return json({ error: "not found" }, 404);

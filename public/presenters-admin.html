@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>問題提起人の管理 ｜ 応援傍聴ナビ</title>
+<title>ニックネームの管理 ｜ 応援傍聴ナビ</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,7 +25,7 @@
 
   <a class="pillbtn backlink" href="index.html"><i class="bi bi-arrow-left" aria-hidden="true"></i> トップに戻る</a>
 
-  <div class="ce-title">問題提起人の管理</div>
+  <div class="ce-title">ニックネームの管理</div>
   <p class="d-body mut" style="margin-top:4px">運営専用の画面です。ログインの発行・再発行・解除、ニックネーム・アイコンの変更ができます。</p>
 
   <div class="card" id="paLocked" hidden style="margin-top:20px">
@@ -34,12 +34,12 @@
 
   <div id="paGrid" hidden style="margin-top:20px">
     <div class="card">
-      <p class="msec" style="margin-top:0">新しい問題提起人を作る</p>
+      <p class="msec" style="margin-top:0">新しいニックネームを作る</p>
       <div class="cicon-row">
         <input type="text" id="paNewNickname" placeholder="ニックネーム（例：〇〇支援の会）">
         <button type="button" class="btn-save btn-round" id="paNewSave">作成</button>
       </div>
-      <p class="fnote">事件に紐づけるのは、その事件の「事件情報を編集」画面から行います。ここでは問題提起人の"箱"だけを先に作れます。</p>
+      <p class="fnote">事件に紐づけるのは、その事件の「事件情報を編集」画面から行います。ここではニックネームの"箱"だけを先に作れます。</p>
     </div>
 
     <div class="card" style="margin-top:16px">
@@ -119,7 +119,7 @@
         <p class="fnote" id="paLoginStatus" hidden></p>
       </div>
       <div class="ifoot">
-        <button type="button" class="del" id="paDelete">この問題提起人を削除</button>
+        <button type="button" class="del" id="paDelete">このニックネームを削除</button>
         <span class="spacer"></span>
         <button type="button" class="btn-cancel" id="paClose">閉じる</button>
       </div>
@@ -135,7 +135,7 @@
     lockedEl.hidden=true; gridEl.hidden=false;
     const list = [...CC.presenters].sort((a,b)=>a.nickname.localeCompare(b.nickname,"ja"));
     countEl.textContent = list.length + "件";
-    listEl.innerHTML = list.length ? list.map(rowHtml).join("") : `<p class="empty-msg">まだ問題提起人はいません。</p>`;
+    listEl.innerHTML = list.length ? list.map(rowHtml).join("") : `<p class="empty-msg">まだニックネームはありません。</p>`;
     // 開いていた行があれば、再描画のあとも開いたままにする
     if(openId){
       const row = listEl.querySelector(`.irow[data-id="${CSS.escape(openId)}"]`);
@@ -248,7 +248,7 @@
 
     const loginRemove = root.querySelector("#paLoginRemove");
     if(loginRemove) loginRemove.addEventListener("click", async ()=>{
-      if(!confirm("この問題提起人のログインを外します（本人はログインできなくなります）。よろしいですか？")) return;
+      if(!confirm("このニックネームのログインを外します（本人はログインできなくなります）。よろしいですか？")) return;
       showStatus("外しています…");
       try{
         await CC.apiUpdatePresenter(p.id, {nickname:p.nickname, removeLogin:true});

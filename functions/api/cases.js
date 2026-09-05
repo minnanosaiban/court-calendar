@@ -46,7 +46,7 @@ export async function onRequestPost({ request, env }) {
 
   if (c.presenter_id) {
     const pr = await env.DB.prepare(`SELECT id FROM presenters WHERE id = ?`).bind(c.presenter_id).first();
-    if (!pr) return json({ error: "問題提起人が見つかりません" }, 400);
+    if (!pr) return json({ error: "ニックネームが見つかりません" }, 400);
   }
 
   const cid = newId("c");

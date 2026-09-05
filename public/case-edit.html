@@ -145,11 +145,11 @@
         <div class="field">
           <select id="cPresenterSelect" aria-label="ニックネーム">
             <option value="">（未設定）</option>
-            <option value="__new__">＋ 新しい問題提起人を作る…</option>
+            <option value="__new__">＋ 新しいニックネームを作る…</option>
           </select>
           <!-- 問題提起人本人がログイン中は、選べない欄をプルダウンの形にしない（下でJSが出し分ける）。
                本人ログイン時は、身元表示は出さず下のニックネーム欄の値がそのまま身元を示す（2026-08-30） -->
-          <p class="fnote" id="cPresenterHint">同じ人（団体）が複数の事件を持つときは、同じ問題提起人を選べばアイコン・ニックネームを使い回せます。</p>
+          <p class="fnote" id="cPresenterHint">同じ人（団体）が複数の事件を持つときは、同じニックネームを選べばアイコンも使い回せます。</p>
           <div class="subfield subfield-plain" id="cPresenterNewRow" hidden>
             <div class="cicon-row">
               <input type="text" id="cPresenterNewNickname" placeholder="ニックネーム（例：〇〇支援の会）">
@@ -161,7 +161,7 @@
               <input type="text" id="cPresenterRenameNickname" placeholder="ニックネーム">
               <button type="button" class="btn-save btn-round" id="cPresenterRenameSave">変更</button>
             </div>
-            <p class="fnote">変更すると、この問題提起人の他の事件もまとめて表示名が変わります。</p>
+            <p class="fnote">変更すると、同じニックネームを使う他の事件もまとめて表示名が変わります。</p>
           </div>
           <!-- ログイン設定（運営専用。問題提起人が自分でログインし、自分の事件を編集できるようにする） -->
           <div class="subfield subfield-plain" id="cPresenterLoginRow" data-tier-min="detail" hidden>
@@ -174,7 +174,7 @@
               <a id="cPresenterLoginReset" style="cursor:pointer;text-decoration:underline">パスワードを発行／再発行する</a>
               <span id="cPresenterLoginRemoveWrap" hidden>　・　<a id="cPresenterLoginRemove" style="cursor:pointer;text-decoration:underline">ログインを外す</a></span>
             </p>
-            <p class="fnote">発行したログインID・パスワードは、この問題提起人にメール等でお伝えください（この画面には後からパスワードは表示されません）。以後は「問題提起人としてログイン」から、本人が自分の事件を直接編集できます。</p>
+            <p class="fnote">発行したログインID・パスワードは、本人にメール等でお伝えください（この画面には後からパスワードは表示されません）。以後は本人がログイン画面から、自分の事件を直接編集できます。</p>
             <p class="fnote" id="cPresenterLoginStatus" hidden></p>
           </div>
           <p class="fnote" id="cPresenterStatus" hidden></p>
@@ -186,7 +186,7 @@
             <span id="cPresenterIconPreview"></span>
             <input type="file" id="cPresenterIconFile" accept="image/jpeg,image/webp" aria-label="アイコン">
           </div>
-          <p class="fnote" id="cPresenterIconNote">JPEG・WebP、5MBまで。正方形に近い画像がきれいに出ます。選ぶとすぐ反映され（「保存」を待ちません）、同じ問題提起人の他の事件のアイコンも変わります。<a id="cPresenterIconRemove" class="cicon-remove" hidden>アイコンを外す</a></p>
+          <p class="fnote" id="cPresenterIconNote">JPEG・WebP、5MBまで。正方形に近い画像がきれいに出ます。選ぶとすぐ反映され（「保存」を待ちません）、同じニックネームを使う他の事件のアイコンも変わります。<a id="cPresenterIconRemove" class="cicon-remove" hidden>アイコンを外す</a></p>
         </div>
 
         <!-- X（Twitter）URL（運営・問題提起人本人のどちらも変更できる） -->
@@ -224,7 +224,7 @@
           <label class="check"><input type="checkbox" id="cBoardEnabled" checked> 「傍聴に行ってきたよ！掲示板」を表示する</label>
         </div>
         <div class="field" data-tier-min="std">
-          <label class="check"><input type="checkbox" id="cBoardRestricted"> 投稿を制限する（一般の投稿は受け付けず、運営とこの事件の問題提起人のみ投稿できます）</label>
+          <label class="check"><input type="checkbox" id="cBoardRestricted"> 投稿を制限する（一般の投稿は受け付けず、運営とこの事件の本人のみ投稿できます）</label>
         </div>
 
         <!-- Twitterカード：事件につき1枚・差し替え専用（問題提起人アイコン・期日案内と同じ仕組み）。

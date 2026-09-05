@@ -271,6 +271,17 @@ window.CC = (function(){
     return `<button type="button" class="like${c.liked?" on":""}" data-like="${escapeAttr(c.id)}" aria-pressed="${c.liked?"true":"false"}" aria-label="いいね">`+
       `<i class="bi ${c.liked?"bi-heart-fill":"bi-heart"}" aria-hidden="true"></i><span class="like-n">${c.likes||0}</span></button>`;
   }
+  // 期日一覧の「種別 ／ 場所」（例：第1回口頭弁論 ／ 大宮簡易裁判所 2号法廷）。
+  // PCでは全角スラッシュでつないだ1行のまま、スマホ（.tp-sep参照）では種別・場所を
+  // それぞれ改行して2行で見せる。トップ「今後の期日」・カレンダーのプレビュー・
+  // 「期日をさがす」の一覧、3か所で共通に使う（2026-09-05）
+  function typePlaceHtml(type, place){
+    const t=String(type||"").trim(), p=String(place||"").trim();
+    if(t && p) return `<span class="tp tp-type">${escapeHtml(t)}</span><span class="tp-sep"> ／ </span><span class="tp tp-place">${escapeHtml(p)}</span>`;
+    if(t) return `<span class="tp tp-type">${escapeHtml(t)}</span>`;
+    if(p) return `<span class="tp tp-place">${escapeHtml(p)}</span>`;
+    return "";
+  }
   // 期日のお気に入り。❤いいね（事件単位・件数表示あり）とは別に、期日単位・件数表示なしの自分専用の目印
   function bookmarkHtml(ev){
     return `<button type="button" class="bookmark${ev.bookmarked?" on":""}" data-bookmark="${escapeAttr(ev.id)}" aria-pressed="${ev.bookmarked?"true":"false"}" aria-label="お気に入り">`+
@@ -410,7 +421,11 @@ window.CC = (function(){
       ${im.caption?`<span class="gal-cap">${escapeHtml(im.caption)}</span>`:""}
     </a>`;
     };
-    if(imgs.length===1) return `<div class="gal">${itemHtml(imgs[0])}</div>`;
+    // 1枚だけのときは、複数枚用のフルブリード幅（.gal、画面いっぱい・最大1120px）は使わず、
+    // 本文と同じ列幅に収める（.gal-single、2026-09-05）。フルブリードのままだと1枚だけ
+    // 極端に大きく見えてしまっていた（複数枚のときはSwiperのslidesPerView指定で1枚あたりの
+    // 幅が自然に抑えられるが、1枚だけの場合はSwiperを使わないためこの抑えが効かない）
+    if(imgs.length===1) return `<div class="gal gal-single">${itemHtml(imgs[0])}</div>`;
     const slides = imgs.map(im=>`<div class="swiper-slide">${itemHtml(im)}</div>`).join("");
     return `<div class="gal swiper" data-gal="${escapeAttr(caseId)}">
       <div class="swiper-wrapper">${slides}</div>
@@ -1042,7 +1057,7 @@ window.CC = (function(){
       el.innerHTML =
         `<br>編集できます ── この端末は編集ロック解除済みです。`+
         `<br><a id="stAddCase">新たな事件を追加</a><span class="sep">・</span>`+
-        `<a id="stPresentersAdmin">問題提起人を管理</a><span class="sep">・</span>`+
+        `<a id="stPresentersAdmin">ニックネームを管理</a><span class="sep">・</span>`+
         `<a id="stLock">ロックする</a>`+
         `<br><span class="status-sub">バックアップ（複数件をまとめて登録・復元するとき用）：`+
         `<a id="stExport">書き出す</a><span class="sep">・</span>`+
@@ -1231,10 +1246,10 @@ window.CC = (function(){
         return;
       }
       cPresenterSelect.hidden = false;
-      if(hint){ hint.hidden = false; hint.textContent = "同じ人（団体）が複数の事件を持つときは、同じ問題提起人を選べばアイコン・ニックネームを使い回せます。"; }
+      if(hint){ hint.hidden = false; hint.textContent = "同じ人（団体）が複数の事件を持つときは、同じニックネームを選べばアイコンも使い回せます。"; }
       const opts = [`<option value="">（未設定）</option>`]
         .concat(presenters.map(p=>`<option value="${escapeAttr(p.id)}"${p.id===selectedId?" selected":""}>${escapeHtml(p.nickname)}${p.caseCount?`（${p.caseCount}件）`:""}</option>`))
-        .concat([`<option value="__new__">＋ 新しい問題提起人を作る…</option>`]);
+        .concat([`<option value="__new__">＋ 新しいニックネームを作る…</option>`]);
       cPresenterSelect.innerHTML = opts.join("");
       if(selectedId) cPresenterSelect.value = selectedId;
     }
@@ -1381,7 +1396,7 @@ window.CC = (function(){
       const pid=cPresenterSelect.value;
       if(!pid || pid==="__new__") return;
       const p = presenterById(pid);
-      if(!confirm("この問題提起人のログインを外します（本人はログインできなくなります）。よろしいですか？")) return;
+      if(!confirm("このニックネームのログインを外します（本人はログインできなくなります）。よろしいですか？")) return;
       cPresenterLoginStatus.hidden=false; cPresenterLoginStatus.textContent="外しています…";
       try{
         const up = await apiUpdatePresenter(pid, {nickname:p?p.nickname:"", removeLogin:true});
@@ -1520,7 +1535,7 @@ window.CC = (function(){
     function updateIsPrivateNote(){
       cIsPrivateNote.hidden = !cIsPrivate.checked;
       cIsPrivateNote.textContent = cIsPrivate.checked
-        ? "非公開です。閲覧キーを知っている人にだけ表示されます（一覧・問題提起人の情報も含めて隠れます）。"
+        ? "非公開です。閲覧キーを知っている人にだけ表示されます（一覧・ニックネームの情報も含めて隠れます）。"
         : "";
     }
     cIsPrivate.addEventListener("change", ()=>{
@@ -1585,7 +1600,7 @@ window.CC = (function(){
       let presenterId = cPresenterSelect.value;
       if(presenterId==="__new__"){
         const nickname = cPresenterNewNickname.value.trim();
-        if(!nickname){ alert("問題提起人のニックネームを入力するか、「（未設定）」に戻してください。"); cPresenterNewNickname.focus(); return; }
+        if(!nickname){ alert("ニックネームを入力するか、「（未設定）」に戻してください。"); cPresenterNewNickname.focus(); return; }
         try{
           const created = await apiCreatePresenter({nickname});
           presenters.push(created);
@@ -1690,7 +1705,7 @@ window.CC = (function(){
         // この画面（case-edit.html）には「掲載をご希望の方へ」の枠が無いので、ログインへの
         // 入口をここにも添える（セッション切れ・ブックマークからの再訪などで来ることがあるため。2026-08-30）
         locked.querySelector(".empty-msg").innerHTML = id
-          ? `この事件を編集する権限がありません。問題提起人の方は<a href="login.html">こちらからログイン</a>してください。`
+          ? `この事件を編集する権限がありません。ご本人は<a href="login.html">こちらからログイン</a>してください。`
           : "新しい事件の登録は運営にご連絡ください。";
         return;
       }
@@ -2288,7 +2303,7 @@ window.CC = (function(){
     get me(){ return me; },
     get loaded(){ return loaded; },
     caseById, caseByName, presenterById, caseEvents, casePosts, caseMaterials, caseImages, nearestCase, nextEvent, eventLine, jpDate,
-    likeHtml, toggleLike, bookmarkHtml, toggleBookmark, isArchived, iconHtml, presenterHeaderHtml,
+    likeHtml, toggleLike, bookmarkHtml, toggleBookmark, typePlaceHtml, isArchived, iconHtml, presenterHeaderHtml,
     apiListPresenters, apiCreatePresenter, apiUpdatePresenter, apiDeletePresenter,
     apiUpdatePresenterIcon, apiDeletePresenterIcon, reloadPresenters, saveErr,
     canEditCase, presenterLogin, presenterLogout, apiPresenterChangePassword, caseSelfBarHtml,
