@@ -93,17 +93,19 @@
     </div>
   </div>
 
-  <!-- 節の並びは「①本人について（ニックネーム・アイコン・Xアカウント）→②事件について
-       （事件名・事件番号・報道掲載・Twitterカード・争点・当事者・裁判について・画像）→③記録を足す
-       （期日・資料）→④表示の設定（期日案内・関連裁判・掲示板・終結）」の4群（2026-08-30）。
-       本人が編集画面を開いたとき、いちばん書きたい内容が先に来るようにした（以前は事件ページの
-       掲載順そのままで、運営向けの設定が先頭に来ていた）。画像・期日・資料は複数件の集まりなので、
-       事件情報とは性質が違う＝1件ずつ保存する行内エディタにしている（2026-08-27）。事件番号は
-       独立した節に置く（公開チェックが無いかぎり運営専用の内部メモとして扱う・2026-08-28）。
-       表示設定のチェック（公開する）は .checkrow に入れ、欄名の直下・入力欄の
-       上に置く。入力欄の下に置くと、上の入力欄と下の欄名のどちらに属するのか読み取れなかった
-       （2026-08-28）。「トップにも表示する」（応援ピックアップへの表示可否）は、応援ピックアップ
-       自体の廃止に伴い2026-09-05に削除 -->
+  <!-- 節の並びは本人指示により2026-09-05に次の5群へ再編：
+       ①本人について（ニックネーム・アイコン・Xアカウント）
+       ②基本情報（事件名・争点・当事者・事件番号）
+       ③情報へのアクセス（アクセス制限・掲示板・Twitterカード・期日案内）
+       ④裁判の説明（裁判について・画像・報道・掲載・関連裁判）
+       ⑤裁判記録（期日・資料・終結）
+       （以前は「本人について→事件について→記録を足す→表示の設定」の4群だった・2026-08-30）。
+       画像・期日・資料は複数件の集まりなので、事件情報とは性質が違う＝1件ずつ保存する
+       行内エディタにしている（2026-08-27）。事件番号は独立した節に置く（公開チェックが
+       無いかぎり運営専用の内部メモとして扱う・2026-08-28）。表示設定のチェック（公開する）は
+       .checkrow に入れ、欄名の直下・入力欄の上に置く。入力欄の下に置くと、上の入力欄と下の
+       欄名のどちらに属するのか読み取れなかった（2026-08-28）。「トップにも表示する」
+       （応援ピックアップへの表示可否）は、応援ピックアップ自体の廃止に伴い2026-09-05に削除 -->
   <div class="editgrid" id="ceGrid" hidden>
     <!-- スマホ用「目次∨」。secnav の直前に置く（CSSの隣接セレクタでタップ時だけ secnav を開く） -->
     <div class="mobtoc" id="ceMobToc"><span class="cur" id="ceMobTocCur">ニックネーム</span><span class="chev" aria-hidden="true">∨</span></div>
@@ -112,32 +114,32 @@
       <div data-sec="sec-nickname" class="on">ニックネーム</div>
       <div data-sec="cPresenterIconRow">アイコン</div>
       <div data-sec="cPresenterXUrlRow" data-tier-min="std">Xアカウント</div>
-      <div class="grp">事件について</div>
+      <div class="grp">基本情報</div>
       <div data-sec="sec-name">事件名</div>
-      <div data-sec="sec-privacy">アクセス制限</div>
-      <div data-sec="sec-caseno" data-tier-min="detail">事件番号</div>
-      <div data-sec="sec-press" data-tier-min="std">報道・掲載</div>
-      <div data-sec="sec-card">Twitterカード</div>
       <div data-sec="sec-points" data-tier-min="std">争点</div>
       <div data-sec="sec-parties" data-tier-min="std">当事者</div>
+      <div data-sec="sec-caseno" data-tier-min="detail">事件番号</div>
+      <div class="grp">情報へのアクセス</div>
+      <div data-sec="sec-privacy">アクセス制限</div>
+      <div data-sec="sec-board" data-tier-min="std">掲示板</div>
+      <div data-sec="sec-card">Twitterカード</div>
+      <div data-sec="sec-notice" data-tier-min="std">期日案内</div>
+      <div class="grp">裁判の説明</div>
       <div data-sec="sec-call" data-tier-min="std">裁判について</div>
       <div data-sec="sec-img" data-tier-min="detail">画像<span class="n" id="navImgCount"></span></div>
-      <div class="grp">記録を足す</div>
+      <div data-sec="sec-press" data-tier-min="std">報道・掲載</div>
+      <div data-sec="sec-related" data-tier-min="detail">関連裁判</div>
+      <div class="grp">裁判記録</div>
       <div data-sec="sec-ev">期日<span class="n" id="navEvCount"></span></div>
       <div data-sec="sec-mat" data-tier-min="detail">資料<span class="n" id="navMatCount"></span></div>
       <div data-sec="sec-closure" data-tier-min="detail">終結</div>
-      <div class="grp">表示の設定</div>
-      <div data-sec="sec-notice" data-tier-min="std">期日案内</div>
-      <div data-sec="sec-related" data-tier-min="detail">関連裁判</div>
-      <div data-sec="sec-board" data-tier-min="std">掲示板</div>
     </nav>
     <div>
       <div class="editcol" id="ceForm">
 
-        <!-- 2026-08-30：階層を「本人について（ニックネーム・アイコン・Xアカウント）」→
-             「事件について（事件名・事件番号・報道掲載・Twitterカード・争点・当事者・裁判について）」
-             に組み直した。争点・当事者は各々を独立した節にし、当事者は原告名/原告のリンクのように
-             同じ当事者どうしを並べる形に変更。同じ階層の項目名は .msec（見出し）で揃える -->
+        <!-- 争点・当事者は各々を独立した節にし、当事者は原告名/原告のリンクのように同じ当事者
+             どうしを並べる形にしている（2026-08-30）。同じ階層の項目名は .msec（見出し）で揃える。
+             節の並び自体は上部のコメント参照（2026-09-05に5群へ再編） -->
         <p class="msec" id="sec-nickname">ニックネーム</p>
         <div class="field">
           <select id="cPresenterSelect" aria-label="ニックネーム">
@@ -201,70 +203,6 @@
           <input type="text" id="cName" aria-label="事件名" placeholder="例）情報公開請求をめぐる訴訟">
         </div>
 
-        <!-- アクセス制限（閲覧キー）：2026-09-02。事件ページ・一覧・問題提起人一覧・サイトマップ等、
-             すべての公開経路を一括で隠す・見せるスイッチなので、掲載レベルに関わらず常に出す
-             （事件名の直後＝いちばん見落としてほしくない場所）。キーは空欄で✓を入れると
-             自動生成し、「作り直す」でいつでも別の値に変えられる（作り直すと古いURLは無効になる）。
-             実際の共有は事件ページの「シェア」→「リンクをコピー」から（shareHtml()がisPrivateなら
-             このキーを自動で付ける） -->
-        <p class="msec" id="sec-privacy">アクセス制限</p>
-        <div class="field">
-          <label class="check"><input type="checkbox" id="cIsPrivate"> この事件を非公開にする（閲覧キーを知っている人にだけ見せる）</label>
-          <p class="fnote" id="cIsPrivateNote"></p>
-          <div class="subfield subfield-plain" id="cViewKeyRow" hidden>
-            <label>閲覧キー（合言葉）</label>
-            <div class="cicon-row">
-              <input type="text" id="cViewKey" aria-label="閲覧キー" placeholder="空欄のまま保存すると自動で作られます">
-              <button type="button" class="btn-save btn-round" id="cViewKeyRegen">作成</button>
-            </div>
-            <p class="fnote">「作成」を押すと新しいキーになり、それまでのURLは見られなくなります（受け取った人に新しいURLを配り直す必要があります）。実際に送るURLは、保存後にこの事件のページの「シェア」→「リンクをコピー」から取れます（このキーが自動で付きます）。</p>
-          </div>
-        </div>
-
-        <p class="msec" id="sec-caseno" data-tier-min="detail">事件番号</p>
-        <div class="field" data-tier-min="detail">
-          <div class="checkrow">
-            <label class="check"><input type="checkbox" id="cCaseNoPublic"> 公開する</label>
-          </div>
-          <span class="lhint">1行に1件</span>
-          <textarea id="cCaseNo" aria-label="事件番号" placeholder="地裁　令和6年(ワ)第12345号&#10;高裁　令和7年(ネ)第1234号"></textarea>
-          <p class="fnote" id="cCaseNoPublicNote"></p>
-        </div>
-
-        <p class="msec" id="sec-press" data-tier-min="std">報道・掲載</p>
-        <div class="field" data-tier-min="std">
-          <span class="lhint">1行に1件。末尾に半角スペース＋URLで記事のリンクを添えられます（任意）</span>
-          <textarea id="cPress" aria-label="報道・掲載" placeholder="例）〇〇新聞で報道されました https://...&#10;労働判例ジャーナル2025.10 No.163に掲載&#10;裁判所への手続きにより特別保存（永久保存）となっています"></textarea>
-        </div>
-
-        <!-- Twitterカード：事件につき1枚・差し替え専用（問題提起人アイコン・期日案内と同じ仕組み）。
-             未設定（既定）なら /api/cases/:id/card.png・card-square.png が期日・問題提起人から自動で
-             「傍聴券」を描く。正方形版はTeams・Slack等がog:imageを中央トリミングする対策で、横長版と
-             差し替えの仕組みは同じ（2026-08-30）。新規作成のときはまだ事件が無いので出さない。
-             説明は横長版・正方形版で繰り返さず、正方形版の枠の下に1本だけ置く（2026-09-02）。
-             「自動生成に戻す」は見出しの隣に置き、差し替え済みのときだけ出す（updateCardFieldUI等が
-             hidden を切り替える。以前は説明文の中に埋めていた） -->
-        <div class="field" id="sec-card" hidden>
-          <p class="msec">Twitterカード</p>
-
-          <label>横長版<span id="cCardRemoveWrap" hidden>（<a id="cCardRemove" class="cicon-remove">自動生成に戻す</a>）</span></label>
-          <div class="cicon-row">
-            <span id="cCardPreview"></span>
-            <input type="file" id="cCardFile" accept="image/jpeg,image/png" aria-label="Twitterカード（横長）">
-          </div>
-          <p class="fnote" id="cCardStatus" hidden></p>
-
-          <div class="subfield subfield-plain">
-            <label>正方形版<span id="cCardSquareRemoveWrap" hidden>（<a id="cCardSquareRemove" class="cicon-remove">自動生成に戻す</a>）</span></label>
-            <div class="cicon-row">
-              <span id="cCardSquarePreview"></span>
-              <input type="file" id="cCardSquareFile" accept="image/jpeg,image/png" aria-label="Twitterカード（正方形）">
-            </div>
-            <p class="fnote">Twitterカードの画像は自動生成されます。画像を変更することもできます。（JPEG・PNG、1200×1200推奨、8MBまで）</p>
-            <p class="fnote" id="cCardSquareStatus" hidden></p>
-          </div>
-        </div>
-
         <p class="msec" id="sec-points" data-tier-min="std">争点</p>
         <div class="field" data-tier-min="std">
           <label>タグ</label>
@@ -307,6 +245,85 @@
           <textarea id="cJudge" placeholder="地裁　〇〇〇〇裁判官&#10;高裁　〇〇〇〇裁判官 https://saibankan-map.jp/..."></textarea>
         </div>
 
+        <p class="msec" id="sec-caseno" data-tier-min="detail">事件番号</p>
+        <div class="field" data-tier-min="detail">
+          <div class="checkrow">
+            <label class="check"><input type="checkbox" id="cCaseNoPublic"> 公開する</label>
+          </div>
+          <span class="lhint">1行に1件</span>
+          <textarea id="cCaseNo" aria-label="事件番号" placeholder="地裁　令和6年(ワ)第12345号&#10;高裁　令和7年(ネ)第1234号"></textarea>
+          <p class="fnote" id="cCaseNoPublicNote"></p>
+        </div>
+
+        <!-- アクセス制限（閲覧キー）：2026-09-02。事件ページ・一覧・問題提起人一覧・サイトマップ等、
+             すべての公開経路を一括で隠す・見せるスイッチなので、掲載レベルに関わらず常に出す
+             （「情報へのアクセス」群の先頭・2026-09-05）。キーは空欄で✓を入れると
+             自動生成し、「作り直す」でいつでも別の値に変えられる（作り直すと古いURLは無効になる）。
+             実際の共有は事件ページの「シェア」→「リンクをコピー」から（shareHtml()がisPrivateなら
+             このキーを自動で付ける） -->
+        <p class="msec" id="sec-privacy">アクセス制限</p>
+        <div class="field">
+          <label class="check"><input type="checkbox" id="cIsPrivate"> この事件を非公開にする（閲覧キーを知っている人にだけ見せる）</label>
+          <p class="fnote" id="cIsPrivateNote"></p>
+          <div class="subfield subfield-plain" id="cViewKeyRow" hidden>
+            <label>閲覧キー（合言葉）</label>
+            <div class="cicon-row">
+              <input type="text" id="cViewKey" aria-label="閲覧キー" placeholder="空欄のまま保存すると自動で作られます">
+              <button type="button" class="btn-save btn-round" id="cViewKeyRegen">作成</button>
+            </div>
+            <p class="fnote">「作成」を押すと新しいキーになり、それまでのURLは見られなくなります（受け取った人に新しいURLを配り直す必要があります）。実際に送るURLは、保存後にこの事件のページの「シェア」→「リンクをコピー」から取れます（このキーが自動で付きます）。</p>
+          </div>
+        </div>
+
+        <p class="msec" id="sec-board" data-tier-min="std">掲示板</p>
+        <div class="field" data-tier-min="std">
+          <label class="check"><input type="checkbox" id="cBoardEnabled" checked> 「傍聴に行ってきたよ！掲示板」を表示する</label>
+        </div>
+        <div class="field" data-tier-min="std">
+          <label class="check"><input type="checkbox" id="cBoardRestricted"> 投稿を制限する（一般の投稿は受け付けず、運営とこの事件の問題提起人のみ投稿できます）</label>
+        </div>
+
+        <!-- Twitterカード：事件につき1枚・差し替え専用（問題提起人アイコン・期日案内と同じ仕組み）。
+             未設定（既定）なら /api/cases/:id/card.png・card-square.png が期日・問題提起人から自動で
+             「傍聴券」を描く。正方形版はTeams・Slack等がog:imageを中央トリミングする対策で、横長版と
+             差し替えの仕組みは同じ（2026-08-30）。新規作成のときはまだ事件が無いので出さない。
+             説明は横長版・正方形版で繰り返さず、正方形版の枠の下に1本だけ置く（2026-09-02）。
+             「自動生成に戻す」は見出しの隣に置き、差し替え済みのときだけ出す（updateCardFieldUI等が
+             hidden を切り替える。以前は説明文の中に埋めていた） -->
+        <div class="field" id="sec-card" hidden>
+          <p class="msec">Twitterカード</p>
+
+          <label>横長版<span id="cCardRemoveWrap" hidden>（<a id="cCardRemove" class="cicon-remove">自動生成に戻す</a>）</span></label>
+          <div class="cicon-row">
+            <span id="cCardPreview"></span>
+            <input type="file" id="cCardFile" accept="image/jpeg,image/png" aria-label="Twitterカード（横長）">
+          </div>
+          <p class="fnote" id="cCardStatus" hidden></p>
+
+          <div class="subfield subfield-plain">
+            <label>正方形版<span id="cCardSquareRemoveWrap" hidden>（<a id="cCardSquareRemove" class="cicon-remove">自動生成に戻す</a>）</span></label>
+            <div class="cicon-row">
+              <span id="cCardSquarePreview"></span>
+              <input type="file" id="cCardSquareFile" accept="image/jpeg,image/png" aria-label="Twitterカード（正方形）">
+            </div>
+            <p class="fnote">Twitterカードの画像は自動生成されます。画像を変更することもできます。（JPEG・PNG、1200×1200推奨、8MBまで）</p>
+            <p class="fnote" id="cCardSquareStatus" hidden></p>
+          </div>
+        </div>
+
+        <!-- 期日案内：事件につき1枚・差し替え専用（問題提起人アイコンと同じ仕組み）。JPEGのみ
+             （2026-08-28：ファイルサイズが小さく済むJPEGに限定。PDF・PNGは既存データの表示のみ対応）。
+             新規作成のときはまだ事件が無いので出さない -->
+        <div class="field" id="sec-notice" data-tier-min="std" hidden>
+          <p class="msec">期日案内</p>
+          <label>案内チラシ（JPEG）</label>
+          <div class="cicon-row">
+            <input type="file" id="cNoticeFile" accept="image/jpeg">
+          </div>
+          <p class="fnote" id="cNoticeNote">JPEG、20MBまで。支援者向けの「裁判期日一覧のご案内」のようなチラシを想定しています。選ぶとすぐ反映され（「保存」を待ちません）、事件ページとトップに埋め込み表示されます。<a id="cNoticeRemove" class="cicon-remove" hidden>外す</a></p>
+          <p class="fnote" id="cNoticeStatus" hidden></p>
+        </div>
+
         <p class="msec" id="sec-call" data-tier-min="std">裁判について</p>
         <div class="field" data-tier-min="std">
           <label>本文</label>
@@ -323,6 +340,20 @@
             <button type="button" class="addbtn" id="imgAddBtn">＋ 画像を追加</button>
           </div>
         </section>
+
+        <p class="msec" id="sec-press" data-tier-min="std">報道・掲載</p>
+        <div class="field" data-tier-min="std">
+          <span class="lhint">1行に1件。末尾に半角スペース＋URLで記事のリンクを添えられます（任意）</span>
+          <textarea id="cPress" aria-label="報道・掲載" placeholder="例）〇〇新聞で報道されました https://...&#10;労働判例ジャーナル2025.10 No.163に掲載&#10;裁判所への手続きにより特別保存（永久保存）となっています"></textarea>
+        </div>
+
+        <p class="msec" id="sec-related" data-tier-min="detail">関連裁判</p>
+        <div class="field" data-tier-min="detail">
+          <label>関連裁判</label>
+          <span class="lhint">登録済みの事件名を1行に1つ</span>
+          <textarea id="cRelated" placeholder="例）情報公開請求をめぐる訴訟"></textarea>
+          <p class="fnote">同じ事実に関連する別争点の訴訟など。どちらか一方に登録すれば、両方の事件ページに表示されます。</p>
+        </div>
 
         <!-- 期日：1件ずつ保存（新規作成のときはまだ事件が無いので出さない） -->
         <section class="lssec listsec" id="sec-ev" data-listsec="ev" hidden>
@@ -353,35 +384,6 @@
             <div class="field"><label>終結日</label><input type="date" id="cArchivedAt"></div>
             <div class="field"><label>終結の種類</label><input type="text" id="cCloseType" placeholder="例）判決、和解、取下げ"></div>
           </div>
-        </div>
-
-        <!-- 期日案内：事件につき1枚・差し替え専用（問題提起人アイコンと同じ仕組み）。JPEGのみ
-             （2026-08-28：ファイルサイズが小さく済むJPEGに限定。PDF・PNGは既存データの表示のみ対応）。
-             新規作成のときはまだ事件が無いので出さない -->
-        <div class="field" id="sec-notice" data-tier-min="std" hidden>
-          <p class="msec">期日案内</p>
-          <label>案内チラシ（JPEG）</label>
-          <div class="cicon-row">
-            <input type="file" id="cNoticeFile" accept="image/jpeg">
-          </div>
-          <p class="fnote" id="cNoticeNote">JPEG、20MBまで。支援者向けの「裁判期日一覧のご案内」のようなチラシを想定しています。選ぶとすぐ反映され（「保存」を待ちません）、事件ページとトップに埋め込み表示されます。<a id="cNoticeRemove" class="cicon-remove" hidden>外す</a></p>
-          <p class="fnote" id="cNoticeStatus" hidden></p>
-        </div>
-
-        <p class="msec" id="sec-related" data-tier-min="detail">関連裁判</p>
-        <div class="field" data-tier-min="detail">
-          <label>関連裁判</label>
-          <span class="lhint">登録済みの事件名を1行に1つ</span>
-          <textarea id="cRelated" placeholder="例）情報公開請求をめぐる訴訟"></textarea>
-          <p class="fnote">同じ事実に関連する別争点の訴訟など。どちらか一方に登録すれば、両方の事件ページに表示されます。</p>
-        </div>
-
-        <p class="msec" id="sec-board" data-tier-min="std">掲示板</p>
-        <div class="field" data-tier-min="std">
-          <label class="check"><input type="checkbox" id="cBoardEnabled" checked> 「傍聴に行ってきたよ！掲示板」を表示する</label>
-        </div>
-        <div class="field" data-tier-min="std">
-          <label class="check"><input type="checkbox" id="cBoardRestricted"> 投稿を制限する（一般の投稿は受け付けず、運営とこの事件の問題提起人のみ投稿できます）</label>
         </div>
 
       </div>
