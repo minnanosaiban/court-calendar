@@ -100,9 +100,10 @@
        掲載順そのままで、運営向けの設定が先頭に来ていた）。画像・期日・資料は複数件の集まりなので、
        事件情報とは性質が違う＝1件ずつ保存する行内エディタにしている（2026-08-27）。事件番号は
        独立した節に置く（公開チェックが無いかぎり運営専用の内部メモとして扱う・2026-08-28）。
-       表示設定のチェック（公開する／トップにも表示する）は .checkrow に入れ、欄名の直下・入力欄の
+       表示設定のチェック（公開する）は .checkrow に入れ、欄名の直下・入力欄の
        上に置く。入力欄の下に置くと、上の入力欄と下の欄名のどちらに属するのか読み取れなかった
-       （2026-08-28） -->
+       （2026-08-28）。「トップにも表示する」（応援ピックアップへの表示可否）は、応援ピックアップ
+       自体の廃止に伴い2026-09-05に削除 -->
   <div class="editgrid" id="ceGrid" hidden>
     <!-- スマホ用「目次∨」。secnav の直前に置く（CSSの隣接セレクタでタップ時だけ secnav を開く） -->
     <div class="mobtoc" id="ceMobToc"><span class="cur" id="ceMobTocCur">ニックネーム</span><span class="chev" aria-hidden="true">∨</span></div>
@@ -132,14 +133,6 @@
     </nav>
     <div>
       <div class="editcol" id="ceForm">
-
-        <!-- 2026-08-30：ページ最上部に固定の注意書き。以前は争点欄の直前だけに置いていたが、
-             事件番号・報道掲載など他の欄にも同じチェックボックスがあるため、ページの先頭にまとめた。
-             「入力は公開情報」という前提の注意は、タイトル横（ce-title-warn）に分けて置いている。
-             背景色・縦棒の装飾箱（.helpbar）はやめ、他の注記と同じ地の文（.fnote・※付き）にした。
-             「トップにも表示する」チェックボックス自体が標準的以上の節にしか無いため、最小限では
-             出さない（2026-09-01） -->
-        <p class="fnote" data-tier-min="std">※ 「トップにも表示する」のチェックボックスとは、ここの項目は、ふだん事件ページにだけ出ます。✓を入れると、この事件がトップページの〈応援ピックアップ〉に選ばれたときに一緒に出ます（ピックアップは直近に開廷した事件が自動で選ばれます）。</p>
 
         <!-- 2026-08-30：階層を「本人について（ニックネーム・アイコン・Xアカウント）」→
              「事件について（事件名・事件番号・報道掲載・Twitterカード・争点・当事者・裁判について）」
@@ -232,7 +225,6 @@
         <div class="field" data-tier-min="detail">
           <div class="checkrow">
             <label class="check"><input type="checkbox" id="cCaseNoPublic"> 公開する</label>
-            <label class="check"><input type="checkbox" id="cShowCaseNoOnTop"> トップにも表示する</label>
           </div>
           <span class="lhint">1行に1件</span>
           <textarea id="cCaseNo" aria-label="事件番号" placeholder="地裁　令和6年(ワ)第12345号&#10;高裁　令和7年(ネ)第1234号"></textarea>
@@ -241,7 +233,6 @@
 
         <p class="msec" id="sec-press" data-tier-min="std">報道・掲載</p>
         <div class="field" data-tier-min="std">
-          <div class="checkrow"><label class="check"><input type="checkbox" id="cShowPressOnTop"> トップにも表示する</label></div>
           <span class="lhint">1行に1件。末尾に半角スペース＋URLで記事のリンクを添えられます（任意）</span>
           <textarea id="cPress" aria-label="報道・掲載" placeholder="例）〇〇新聞で報道されました https://...&#10;労働判例ジャーナル2025.10 No.163に掲載&#10;裁判所への手続きにより特別保存（永久保存）となっています"></textarea>
         </div>
@@ -281,7 +272,6 @@
           <textarea id="cTags" placeholder="情報公開&#10;行政"></textarea>
         </div>
         <div class="field" data-tier-min="std">
-          <div class="checkrow"><label class="check"><input type="checkbox" id="cShowPointsOnTop"> トップにも表示する</label></div>
           <span class="lhint">1行に1つ</span>
           <textarea id="cPoints" aria-label="争点" placeholder="例）◯◯の事実があったか"></textarea>
         </div>
@@ -290,14 +280,11 @@
         <div class="two two-links" data-tier-min="std">
           <div class="field">
             <label>原告名</label>
-            <div class="checkrow"><label class="check"><input type="checkbox" id="cShowPlaintiffOnTop"> トップにも表示する</label></div>
             <span class="lhint">2行目以降は代理人名など（任意）</span>
             <textarea id="cPlaintiff" placeholder="例）従業員&#10;代理人　〇〇"></textarea>
           </div>
           <div class="field" data-tier-min="detail">
             <label>原告のリンク</label>
-            <!-- 左（原告名）の「トップにも表示する」チェック分と高さを揃えるためのダミー（2026-08-30） -->
-            <div class="checkrow" aria-hidden="true" style="visibility:hidden"><label class="check"><input type="checkbox" disabled tabindex="-1"> トップにも表示する</label></div>
             <span class="lhint">1行に1つ</span>
             <textarea id="cPlaintiffLinks" placeholder="https://x.com/..."></textarea>
           </div>
@@ -305,21 +292,17 @@
         <div class="two two-links" data-tier-min="std">
           <div class="field">
             <label>被告名</label>
-            <div class="checkrow"><label class="check"><input type="checkbox" id="cShowDefendantOnTop"> トップにも表示する</label></div>
             <span class="lhint">2行目以降は代理人名など（任意）</span>
             <textarea id="cDefendant" placeholder="例）〇〇株式会社&#10;代理人　〇〇"></textarea>
           </div>
           <div class="field" data-tier-min="detail">
             <label>被告のリンク</label>
-            <!-- 左（被告名）の「トップにも表示する」チェック分と高さを揃えるためのダミー（2026-08-30） -->
-            <div class="checkrow" aria-hidden="true" style="visibility:hidden"><label class="check"><input type="checkbox" disabled tabindex="-1"> トップにも表示する</label></div>
             <span class="lhint">1行に1つ</span>
             <textarea id="cDefendantLinks" placeholder="https://x.com/..."></textarea>
           </div>
         </div>
         <div class="field" data-tier-min="std">
           <label>裁判官</label>
-          <div class="checkrow"><label class="check"><input type="checkbox" id="cShowJudgeOnTop"> トップにも表示する</label></div>
           <span class="lhint">1行に1人（審級＋スペース＋名前）。末尾に半角スペース＋URLで「裁判官マップ」等へのリンクを添えられます（任意）</span>
           <textarea id="cJudge" placeholder="地裁　〇〇〇〇裁判官&#10;高裁　〇〇〇〇裁判官 https://saibankan-map.jp/..."></textarea>
         </div>
@@ -327,7 +310,6 @@
         <p class="msec" id="sec-call" data-tier-min="std">裁判について</p>
         <div class="field" data-tier-min="std">
           <label>本文</label>
-          <div class="checkrow"><label class="check"><input type="checkbox" id="cShowCallOnTop"> トップにも表示する</label></div>
           <span class="lhint">空行を挟むと段落を分けられます</span>
           <textarea id="cCall" style="min-height:200px" placeholder="どんな裁判か、傍聴や支援をお願いする文章など"></textarea>
         </div>
@@ -389,7 +371,6 @@
         <p class="msec" id="sec-related" data-tier-min="detail">関連裁判</p>
         <div class="field" data-tier-min="detail">
           <label>関連裁判</label>
-          <div class="checkrow"><label class="check"><input type="checkbox" id="cShowRelatedOnTop"> トップにも表示する</label></div>
           <span class="lhint">登録済みの事件名を1行に1つ</span>
           <textarea id="cRelated" placeholder="例）情報公開請求をめぐる訴訟"></textarea>
           <p class="fnote">同じ事実に関連する別争点の訴訟など。どちらか一方に登録すれば、両方の事件ページに表示されます。</p>

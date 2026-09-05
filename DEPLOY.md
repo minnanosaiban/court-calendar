@@ -228,7 +228,7 @@ X などでシェアしたときに正しいカード（タイトル・説明・
 - 旧形式（v3より前）のバックアップ取り込みでも、期日に埋め込まれた `parties` を取り込み時だけ同じ書式で解析する
   （`splitLegacyParties`、`public/lib.js`）
 
-### v4：応援ピックアップ（2026-08-23〜24）
+### v4：応援ピックアップ（2026-08-23〜24、2026-09-05に廃止。後述の「応援ピックアップの廃止」参照）
 
 トップの「最近の期日」カード（見出し無し）に、見出し「応援ピックアップ」と選定理由の1文を追加。
 DBスキーマの変更なし。
@@ -334,6 +334,24 @@ DBスキーマの変更なし。
 ```
 npx wrangler d1 execute court-calendar --remote --file migrate_032_presenter_accounts.sql
 ```
+
+### 応援ピックアップの廃止（2026-09-05）
+
+トップの「応援ピックアップ」（`index.html` の固定表示カード）と、事件情報編集ページの項目ごとの
+「トップにも表示する」チェックボックス（事件番号・争点・原告・被告・裁判官・報道掲載・裁判について・
+関連裁判の8項目）を廃止した。
+
+- `index.html`：ピックアップの節（見出し・`pickupCase()` の呼び出し・`#recentBody`）を削除。他ページへの
+  導線（期日カレンダーを見る／事件をさがす／期日をさがす）はこの節にあったものなので、ヘッダー直下に残した
+- `public/lib.js`：`pickupCase()`／`PICKUP_OVERRIDE` を削除。`caseCardHtml()` の事件番号・争点・原告・被告・
+  裁判官・報道掲載の各行は「トップにも表示する」の判定を外し、事件ページ（`full=true`）でのみ出す元の
+  挙動に戻した
+- `public/case-edit.html`：8つの「トップにも表示する」チェックボックスと、その説明文（ページ上部の`.fnote`）を削除
+- `cases` テーブルから `show_case_no_on_top`・`show_points_on_top`・`show_plaintiff_on_top`・
+  `show_defendant_on_top`・`show_judge_on_top`・`show_press_on_top`・`show_call_on_top`・
+  `show_related_on_top` の8列を削除（`functions/_common.js`・`functions/api/cases.js`・
+  `functions/api/cases/[id].js` からも参照を除去）。旧スキーマのDBを更新する場合は
+  `migrate_038_drop_show_on_top.sql` を実行すること
 
 ### （過去）events テーブルの列（2026-08-20〜21）
 

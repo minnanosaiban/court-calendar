@@ -712,11 +712,12 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .fixedcase{font-size:.9rem;padding:4px 0}
 .field .check{display:flex;align-items:center;gap:8px;font-size:.9rem;color:var(--ink)}
 .field .check input{width:auto}
-/* 欄に付く表示設定のチェック（「公開する」「トップにも表示する」）。欄名の直下・入力欄の上に置く。
+/* 欄に付く表示設定のチェック（「公開する」）。欄名の直下・入力欄の上に置く。
    .field .check の既定（.9rem・地色）のままだと、欄名（.8rem）より大きく同じ濃さになり、
    従属的な設定のほうが強く見えて欄の切れ目が読めなくなる。ここだけ「キャプション段」（.8rem・
-   --mut、.fnote と同じ強さ）まで落として、欄名 ＞ 中身 ＞ この設定、の順に強さを並べる。
-   1つの欄に複数個あるとき（事件番号）は横並び。2026-08-28 */
+   --mut、.fnote と同じ強さ）まで落として、欄名 ＞ 中身 ＞ この設定、の順に強さを並べる。2026-08-28
+   （「トップにも表示する」は応援ピックアップ廃止に伴い2026-09-05に削除。flex-wrapは複数個
+   並ぶ場合に備えて残す） */
 .checkrow{display:flex;flex-wrap:wrap;gap:2px 20px;margin-bottom:8px}
 .checkrow .check{font-size:.8rem;color:var(--mut)}
 .checkrow .check input{accent-color:var(--mut)}

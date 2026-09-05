@@ -194,19 +194,6 @@ window.CC = (function(){
     const list=events.filter(e=>e.date>=today && !isArchived(e.caseId)).sort(byDate);
     return list[0] ? list[0].caseId : null;
   }
-  // 最近開廷された（今日までにいちばん新しく期日があった）事件（トップ「応援ピックアップ」用）。
-  // 「傍聴に行ってきたよ！掲示板」は行った"あと"に書く場所なので、これから開かれる事件ではなく
-  // 実際に開廷があった事件を選ぶ。まだどの事件も開廷していない（全事件が未来の期日のみ）ときは
-  // nearestCase() にフォールバックする。
-  // ※ 2026-08-28、本人指示により当面「サンプル）情報公開請求をめぐる訴訟」に固定（下のPICKUP_OVERRIDE）。
-  //   自動選定に戻すときはこの定数をnullにするだけでよい
-  const PICKUP_OVERRIDE = "c53bfb741871f"; // サンプル）情報公開請求をめぐる訴訟
-  function pickupCase(){
-    if(PICKUP_OVERRIDE) return PICKUP_OVERRIDE;
-    const today=todayStr();
-    const list=events.filter(e=>e.date<=today && !isArchived(e.caseId)).sort(byDate);
-    return list.length ? list[list.length-1].caseId : nearestCase();
-  }
   function isArchived(caseId){
     const c=caseById(caseId);
     return !!(c && c.archivedAt);
@@ -474,23 +461,21 @@ window.CC = (function(){
     const points=(c.points||[]).map(p=>`<li>${escapeHtml(p)}</li>`).join("");
 
     // ファクトシート：最近の期日・手続・事件番号・争点・原告・被告・裁判官・掲載（値がある行だけ出す）。
-    // 事件番号〜掲載は、既定では事件ページ（full=true）でだけ出す。トップのピックアップカードにも
-    // 出すかどうかは項目ごとのチェックボックス（showXxxOnTop）で選べる（2026-08-28、事件番号は
-    // さらに「公開する」もチェックされている場合だけ）。詳しい情報が知りたい人は「詳細を見る」
-    // から先へ進んでもらう（2026-08-27）
+    // 事件番号〜掲載は事件ページ（full=true）でだけ出す。詳しい情報が知りたい人は「詳細を見る」
+    // から先へ進んでもらう（2026-08-27）。項目ごとに「トップにも表示する」を選べる仕組みは
+    // 応援ピックアップの廃止に伴い2026-09-05に削除した
     const nextRow = next
       ? factRow("期日",
           `<div>${escapeHtml(jpDate(next.date))}${next.time?" "+escapeHtml(next.time):""}${next.open===false?`<span class="round-closed">非公開・要確認</span>`:""}${next.reportMeeting?`<span class="round-note">期日報告会あり</span>`:""}</div>`+
           ([next.court,next.place].filter(Boolean).length?`<div>${escapeHtml([next.court,next.place].filter(Boolean).join(" "))}</div>`:"")
         ) + factRow("手続", next.type?escapeHtml(next.type):"")
       : "";
-    const caseNoRow = (c.caseNoPublic && (full || c.showCaseNoOnTop))
-      ? factRow("事件番号", courtLinesHtml(c.caseNo)) : "";
-    const pointsRow = (full || c.showPointsOnTop) ? factRow("争点", points?`<ul class="pts">${points}</ul>`:"") : "";
-    const plaintiffRow = (full || c.showPlaintiffOnTop) ? factRow("原告", partyNameHtml(c.plaintiffName)+partyLinksHtml(c.plaintiffLinks)) : "";
-    const defendantRow = (full || c.showDefendantOnTop) ? factRow("被告", partyNameHtml(c.defendantName)+partyLinksHtml(c.defendantLinks)) : "";
-    const judgeRow = (full || c.showJudgeOnTop) ? factRow("裁判官", c.judge?courtLinesHtml(c.judge):"") : "";
-    const pressRow = (full || c.showPressOnTop) ? factRow("掲載", c.press.length?`<ul class="pts">${c.press.map(line=>`<li>${linkify(line)}</li>`).join("")}</ul>`:"") : "";
+    const caseNoRow = (c.caseNoPublic && full) ? factRow("事件番号", courtLinesHtml(c.caseNo)) : "";
+    const pointsRow = full ? factRow("争点", points?`<ul class="pts">${points}</ul>`:"") : "";
+    const plaintiffRow = full ? factRow("原告", partyNameHtml(c.plaintiffName)+partyLinksHtml(c.plaintiffLinks)) : "";
+    const defendantRow = full ? factRow("被告", partyNameHtml(c.defendantName)+partyLinksHtml(c.defendantLinks)) : "";
+    const judgeRow = full ? factRow("裁判官", c.judge?courtLinesHtml(c.judge):"") : "";
+    const pressRow = full ? factRow("掲載", c.press.length?`<ul class="pts">${c.press.map(line=>`<li>${linkify(line)}</li>`).join("")}</ul>`:"") : "";
     const facts1 = nextRow+caseNoRow+pointsRow+plaintiffRow+defendantRow+judgeRow+pressRow;
 
     // 掲示板・事件本体（dcard）は、1つの塊として続けて出す（箱の中に箱、を解消するため）。
@@ -523,9 +508,6 @@ window.CC = (function(){
     if(full){
       html += callHtml(c) + relatedCasesHtml(c) + timelineHtml(caseId) + materialsListHtml(caseId);
     } else {
-      // ピックアップカードでも、項目ごとのチェックがある「裁判について」「関連裁判」は出す
-      // （編集リンク・タイムライン・訴訟資料一覧は事件ページだけの機能なのでここには出さない）
-      html += (c.showCallOnTop ? callHtml(c) : "") + (c.showRelatedOnTop ? relatedCasesHtml(c) : "");
       // 「詳細を見る」はカードの一番下・右下に置く（2026-09-04。タイトル・掲示板の事件名も
       // 事件ページへのリンクになってはいるが、本文を最後まで読んだ人が迷わず進める入口として、
       // カードの締めにも改めて置く）。見た目は掲示板の「報告を書く」（.bwrite）と同じ朱色の枠線ピルに
@@ -1183,10 +1165,6 @@ window.CC = (function(){
                       tags:$("cTags"), related:$("cRelated"), archivedAt:$("cArchivedAt"), closeType:$("cCloseType") };
     const cBoardEnabled=$("cBoardEnabled"), cBoardRestricted=$("cBoardRestricted");
     const cCaseNoPublic=$("cCaseNoPublic");
-    // 争点・当事者〜関連裁判の各項目を、トップのピックアップカードにも出すかの項目ごとのチェックボックス（2026-08-28）
-    const cShowOnTop = { caseNo:$("cShowCaseNoOnTop"), points:$("cShowPointsOnTop"), plaintiff:$("cShowPlaintiffOnTop"),
-                          defendant:$("cShowDefendantOnTop"), judge:$("cShowJudgeOnTop"), press:$("cShowPressOnTop"),
-                          call:$("cShowCallOnTop"), related:$("cShowRelatedOnTop") };
     const cNoticeFile=$("cNoticeFile"), cNoticeRemove=$("cNoticeRemove"), cNoticeNote=$("cNoticeNote"), cNoticeStatus=$("cNoticeStatus");
     const cCardFile=$("cCardFile"), cCardPreview=$("cCardPreview"), cCardRemove=$("cCardRemove"), cCardRemoveWrap=$("cCardRemoveWrap"), cCardStatus=$("cCardStatus");
     const cCardSquareFile=$("cCardSquareFile"), cCardSquarePreview=$("cCardSquarePreview"), cCardSquareRemove=$("cCardSquareRemove"), cCardSquareRemoveWrap=$("cCardSquareRemoveWrap"), cCardSquareStatus=$("cCardSquareStatus");
@@ -1585,14 +1563,6 @@ window.CC = (function(){
       updateIsPrivateNote();
       cCaseNoPublic.checked = c.caseNoPublic===true;
       updateCaseNoPublicNote();
-      cShowOnTop.caseNo.checked = c.showCaseNoOnTop===true;
-      cShowOnTop.points.checked = c.showPointsOnTop===true;
-      cShowOnTop.plaintiff.checked = c.showPlaintiffOnTop===true;
-      cShowOnTop.defendant.checked = c.showDefendantOnTop===true;
-      cShowOnTop.judge.checked = c.showJudgeOnTop===true;
-      cShowOnTop.press.checked = c.showPressOnTop===true;
-      cShowOnTop.call.checked = c.showCallOnTop===true;
-      cShowOnTop.related.checked = c.showRelatedOnTop===true;
       cFields.plaintiff.value=c.plaintiffName||""; cFields.defendant.value=c.defendantName||"";
       cFields.judge.value=c.judge||"";
       cFields.points.value=(c.points||[]).join("\n"); cFields.callText.value=c.callText||"";
@@ -1647,10 +1617,6 @@ window.CC = (function(){
         name, presenterId,
         isPrivate:cIsPrivate.checked, viewKey:cViewKey.value.trim(),
         caseNo:cFields.caseNo.value.trim(), caseNoPublic:cCaseNoPublic.checked,
-        showCaseNoOnTop:cShowOnTop.caseNo.checked, showPointsOnTop:cShowOnTop.points.checked,
-        showPlaintiffOnTop:cShowOnTop.plaintiff.checked, showDefendantOnTop:cShowOnTop.defendant.checked,
-        showJudgeOnTop:cShowOnTop.judge.checked, showPressOnTop:cShowOnTop.press.checked,
-        showCallOnTop:cShowOnTop.call.checked, showRelatedOnTop:cShowOnTop.related.checked,
         plaintiffName:cFields.plaintiff.value.trim(), defendantName:cFields.defendant.value.trim(),
         judge:cFields.judge.value.trim(),
         points:cFields.points.value.split("\n").map(s=>s.trim()).filter(Boolean),
@@ -2341,7 +2307,7 @@ window.CC = (function(){
     get images(){ return images; },
     get me(){ return me; },
     get loaded(){ return loaded; },
-    caseById, caseByName, presenterById, caseEvents, casePosts, caseMaterials, caseImages, nearestCase, pickupCase, nextEvent, eventLine, jpDate,
+    caseById, caseByName, presenterById, caseEvents, casePosts, caseMaterials, caseImages, nearestCase, nextEvent, eventLine, jpDate,
     likeHtml, toggleLike, bookmarkHtml, toggleBookmark, isArchived, iconHtml, presenterHeaderHtml,
     apiListPresenters, apiCreatePresenter, apiUpdatePresenter, apiDeletePresenter,
     apiUpdatePresenterIcon, apiDeletePresenterIcon, reloadPresenters, saveErr,
