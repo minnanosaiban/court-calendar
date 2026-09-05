@@ -31,7 +31,7 @@
     <div class="tags" id="tagFilters" style="margin-top:14px"></div>
     <div class="tabs" id="periodTabs"></div>
     <div class="sortrow">
-      <span class="favtoggle" id="favToggle" role="button" tabindex="0" aria-pressed="false"><i class="bi bi-bookmark" aria-hidden="true"></i> お気に入りのみ</span>
+      <span class="favtoggle" id="favToggle" role="button" tabindex="0" aria-pressed="false"><i class="bi bi-bookmark" id="favToggleIcon" aria-hidden="true"></i>お気に入りのみ</span>
       <span class="sortlink" id="sortToggle" role="button" tabindex="0"><i class="bi bi-arrow-down-up" aria-hidden="true"></i> <span id="sortLabel"></span></span>
     </div>
     <div class="card ucard" id="dlist"></div>
@@ -72,6 +72,7 @@
   const sortToggle=document.getElementById("sortToggle");
   const sortLabel=document.getElementById("sortLabel");
   const favToggle=document.getElementById("favToggle");
+  const favToggleIcon=document.getElementById("favToggleIcon");
   const dlistEl=document.getElementById("dlist");
   const statusEl=document.getElementById("status");
   let activeTag = new URLSearchParams(location.search).get("tag") || "";
@@ -181,6 +182,8 @@
     favOnly=!favOnly;
     favToggle.classList.toggle("on",favOnly);
     favToggle.setAttribute("aria-pressed",favOnly?"true":"false");
+    // 選択中は、しおりのアイコンを塗りつぶし（bi-bookmark-fill）にして一目で分かるようにする
+    favToggleIcon.className="bi "+(favOnly?"bi-bookmark-fill":"bi-bookmark");
     renderTabs(); renderList();
   }
   favToggle.addEventListener("click", toggleFavOnly);

@@ -464,10 +464,14 @@ a{color:inherit}
 .navbtns{color:var(--mut);font-size:.8rem;display:flex;gap:16px}
 .navbtns span{cursor:pointer;user-select:none}
 .navbtns span:hover{color:var(--ink)}
-/* カレンダー・「今後の期日」を、お気に入り登録した期日だけに絞り込むトグル（2026-08-29） */
-.favtoggle{margin-left:auto;color:var(--mut);font-size:.8rem;cursor:pointer;user-select:none}
-.favtoggle:hover{color:var(--ink)}
-.favtoggle.on{color:var(--stamp)}
+/* カレンダー・「今後の期日」を、お気に入り登録した期日だけに絞り込むトグル（2026-08-29）。
+   見た目は「報告を書く」（.bwrite a）と同じ枠線ピルにそろえる（2026-09-05）。選択中は
+   しおりのアイコンをbi-bookmark-fillに差し替え、赤く塗りつぶされた状態にする（JS側） */
+.favtoggle{display:inline-flex;align-items:center;gap:4px;margin-left:auto;background:none;
+  border:1px solid rgba(185,50,38,.35);border-radius:999px;padding:4px 12px;
+  font-size:.7rem;color:var(--stamp);cursor:pointer;user-select:none;line-height:1.5}
+.favtoggle:hover{border-color:rgba(185,50,38,.6)}
+.favtoggle .bi{font-size:.8rem;line-height:1;color:var(--stamp)}
 .cal-row{display:flex;flex-direction:column;gap:32px}
 .cal-block2{display:none}
 .month{font-family:"Shippori Mincho",serif;font-size:1.2rem;font-weight:600;

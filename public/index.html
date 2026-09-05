@@ -39,9 +39,9 @@
     </div>
   </header>
 
-  <!-- 応援ピックアップの節にあった、他ページへの導線（2026-09-05、ピックアップ本体の削除後もこれは残す） -->
-  <p class="jumplink"><a class="pillbtn" href="#cal-h">期日カレンダーを見る <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
-    <a class="pillbtn" href="cases.html">事件をさがす <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+  <!-- 応援ピックアップの節にあった、他ページへの導線（2026-09-05、ピックアップ本体の削除後もこれは残す。
+       「期日カレンダーを見る」は、このすぐ下がカレンダーなので2026-09-05に削除） -->
+  <p class="jumplink"><a class="pillbtn" href="cases.html">事件をさがす <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
     <a class="pillbtn" href="dates.html">期日をさがす <i class="bi bi-arrow-right" aria-hidden="true"></i></a></p>
 
   <!-- カレンダー：日付にカーソルを合わせる（タップする）とその日の予定が出て、クリックすると詳しいページへ -->
@@ -55,7 +55,7 @@
         <span id="todayBtn">今日</span>
       </div>
       <span class="favtoggle" id="favToggle" role="button" tabindex="0" aria-pressed="false">
-        <i class="bi bi-bookmark" aria-hidden="true"></i> お気に入りのみ
+        <i class="bi bi-bookmark" id="favToggleIcon" aria-hidden="true"></i>お気に入りのみ
       </span>
     </div>
     <!-- 凡例はカレンダーの上（印を見る前に意味が分かるように・2026-08-27） -->
@@ -341,10 +341,13 @@
   document.getElementById("next").addEventListener("click",()=>{view=new Date(view.getFullYear(),view.getMonth()+1,1);renderCalendars();});
   document.getElementById("todayBtn").addEventListener("click",()=>{view=CC.startOfMonth(new Date());renderCalendars();});
   const favToggle=document.getElementById("favToggle");
+  const favToggleIcon=document.getElementById("favToggleIcon");
   function toggleFavOnly(){
     favOnly=!favOnly;
     favToggle.classList.toggle("on",favOnly);
     favToggle.setAttribute("aria-pressed",favOnly?"true":"false");
+    // 選択中は、しおりのアイコンを塗りつぶし（bi-bookmark-fill）にして一目で分かるようにする
+    favToggleIcon.className="bi "+(favOnly?"bi-bookmark-fill":"bi-bookmark");
     closePopoverNow();
     renderCalendars();
     renderUpcoming();
