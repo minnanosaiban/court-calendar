@@ -102,14 +102,13 @@
   function rowHtml(ev){
     const c=CC.caseById(ev.caseId);
     const d=CC.parseYmd(ev.date);
-    const place=[ev.court,ev.place].filter(Boolean).join(" ");
     return `<div class="u" data-open="${CC.escapeAttr(ev.caseId)}" role="link" tabindex="0">
       <span class="ubar${ev.open===false?" shut":""}" aria-hidden="true"></span>
       ${c?CC.presenterHeaderHtml(c):""}
       <div class="ubody">
         <div class="ud"><b>${d.getMonth()+1}/${d.getDate()}</b>（${CC.WD[d.getDay()]}）${ev.time?" "+CC.escapeHtml(ev.time):""}</div>
         <div class="ut">${CC.escapeHtml(ev.case)}</div>
-        <div class="um">${CC.typePlaceHtml(ev.type,place)||"&nbsp;"} ${CC.bookmarkHtml(ev)}</div>
+        <div class="um">${CC.typePlaceHtml(ev.type,ev.court,ev.place)||"&nbsp;"} ${CC.bookmarkHtml(ev)}</div>
       </div>
       <i class="bi bi-chevron-double-right u-arrow" aria-hidden="true"></i>
     </div>`;

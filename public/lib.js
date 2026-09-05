@@ -271,15 +271,31 @@ window.CC = (function(){
     return `<button type="button" class="like${c.liked?" on":""}" data-like="${escapeAttr(c.id)}" aria-pressed="${c.liked?"true":"false"}" aria-label="いいね">`+
       `<i class="bi ${c.liked?"bi-heart-fill":"bi-heart"}" aria-hidden="true"></i><span class="like-n">${c.likes||0}</span></button>`;
   }
-  // 期日一覧の「種別 ／ 場所」（例：第1回口頭弁論 ／ 大宮簡易裁判所 2号法廷）。
-  // PCでは全角スラッシュでつないだ1行のまま、スマホ（.tp-sep参照）では種別・場所を
-  // それぞれ改行して2行で見せる。トップ「今後の期日」・カレンダーのプレビュー・
-  // 「期日をさがす」の一覧、3か所で共通に使う（2026-09-05）
-  function typePlaceHtml(type, place){
-    const t=String(type||"").trim(), p=String(place||"").trim();
-    if(t && p) return `<span class="tp tp-type">${escapeHtml(t)}</span><span class="tp-sep"> ／ </span><span class="tp tp-place">${escapeHtml(p)}</span>`;
+  // 裁判所名の略称（東京地方裁判所→東京地裁、大宮簡易裁判所→大宮簡裁 等）。
+  // スマホでは正式名称だと長すぎるため、一覧ではこちらを出す（.court-abbr参照・2026-09-05）
+  function courtAbbr(name){
+    return String(name||"")
+      .replace(/最高裁判所$/, "最高裁")
+      .replace(/高等裁判所$/, "高裁")
+      .replace(/地方裁判所$/, "地裁")
+      .replace(/家庭裁判所$/, "家裁")
+      .replace(/簡易裁判所$/, "簡裁");
+  }
+  // 期日一覧の「種別 ／ 裁判所＋法廷」（例：第1回口頭弁論 ／ 大宮簡易裁判所 2号法廷）。
+  // PCでは全角スラッシュでつないだ1行・裁判所は正式名称のまま、スマホ（.tp-sep参照）では
+  // 種別・場所をそれぞれ改行して2行にし、裁判所名も略称にする（.court-full/.court-abbrを
+  // CSSの@mediaで出し分け）。トップ「今後の期日」・カレンダーのプレビュー・「期日をさがす」の
+  // 一覧、3か所で共通に使う（2026-09-05）
+  function typePlaceHtml(type, court, place){
+    const t=String(type||"").trim(), c=String(court||"").trim(), pl=String(place||"").trim();
+    const abbr = c ? courtAbbr(c) : "";
+    const courtHtml = c
+      ? (abbr===c ? escapeHtml(c) : `<span class="court-full">${escapeHtml(c)}</span><span class="court-abbr">${escapeHtml(abbr)}</span>`)
+      : "";
+    const p = [courtHtml, pl?escapeHtml(pl):""].filter(Boolean).join(" ");
+    if(t && p) return `<span class="tp tp-type">${escapeHtml(t)}</span><span class="tp-sep"> ／ </span><span class="tp tp-place">${p}</span>`;
     if(t) return `<span class="tp tp-type">${escapeHtml(t)}</span>`;
-    if(p) return `<span class="tp tp-place">${escapeHtml(p)}</span>`;
+    if(p) return `<span class="tp tp-place">${p}</span>`;
     return "";
   }
   // 期日のお気に入り。❤いいね（事件単位・件数表示あり）とは別に、期日単位・件数表示なしの自分専用の目印

@@ -597,10 +597,15 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .pop-title{font-size:.9rem;font-weight:500;margin-top:1px;font-family:"Shippori Mincho",serif}
 .pop-meta{font-size:.8rem;color:var(--mut);margin-top:1px}
 /* 種別／場所（CC.typePlaceHtml、.pop-meta と .um で共通）。PCは全角スラッシュでつないだ1行のまま、
-   スマホは読みやすいよう種別・場所をそれぞれ改行して2行にする（2026-09-05） */
+   スマホは読みやすいよう種別・場所をそれぞれ改行して2行にする（2026-09-05）。
+   裁判所名（.court-full＝正式名称／.court-abbr＝略称）もあわせて出し分ける：
+   PCは正式名称、スマホは長すぎるため略称（東京地方裁判所→東京地裁 等）にする */
+.court-abbr{display:none}
 @media(max-width:559.98px){
   .tp-sep{display:none}
   .tp-type{display:block}
+  .court-full{display:none}
+  .court-abbr{display:inline}
 }
 /* プレビュー下の操作行：右下に「閉じる×」 */
 .pop-foot{display:flex;justify-content:flex-end;align-items:center;gap:16px;margin-top:4px;padding:8px 12px 4px;border-top:1px solid var(--tint)}
@@ -611,6 +616,11 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 /* ---- upcoming ---- */
 /* 「期日をさがす」（dates.html）の結果一覧：検索欄・タブなどの操作と分けるため白い面に載せる */
 .ucard{padding:8px 12px}
+/* スマホでは、トップ「今後の期日」（.ulist）と同じく白い面（.card）に載せず地の上に直接置く
+   （2026-09-05。行（.u）自体が背景・角丸を持つので、外側の箱が無くても見分けはつく） */
+@media(max-width:559.98px){
+  #dlist{background:none;padding:0;border-radius:0}
+}
 /* トップの「今後の期日」：白い面に載せず、地の上に直接置く（2026-08-27。トップは面が多すぎたため。
    箱の内側12pxが無くなるぶん、特にスマホで左右が広がり事件名の折り返しが減る） */
 /* 見出しを置かないので、カレンダーとの間は自前の余白で取る（節の区切り＝32px） */
