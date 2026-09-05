@@ -164,14 +164,6 @@ a{color:inherit}
 .presenter-x{color:var(--mut);font-size:.85rem;line-height:1}
 .presenter-x:hover{color:var(--ink)}
 .d-title{font-family:"Shippori Mincho",serif;font-size:1.6rem;font-weight:600;line-height:1.4}
-/* トップのピックアップカードだけ：事件名を事件ページへのリンクにする。事件名（.board-name-link）と
-   同じく普段は下線を引かず地の文と同じ見た目のまま（2026-08-29）。触れると赤い下線が出て、
-   隣のアイコン（問題提起人ページへの別リンク）経由の移動と区別できるようにする（2026-08-30） */
-/* 太さは自動だと文字が大きいぶん(1.6rem)太くなりすぎるので、日付の下線(.pop-date等・.8rem)と
-   同じ1pxに固定する（2026-08-30） */
-.d-title-link{text-decoration:underline;text-decoration-color:transparent;text-decoration-thickness:1px;
-  text-underline-offset:3px;transition:text-decoration-color .15s ease}
-.d-title-link:hover{text-decoration-color:var(--stamp)}
 .d-body{font-size:.9rem;margin-top:8px}
 .mut{color:var(--mut)}
 /* タイトル行 */
@@ -275,8 +267,6 @@ a{color:inherit}
 .notice-frame iframe{display:block;width:100%;aspect-ratio:210/297;border:0}
 /* 画像は決め打ちの比率を持たせず、画像自身の縦横比のまま幅いっぱいに出す（どの向きでも余白が出ない） */
 .notice-frame img{display:block;width:100%;height:auto;object-fit:contain}
-/* トップのピックアップカードも同じ大きさで出す（2026-08-27：横長1.9:1に切り詰めていたのをやめ、
-   案内チラシは事件ページと同じくA4縦・原寸の比率で拡大表示） */
 .pts{list-style:none;margin-top:8px;font-size:.9rem}
 /* ファクトシート内（争点・掲載）では、.pts自身のmargin-topが dt の位置合わせ用padding-topと
    二重にかかり、他の行（.court-lineや素のテキスト）よりラベルとの間が8px広くなって
@@ -392,8 +382,6 @@ a{color:inherit}
 .board-id-main{min-width:0;flex:1}
 .board-name{font-size:.9rem}
 .board-id .bwrite-top{margin-top:4px}
-/* 下線などの装飾はしない。色は地の文（.board-name）をそのまま継承する（a{color:inherit}が既定で効く） */
-.board-name-link{text-decoration:none}
 /* 問題提起人名（本来は.d-titleの下に置く前提でdisplay:block）を、掲示板枠では事件名と同じ行に
    並べて出す（2026-08-29）。字下げ用のmargin-topも打ち消す */
 .board-name .presenter-name{display:inline;margin-top:0}
@@ -412,9 +400,7 @@ a{color:inherit}
 .bubble .del{color:var(--mut);font-size:.8rem;margin-left:.5em;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .board-empty{color:var(--mut);font-size:.9rem;margin-top:12px}
 .board-empty a{color:var(--ink);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
-/* 右下（既定の位置）。左上にも同じボタンを .bwrite-top で重ねて置く（book/boardHtml参照）。
-   ピックアップカード最下部の「詳細を見る」（caseCardHtml）も、投稿ボタンではなくリンクだが
-   見た目をそろえるためこのクラスをそのまま流用している（2026-09-04） */
+/* 右下（既定の位置）。左上にも同じボタンを .bwrite-top で重ねて置く（boardHtml参照） */
 .bwrite{margin-top:12px;text-align:right}
 .bwrite-top{text-align:left}
 /* 掲示板の主役は白い吹き出しなので、ボタンには塗り・影を持たせず枠線だけにして競合を避ける。
@@ -562,7 +548,7 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .ccard{display:flex;gap:16px;padding:16px;cursor:pointer}
 .ccard:hover{box-shadow:0 2px 12px rgba(0,0,0,.07)}
 .cbody{min-width:0;flex:1}
-/* 事件名に触れると赤い下線（.pop-date・.ud・.d-title-linkと同じ扱い）、行末の矢印(.c-arrow)も
+/* 事件名に触れると赤い下線（.pop-date・.udと同じ扱い）、行末の矢印(.c-arrow)も
    同時に少し動く。カードの他の部分に触れたときだけ出て、アイコン（問題提起人ページへの別リンク）に
    触れている間は:has()で除外する＝アイコン経由の移動と区別できる（2026-08-30） */
 .ctitle{font-family:"Shippori Mincho",serif;font-size:1.2rem;font-weight:600;line-height:1.5;

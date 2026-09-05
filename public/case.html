@@ -104,7 +104,7 @@
     if(!caseId && legacyName && CC.loaded){
       const c=CC.caseByName(legacyName); if(c) caseId=c.id;
     }
-    CC.renderCaseDetail(caseBody, caseId || legacyName, {full:true});
+    CC.renderCaseDetail(caseBody, caseId || legacyName);
     // 「Xさんとしてログイン中です」は、この事件のご本人であれば上の自己確認バーに出ているので、
     // ページ下部（footer）では重ねて出さない（presenter.htmlも2026-08-30から同じ扱いに揃えた）
     CC.renderStatus(statusEl, {hidePresenterSelf:true});
@@ -113,7 +113,7 @@
     // 自己確認バーは画像・タイトルより上、ページの一番上に出す（2026-08-30）。
     // caseSelfBarのinnerHTMLは毎回作り直すので、中のリンクは毎回付け直す
     const selfBarEl = document.getElementById("caseSelfBar");
-    selfBarEl.innerHTML = c ? CC.caseSelfBarHtml(c, true) : "";
+    selfBarEl.innerHTML = c ? CC.caseSelfBarHtml(c) : "";
     // 「自分の事件一覧」への文字リンクは廃止した。caseSelfBarHtml内のアイコン
     // （.cicon-link、presenterHeaderHtml）が同じリンク先を兼ねる（2026-09-01）
     const pwLink = document.getElementById("caseSelfPwLink");

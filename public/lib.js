@@ -322,7 +322,7 @@ window.CC = (function(){
     const xLink = `<a class="presenter-x" href="${escapeAttr(c.presenterXUrl)}" target="_blank" rel="noopener" aria-label="Xで見る"><i class="bi bi-twitter-x" aria-hidden="true"></i></a>`;
     return `<span class="presenter-line">${nameLink}${xLink}</span>`;
   }
-  // 事件ページ（full）の一番上に出す、編集できる人だけのバー。運営（事務局）・ご本人（この事件の
+  // 事件ページの一番上に出す、編集できる人だけのバー。運営（事務局）・ご本人（この事件の
   // 問題提起人）としてログイン中のどちらでも「＋ 事件情報を編集」を出す（2026-08-30。以前はdcardの
   // 中、タイトルの上に小さく置いていたが、写真・掲示板より下でスクロールしないと見えず、初見の人が
   // 見つけづらかったため、ここへ一本化した）。ご本人のときは、case-edit.htmlの自己確認バーと
@@ -332,8 +332,8 @@ window.CC = (function(){
   // です」はcase.html・presenter.htmlのどちらでも廃止しここへ一本化。画像等より上、ページの
   // 一番上に出したいので、caseCardHtmlの中ではなくcase.html側の別要素（#caseSelfBar）に
   // 呼び出し側が直接描く。クリック処理もcase.html側で、innerHTML差し替え後に付け直す）
-  function caseSelfBarHtml(c, full){
-    if(!full || !canEditCase(c.id)) return "";
+  function caseSelfBarHtml(c){
+    if(!canEditCase(c.id)) return "";
     // 他の.selfbar内リンク（下線だけの地味なテキスト）と同じ並びだと素通りされてしまうので、
     // .edit-fab（右端に寄せた正円のアイコンボタン）にして目立たせる。アイコン・バッジ等は左側に
     // まとめ、editLinkはDOM順の最後に置いてmargin-left:autoで単独で右へ押し出す（2026-08-31。
@@ -452,30 +452,28 @@ window.CC = (function(){
   }
 
   // ================= 事件のカード =================
-  // full=false: トップ「最近の期日」用（タイトル〜掲示板＋「詳細を見る」）
-  // full=true : 事件ページ用（さらに よびかけ・関連裁判・タイムライン・訴訟資料一覧）
-  function caseCardHtml(caseId, full){
+  // 事件ページ（case.html）の中身一式：タイトル〜掲示板〜よびかけ・関連裁判・タイムライン・訴訟資料一覧。
+  // 以前はトップページの「応援ピックアップ」用に、これの一部だけを出す簡易版（full=false）もあったが、
+  // 応援ピックアップの廃止（2026-09-05）に伴いその分岐は削除し、常にこの全部入りの内容を返す
+  function caseCardHtml(caseId){
     const c = caseById(caseId);
     if(!c) return null;
     const next = nextEvent(caseId);
     const points=(c.points||[]).map(p=>`<li>${escapeHtml(p)}</li>`).join("");
 
-    // ファクトシート：最近の期日・手続・事件番号・争点・原告・被告・裁判官・掲載（値がある行だけ出す）。
-    // 事件番号〜掲載は事件ページ（full=true）でだけ出す。詳しい情報が知りたい人は「詳細を見る」
-    // から先へ進んでもらう（2026-08-27）。項目ごとに「トップにも表示する」を選べる仕組みは
-    // 応援ピックアップの廃止に伴い2026-09-05に削除した
+    // ファクトシート：最近の期日・手続・事件番号・争点・原告・被告・裁判官・掲載（値がある行だけ出す）
     const nextRow = next
       ? factRow("期日",
           `<div>${escapeHtml(jpDate(next.date))}${next.time?" "+escapeHtml(next.time):""}${next.open===false?`<span class="round-closed">非公開・要確認</span>`:""}${next.reportMeeting?`<span class="round-note">期日報告会あり</span>`:""}</div>`+
           ([next.court,next.place].filter(Boolean).length?`<div>${escapeHtml([next.court,next.place].filter(Boolean).join(" "))}</div>`:"")
         ) + factRow("手続", next.type?escapeHtml(next.type):"")
       : "";
-    const caseNoRow = (c.caseNoPublic && full) ? factRow("事件番号", courtLinesHtml(c.caseNo)) : "";
-    const pointsRow = full ? factRow("争点", points?`<ul class="pts">${points}</ul>`:"") : "";
-    const plaintiffRow = full ? factRow("原告", partyNameHtml(c.plaintiffName)+partyLinksHtml(c.plaintiffLinks)) : "";
-    const defendantRow = full ? factRow("被告", partyNameHtml(c.defendantName)+partyLinksHtml(c.defendantLinks)) : "";
-    const judgeRow = full ? factRow("裁判官", c.judge?courtLinesHtml(c.judge):"") : "";
-    const pressRow = full ? factRow("掲載", c.press.length?`<ul class="pts">${c.press.map(line=>`<li>${linkify(line)}</li>`).join("")}</ul>`:"") : "";
+    const caseNoRow = c.caseNoPublic ? factRow("事件番号", courtLinesHtml(c.caseNo)) : "";
+    const pointsRow = factRow("争点", points?`<ul class="pts">${points}</ul>`:"");
+    const plaintiffRow = factRow("原告", partyNameHtml(c.plaintiffName)+partyLinksHtml(c.plaintiffLinks));
+    const defendantRow = factRow("被告", partyNameHtml(c.defendantName)+partyLinksHtml(c.defendantLinks));
+    const judgeRow = factRow("裁判官", c.judge?courtLinesHtml(c.judge):"");
+    const pressRow = factRow("掲載", c.press.length?`<ul class="pts">${c.press.map(line=>`<li>${linkify(line)}</li>`).join("")}</ul>`:"");
     const facts1 = nextRow+caseNoRow+pointsRow+plaintiffRow+defendantRow+judgeRow+pressRow;
 
     // 掲示板・事件本体（dcard）は、1つの塊として続けて出す（箱の中に箱、を解消するため）。
@@ -487,34 +485,21 @@ window.CC = (function(){
     // 「＋ 事件情報を編集」はページ最上部の自己確認バー（caseSelfBarHtml）に一本化した（2026-08-30。
     // 以前はここ＝dcardの一番上にも小さく出していたが、写真・掲示板より下でスクロールしないと
     // 見えず、初見の人が見つけづらかったため廃止）
-    const galHtml = full ? galleryHtml(caseId) : "";
-    let html = galHtml + boardHtml(caseId, full) + `
+    let html = galleryHtml(caseId) + boardHtml(caseId) + `
       <div class="card dcard">
         <div class="d-head">
           ${presenterHeaderHtml(c)}
           <div class="d-head-main">
-            <h2 class="d-title">${full
-              ? escapeHtml(c.name)
-              : `<a class="d-title-link" href="case?id=${encodeURIComponent(c.id)}">${escapeHtml(c.name)}</a>`
-            } ${likeHtml(c)}</h2>
+            <h2 class="d-title">${escapeHtml(c.name)} ${likeHtml(c)}</h2>
             ${presenterNameHtml(c)}
           </div>
         </div>
         ${tagsHtml(c)}
-        ${full ? shareHtml(c) : ""}
+        ${shareHtml(c)}
         ${facts1?`<dl class="facts">${facts1}</dl>`:""}
-        ${noticeHtml(c, full)}`;
+        ${noticeHtml(c)}`;
 
-    if(full){
-      html += callHtml(c) + relatedCasesHtml(c) + timelineHtml(caseId) + materialsListHtml(caseId);
-    } else {
-      // 「詳細を見る」はカードの一番下・右下に置く（2026-09-04。タイトル・掲示板の事件名も
-      // 事件ページへのリンクになってはいるが、本文を最後まで読んだ人が迷わず進める入口として、
-      // カードの締めにも改めて置く）。見た目は掲示板の「報告を書く」（.bwrite）と同じ朱色の枠線ピルに
-      // そろえる（別クラスに分けず .bwrite をそのまま流用：見た目を完全に一致させ、意匠がずれる
-      // 心配をなくすため。中身は data-openpost の投稿ボタンではなく素のリンク）
-      html += `<p class="bwrite"><a href="case?id=${encodeURIComponent(c.id)}"><i class="bi bi-arrow-right" aria-hidden="true"></i>詳細を見る</a></p>`;
-    }
+    html += callHtml(c) + relatedCasesHtml(c) + timelineHtml(caseId) + materialsListHtml(caseId);
     html += `</div>`;
     return html;
   }
@@ -524,9 +509,8 @@ window.CC = (function(){
   // 拡大はブラウザの標準機能・別タブで開いた先の画像表示に任せる）。isImageでないPDF分岐は、制限前に
   // アップロード済みの既存データ（PDF・PNG）を引き続き表示するための後方互換（新規には出てこない）。
   // PDFはブラウザのネイティブビューアで表示・拡大できる（埋め込みが効かない環境＝Android端末の一部に
-  // 備えて「新しいタブで開く」を必ず添える）。トップのピックアップカード（!full）
-  // でも事件ページ（full）と同じ大きさで出す（2026-08-27：以前は低めに切り詰めていたが拡大表示に変更）
-  function noticeHtml(c, full){
+  // 備えて「新しいタブで開く」を必ず添える）。原寸で拡大表示する（2026-08-27：以前は低めに切り詰めていたが変更）
+  function noticeHtml(c){
     if(!c.noticeUrl) return "";
     const isImage = c.noticeMime==="image/png" || c.noticeMime==="image/jpeg";
     // 埋め込み側はツールバー（拡大・ページ送り・印刷・ダウンロードのアイコン列）を隠してすっきりさせる。
@@ -536,12 +520,9 @@ window.CC = (function(){
     const body = isImage
       ? `<img src="${escapeAttr(c.noticeUrl)}" alt="${escapeAttr(c.noticeFileName||"期日案内")}" loading="lazy">`
       : `<iframe src="${escapeAttr(c.noticeUrl)}#toolbar=0&navpanes=0" title="${escapeAttr(c.noticeFileName||"期日案内")}" loading="lazy"></iframe>`;
-    // 見出し「期日案内」の隣に「（新しいタブで開く）」を畳み込む（full・!full共通、2026-08-29）。
-    // 「詳細を見る」は以前ここ（見出しの右）に置いていたが、2026-09-04にカード最下部・右下へ
-    // 移設した（caseCardHtml参照。チラシが無い事件にも出したいため、チラシの有無で出たり消えたり
-    // するここからは切り離した）
+    // 見出し「期日案内」の隣に「（新しいタブで開く）」を畳み込む（2026-08-29）
     const head = `<span class="notice-lab">期日案内<a class="notice-lab-link" href="${escapeAttr(c.noticeUrl)}" target="_blank" rel="noopener">（新しいタブで開く <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>）</a></span>`;
-    return `<div class="notice${full?"":" compact"}">
+    return `<div class="notice">
       <div class="notice-head">${head}</div>
       <div class="notice-frame">${body}</div>
     </div>`;
@@ -766,7 +747,7 @@ window.CC = (function(){
   function writeBtnHtml(caseId){
     return `<a data-openpost="${escapeAttr(caseId)}"><i class="bi bi-chat-left-text" aria-hidden="true"></i>報告を書く</a>`;
   }
-  function boardHtml(caseId, full){
+  function boardHtml(caseId){
     const c = caseById(caseId);
     // 事件ごとに掲示板を非表示にできる（2026-08-25）。非表示なら既存の報告も含めて丸ごと出さない
     if(c && c.boardEnabled===false) return "";
@@ -790,14 +771,10 @@ window.CC = (function(){
       // 掲示板だけが独立した箱になったので、どの事件の掲示板かが分かるようアイコン・事件名・いいねを添える。
       // アイコン（見出しの「傍」・下の事件カードのアイコンと左端がそろう）の右に、事件名・「報告を書く」を
       // 縦に2段重ねる（2026-08-24。アイコンが56pxと大きくなり、事件名の1行だけでは右に余白が余るため）。
-      // 事件名は事件ページへのリンクにする（下線などの装飾はしない）。ただし事件ページ自身では
-      // 自分へのリンクになってしまうので、そこだけは素のテキストのまま。
+      // 事件名はここが事件ページ自身なので素のテキストのまま（自分自身へのリンクにはしない）。
       // アイコンは事件詳細ページの見出しと同じく、問題提起人の他の事件一覧（presenter.html）へのリンクにする
       (c?`<div class="board-id">${presenterHeaderHtml(c)}<div class="board-id-main">`+
-          `<p class="d-title board-name">${presPart?presPart+"　":""}${full
-            ? escapeHtml(c.name)
-            : `<a class="board-name-link" href="case?id=${encodeURIComponent(c.id)}">${escapeHtml(c.name)}</a>`
-          } ${likeHtml(c)}</p>`+
+          `<p class="d-title board-name">${presPart?presPart+"　":""}${escapeHtml(c.name)} ${likeHtml(c)}</p>`+
           // 左上（事件名の下）にも書き込みボタンを置く。長い報告一覧を下までスクロールしなくても書き始められる
           (showWriteBtn?`<p class="bwrite bwrite-top">${writeBtnHtml(caseId)}</p>`:"")+
         `</div></div>`:"");
@@ -939,9 +916,9 @@ window.CC = (function(){
     }catch(err){ btn.disabled=false; }
   }
 
-  // 事件のカードを、指定した入れ物に描く（トップの「最近の期日」／事件ページ共通）
-  function renderCaseDetail(container, caseId, opts){
-    const full = !!(opts && opts.full);
+  // 事件のカードを、指定した入れ物に描く（事件ページ用。以前はトップの「最近の期日」でも
+  // 使っていたが、応援ピックアップの廃止に伴い2026-09-05に事件ページ専用になった）
+  function renderCaseDetail(container, caseId){
     if(!loaded){
       container.innerHTML = `<div class="card"><p class="empty-msg">読み込んでいます…</p></div>`;
       return;
@@ -950,7 +927,7 @@ window.CC = (function(){
       container.innerHTML = `<div class="card"><p class="empty-msg">これから先の期日は、まだ登録されていません。</p></div>`;
       return;
     }
-    const html = caseCardHtml(caseId, full);
+    const html = caseCardHtml(caseId);
     if(!html){
       container.innerHTML =
         `<div class="card"><p class="empty-msg">その事件は見つかりませんでした。</p>`+
@@ -958,11 +935,11 @@ window.CC = (function(){
       return;
     }
     container.innerHTML = html;
-    wireCaseDetail(container, caseId, opts);
+    wireCaseDetail(container, caseId);
   }
 
-  function wireCaseDetail(container, caseId, opts){
-    const rerender=()=>renderCaseDetail(container, caseId, opts);
+  function wireCaseDetail(container, caseId){
+    const rerender=()=>renderCaseDetail(container, caseId);
     container.querySelectorAll("[data-gal]").forEach(gal=>wireGallery(gal));
     // 画像・期日・資料の追加・編集・並び替えは、すべて事件情報の編集ページ（case-edit.html）への
     // 普通のリンクになった（2026-08-27）。ここでのJSでの配線は不要
