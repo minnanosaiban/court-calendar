@@ -540,10 +540,10 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
   #ceTierPick .c-arrow{align-self:flex-end;margin-top:-8px}
 }
 /* 掲載レベルの選択カードは3枚とも常にグレー地にし、いま選んでいるカードだけ内側に朱色の細線を
-   引いて示す（カードは選び直せるタブとして常に出し続けるので、色の面ではなく線1本の差にした。
-   2026-09-01） */
+   引いて示していたが（2026-09-01）、選んでいるカードをもっと一目で分かるようにするため、
+   2026-09-05にうすい赤の背景（.cell.has・.bpanelと同じ色）も敷くよう変更した */
 #ceTierPick .ccard{background:var(--tint)}
-#ceTierPick .ccard.on{box-shadow:inset 0 0 0 .5px var(--stamp)}
+#ceTierPick .ccard.on{background:rgba(185,50,38,.055);box-shadow:inset 0 0 0 .5px var(--stamp)}
 #ceTierPick .ccard.on:hover{box-shadow:inset 0 0 0 .5px var(--stamp),0 2px 12px rgba(0,0,0,.07)}
 /* 期日をさがす：並べ替えの切り替え（期日が古い順⇄新しい順）。タブの下・一覧の上に右寄せで置く */
 .sortrow{display:flex;justify-content:flex-end;gap:16px;flex-wrap:wrap;margin:8px 4px 12px}
@@ -800,7 +800,7 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 /* タイトルの隣に「入力は公開情報」の注意を添える（2026-08-30）。折り返しても崩れないよう
    align-items:baseline＋flex-wrap（.ce-title 側の margin-top は行が2つに分かれても保つ） */
 .ce-title-row{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 14px}
-.ce-title-warn{font-size:.8rem;color:var(--stamp)}
+.ce-title-warn{font-size:.8rem;color:var(--stamp);font-weight:600}
 .ce-case{font-size:.9rem;color:var(--mut);margin-top:2px}
 /* case-edit.htmlでは事件名をタイトルの上に置く（2026-09-01）。事件名がタイトルに寄り添うよう、
    間の余白は上（事件名側）に持たせ、直後のタイトルは詰める */
