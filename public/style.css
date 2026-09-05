@@ -850,8 +850,9 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .imove a{color:var(--faint);font-size:.9rem;cursor:pointer;text-decoration:none}
 .imove a:hover{color:var(--ink)}
 /* 画像・期日・資料（とニックネームの管理画面）を追加・編集するときのグレー地の箱。
-   グレー地だけだと外形が読み取りにくいため、細い黒枠で外枠を囲む（2026-09-05） */
-.ieditor{background:var(--tint);border:1px solid var(--ink);border-radius:12px;padding:16px;margin:4px 0}
+   グレー地だけだと外形が読み取りにくいため、細い黒枠で外枠を囲む（2026-09-05）。
+   枠線は var(--ink) だと1px幅では見出し文字ほど濃く見えなかったため、純粋な黒にした */
+.ieditor{background:var(--tint);border:1px solid #000;border-radius:12px;padding:16px;margin:4px 0}
 /* 「閉じる」「保存」は枠の右上（見出しと同じ行）に置く。下の保存バーの「保存」との
    被りを避けるため（2026-08-30。以前は下部.ifootにあった） */
 .ieditor .ihead{font-size:.8rem;color:var(--mut);margin-bottom:12px;
