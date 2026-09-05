@@ -157,6 +157,16 @@ a{color:inherit}
   white-space:nowrap;padding:4px 10px;border-radius:6px;
   opacity:0;pointer-events:none;transition:opacity .12s;z-index:20}
 [data-tip]:hover::after,[data-tip]:focus-visible::after{opacity:1}
+/* 「今後の期日」「期日をさがす」「カレンダーのプレビュー」の行は、行全体が事件ページへの
+   リンクで、その中にアイコン（問題提起人ページへの別リンク）が入れ子になっている。PCは
+   ホバーで区別できる（アイコンに乗ると行の矢印・下線が動かない）が、スマホにはホバーが
+   無くこの区別が効かず、事件ページに行きたいのにアイコンを押してしまう事故が起きていた。
+   スマホではアイコンへのリンクを無効にし、行のどこを押しても事件ページへ行くようにする
+   （pointer-events:noneでクリックを素通しし、行側のクリック判定に任せる。当事者ページへは
+   事件ページ側のアイコン／ニックネームから行ける。見た目は変えない・2026-09-05） */
+@media(max-width:559.98px){
+  .u .cicon-link,.pop-row .cicon-link{pointer-events:none}
+}
 /* 事件名の下に添える、問題提起人のニックネーム（presenter.htmlへのリンク）。アイコンの下だと
    幅が狭く長い名前が省略されてしまうため、タイトルの下の広い幅で全文出す（2026-08-26） */
 .presenter-name{display:block;font-family:"Zen Kaku Gothic New",sans-serif;font-size:.8rem;
