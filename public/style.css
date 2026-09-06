@@ -573,7 +573,10 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .sortlink{display:inline-flex;align-items:center;gap:4px;font-size:.8rem;color:var(--mut);cursor:pointer}
 .sortlink:hover{color:var(--ink)}
 .sortlink .bi{font-size:.8rem;line-height:1}
-.ccard{display:flex;gap:16px;padding:16px;cursor:pointer}
+/* text-decoration:noneは.ccardを<a>で使う場合の保険（ツール紹介カード、2026-09-07）。
+   <div>で使う既存の事件カードには元々下線が無いので影響なし。中の.ctitleが自前の下線
+   （hoverで色が付く）を持っているので、外側のアンカーの既定下線が透けて見えるのを防ぐ */
+.ccard{display:flex;gap:16px;padding:16px;cursor:pointer;text-decoration:none}
 .ccard:hover{box-shadow:0 2px 12px rgba(0,0,0,.07)}
 .cbody{min-width:0;flex:1}
 /* 事件名に触れると赤い下線（.pop-date・.udと同じ扱い）、行末の矢印(.c-arrow)も
@@ -587,6 +590,16 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .ccard:hover:not(:has(.cicon-link:hover)) .c-arrow{transform:translateX(3px)}
 .cnext{font-size:.8rem;color:var(--mut);margin-top:4px;font-variant-numeric:tabular-nums}
 .cnext b{color:var(--stamp);font-weight:600;margin-right:.4em}
+
+/* ---- 訴訟準備に使えるツール（トップページ、姉妹アプリの紹介カード）2026-09-07 ----
+   カード本体は事件一覧の.card.ccard（.cbody/.ctitle/.c-arrow）をそのまま流用。
+   ここで足すのはアイコンバッジ(.ticon)と説明文(.tdesc)、並べる格子(.toolgrid)だけ */
+.toolgrid{display:grid;gap:12px;margin-top:16px}
+@media(min-width:560px){.toolgrid{grid-template-columns:1fr 1fr}}
+/* .stampと同じ寸法・線・色（52px角丸バッジ）だが、こちらは回転させずアイコングリフを載せる */
+.ticon{flex:none;align-self:center;width:52px;height:52px;border:2.5px solid var(--stamp);
+  border-radius:8px;display:grid;place-content:center;color:var(--stamp);font-size:1.3rem}
+.tdesc{font-size:.9rem;color:var(--mut);margin-top:4px;line-height:1.6}
 .cfoot{display:flex;align-items:center;gap:12px;margin-top:8px}
 .cfoot .tags{margin-top:0}
 .clike{margin-left:auto;font-size:.8rem;color:var(--mut);white-space:nowrap}
