@@ -260,7 +260,8 @@ export const MATERIAL_MIMES = { "application/pdf": "pdf", "image/png": "png", "i
 export const MATERIAL_MAX_BYTES = 20 * 1024 * 1024;
 
 export const MATERIAL_COLS = `m.id, m.case_id, m.event_id, m.title, m.side, m.filed_on,
-                              m.url, m.r2_key, m.file_name, m.file_size, m.mime, m.claims, m.body, m.summary,
+                              m.url, m.r2_key, m.file_name, m.file_size, m.mime, m.claims, m.body,
+                              m.body_model, m.body_date, m.summary,
                               m.summary_model, m.summary_date,
                               m.created_at, m.updated_at`;
 
@@ -286,6 +287,8 @@ export function rowToMaterial(r) {
     mime: r.mime || "",
     claims: textToLines(r.claims),
     body: r.body || "",
+    bodyModel: r.body_model || "",
+    bodyDate: r.body_date || "",
     summary: r.summary || "",
     summaryModel: r.summary_model || "",
     summaryDate: r.summary_date || "",

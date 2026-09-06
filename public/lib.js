@@ -590,11 +590,17 @@ window.CC = (function(){
   function sanitizeFileName(s){
     return String(s||"").replace(/[\\/:*?"<>|\x00-\x1f]/g,"_").trim() || "資料";
   }
-  // .md（コピー・ダウンロード共通）の中身：事件名／提出者側／資料名のメタ行＋本文
+  // .md（コピー・ダウンロード共通）の中身：事件名／提出者側／資料名のメタ行＋（AI作成なら出所の注記）＋本文
+  // 出所の注記はここに埋め込む（コピー・ダウンロードでサイトの文脈から切り離されても、本文と一緒に残るように）
   function mdExportText(m){
     const c = caseById(m.caseId);
     const meta = [c?c.name:"", [m.side,m.kind].filter(Boolean).join("・"), m.title].filter(Boolean).join("／");
-    return meta ? `${meta}\n\n${m.body}` : m.body;
+    const src = [m.bodyModel, m.bodyDate].filter(Boolean).join("　");
+    const pdfUrl = m.fileUrl ? (m.fileUrl.startsWith("/") ? location.origin + m.fileUrl : m.fileUrl) : "";
+    const note = src
+      ? `※この本文はPDFをもとにAIが作成したものです（${src}）。${pdfUrl ? `原本PDF：${pdfUrl}` : "原本はPDFでご確認ください。"}`
+      : "";
+    return [meta, note, m.body].filter(Boolean).join("\n\n");
   }
   // PDF・テキスト・要約の3つのボタン。無いものはグレーのまま押せない（「この資料には無い」ことが分かるように）
   function matButtonsHtml(m){
@@ -2005,7 +2011,7 @@ window.CC = (function(){
       if(isNew){
         const rounds=caseEvents(edCaseId), today=todayStr();
         let def=""; rounds.forEach(e=>{ if(e.date<=today) def=e.id; });
-        mm = { title:"", side:"", eventId:def, filedOn:"", url:"", claims:[], body:"", summary:"", summaryModel:"", summaryDate:"", fileUrl:"", fileName:"" };
+        mm = { title:"", side:"", eventId:def, filedOn:"", url:"", claims:[], body:"", bodyModel:"", bodyDate:"", summary:"", summaryModel:"", summaryDate:"", fileUrl:"", fileName:"" };
       }
       const hasR2 = !!(mm.fileUrl && mm.fileUrl.startsWith("/files/"));
       const showFileField = me.uploads || hasR2;
@@ -2033,8 +2039,13 @@ window.CC = (function(){
         </div>`:""}
         <div class="field"><label>この書面で主張していること</label><span class="lhint">1行に1項目</span><textarea class="ef-claims" placeholder="例）不開示決定の取消しを求める">${escapeHtml((mm.claims||[]).join("\n"))}</textarea></div>
         <div class="field"><label>本文（Markdownを貼り付け）</label><textarea class="ef-body" style="min-height:120px" placeholder="書面の本文をそのまま貼り付けられます（見出し・箇条書き・**強調**などが使えます）">${escapeHtml(mm.body)}</textarea>
-          <p class="fnote">「本文」ボタンから読めるページになります。原本はPDFなので、本文は補助（検索されやすくする・要点を読みやすくする）目的です。</p>
+          <p class="fnote">「.md」ボタンからコピー・ダウンロードできます。原本はPDFなので、本文は補助（検索されやすくする・要点を読みやすくする）目的です。</p>
         </div>
+        <div class="two">
+          <div class="field"><label>本文を作ったAI（任意）</label><input type="text" class="ef-bodymodel" value="${escapeAttr(mm.bodyModel)}" placeholder="例）Claude Sonnet 5"></div>
+          <div class="field"><label>作った年月日（任意）</label><input type="text" class="ef-bodydate" value="${escapeAttr(mm.bodyDate)}" placeholder="例）2026.09.04"></div>
+        </div>
+        <p class="fnote">どちらか一方でも入れると、コピー・ダウンロードする本文の先頭に「PDFをもとにAIが作成した本文（${escapeHtml(mm.bodyModel||"Claude Sonnet 5")}　${escapeHtml(mm.bodyDate||"2026.09.04")}）。原本は.pdfボタンでご確認ください」のように出所を添えます。手で書き写した本文なら空のままにしてください。</p>
         <div class="field"><label>要約</label><textarea class="ef-summary" placeholder="手で書いた要約、またはAIに作らせて確認した要約">${escapeHtml(mm.summary)}</textarea></div>
         <div class="two">
           <div class="field"><label>要約を作ったAI（任意）</label><input type="text" class="ef-summarymodel" value="${escapeAttr(mm.summaryModel)}" placeholder="例）Claude Opus5"></div>
@@ -2057,6 +2068,8 @@ window.CC = (function(){
       fd.append("url", root.querySelector(".ef-url").value.trim());
       fd.append("claims", root.querySelector(".ef-claims").value);
       fd.append("body", root.querySelector(".ef-body").value);
+      fd.append("bodyModel", root.querySelector(".ef-bodymodel").value.trim());
+      fd.append("bodyDate", root.querySelector(".ef-bodydate").value.trim());
       fd.append("summary", root.querySelector(".ef-summary").value);
       fd.append("summaryModel", root.querySelector(".ef-summarymodel").value.trim());
       fd.append("summaryDate", root.querySelector(".ef-summarydate").value.trim());

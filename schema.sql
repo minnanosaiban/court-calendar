@@ -156,6 +156,8 @@ CREATE TABLE IF NOT EXISTS materials (
   mime        TEXT,
   claims      TEXT,            -- この書面で主張していること（1行1項目、改行区切り・任意）
   body        TEXT,            -- 本文（Markdownを貼り付け・任意）
+  body_model  TEXT,            -- 本文を作ったAIモデル名（例：Claude Sonnet 5・任意。手入力・コピペの本文なら空でよい）
+  body_date   TEXT,            -- 本文を作った年月日（自由書式・任意）
   summary     TEXT,            -- 要約（手入力・またはAIに作らせて確認したもの・任意）
   summary_model TEXT,          -- 要約を作ったAIモデル名（例：Claude Opus5・任意。手入力の要約なら空でよい）
   summary_date  TEXT,          -- 要約を作った年月日（自由書式・任意）
