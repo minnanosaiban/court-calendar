@@ -105,7 +105,11 @@ a{color:inherit}
    抑えられるが、1枚だけの場合はその抑えが効かないため・2026-09-05） */
 .gal.gal-single{width:auto;max-width:720px;margin:0 auto 24px;transform:none}
 .gal .swiper-slide{opacity:.5;transform:scale(.92);transition:opacity .4s ease, transform .4s ease}
-.gal .swiper-slide-active{opacity:1;transform:scale(1)}
+/* 中央の1枚をひとまわり拡大して主役にする（1.15倍・chapro.jpを実測してそろえた値、2026-09-07）。
+   左右チラ見えとの間隔は、拡大分だけ隣（.92倍で少し縮む）との隙間が詰まるが、実測ではchapro.jp
+   と同程度の隙間（十数px）が残るのでめくれた見た目のまま重ならない。z-indexは拡大した分だけ
+   隣に少しかぶるので、常に中央が手前に来るように */
+.gal .swiper-slide-active{opacity:1;transform:scale(1.15);z-index:2}
 .gal-item{position:relative;display:block}
 .gal-item img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;
   border-radius:14px;background:var(--tint);box-shadow:0 6px 20px rgba(0,0,0,.14)}
