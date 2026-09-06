@@ -110,13 +110,18 @@ a{color:inherit}
    と同程度の隙間（十数px）が残るのでめくれた見た目のまま重ならない。z-indexは拡大した分だけ
    隣に少しかぶるので、常に中央が手前に来るように */
 .gal .swiper-slide-active{opacity:1;transform:scale(1.15);z-index:2}
+/* transform:scaleは中心から均等に広がるため、拡大した中央の1枚は上にも約20pxはみ出す。
+   .swiper（.gal）はSwiper既定でoverflow:hiddenのため、そのままだと上端が切れてしまう
+   （2026-09-07、実機で発覚）。切れない分だけpadding-topで逃がす（余裕を見て24px） */
+.gal.swiper{padding-top:24px}
 .gal-item{position:relative;display:block}
 .gal-item img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;
   border-radius:14px;background:var(--tint);box-shadow:0 6px 20px rgba(0,0,0,.14)}
 .gal-cap{position:absolute;left:0;right:0;bottom:0;padding:20px 14px 10px;font-size:.8rem;letter-spacing:.02em;
   border-radius:0 0 14px 14px;background:linear-gradient(transparent,rgba(0,0,0,.55));color:#fff}
-/* ページ送りの点は、写真の上に重ねず下に置く（隣の写真がチラ見えする分、写真に重ねると窮屈なため） */
-.gal .swiper-pagination{position:static;margin-top:14px}
+/* ページ送りの点は、写真の上に重ねず下に置く（隣の写真がチラ見えする分、写真に重ねると窮屈なため）。
+   中央の1枚が下にも約21pxはみ出す分、詰まって見えないよう間隔を広げてある（14px→35px、2026-09-07） */
+.gal .swiper-pagination{position:static;margin-top:35px}
 .gal .swiper-pagination-bullet{background:var(--faint);opacity:1}
 .gal .swiper-pagination-bullet-active{background:var(--stamp)}
 /* 写真の管理（編集権限があるときだけ）：ギャラリーの下に小さな一覧 */
