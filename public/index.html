@@ -86,49 +86,6 @@
     <div class="ulist" id="upcoming"></div>
   </section>
 
-  <!-- 訴訟準備に使えるツール（姉妹アプリの紹介）。Noteの「こちらもおすすめ」のようなカードで、
-       同じ作者が公開している外部アプリへ案内する。カードは.cases.htmlの事件カード（.card.ccard・
-       .cbody・.ctitle・.c-arrow）をそのまま流用し、アイコンだけ.ticon（角丸バッジ）に差し替えている
-       （2026-09-07）。事件一覧と違い1枚のリンクで完結するので、JSでのクリック委譲は不要 -->
-  <section aria-labelledby="tools-h">
-    <p class="subhead" id="tools-h">訴訟に関する資料作成に使えるツール</p>
-    <p class="fnote">同じ作者が公開している、証拠づくり・書面づくりに使える無料ツールです。</p>
-    <div class="toolgrid">
-      <a class="card ccard" href="https://pdf-redactor.pages.dev/" target="_blank" rel="noopener">
-        <span class="ticon"><i class="bi bi-eraser" aria-hidden="true"></i></span>
-        <div class="cbody">
-          <div class="ctitle">PDF 墨消し</div>
-          <p class="tdesc">PDF内の文字を検索して墨消し枠を重ね、そのまま書き出せます。ローカル完結で外部送信はありません。</p>
-        </div>
-        <i class="bi bi-box-arrow-up-right c-arrow" aria-hidden="true"></i>
-      </a>
-      <a class="card ccard" href="https://screenshot-pdf.pages.dev/" target="_blank" rel="noopener">
-        <span class="ticon"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i></span>
-        <div class="cbody">
-          <div class="ctitle">スクショ PDF化</div>
-          <p class="tdesc">スマホのスクリーンショットを2×2でA4に並べ、提出しやすいPDFにまとめます。</p>
-        </div>
-        <i class="bi bi-box-arrow-up-right c-arrow" aria-hidden="true"></i>
-      </a>
-      <a class="card ccard" href="https://sidenote-pdf.pages.dev/" target="_blank" rel="noopener">
-        <span class="ticon"><i class="bi bi-file-earmark-text" aria-hidden="true"></i></span>
-        <div class="cbody">
-          <div class="ctitle">サイドノート資料作成</div>
-          <p class="tdesc">本文にコメント（サイドノート）を添えてPDF化できる、訴訟活動用の資料作成アプリです。</p>
-        </div>
-        <i class="bi bi-box-arrow-up-right c-arrow" aria-hidden="true"></i>
-      </a>
-      <a class="card ccard" href="https://github.com/minnanosaiban/screenshot-x/releases" target="_blank" rel="noopener">
-        <span class="ticon"><i class="bi bi-camera" aria-hidden="true"></i></span>
-        <div class="cbody">
-          <div class="ctitle">X スクショ管理アプリ</div>
-          <p class="tdesc">Xの投稿を証拠として提出できる形で保存・仕分け・書き出しするWindows用アプリです（ダウンロード版）。</p>
-        </div>
-        <i class="bi bi-box-arrow-up-right c-arrow" aria-hidden="true"></i>
-      </a>
-    </div>
-  </section>
-
   <input type="file" id="fileInput" accept="application/json,.json" style="display:none;">
 
   <footer class="site-footer">
@@ -150,6 +107,53 @@
     <p class="disc">本サイトは有志による非公式のツールで、法的助言を提供するものではありません。事件の説明はご本人の主張であり、裁判所が認定した事実とは限りません。当事者のお名前は、ご本人が実名での掲載を望まれる場合をのぞき掲載しません。<span class="disc-warn">掲載情報の正確性・完全性・最新性は保証せず、期日は変更されたり非公開になったりすることがあります。</span>本サイトの利用により生じたいかなる損害についても、運営者は責任を負いません。</p>
     <!-- 期日の追加・編集（ひっそり） -->
     <p class="status-row"><a href="https://github.com/minnanosaiban/court-calendar" target="_blank" rel="noopener"><i class="bi bi-github" aria-hidden="true"></i> ソースコード</a><span id="status"></span></p>
+
+    <!-- 証拠整理や分析に使えるツール（姉妹アプリの紹介）。あくまでおまけなので、GitHubの
+         ソースコードリンクと同じ「事務局用」の静かな一角＝フッター最下部に置く（2026-09-07、
+         トップ直下から移設・「訴訟に関する資料作成に使えるツール」から改題）。直前のソースコード行
+         とはっきり切り離すため、上との間隔はページ下部の運用メモに使う64pxを#tools-hに当てる。
+         注記は、この位置なら直前の.disc（免責事項）を指せるので「ご利用前に免責事項をご覧ください」
+         に差し替えた。カードは.cases.htmlの事件カード（.card.ccard・.cbody・.ctitle・.c-arrow）を
+         そのまま流用し、アイコンだけ.ticon（角丸バッジ）に差し替えている。事件一覧と違い1枚の
+         リンクで完結するので、JSでのクリック委譲は不要 -->
+    <section aria-labelledby="tools-h">
+      <p class="subhead" id="tools-h">証拠整理や分析に使えるツール</p>
+      <p class="fnote">外部への送信はなくローカルで完結するアプリです。ご利用前に免責事項をご覧ください。</p>
+      <div class="toolgrid">
+        <a class="card ccard" href="https://pdf-redactor.pages.dev/" target="_blank" rel="noopener">
+          <span class="ticon"><i class="bi bi-eraser" aria-hidden="true"></i></span>
+          <div class="cbody">
+            <div class="ctitle">PDF 墨消し</div>
+            <p class="tdesc">PDF内の文字を検索して墨消し枠を重ね、そのまま書き出せます。ローカル完結で外部送信はありません。</p>
+          </div>
+          <i class="bi bi-box-arrow-up-right c-arrow" aria-hidden="true"></i>
+        </a>
+        <a class="card ccard" href="https://screenshot-pdf.pages.dev/" target="_blank" rel="noopener">
+          <span class="ticon"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i></span>
+          <div class="cbody">
+            <div class="ctitle">スクショ PDF化</div>
+            <p class="tdesc">スマホのスクリーンショットを2×2でA4に並べ、提出しやすいPDFにまとめます。</p>
+          </div>
+          <i class="bi bi-box-arrow-up-right c-arrow" aria-hidden="true"></i>
+        </a>
+        <a class="card ccard" href="https://sidenote-pdf.pages.dev/" target="_blank" rel="noopener">
+          <span class="ticon"><i class="bi bi-file-earmark-text" aria-hidden="true"></i></span>
+          <div class="cbody">
+            <div class="ctitle">サイドノート資料作成</div>
+            <p class="tdesc">本文にコメント（サイドノート）を添えてPDF化できる、訴訟活動用の資料作成アプリです。</p>
+          </div>
+          <i class="bi bi-box-arrow-up-right c-arrow" aria-hidden="true"></i>
+        </a>
+        <a class="card ccard" href="https://github.com/minnanosaiban/screenshot-x/releases" target="_blank" rel="noopener">
+          <span class="ticon"><i class="bi bi-camera" aria-hidden="true"></i></span>
+          <div class="cbody">
+            <div class="ctitle">X スクショ管理アプリ</div>
+            <p class="tdesc">Xの投稿を証拠として提出できる形で保存・仕分け・書き出しするWindows用アプリです（ダウンロード版）。</p>
+          </div>
+          <i class="bi bi-box-arrow-up-right c-arrow" aria-hidden="true"></i>
+        </a>
+      </div>
+    </section>
   </footer>
 </div>
 

@@ -591,9 +591,12 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .cnext{font-size:.8rem;color:var(--mut);margin-top:4px;font-variant-numeric:tabular-nums}
 .cnext b{color:var(--stamp);font-weight:600;margin-right:.4em}
 
-/* ---- 訴訟準備に使えるツール（トップページ、姉妹アプリの紹介カード）2026-09-07 ----
+/* ---- 証拠整理や分析に使えるツール（トップページ最下部、姉妹アプリの紹介カード）2026-09-07 ----
    カード本体は事件一覧の.card.ccard（.cbody/.ctitle/.c-arrow）をそのまま流用。
    ここで足すのはアイコンバッジ(.ticon)と説明文(.tdesc)、並べる格子(.toolgrid)だけ */
+/* おまけなのでフッター内ソースコード行の下に置く。.subhead既定の24pxでは直前の.status-rowと
+   近すぎるため、余白スケール表の「ページ下部の運用メモの上＝64px」を採用してはっきり切り離す */
+#tools-h{margin-top:64px}
 .toolgrid{display:grid;gap:12px;margin-top:16px}
 @media(min-width:560px){.toolgrid{grid-template-columns:1fr 1fr}}
 /* .stampと同じ寸法・線幅（52px角丸バッジ）だが、こちらは回転させずアイコングリフを載せる。
