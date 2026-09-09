@@ -567,8 +567,10 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
    2026-09-01。うすい赤の背景も敷く案を2026-09-05に試したが、もとの細線だけの見た目に戻した）。
    2026-09-10に「見落とされやすい」との指摘を受けて白地＋常時の影に変更してみたが、実機で見ると
    下の.editcol（同じ白いカード）と続けて4枚並んでいるように見えてしまい、かえって選択画面らしさが
-   薄れたため元のグレー地・0.5pxの線に戻した。見落とし対策は配色でなく余白側（このすぐ下のmargin）で行う */
-#ceTierPick .ccard{background:var(--tint)}
+   薄れたため元のグレー地・0.5pxの線に戻した（最終的な対策は、3枚を白いカードで囲う形＝下の
+   #ceTierPick の項）。囲いの中に入ったので、角丸はカードの20pxではなく「箱の中の箱」の12pxにする。
+   背景・角丸の両方をここで指定しているため .card クラスは効き目が無くなり、HTML側から外した */
+#ceTierPick .ccard{background:var(--tint);border-radius:12px}
 #ceTierPick .ccard.on{box-shadow:inset 0 0 0 .5px var(--stamp)}
 #ceTierPick .ccard.on:hover{box-shadow:inset 0 0 0 .5px var(--stamp),0 2px 12px rgba(0,0,0,.07)}
 /* 期日をさがす：並べ替えの切り替え（期日が古い順⇄新しい順）。タブの下・一覧の上に右寄せで置く */
@@ -865,12 +867,15 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
    間の余白は上（事件名側）に持たせ、直後のタイトルは詰める */
 #ceCaseName{margin-top:24px}
 #ceCaseName + .ce-title-row .ce-title{margin-top:2px}
-/* 掲載レベルの選択カード。上は.editgridと同じ24pxで揃えていたが（2026-09-01）、カードが
-   タイトル・下のフォームどちらとも余白が詰まって見落とされやすいとの指摘を受け、上下とも32pxに
-   広げて独立した1つの塊として見えるようにした（2026-09-10。配色を変える案は実機で「白いカードが
-   4枚に見える」と分かり不採用、余白側で対応。下は.editgridのmargin-top:24pxとの間でmargin
-   collapseにより32pxが優先される） */
-#ceTierPick{margin-top:32px;margin-bottom:32px}
+/* 掲載レベルの選択パネル。3枚のカードを1枚の白いカードで囲い、見出しを添えた形（2026-09-10）。
+   それまでは3枚を地の上に直接置いていたが、下の .editcol（同じ白いカード）と続けて白い箱が4枚
+   並んで見え、「ここで選ぶ」ことが伝わらなかった。囲んだことで白い箱は「選択パネル＋入力フォーム」の
+   2枚になり、役割の違いが見出しで分かる。内側の余白・見出しの字形は .editcol と同じ値にそろえて、
+   下のフォームと対になっていることを示す（先に余白を広げる案・配色を変える案を試したが、いずれも
+   実機では効果が薄く、囲う案に落ち着いた） */
+#ceTierPick{margin-top:32px;background:var(--card);border-radius:20px;padding:24px}
+#ceTierPick .tierhead{font-family:"Shippori Mincho",serif;font-size:1.2rem;margin-bottom:16px}
+#ceTierPick .clist{margin-top:0}
 .editgrid{margin-top:24px}
 /* 権限が無い間は hidden 属性で隠すが、860px以上の .editgrid{display:grid}（下の @media）が
    これを上書きしてしまう（[hidden] は display:none のはずが grid に化ける）ため、
@@ -949,7 +954,8 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .savebar .btn-round{flex:none;width:56px;height:56px;padding:0;border-radius:50%;background:var(--stamp);color:#fff}
 .savebar .btn-round:hover{background:#9c2a20}
 @media(min-width:560px){
-  .editcol{padding:32px}
+  /* 掲載レベルの選択パネルは .editcol と同じ内側余白にそろえる（2026-09-10） */
+  .editcol,#ceTierPick{padding:32px}
 }
 @media(min-width:860px){
   /* PCでは左に節ナビ（ページ内ジャンプ）を出す */

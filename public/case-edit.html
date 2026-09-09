@@ -67,24 +67,27 @@
        ずっと出したままにし、下の入力欄はどれを選んでいるかで表示する節が変わる（選び直しても
        既存の項目値はフォームの裏に残ったままで、保存で消えることはない）。事件を新規作成するとき・
        期日等の個別編集への深いリンク（?open=）で来たときは選ばせず、従来どおりフル項目にする
-       （initCaseEditPage 参照） -->
+       （initCaseEditPage 参照）。
+       2026-09-10、3枚を1枚の白いカード（このdiv自体）で囲い、見出しを添えた。囲む前は3枚の
+       カードと下の .editcol が同じ白い箱として4枚並んで見え、ここが「選ぶ場所」だと分からなかった -->
   <div id="ceTierPick" hidden>
+    <p class="tierhead">入力欄は3種類から選べます</p>
     <div class="clist">
-      <div class="card ccard ccard-noicon" id="ceTierMin" role="link" tabindex="0">
+      <div class="ccard ccard-noicon" id="ceTierMin" role="link" tabindex="0">
         <div class="cbody">
           <div class="ctitle">最小限掲載の入力へ</div>
           <p class="fnote">事件名と期日だけ。まずは載せたい方に。</p>
         </div>
         <i class="bi bi-chevron-double-right c-arrow" aria-hidden="true"></i>
       </div>
-      <div class="card ccard ccard-noicon" id="ceTierStd" role="link" tabindex="0">
+      <div class="ccard ccard-noicon" id="ceTierStd" role="link" tabindex="0">
         <div class="cbody">
           <div class="ctitle">標準的掲載の入力へ</div>
           <p class="fnote">争点・当事者・裁判についてなど、よくある内容も載せたい方に。</p>
         </div>
         <i class="bi bi-chevron-double-right c-arrow" aria-hidden="true"></i>
       </div>
-      <div class="card ccard ccard-noicon" id="ceTierDetail" role="link" tabindex="0">
+      <div class="ccard ccard-noicon" id="ceTierDetail" role="link" tabindex="0">
         <div class="cbody">
           <div class="ctitle">詳細な掲載の入力へ</div>
           <p class="fnote">画像・資料・関連裁判なども含め、すべての項目を使いたい方に。</p>
