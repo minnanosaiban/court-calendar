@@ -7,7 +7,7 @@
 // URL: /api/cases/:id/card.png（非公開事件は ?key=閲覧キー が必要。case.js と同じ規則）
 import {
   h, BG, PAPER, RING, GO_R, GO_M, INK, RED, GRAY,
-  SITE_LABEL, MESSAGE, stamp, perforation, dateSection,
+  SITE_LABEL, MESSAGE, stamp, perforation, dateSection, cheerSection,
   loadFonts, fontList, loadCardContext, loadPresenterIconDataUri, loadCardData, overrideResponse,
   ImageResponse, cache,
 } from "../_card.js";
@@ -46,7 +46,8 @@ function buildTree(c) {
             stamp(46),
             h("div", { key: "label", style: { display: "flex", marginLeft: 16, fontFamily: GO_M, fontSize: 25, color: INK, letterSpacing: 1.5 } }, SITE_LABEL),
           ]),
-          dateSection(c),
+          // 期日が決まっていない事件は、空白を報告せず応援の面に差し替える（2026-09-10）
+          c.nextEvent || c.archivedAt ? dateSection(c) : cheerSection("次の期日は調整中です"),
           h("div", { key: "msg", style: { display: "flex", fontFamily: GO_M, fontSize: 27, color: RED, letterSpacing: 1.5 } }, MESSAGE),
         ]
       ),

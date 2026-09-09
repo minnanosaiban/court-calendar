@@ -8,7 +8,7 @@
 // URL: /api/cases/:id/card-square.png（非公開事件は ?key=閲覧キー が必要。case.js と同じ規則）
 import {
   h, BG, PAPER, RING, GO_R, GO_M, INK, RED, GRAY,
-  SITE_LABEL, MESSAGE, stamp, dateSection,
+  SITE_LABEL, MESSAGE, stamp, dateSection, cheerSection,
   loadFonts, fontList, loadCardContext, loadPresenterIconDataUri, loadCardData, overrideResponse,
   ImageResponse, cache,
 } from "../_card.js";
@@ -45,7 +45,8 @@ function buildSquareTree(c) {
         stamp(52),
         h("div", { key: "label", style: { display: "flex", marginLeft: 18, fontFamily: GO_M, fontSize: 30, color: INK, letterSpacing: 1.5 } }, SITE_LABEL),
       ]),
-      h("div", { key: "date", style: { display: "flex", marginTop: 64 } }, dateSection(c, true)),
+      h("div", { key: "date", style: { display: "flex", marginTop: 64 } },
+        c.nextEvent || c.archivedAt ? dateSection(c, true) : cheerSection("次の期日は調整中です", { center: true, size: 48 })),
       h("div", { key: "presenter", style: { display: "flex", flexDirection: "column", alignItems: "center", marginTop: 64 } }, presenter),
       h("div", { key: "msg", style: { display: "flex", fontFamily: GO_M, fontSize: 32, color: RED, letterSpacing: 1.5, marginTop: 64, textAlign: "center" } }, MESSAGE),
     ]

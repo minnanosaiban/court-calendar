@@ -104,6 +104,24 @@ export function perforation() {
   );
 }
 
+// 応援の面（2026-09-10）。期日が決まっていないときと、問題提起人のプロフィールカードで使う。
+// 「次回期日は未定です」と空白を報告して終わるより、サイトのコピーをカードの主役に据えて
+// 「傍聴に行く意味」をそのまま伝えるほうが、シェアされたときに効くという判断。
+// sub には小さなグレーの1行（期日の状況・件数など、その場で言える事実）を渡す。
+export function cheerSection(sub, opts) {
+  const { center = false, size = 40 } = opts || {};
+  const align = center ? { alignItems: "center", textAlign: "center" } : {};
+  const line = (t, key, marginTop) =>
+    h("div", { key, style: { display: "flex", fontFamily: MIN_B, fontSize: size, color: INK, marginTop: marginTop || 0 } }, t);
+  return h("div", { style: { display: "flex", flexDirection: "column", ...align } }, [
+    line("傍聴席に、ひとり増える。", "l1"),
+    line("それだけで法廷は変わる。", "l2", Math.round(size * 0.25)),
+    sub
+      ? h("div", { key: "sub", style: { display: "flex", fontFamily: GO_R, fontSize: 23, color: FAINT, marginTop: 18, ...align } }, sub)
+      : null,
+  ].filter(Boolean));
+}
+
 // 期日欄：直近期日／終結案内／未定案内のどれかを返す。center=true なら正方形版向けに中央寄せにする
 export function dateSection(c, center) {
   const align = center ? { alignItems: "center", textAlign: "center" } : {};
