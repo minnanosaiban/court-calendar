@@ -62,41 +62,6 @@
     <p class="empty-msg">編集にはパスワードが必要です。ページ下の「事務局用」からロックを解除してください。</p>
   </div>
 
-  <!-- 掲載レベルの選択（2026-09-01）：赤の編集ボタンから来た人が、詳細な入力欄に迷わないよう、
-       まず「最小限／標準的／詳細」のどれで入力するか選んでもらう。カード自体はタブのように
-       ずっと出したままにし、下の入力欄はどれを選んでいるかで表示する節が変わる（選び直しても
-       既存の項目値はフォームの裏に残ったままで、保存で消えることはない）。事件を新規作成するとき・
-       期日等の個別編集への深いリンク（?open=）で来たときは選ばせず、従来どおりフル項目にする
-       （initCaseEditPage 参照）。
-       2026-09-10、3枚を1枚の白いカード（このdiv自体）で囲い、見出しを添えた。囲む前は3枚の
-       カードと下の .editcol が同じ白い箱として4枚並んで見え、ここが「選ぶ場所」だと分からなかった -->
-  <div id="ceTierPick" hidden>
-    <p class="tierhead">入力欄は3種類から選べます</p>
-    <div class="clist">
-      <div class="ccard ccard-noicon" id="ceTierMin" role="link" tabindex="0">
-        <div class="cbody">
-          <div class="ctitle">最小限掲載の入力へ</div>
-          <p class="fnote">事件名と期日だけ。まずは載せたい方に。</p>
-        </div>
-        <i class="bi bi-chevron-double-right c-arrow" aria-hidden="true"></i>
-      </div>
-      <div class="ccard ccard-noicon" id="ceTierStd" role="link" tabindex="0">
-        <div class="cbody">
-          <div class="ctitle">標準的掲載の入力へ</div>
-          <p class="fnote">争点・当事者・裁判についてなど、よくある内容も載せたい方に。</p>
-        </div>
-        <i class="bi bi-chevron-double-right c-arrow" aria-hidden="true"></i>
-      </div>
-      <div class="ccard ccard-noicon" id="ceTierDetail" role="link" tabindex="0">
-        <div class="cbody">
-          <div class="ctitle">詳細な掲載の入力へ</div>
-          <p class="fnote">画像・資料・関連裁判なども含め、すべての項目を使いたい方に。</p>
-        </div>
-        <i class="bi bi-chevron-double-right c-arrow" aria-hidden="true"></i>
-      </div>
-    </div>
-  </div>
-
   <!-- 節の並びは本人指示により2026-09-05に次の5群へ再編：
        ①本人について（ニックネーム・アイコン・Xアカウント）
        ②情報へのアクセス（アクセス制限・掲示板・Twitterカード・期日案内）
@@ -112,7 +77,10 @@
        欄名のどちらに属するのか読み取れなかった（2026-08-28）。「トップにも表示する」
        （応援ピックアップへの表示可否）は、応援ピックアップ自体の廃止に伴い2026-09-05に削除 -->
   <div class="editgrid" id="ceGrid" hidden>
-    <!-- スマホ用「目次∨」。secnav の直前に置く（CSSの隣接セレクタでタップ時だけ secnav を開く） -->
+    <!-- 「目次∨」の帯。secnav の直前に置く（CSSの隣接セレクタで、押したときだけ secnav を開く）。
+         2026-09-10までスマホ専用で、PCでは左の固定列に節ナビを出していたが、カードを全幅にするため
+         列をやめ、この帯を全幅で使うようにした -->
+    <!-- 掲載レベルの選択・入力欄はこの下の .editcol（白いカード1枚）の中にまとめて入っている -->
     <div class="mobtoc" id="ceMobToc"><span class="cur" id="ceMobTocCur">ニックネーム</span><span class="chev" aria-hidden="true">∨</span></div>
     <nav class="secnav" id="ceNav" aria-label="節へ移動">
       <div class="grp">本人について</div>
@@ -141,6 +109,42 @@
     </nav>
     <div>
       <div class="editcol" id="ceForm">
+
+        <!-- 掲載レベルの選択（2026-09-01）：赤の編集ボタンから来た人が、詳細な入力欄に迷わないよう、
+             まず「最小限／標準的／詳細」のどれで入力するか選んでもらう。カード自体はタブのように
+             ずっと出したままにし、下の入力欄はどれを選んでいるかで表示する節が変わる（選び直しても
+             既存の項目値はフォームの裏に残ったままで、保存で消えることはない）。事件を新規作成するとき・
+             期日等の個別編集への深いリンク（?open=）で来たときは選ばせず、従来どおりフル項目にする
+             （initCaseEditPage 参照）。
+             2026-09-10、それまで .editcol の外に置いていたこの節を中へ移し、入力フォームと同じ1枚の
+             白いカードに収めた（外に置くと同じ白い箱が2枚並び、下の入力欄と切れて見えたため）。
+             節の見出しと3枚の並びだけで「ここで選ぶ」と分かるよう、下に細い区切り線を入れている -->
+        <div id="ceTierPick" hidden>
+          <p class="tierhead">入力欄は3種類から選べます</p>
+          <div class="clist">
+            <div class="ccard ccard-noicon" id="ceTierMin" role="link" tabindex="0">
+              <div class="cbody">
+                <div class="ctitle">最小限掲載の入力へ</div>
+                <p class="fnote">事件名と期日だけ。まずは載せたい方に。</p>
+              </div>
+              <i class="bi bi-chevron-double-right c-arrow" aria-hidden="true"></i>
+            </div>
+            <div class="ccard ccard-noicon" id="ceTierStd" role="link" tabindex="0">
+              <div class="cbody">
+                <div class="ctitle">標準的掲載の入力へ</div>
+                <p class="fnote">争点・当事者・裁判についてなど、よくある内容も載せたい方に。</p>
+              </div>
+              <i class="bi bi-chevron-double-right c-arrow" aria-hidden="true"></i>
+            </div>
+            <div class="ccard ccard-noicon" id="ceTierDetail" role="link" tabindex="0">
+              <div class="cbody">
+                <div class="ctitle">詳細な掲載の入力へ</div>
+                <p class="fnote">画像・資料・関連裁判なども含め、すべての項目を使いたい方に。</p>
+              </div>
+              <i class="bi bi-chevron-double-right c-arrow" aria-hidden="true"></i>
+            </div>
+          </div>
+        </div>
 
         <!-- 争点・当事者は各々を独立した節にし、当事者は原告名/原告のリンクのように同じ当事者
              どうしを並べる形にしている（2026-08-30）。同じ階層の項目名は .msec（見出し）で揃える。

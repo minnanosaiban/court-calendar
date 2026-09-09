@@ -54,7 +54,12 @@
   <!-- カレンダー：日付にカーソルを合わせる（タップする）とその日の予定が出て、クリックすると詳しいページへ -->
   <section aria-labelledby="cal-h">
     <p class="home-title" id="cal-h">期日カレンダー</p>
-    <p class="hint" id="calHint"></p>
+    <!-- カレンダー直下の案内文は、操作方法の説明から免責＋確認のお願いに変更した（2026-09-10）。
+         操作（合わせる・タップする）は触れば分かる一方、期日が変わる・非公開になることがある点は
+         傍聴に出かける前に伝わっている必要があるため。文言はページ下部の .disc にあったものと同じで、
+         二重になるので index.html の下部からは削除した（他のページの .disc はそのまま）。
+         朱色の下線（.disc-warn）は下部で使っていた強調をそのまま持ち上げたもの -->
+    <p class="hint"><span class="disc-warn">掲載情報の正確性・完全性・最新性は保証せず、期日は変更されたり非公開になったりすることがあります。</span>傍聴の前に当事者の<i class="bi bi-twitter-x" role="img" aria-label="X"></i>などでご確認ください。</p>
     <div class="calhead">
       <div class="navbtns">
         <span id="prev"><i class="bi bi-chevron-left" aria-hidden="true"></i> 前の月</span>
@@ -111,7 +116,7 @@
       </div>
       <img src="frog-mic.png" alt="" class="request-frog">
     </div>
-    <p class="disc">本サイトは有志による非公式のツールで、法的助言を提供するものではありません。事件の説明はご本人の主張であり、裁判所が認定した事実とは限りません。当事者のお名前は、ご本人が実名での掲載を望まれる場合をのぞき掲載しません。<span class="disc-warn">掲載情報の正確性・完全性・最新性は保証せず、期日は変更されたり非公開になったりすることがあります。</span>本サイトの利用により生じたいかなる損害についても、運営者は責任を負いません。</p>
+    <p class="disc">本サイトは有志による非公式のツールで、法的助言を提供するものではありません。事件の説明はご本人の主張であり、裁判所が認定した事実とは限りません。当事者のお名前は、ご本人が実名での掲載を望まれる場合をのぞき掲載しません。本サイトの利用により生じたいかなる損害についても、運営者は責任を負いません。</p>
     <!-- 期日の追加・編集（ひっそり） -->
     <p class="status-row"><a href="https://github.com/minnanosaiban/court-calendar" target="_blank" rel="noopener"><i class="bi bi-github" aria-hidden="true"></i> ソースコード</a><span id="status"></span></p>
 
@@ -188,10 +193,8 @@
                         // （スマホの「タップ＝ホバー相当＋クリック」挙動）ことがあるため、その"貫通クリック"は無視する
   const canHover = window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
-  // 案内文は操作方法に合わせる（PC=カーソル／スマホ=タップ）
-  document.getElementById("calHint").textContent = canHover
-    ? "日付にカーソルを合わせると、その日の予定が出ます。クリックすると詳しいページに移ります。"
-    : "日付をタップすると、その日の予定が出ます。出てきた予定をもう一度タップすると、詳しいページに移ります。";
+  // カレンダー直下の案内文を操作方法（PC=カーソル／スマホ=タップ）で出し分ける処理は、案内文自体を
+  // 免責＋確認のお願い（HTMLに直書き）へ差し替えた2026-09-10に廃止。canHover は下のプレビュー挙動で使う
 
   // ---- 日付のプレビュー ----
   function popoverHtmlFor(dayEvents){
