@@ -7,6 +7,9 @@ window.CC = (function(){
   const VIEWER_LS  = "court-calendar.viewer";
   const VIEWKEYS_LS = "court-calendar.viewkeys";
   const PRESENTERTOKEN_LS = "court-calendar.presentertoken";
+  // 掲載レベル選択カード（最小限／標準的／詳細）で自分から選んだ値は、この端末では次回も
+  // 初期状態にする（2026-09-10。事件ごとではなく端末ごとの好みとして覚える）
+  const TIER_LS = "court-calendar.tier";
   const WD = ["日","月","火","水","木","金","土"];
 
   // ---- state ----
@@ -1252,6 +1255,13 @@ window.CC = (function(){
       url.searchParams.set("tier", tier);
       history.replaceState(null, "", url);
     }
+    // カードを自分でクリック／Enterで選んだときだけ、この端末の既定として覚える（2026-09-10）。
+    // applyTier自体は新規作成・深いリンクの「常にdetail扱い」等でも呼ばれるため、そちらでは
+    // 覚えない（本人が選んだのでない値で好みを上書きしないよう、ここで分けている）
+    function chooseTier(tier){
+      applyTier(tier);
+      try{ localStorage.setItem(TIER_LS, tier); }catch(e){}
+    }
     // 問題提起人プルダウンの選択肢を作る（未設定／既存の問題提起人／＋新規作成）。
     // 問題提起人本人が編集しているときは、付け替え・新規作成はできないので自分の分だけ固定で出す
     function renderPresenterOptions(selectedId){
@@ -1690,8 +1700,8 @@ window.CC = (function(){
     // タブのようにいつでも選び直せるので、常時ここで配線しておく
     TIER_CARDS.forEach(([elId,tier])=>{
       const el=$(elId);
-      el.addEventListener("click", ()=>applyTier(tier));
-      el.addEventListener("keydown",(e)=>{ if(e.key==="Enter") applyTier(tier); });
+      el.addEventListener("click", ()=>chooseTier(tier));
+      el.addEventListener("keydown",(e)=>{ if(e.key==="Enter") chooseTier(tier); });
     });
     // パスワード変更（自己確認バーの「パスワード変更」から開くページ内フォーム。
     // case.html・presenter.htmlと同じ仕組み。2026-09-01）
@@ -1784,8 +1794,14 @@ window.CC = (function(){
       const openParam=params.get("open");
       if(id && !openParam){
         tierPick.hidden=false;
+        // URL指定 ＞ この端末で前回自分から選んだ値 ＞ 「最小限」の順で初期状態を決める（2026-09-10）
         const urlTier=params.get("tier");
-        applyTier(TIER_ORDER.hasOwnProperty(urlTier) ? urlTier : "min");
+        let savedTier=null;
+        try{ savedTier=localStorage.getItem(TIER_LS); }catch(e){}
+        const initialTier = TIER_ORDER.hasOwnProperty(urlTier) ? urlTier
+                           : TIER_ORDER.hasOwnProperty(savedTier) ? savedTier
+                           : "min";
+        applyTier(initialTier);
         // 画像・期日・資料は、節を開いた状態にし、「追加」の新規入力欄も最初から出しておく
         // （クリック待ちにしない。2026-09-01。深いリンク（?open=）で来たときは openDeepLink() 側が
         // 個別に1件だけ開くので、二重に開かないようこちらは通らない）
