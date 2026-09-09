@@ -77,36 +77,9 @@
        欄名のどちらに属するのか読み取れなかった（2026-08-28）。「トップにも表示する」
        （応援ピックアップへの表示可否）は、応援ピックアップ自体の廃止に伴い2026-09-05に削除 -->
   <div class="editgrid" id="ceGrid" hidden>
-    <!-- 「目次∨」の帯。secnav の直前に置く（CSSの隣接セレクタで、押したときだけ secnav を開く）。
-         2026-09-10までスマホ専用で、PCでは左の固定列に節ナビを出していたが、カードを全幅にするため
-         列をやめ、この帯を全幅で使うようにした -->
-    <!-- 掲載レベルの選択・入力欄はこの下の .editcol（白いカード1枚）の中にまとめて入っている -->
-    <div class="mobtoc" id="ceMobToc"><span class="cur" id="ceMobTocCur">ニックネーム</span><span class="chev" aria-hidden="true">∨</span></div>
-    <nav class="secnav" id="ceNav" aria-label="節へ移動">
-      <div class="grp">本人について</div>
-      <div data-sec="sec-nickname" class="on">ニックネーム</div>
-      <div data-sec="cPresenterIconRow">アイコン</div>
-      <div data-sec="cPresenterXUrlRow" data-tier-min="std">Xアカウント</div>
-      <div class="grp">情報へのアクセス</div>
-      <div data-sec="sec-privacy">アクセス制限</div>
-      <div data-sec="sec-board" data-tier-min="std">掲示板</div>
-      <div data-sec="sec-card">Twitterカード</div>
-      <div data-sec="sec-notice" data-tier-min="std">期日案内</div>
-      <div class="grp">基本情報</div>
-      <div data-sec="sec-name">事件名</div>
-      <div data-sec="sec-points" data-tier-min="std">争点</div>
-      <div data-sec="sec-parties" data-tier-min="std">当事者</div>
-      <div data-sec="sec-caseno" data-tier-min="detail">事件番号</div>
-      <div class="grp">裁判の説明</div>
-      <div data-sec="sec-call" data-tier-min="std">裁判について</div>
-      <div data-sec="sec-img" data-tier-min="detail">画像<span class="n" id="navImgCount"></span></div>
-      <div data-sec="sec-press" data-tier-min="std">報道・掲載</div>
-      <div data-sec="sec-related" data-tier-min="detail">関連裁判</div>
-      <div class="grp">裁判記録</div>
-      <div data-sec="sec-ev">期日<span class="n" id="navEvCount"></span></div>
-      <div data-sec="sec-mat" data-tier-min="detail">資料<span class="n" id="navMatCount"></span></div>
-      <div data-sec="sec-closure" data-tier-min="detail">終結</div>
-    </nav>
+    <!-- 節ナビ（PCの左固定列＋スマホの「目次∨」の帯）は2026-09-10に廃止。掲載レベルで欄数を絞れる
+         ようになり、1枚のカードを上から順に読む形になったので、目次無しでも迷わないとの判断。
+         内容はすべて下の .editcol（白いカード1枚）の中に入っている -->
     <div>
       <div class="editcol" id="ceForm">
 
@@ -426,36 +399,8 @@
     renderAll();
   })();
 
-  // 節ナビ：クリックでその節へ（畳んである一覧は開いてから移動）。スクロールで現在地をハイライト
-  const nav=document.getElementById("ceNav");
-  const items=[...nav.querySelectorAll("[data-sec]")];
-  // スマホの「目次∨」：ふだんは畳んで現在地だけを示し、タップで secnav をその場に開く（2026-08-30）
-  const mobToc=document.getElementById("ceMobToc");
-  const mobTocCur=document.getElementById("ceMobTocCur");
-  mobToc.addEventListener("click",()=>mobToc.classList.toggle("open"));
-  items.forEach(d=>d.addEventListener("click",()=>{
-    const t=document.getElementById(d.dataset.sec);
-    if(!t) return;
-    if(t.classList.contains("lssec")) t.classList.add("open");
-    t.scrollIntoView({behavior:"smooth",block:"start"});
-    mobToc.classList.remove("open");
-  }));
-  window.addEventListener("scroll",()=>{
-    let cur=0;
-    // 「画面の上から3分の1を過ぎたら次の節」という判定にする。固定値100pxだと、次の見出しが
-    // まだ画面下の方にあるうちから切り替わってしまい、実際に読んでいる節より1つ手前が光っていた
-    // （2026-08-30）
-    const threshold=innerHeight/3;
-    items.forEach((d,i)=>{
-      // 掲載レベルで隠している節（d.hidden）は、隠れているぶんrectのtopが0のままで常に
-      // 「もう過ぎた」と誤判定されてしまうので、ハイライト対象から外す（2026-09-01）
-      if(d.hidden) return;
-      const t=document.getElementById(d.dataset.sec);
-      if(t && t.getBoundingClientRect().top<threshold) cur=i;
-    });
-    items.forEach((d,i)=>d.classList.toggle("on",i===cur));
-    mobTocCur.textContent=items[cur].childNodes[0].textContent;
-  },{passive:true});
+  // 節ナビ（クリックでその節へ移動・スクロールで現在地をハイライト・スマホの「目次∨」）の配線は、
+  // ナビ自体を廃止した2026-09-10に削除
 })();
 </script>
 </body>

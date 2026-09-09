@@ -1857,7 +1857,6 @@ window.CC = (function(){
         </div>`).join("") || `<p class="d-body mut">まだ画像はありません。</p>`;
       $("imgList").innerHTML = html;
       $("imgCount").textContent = imgs.length + "件";
-      $("navImgCount").textContent = imgs.length || "";
     }
     function imgEditorHtml(im){
       const isNew = !im;
@@ -1932,7 +1931,6 @@ window.CC = (function(){
         </div>`).join("") || `<p class="d-body mut">まだ期日はありません。</p>`;
       $("evList").innerHTML = html;
       $("evCount").textContent = evs.length + "件";
-      $("navEvCount").textContent = evs.length || "";
     }
     const EVENT_TYPES = ["口頭弁論","弁論準備","進行協議","和解","尋問","当事者尋問","判決言渡","控訴審 第1回","提出期限（書面）"];
     function evEditorHtml(ev){
@@ -2014,7 +2012,6 @@ window.CC = (function(){
         </div>`).join("") || `<p class="d-body mut">まだ資料はありません。</p>`;
       $("matList").innerHTML = html;
       $("matCount").textContent = mats.length + "件";
-      $("navMatCount").textContent = mats.length || "";
     }
     function matEventOptionsHtml(selectedId){
       const rounds = caseEvents(edCaseId);
