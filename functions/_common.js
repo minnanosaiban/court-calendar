@@ -238,6 +238,31 @@ export function rowToPresenter(r, admin) {
   return out;
 }
 
+// ---- カードの文言・SEO文言の文字数上限 ----
+// satoriでPNG（card.png／card-square.png）に描くテキストなので、際限なく長い文字列が来ると
+// Workerのメモリ・CPUを食いつぶす。事件・問題提起人どちらの保存でも同じ上限を使う。
+// 文字数は [...s].length で数える（サロゲートペア・合字を1文字として数え、日本語もそのまま1文字扱い）
+export const CARD_TEXT_MAX = { cardHeadline: 60, cardSub: 60, cardMessage: 60, seoTitle: 100, seoDescription: 300 };
+// public/case-edit.html の label／aria-label と同じ文言（事件用cC…・問題提起人用cP…のどちらも同じ表記）
+const CARD_TEXT_LABELS = {
+  cardHeadline: "カードの大きい文字",
+  cardSub: "カードの小さい1行",
+  cardMessage: "カードの赤い1行",
+  seoTitle: "タイトル",
+  seoDescription: "説明",
+};
+// body に含まれる5つの文言のうち、上限を超えているものが1つでもあれば理由（日本語）を返す。
+// 全部が上限内、またはそもそも含まれていなければ null
+export function validateCardText(body) {
+  for (const key of Object.keys(CARD_TEXT_MAX)) {
+    const v = body ? body[key] : undefined;
+    if (typeof v === "string" && [...v].length > CARD_TEXT_MAX[key]) {
+      return `${CARD_TEXT_LABELS[key]}は${CARD_TEXT_MAX[key]}文字以内にしてください`;
+    }
+  }
+  return null;
+}
+
 // ---- 期日 ----
 // bookmarked は「この端末がお気に入りにしたか」（件数は出さない、liked と違って likes 相当の集計は無い）。
 // 呼び出し側は SELECT の最初の ? に viewer のハッシュを bind すること（casesSelect() の liked と同じ形）。
@@ -618,6 +643,19 @@ export async function myCaseIds(env, session) {
   if (!session) return new Set();
   const { results } = await env.DB.prepare(`SELECT id FROM cases WHERE presenter_id = ?`).bind(session.presenterId).all();
   return new Set((results || []).map((r) => r.id));
+}
+
+// 問題提起人まわりの1件だけのファイル（アイコン・Twitterカード横長／正方形）の書き込み権限。
+//  (A) 運営（authorizeWrite）は常に許可
+//  (B) ログイン中の問題提起人は、自分（pid）のものだけ許可
+// admin: 運営としての書き込みか（rowToPresenter(row, admin)にそのまま渡せる）。
+// actor: created_by/updated_by に入れる印（運営はメール、本人は "presenter:"+pid）。
+// もとは presenters/[id]/{icon,card,card-square}.js に3つ別々にコピーされていたもの（2026-09-10統合）
+export async function authorizeSelfOrAdmin(request, env, pid) {
+  const id = await getIdentity(request, env);
+  if (authorizeWrite(request, env, id)) return { ok: true, admin: true, actor: id.email || "admin" };
+  const session = await getPresenterSession(request, env);
+  return { ok: !!session && session.presenterId === pid, admin: false, actor: "presenter:" + pid };
 }
 
 // 1つの事件に対する書き込み権限の判定。

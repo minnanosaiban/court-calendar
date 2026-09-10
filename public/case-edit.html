@@ -168,12 +168,12 @@
           <div class="subfield subfield-plain">
             <label>カードに入る文言</label>
             <span class="lhint">空欄なら、うすい文字で出ている内容がそのまま入ります</span>
-            <textarea id="cPCardHeadline" rows="2" aria-label="カードの大きい文字"></textarea>
+            <textarea id="cPCardHeadline" rows="2" maxlength="60" aria-label="カードの大きい文字"></textarea>
             <p class="fnote">大きい文字（改行すると2行になります）</p>
-            <input type="text" id="cPCardSub" aria-label="カードの小さい1行">
+            <input type="text" id="cPCardSub" maxlength="60" aria-label="カードの小さい1行">
             <p class="fnote">その下の小さい1行</p>
             <div class="cicon-row">
-              <input type="text" id="cPCardMessage" aria-label="カードの赤い1行">
+              <input type="text" id="cPCardMessage" maxlength="60" aria-label="カードの赤い1行">
               <button type="button" class="btn-save btn-round" id="cPCardTextSave">変更</button>
             </div>
             <p class="fnote">一番下の赤い1行</p>
@@ -192,10 +192,10 @@
             <div class="gprev-desc" id="cPSeoPrevDesc"></div>
           </div>
           <label>タイトル</label>
-          <input type="text" id="cPSeoTitle" aria-label="アカウントのページのタイトル">
+          <input type="text" id="cPSeoTitle" maxlength="100" aria-label="アカウントのページのタイトル">
           <label>説明</label>
           <div class="cicon-row">
-            <textarea id="cPSeoDescription" rows="2" aria-label="アカウントのページの説明"></textarea>
+            <textarea id="cPSeoDescription" rows="2" maxlength="300" aria-label="アカウントのページの説明"></textarea>
             <button type="button" class="btn-save btn-round" id="cPSeoSave">変更</button>
           </div>
           <p class="fnote">説明は140字までが検索結果に出ます。</p>
@@ -268,11 +268,11 @@
           <div class="subfield subfield-plain">
             <label>カードに入る文言</label>
             <span class="lhint">空欄なら、うすい文字で出ている内容がそのまま入ります</span>
-            <textarea id="cCardHeadline" rows="2" aria-label="カードの大きい文字"></textarea>
+            <textarea id="cCardHeadline" rows="2" maxlength="60" aria-label="カードの大きい文字"></textarea>
             <p class="fnote">大きい文字（改行すると2行になります）。次回期日が入っているあいだは日付が出るので、この欄は期日が決まっていないときだけ使われます。</p>
-            <input type="text" id="cCardSub" aria-label="カードの小さい1行">
+            <input type="text" id="cCardSub" maxlength="60" aria-label="カードの小さい1行">
             <p class="fnote">その下の小さい1行（同上）</p>
-            <input type="text" id="cCardMessage" aria-label="カードの赤い1行">
+            <input type="text" id="cCardMessage" maxlength="60" aria-label="カードの赤い1行">
             <p class="fnote">一番下の赤い1行（いつでも使われます）</p>
           </div>
         </div>
@@ -287,9 +287,9 @@
             <div class="gprev-desc" id="cSeoPrevDesc"></div>
           </div>
           <label>タイトル</label>
-          <input type="text" id="cSeoTitle" aria-label="事件のページのタイトル">
+          <input type="text" id="cSeoTitle" maxlength="100" aria-label="事件のページのタイトル">
           <label>説明</label>
-          <textarea id="cSeoDescription" rows="2" aria-label="事件のページの説明"></textarea>
+          <textarea id="cSeoDescription" rows="2" maxlength="300" aria-label="事件のページの説明"></textarea>
           <p class="fnote">説明は140字までが検索結果に出ます。</p>
         </div>
 

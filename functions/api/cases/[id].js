@@ -1,6 +1,6 @@
 import {
   json, rowToCase, caseFromBody, getIdentity, viewerHash, uniqueCaseName,
-  authorizeCaseWrite, actorLabel, deleteR2,
+  authorizeCaseWrite, actorLabel, deleteR2, validateCardText,
 } from "../../_common.js";
 import { casesSelect } from "../cases.js";
 
@@ -15,6 +15,8 @@ export async function onRequestPut({ request, env, params }) {
   try { body = await request.json(); } catch { return json({ error: "bad json" }, 400); }
   const c = caseFromBody(body);
   if (!c.name) return json({ error: "事件名は必須です" }, 400);
+  const cardTextErr = validateCardText(body);
+  if (cardTextErr) return json({ error: cardTextErr }, 400);
 
   // 事件名が重複していたら、エラーで止めずに全角の連番を振って回避する（2026-08-28）
   c.name = await uniqueCaseName(env, c.name, cid);

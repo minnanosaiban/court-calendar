@@ -1,7 +1,7 @@
 import {
   json, newId, rowToCase, caseFromBody, CASE_COLS,
   getIdentity, authorizeWrite, viewerHash, hiddenCaseIds, redactCaseNo, uniqueCaseName,
-  getPresenterSession, myCaseIds,
+  getPresenterSession, myCaseIds, validateCardText,
 } from "../_common.js";
 
 // 事件の一覧は、いいねの数と「この端末が押したか」を一緒に返す（最初の ? に viewer のハッシュを bind する）
@@ -44,6 +44,8 @@ export async function onRequestPost({ request, env }) {
   try { body = await request.json(); } catch { return json({ error: "bad json" }, 400); }
   const c = caseFromBody(body);
   if (!c.name) return json({ error: "事件名は必須です" }, 400);
+  const cardTextErr = validateCardText(body);
+  if (cardTextErr) return json({ error: cardTextErr }, 400);
 
   // 事件名が重複していたら、エラーで止めずに全角の連番を振って回避する（2026-08-28）
   c.name = await uniqueCaseName(env, c.name);

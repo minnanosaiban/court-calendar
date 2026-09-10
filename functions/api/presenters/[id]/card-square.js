@@ -1,5 +1,5 @@
 import {
-  json, rowToPresenter, putFile, getIdentity, authorizeWrite, getPresenterSession,
+  json, rowToPresenter, putFile, authorizeSelfOrAdmin,
   CARD_MIMES, CARD_MAX_BYTES,
 } from "../../../_common.js";
 import { presentersSelect } from "../../presenters.js";
@@ -11,13 +11,6 @@ import { presentersSelect } from "../../presenters.js";
 
 async function loadRow(env, pid) {
   return env.DB.prepare(`${presentersSelect()} WHERE presenters.id = ?`).bind(pid).first();
-}
-
-async function authorizeSelfOrAdmin(request, env, pid) {
-  const id = await getIdentity(request, env);
-  if (authorizeWrite(request, env, id)) return { ok: true, actor: id.email || "admin" };
-  const session = await getPresenterSession(request, env);
-  return { ok: !!session && session.presenterId === pid, actor: "presenter:" + pid };
 }
 
 export async function onRequestPut({ request, env, params }) {
@@ -46,7 +39,7 @@ export async function onRequestPut({ request, env, params }) {
   ).bind(key, auth.actor, new Date().toISOString(), pid).run();
   if (cur.card_square_r2_key && cur.card_square_r2_key !== key && env.FILES) await env.FILES.delete(cur.card_square_r2_key).catch(() => {});
 
-  return json(rowToPresenter(await loadRow(env, pid)));
+  return json(rowToPresenter(await loadRow(env, pid), auth.admin));
 }
 
 // 自動生成に戻す
@@ -63,5 +56,5 @@ export async function onRequestDelete({ request, env, params }) {
   ).bind(auth.actor, new Date().toISOString(), pid).run();
   if (cur.card_square_r2_key && env.FILES) await env.FILES.delete(cur.card_square_r2_key).catch(() => {});
 
-  return json(rowToPresenter(await loadRow(env, pid)));
+  return json(rowToPresenter(await loadRow(env, pid), auth.admin));
 }

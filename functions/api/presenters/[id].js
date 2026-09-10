@@ -1,7 +1,7 @@
 import {
   json, rowToPresenter, getIdentity, authorizeWrite, isHttpUrl,
   getPresenterSession, generatePassword, randomHex, hashPassword,
-  hiddenCaseIds, myCaseIds, presenterCaseVisibility, deleteR2,
+  hiddenCaseIds, myCaseIds, presenterCaseVisibility, deleteR2, validateCardText,
 } from "../../_common.js";
 import { presentersSelect } from "../presenters.js";
 
@@ -39,6 +39,8 @@ export async function onRequestPut({ request, env, params }) {
   try { body = await request.json(); } catch { return json({ error: "bad json" }, 400); }
   const nickname = String(body.nickname || "").trim();
   if (!nickname) return json({ error: "ニックネームは必須です" }, 400);
+  const cardTextErr = validateCardText(body);
+  if (cardTextErr) return json({ error: cardTextErr }, 400);
 
   let sql = `UPDATE presenters SET nickname=?, updated_by=?, updated_at=?`;
   const bind = [nickname, admin ? id.email : ("presenter:" + params.id), new Date().toISOString()];
