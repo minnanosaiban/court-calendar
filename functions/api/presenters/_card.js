@@ -9,7 +9,7 @@ export async function loadPresenterCardData(env, id) {
   const today = todayJst();
   const [p, nextEvent, count] = await Promise.all([
     env.DB.prepare(`SELECT id, nickname, icon_r2_key AS presenter_icon_r2_key,
-              card_r2_key, card_square_r2_key, card_headline, card_sub, card_message
+              card_r2_key, card_square_r2_key, card_headline, card_sub, card_message, seo_title
          FROM presenters WHERE id = ?`).bind(id).first(),
     env.DB.prepare(
       `SELECT e.date, e.time, e.court, e.place

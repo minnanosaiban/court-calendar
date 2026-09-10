@@ -10,6 +10,7 @@ import {
   h, BG, PAPER, RING, GO_R, GO_M, INK, RED, GRAY,
   SITE_LABEL, MESSAGE, stamp, perforation, cheerSection,
   loadFonts, fontList, loadPresenterIconDataUri, overrideResponse,
+  cardHeadlineFrom,
   ImageResponse, cache,
 } from "../../cases/_card.js";
 import { loadPresenterCardData, presenterSubLine } from "../_card.js";
@@ -79,7 +80,7 @@ export async function onRequestGet(context) {
   const data = {
     nickname: loaded.row.nickname || "",
     iconDataUri,
-    headline: loaded.row.card_headline || "",
+    headline: cardHeadlineFrom(loaded.row.seo_title, `${loaded.row.nickname}さん ｜ 応援傍聴ナビ`),
     subLine: loaded.row.card_sub || presenterSubLine(loaded),
     message: loaded.row.card_message || MESSAGE,
   };

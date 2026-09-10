@@ -1623,13 +1623,9 @@ window.CC = (function(){
     // どの欄も空欄＝自動生成で、うすい文字（placeholder）に自動のときの中身を出しておく。
     // 事件側の値は下の「保存」でまとめて保存し、アカウント側の値はその場で「変更」する
     // （ニックネーム・アイコン・Xアカウントと同じ扱い＝同じ人の他の事件にも効くため）。
-    const CARD_HEADLINE_PH = "傍聴席に、ひとり増える。\nそれだけで法廷は変わる。";
-    const CARD_SUB_PH_PRESENTER = "自動（次回期日、無ければ「応援している裁判 ◯件」）";
-    const CARD_SUB_PH_CASE = "次の期日は調整中です";
-    const CARD_MESSAGE_PH = "傍聴に行って応援しよう！";
     const SEO_DESC_PH = "傍聴席に、ひとり増える。それだけで法廷は変わる。";
-    function cardImgTag(src){
-      return src ? `<img src="${escapeAttr(src)}" alt="" style="width:180px;border-radius:8px;border:1px solid var(--tint)">` : "";
+    function cardImgTag(src, width){
+      return src ? `<img src="${escapeAttr(src)}" alt="" style="width:${width||180}px;border-radius:8px;border:1px solid var(--tint)">` : "";
     }
     // 自動生成のカードは1時間エッジキャッシュされるので、編集画面のプレビューだけは毎回作り直させる
     function bustUrl(u){ return u + (u.indexOf("?") < 0 ? "?" : "&") + "t=" + Date.now(); }
@@ -1644,13 +1640,10 @@ window.CC = (function(){
     function updatePresenterCardUI(p){
       if(!p) return;
       const base = "/api/presenters/" + encodeURIComponent(p.id);
-      cPCardPreview.innerHTML = cardImgTag(p.cardUrl || bustUrl(base + "/card.png"));
-      cPCardSquarePreview.innerHTML = cardImgTag(p.cardSquareUrl || bustUrl(base + "/card-square.png"));
+      cPCardPreview.innerHTML = cardImgTag(p.cardUrl || bustUrl(base + "/card.png"), 180);
+      cPCardSquarePreview.innerHTML = cardImgTag(p.cardSquareUrl || bustUrl(base + "/card-square.png"), 120);
       cPCardRemoveWrap.hidden = !p.cardUrl;
       cPCardSquareRemoveWrap.hidden = !p.cardSquareUrl;
-      cPCardHeadline.value = p.cardHeadline || ""; cPCardHeadline.placeholder = CARD_HEADLINE_PH;
-      cPCardSub.value = p.cardSub || "";          cPCardSub.placeholder = CARD_SUB_PH_PRESENTER;
-      cPCardMessage.value = p.cardMessage || "";  cPCardMessage.placeholder = CARD_MESSAGE_PH;
       autosizeAll(cPresenterCardRow);
     }
     function updatePresenterSeoUI(p){
@@ -1720,18 +1713,12 @@ window.CC = (function(){
         statusEl.hidden=false; statusEl.textContent=doneText;
       }catch(err){ statusEl.hidden=false; statusEl.textContent="変更できませんでした：" + (err && err.message || err); }
     }
-    cPCardTextSave.addEventListener("click", ()=>savePresenterFields({
-      cardHeadline:cPCardHeadline.value, cardSub:cPCardSub.value, cardMessage:cPCardMessage.value,
-    }, cPCardTextStatus, "カードの文言を変更しました。"));
     cPSeoSave.addEventListener("click", ()=>savePresenterFields({
       seoTitle:cPSeoTitle.value, seoDescription:cPSeoDescription.value,
     }, cPSeoStatus, "検索結果の見え方を変更しました。"));
 
     // ---- 事件のページ（/case?id=…）。値は下の「保存」でまとめて保存する ----
     function updateCaseCardTextUI(c){
-      cCardHeadline.value=(c&&c.cardHeadline)||""; cCardHeadline.placeholder=CARD_HEADLINE_PH;
-      cCardSub.value=(c&&c.cardSub)||"";           cCardSub.placeholder=CARD_SUB_PH_CASE;
-      cCardMessage.value=(c&&c.cardMessage)||"";   cCardMessage.placeholder=CARD_MESSAGE_PH;
       cSeoTitle.value=(c&&c.seoTitle)||"";
       cSeoDescription.value=(c&&c.seoDescription)||"";
       updateCaseSeoPreview();
@@ -1850,7 +1837,6 @@ window.CC = (function(){
         relatedCaseIds,
         archivedAt:cFields.archivedAt.value, closeType:cFields.closeType.value.trim(),
         boardEnabled:cBoardEnabled.checked, boardRestricted:cBoardRestricted.checked,
-        cardHeadline:cCardHeadline.value.trim(), cardSub:cCardSub.value.trim(), cardMessage:cCardMessage.value.trim(),
         seoTitle:cSeoTitle.value.trim(), seoDescription:cSeoDescription.value.trim(),
       };
       $("cSave").disabled=true;

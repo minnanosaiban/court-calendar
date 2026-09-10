@@ -158,12 +158,22 @@ export function dateSection(c, center) {
   ]);
 }
 
+// カードの見出しは、編集画面の「SEOとタイトル」の値をそのまま使う（2026-09-11、専用の
+// カード文言欄を廃止したため）。空ならページ自身のSEOタイトルと同じ既定値（fallback）を使う。
+// 見出しの枠は固定幅なので、SEOタイトル（最大100字・改行なし）が長くても崩れないよう、
+// 表示に使う分だけ Unicode コードポイント単位で切り詰める（validateCardText と同じ数え方）
+export function cardHeadlineFrom(seoTitle, fallback) {
+  const s = (seoTitle || fallback || "").trim();
+  const chars = [...s];
+  return chars.length > 40 ? chars.slice(0, 40).join("") + "…" : s;
+}
+
 // 事件データの読み出し＋非公開チェック＋問題提起人アイコンのdata URI化。card.png.js・card-square.png.js共通。
 // card_r2_key・card_square_r2_key の両方を読んでおき、どちらを見るかは呼び出し側（variant）に任せる
 export async function loadCardContext(env, request, id) {
   const c = await env.DB.prepare(
     `SELECT c.id, c.name, c.archived_at, c.close_type, c.view_key, c.card_r2_key, c.card_square_r2_key,
-            c.card_headline, c.card_sub, c.card_message,
+            c.card_headline, c.card_sub, c.card_message, c.seo_title,
             p.nickname AS presenter_nickname, p.icon_r2_key AS presenter_icon_r2_key
        FROM cases c LEFT JOIN presenters p ON p.id = c.presenter_id
       WHERE c.id = ?`

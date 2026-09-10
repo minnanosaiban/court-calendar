@@ -9,6 +9,7 @@ import {
   h, BG, PAPER, RING, GO_R, GO_M, INK, RED, GRAY,
   SITE_LABEL, MESSAGE, stamp, perforation, dateSection, cheerSection,
   loadFonts, fontList, loadCardContext, loadPresenterIconDataUri, loadCardData, overrideResponse,
+  cardHeadlineFrom,
   ImageResponse, cache,
 } from "../_card.js";
 
@@ -94,8 +95,9 @@ export async function onRequestGet(context) {
     nextEvent,
     archivedAt: c.archived_at || "",
     closeType: c.close_type || "",
-    // カードの文言（空＝自動。期日があるときは日付が主役なので効くのは赤い行だけ）
-    cardHeadline: c.card_headline || "",
+    // カードの見出しはSEOタイトルと同じ値（空なら同じ既定値）。期日があるときは日付が主役なので、
+    // 実際にこの見出しが出るのは期日未定の応援の面だけ
+    cardHeadline: cardHeadlineFrom(c.seo_title, `${c.name} ｜ 応援傍聴ナビ`),
     cardSub: c.card_sub || "",
     message: c.card_message || MESSAGE,
   };

@@ -7,30 +7,18 @@
 //
 // URL: /api/cases/:id/card-square.png（非公開事件は ?key=閲覧キー が必要。case.js と同じ規則）
 import {
-  h, BG, PAPER, RING, GO_R, GO_M, INK, RED, GRAY,
-  SITE_LABEL, MESSAGE, stamp, dateSection, cheerSection,
-  loadFonts, fontList, loadCardContext, loadPresenterIconDataUri, loadCardData, overrideResponse,
+  h, BG, PAPER, RING, GO_M, INK,
+  SITE_LABEL, stamp,
+  loadFonts, fontList, loadCardContext, loadPresenterIconDataUri, overrideResponse,
   ImageResponse, cache,
 } from "../_card.js";
 
+// 正方形版（Summary）は、X・チャットアプリが小さく縮めて出すため、いつ・誰の事件かの詳細は
+// 横長版に任せ、アイコンとサイト名だけの素朴な見た目に簡略化する（2026-09-11）
 function buildSquareTree(c) {
-  const presenter = [];
-  if (c.iconDataUri) {
-    presenter.push(h("img", { key: "av", src: c.iconDataUri, width: 140, height: 140, style: { borderRadius: "50%", border: `3px solid ${RING}` } }));
-  }
-  if (c.presenterNickname) {
-    presenter.push(h(
-      "div",
-      { key: "nick", style: { display: "flex", flexDirection: "column", alignItems: "center", marginTop: c.iconDataUri ? 20 : 0, fontFamily: GO_R, fontSize: 30, color: GRAY, textAlign: "center" } },
-      [
-        h("div", { key: "n1", style: { display: "flex" } }, c.presenterNickname + "さん"),
-        h("div", { key: "n2", style: { display: "flex" } }, "を応援！"),
-      ]
-    ));
-  } else if (!c.iconDataUri) {
-    // アイコン・ニックネームどちらも無いときだけ、サイトのハンコを目印に出す
-    presenter.push(stamp(64));
-  }
+  const icon = c.iconDataUri
+    ? h("img", { key: "av", src: c.iconDataUri, width: 140, height: 140, style: { borderRadius: "50%", border: `3px solid ${RING}` } })
+    : stamp(140);
 
   const card = h(
     "div",
@@ -41,14 +29,8 @@ function buildSquareTree(c) {
       },
     },
     [
-      h("div", { key: "head", style: { display: "flex", alignItems: "center" } }, [
-        stamp(52),
-        h("div", { key: "label", style: { display: "flex", marginLeft: 18, fontFamily: GO_M, fontSize: 30, color: INK, letterSpacing: 1.5 } }, SITE_LABEL),
-      ]),
-      h("div", { key: "date", style: { display: "flex", marginTop: 64 } },
-        c.nextEvent || c.archivedAt ? dateSection(c, true) : cheerSection(c.cardSub || "次の期日は調整中です", { center: true, size: 48, headline: c.cardHeadline })),
-      h("div", { key: "presenter", style: { display: "flex", flexDirection: "column", alignItems: "center", marginTop: 64 } }, presenter),
-      h("div", { key: "msg", style: { display: "flex", fontFamily: GO_M, fontSize: 32, color: RED, letterSpacing: 1.5, marginTop: 64, textAlign: "center" } }, c.message),
+      icon,
+      h("div", { key: "label", style: { display: "flex", marginTop: 40, fontFamily: GO_M, fontSize: 44, color: INK, letterSpacing: 1.5 } }, SITE_LABEL),
     ]
   );
 
@@ -76,19 +58,9 @@ export async function onRequestGet(context) {
   const overridden = await overrideResponse(env, c.card_square_r2_key, isPrivate, cacheKey, context);
   if (overridden) return overridden;
 
-  const nextEvent = await loadCardData(env, id);
   const iconDataUri = await loadPresenterIconDataUri(env, c);
 
-  const data = {
-    presenterNickname: c.presenter_nickname || "",
-    iconDataUri,
-    nextEvent,
-    archivedAt: c.archived_at || "",
-    closeType: c.close_type || "",
-    cardHeadline: c.card_headline || "",
-    cardSub: c.card_sub || "",
-    message: c.card_message || MESSAGE,
-  };
+  const data = { iconDataUri };
 
   const fonts = await loadFonts(env, request);
   cache.setExecutionContext(context);
