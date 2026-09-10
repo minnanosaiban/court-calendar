@@ -50,6 +50,7 @@ migrate_017_drop_materials_kind.sql 画面のどこにも表示されていな�
 migrate_018_case_no_and_related.sql 事件番号（cases.case_no）と関連裁判（cases.related_case_ids）を追加する一度きりのマイグレーション
 migrate_019_split_parties_links.sql 当事者（cases.parties）を原告名・被告名に、リンク（cases.links）を原告・被告それぞれのリンクに分離する一度きりのマイグレーション
 migrate_020_case_icon.sql         事件のアイコン（cases.icon_r2_key）列を追加する一度きりのマイグレーション
+migrate_040_card_text_and_seo.sql カードの文言（card_headline等）とSEOのタイトル・説明（seo_title/seo_description）を事件・問題提起人の両方に追加する一度きりのマイグレーション
 seed_demo.sql                     動作確認用の架空データ（v3 形式・消し方はファイル冒頭のコメント参照）
 wrangler.toml           設定（D1・R2 バインド・環境変数）
 ```

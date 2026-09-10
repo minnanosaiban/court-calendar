@@ -198,6 +198,20 @@ export const PRESENTER_COLS = `id, nickname, icon_r2_key, x_url, login_username,
                                seo_title, seo_description,
                                created_by, updated_by, updated_at`;
 
+// この問題提起人が持っている事件のうち、いま見せてよい（隠されていない）件数を数える。
+// 非公開にした事件（view_key あり）しか持たない問題提起人は、匿名の訪問者・合言葉を知らない人には
+// 「そんな人はいない」扱いにする（単体取得 /api/presenters/:id と presenter.js のOGPが使う。
+// 一覧 /api/presenters は全員分をまとめて数えるので、同じ規則を api/presenters.js 側に持っている。2026-09-10）。
+// hidden は hiddenCaseIds() の結果、mine はログイン中の問題提起人自身の事件id集合（省略時は空＝純粋な匿名扱い）
+export async function presenterCaseVisibility(env, presenterId, hidden, mine) {
+  const { results } = await env.DB.prepare(`SELECT id FROM cases WHERE presenter_id = ?`).bind(presenterId).all();
+  const rows = results || [];
+  const h = hidden || new Set();
+  const m = mine || new Set();
+  const visible = rows.filter((r) => !h.has(r.id) || m.has(r.id)).length;
+  return { total: rows.length, visible };
+}
+
 // admin=true のときだけ、ログインID・ログイン発行済みかどうかを含める
 // （ログインIDは個人のメールアドレス等になりうるため、運営以外には見せない）
 export function rowToPresenter(r, admin) {
@@ -327,6 +341,24 @@ export async function putFile(env, prefix, itemId, file) {
     customMetadata: { name: file.name },
   });
   return key;
+}
+
+// R2から複数のファイルをベストエフォートで消す（1件失敗しても他は続ける）。
+// 事件・問題提起人の削除など、複数のR2キーをまとめて片付ける場面で共通に使う。
+// ctxLabel は失敗時に console.error へ添えるだけの印（例："case cid123"）。
+// 戻り値は失敗した件数（呼び出し側は必要なら応答に含める。0なら全部成功）
+export async function deleteR2(env, keys, ctxLabel) {
+  if (!env.FILES) return 0;
+  const list = (keys || []).filter(Boolean);
+  const results = await Promise.allSettled(list.map((k) => env.FILES.delete(k)));
+  let failed = 0;
+  results.forEach((r, i) => {
+    if (r.status === "rejected") {
+      failed++;
+      console.error(`R2削除に失敗しました（${ctxLabel || "unknown"}）: key=${list[i]}`, r.reason);
+    }
+  });
+  return failed;
 }
 
 // ---- 事件の写真 ----

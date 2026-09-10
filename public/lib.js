@@ -2427,8 +2427,13 @@ window.CC = (function(){
   }
   // 取り込みで既存の事件に追加データが来たとき用のマージ。incoming側で値が入っている欄だけ上書きし、
   // 空欄（未入力）は existing の値をそのまま残す
+  // isPrivate/viewKey/caseNoPublic・カードの文言/SEOの5欄（cardHeadline等）も、他の欄と同じく
+  // 「incomingが空なら既存の値を残す」対象に含める。漏れているとバックアップの再取り込みで
+  // これらだけNULLに巻き戻ってしまう（caseFromBodyは送られてこなかった欄をNULL/falseにするため。2026-09-10）
   const CASE_FIELDS = ["name","caseNo","plaintiffName","defendantName","judge","points","callText","presenterId","contact",
-    "press","plaintiffLinks","defendantLinks","tags","relatedCaseIds","archivedAt","closeType","boardEnabled","boardRestricted"];
+    "press","plaintiffLinks","defendantLinks","tags","relatedCaseIds","archivedAt","closeType","boardEnabled","boardRestricted",
+    "isPrivate","viewKey","caseNoPublic",
+    "cardHeadline","cardSub","cardMessage","seoTitle","seoDescription"];
   function mergeCaseFields(existing, incoming){
     const merged={};
     CASE_FIELDS.forEach(k=>{

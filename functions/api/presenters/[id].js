@@ -1,7 +1,7 @@
 import {
   json, rowToPresenter, getIdentity, authorizeWrite, isHttpUrl,
   getPresenterSession, generatePassword, randomHex, hashPassword,
-  hiddenCaseIds, myCaseIds,
+  hiddenCaseIds, myCaseIds, presenterCaseVisibility, deleteR2,
 } from "../../_common.js";
 import { presentersSelect } from "../presenters.js";
 
@@ -16,10 +16,9 @@ export async function onRequestGet({ request, env, params }) {
   if (!admin && Number(row.case_count) > 0) {
     const [hidden, session] = await Promise.all([hiddenCaseIds(env, request), getPresenterSession(request, env)]);
     const mine = await myCaseIds(env, session);
-    const { results: caseRows } = await env.DB.prepare(`SELECT id FROM cases WHERE presenter_id = ?`).bind(params.id).all();
-    const visibleCount = (caseRows || []).filter((c) => !hidden.has(c.id) || mine.has(c.id)).length;
-    if (visibleCount === 0) return json({ error: "not found" }, 404);
-    row.case_count = visibleCount;
+    const { visible } = await presenterCaseVisibility(env, params.id, hidden, mine);
+    if (visible === 0) return json({ error: "not found" }, 404);
+    row.case_count = visible;
   }
   return json(rowToPresenter(row, admin));
 }
@@ -107,11 +106,14 @@ export async function onRequestDelete({ request, env, params }) {
   const cnt = await env.DB.prepare(`SELECT COUNT(*) AS n FROM cases WHERE presenter_id = ?`).bind(params.id).first();
   if (cnt && cnt.n > 0) return json({ error: "このニックネームには事件が紐づいています。先に事件側の紐付けを外してください。" }, 409);
 
-  const cur = await env.DB.prepare(`SELECT icon_r2_key FROM presenters WHERE id = ?`).bind(params.id).first();
+  // アイコンだけでなく、カード画像（横長・正方形）のR2キーも先に読んでおく（2026-09-10）
+  const cur = await env.DB.prepare(
+    `SELECT icon_r2_key, card_r2_key, card_square_r2_key FROM presenters WHERE id = ?`
+  ).bind(params.id).first();
   if (!cur) return json({ error: "not found" }, 404);
 
   await env.DB.prepare(`DELETE FROM presenter_sessions WHERE presenter_id = ?`).bind(params.id).run();
   await env.DB.prepare(`DELETE FROM presenters WHERE id = ?`).bind(params.id).run();
-  if (cur.icon_r2_key && env.FILES) await env.FILES.delete(cur.icon_r2_key).catch(() => {});
+  await deleteR2(env, [cur.icon_r2_key, cur.card_r2_key, cur.card_square_r2_key], "presenter:" + params.id);
   return json({ ok: true });
 }

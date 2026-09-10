@@ -3,6 +3,12 @@
 // カードが出るように、配信直前に <head> だけをその場で書き換える。中身の描画は client 側の lib.js が行う。
 // og:image には正方形版（Teams・Slack等が中央トリミングして小さく出す対策）、X が優先して読む
 // twitter:image には横長版を渡す（case.js と同じ出し分け）。
+// 非公開にした事件しか持たない問題提起人は、匿名の訪問者には「存在しない」扱いにする
+// （/api/presenters/:id が匿名・合言葉なしの相手に404を返すのと同じ規則。2026-09-10。
+//  このハンドラはページのナビゲーションそのものを受けるので X-View-Keys 等のヘッダは
+//  そもそも付かず、常に匿名の訪問者として扱ってよい）
+import { hiddenCaseIds, presenterCaseVisibility } from "./_common.js";
+
 function escAttr(s) {
   return String(s || "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
@@ -16,6 +22,12 @@ export async function onRequestGet({ request, env }) {
 
   const p = await env.DB.prepare(`SELECT id, nickname, seo_title, seo_description, updated_at FROM presenters WHERE id = ?`).bind(id).first();
   if (!p) return assetRes;
+
+  // 非公開にした事件しか持たない問題提起人は、素のページ（書き換えなし）をそのまま返す
+  // （事件名・アイコン等がOGPに一切乗らない。/api/presenters/:id と同じ規則、上のコメント参照）
+  const hidden = await hiddenCaseIds(env, request);
+  const visibility = await presenterCaseVisibility(env, p.id, hidden);
+  if (visibility.total > 0 && visibility.visible === 0) return assetRes;
 
   // 更新時刻を付けておくと、カードの文言を変えたときに古いキャッシュを引かずに済む（2026-09-10）
   const ver = String(p.updated_at || "").replace(/\D/g, "");

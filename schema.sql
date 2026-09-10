@@ -57,6 +57,11 @@
 --   見たときに合わせた版を別に登録できるようにした。Web用があればそちらを優先して表示し、無ければ
 --   これまでどおりの写真を使う。旧スキーマのDBを更新する場合は migrate_036_case_images_web.sql を
 --   実行すること。
+--
+-- v16（2026-09-10）：Twitterカードの文言と、Google検索のタイトル・説明を編集できるようにする
+--   （cases.card_headline/card_sub/card_message/seo_title/seo_description、presenters側は同じ5列に
+--   加えてカード画像の差し替え用 card_r2_key/card_square_r2_key も追加）。どの列も空＝これまでどおり自動。
+--   旧スキーマのDBを更新する場合は migrate_040_card_text_and_seo.sql を実行すること。
 
 -- 問題提起人（アイコン＋ニックネーム）。1人が複数の事件を持てる。
 CREATE TABLE IF NOT EXISTS presenters (
@@ -67,6 +72,13 @@ CREATE TABLE IF NOT EXISTS presenters (
   login_username      TEXT,         -- ログインID（運営が設定。メールアドレス等・任意の文字列。未発行ならNULL）
   login_password_salt TEXT,         -- パスワードのソルト（16byte・16進）
   login_password_hash TEXT,         -- PBKDF2-SHA256 ハッシュ（16進）。平文は保存しない
+  card_r2_key TEXT,                 -- プロフィールカード（OGP画像・横長）の差し替え用R2キー。未設定なら自動生成（任意）
+  card_square_r2_key TEXT,          -- 同・正方形版。未設定なら自動生成（任意）
+  card_headline TEXT,               -- カードの大きい2行（改行区切り・任意。空なら既定の呼びかけ文）
+  card_sub    TEXT,                 -- その下の小さいグレー1行（任意）
+  card_message TEXT,                -- 一番下の赤い1行（任意）
+  seo_title   TEXT,                 -- <title>／og:title（任意。空ならニックネームから自動生成）
+  seo_description TEXT,             -- meta description／og:description（任意。空なら自動生成）
   created_by  TEXT,
   updated_by  TEXT,
   updated_at  TEXT                  -- ISO8601
@@ -113,6 +125,11 @@ CREATE TABLE IF NOT EXISTS cases (
   notice_mime     TEXT,              -- PDFか画像かの判定に使う（application/pdf・image/png・image/jpeg）
   card_r2_key TEXT,                  -- Twitterカード（OGP画像・横長）の差し替え用R2キー。未設定なら/api/cases/:id/card.pngが自動生成する（任意）
   card_square_r2_key TEXT,           -- 同・正方形版。未設定なら/api/cases/:id/card-square.pngが自動生成する（任意）
+  card_headline TEXT,                -- カードの大きい2行（改行区切り・任意。期日が決まっていないときだけ効く）
+  card_sub    TEXT,                  -- その下の小さいグレー1行（任意。同上）
+  card_message TEXT,                 -- 一番下の赤い1行（任意）
+  seo_title   TEXT,                  -- <title>／og:title（任意。空なら事件名から自動生成）
+  seo_description TEXT,              -- meta description／og:description（任意。空ならよびかけから自動生成）
   created_by  TEXT,
   updated_by  TEXT,
   updated_at  TEXT                  -- ISO8601
