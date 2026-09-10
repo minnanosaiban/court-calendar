@@ -14,9 +14,11 @@ import { loadPresenterCardData } from "../_card.js";
 // 正方形版（Summary）は事件カードの正方形版（cases/[id]/card-square.png.js）と同じテンプレート：
 // アイコンとサイト名だけの素朴な見た目に簡略化する（2026-09-11）
 function buildSquareTree(p) {
+  // 1000×1000の枠に対してアイコン140px・文字44ptだと余白ばかりで小さく見えたため、
+  // アイコン280px・文字64ptに拡大した（2026-09-11、実物を見た本人の指摘。事件側と揃える）
   const icon = p.iconDataUri
-    ? h("img", { key: "av", src: p.iconDataUri, width: 140, height: 140, style: { borderRadius: "50%", border: `3px solid ${RING}` } })
-    : stamp(140);
+    ? h("img", { key: "av", src: p.iconDataUri, width: 280, height: 280, style: { borderRadius: "50%", border: `4px solid ${RING}` } })
+    : stamp(280);
 
   const card = h(
     "div",
@@ -28,7 +30,7 @@ function buildSquareTree(p) {
     },
     [
       icon,
-      h("div", { key: "label", style: { display: "flex", marginTop: 40, fontFamily: GO_M, fontSize: 44, color: INK, letterSpacing: 1.5 } }, SITE_LABEL),
+      h("div", { key: "label", style: { display: "flex", marginTop: 56, fontFamily: GO_M, fontSize: 64, color: INK, letterSpacing: 1.5 } }, SITE_LABEL),
     ]
   );
 
