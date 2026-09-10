@@ -963,6 +963,18 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .lssec.open .lschev{transform:rotate(180deg)}
 .lsbody{display:none;margin-top:12px}
 .lssec.open .lsbody{display:block}
+/* 事件ページの「＋ 期日を編集」「編集」など（?open=）から来たときは、その1件の入力窓だけを出す
+   （lib.js の edFocus／openDeepLink。事件情報の全項目の中に放り込まれると、慣れていない人が迷うため。
+   2026-09-10）。入力窓の見出し（期日を追加 等）はページのタイトルと重なるので文字だけ隠し、右の
+   「閉じる」「保存」は残す。ページ下の保存バー（事件情報をまとめて保存する方）も出さない */
+#ceForm.focus > :not(.focus-target),
+#ceForm.focus .focus-target .lshead,
+#ceForm.focus .focus-target .addbtn,
+#ceForm.focus :is(#imgList,#evList,#matList) > :not(.ieditor),
+#ceGrid.focus .savebar{display:none}
+#ceForm.focus .focus-target{border-top:none;padding-top:0}
+#ceForm.focus .focus-target .lsbody{margin-top:0}
+#ceForm.focus .ihead > span:first-child{visibility:hidden}
 .irow{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;cursor:pointer;font-size:.9rem}
 .irow:hover{background:var(--tint)}
 .irow.editing{background:var(--tint)}

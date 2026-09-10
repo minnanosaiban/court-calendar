@@ -7,8 +7,9 @@ window.CC = (function(){
   const VIEWER_LS  = "court-calendar.viewer";
   const VIEWKEYS_LS = "court-calendar.viewkeys";
   const PRESENTERTOKEN_LS = "court-calendar.presentertoken";
-  // 掲載レベル選択カード（最小限／標準的／詳細）で自分から選んだ値は、この端末では次回も
-  // 初期状態にする（2026-09-10。事件ごとではなく端末ごとの好みとして覚える）
+  // 掲載レベル選択カード（最小限／標準的／詳細）で自分から選んだ値は、次回も初期状態にする
+  // （2026-09-10。事件ごとではなく人ごとに覚える＝このキーの後ろに「.問題提起人ID」か「.admin」を付ける。
+  // 当初は端末ごとに1つだったが、同じ端末で前の人が選んだ値が、初めてログインした人に引き継がれていた）
   const TIER_LS = "court-calendar.tier";
   const WD = ["日","月","火","水","木","金","土"];
 
@@ -1123,16 +1124,13 @@ window.CC = (function(){
     if(me.canWrite){
       if(opts.hideWhenUnlocked){ el.innerHTML=""; return; }
       el.innerHTML =
-        `<br>編集できます ── この端末は編集ロック解除済みです。`+
-        `<br><a id="stAddCase">新たな事件を追加</a><span class="sep">・</span>`+
-        `<a id="stPresentersAdmin">ニックネームを管理</a><span class="sep">・</span>`+
-        `<a id="stLock">ロックする</a>`+
+        // 「編集できます ── この端末は編集ロック解除済みです。」の文言と「ロックする」（一番上のバーで足りる）、
+        // 「新たな事件を追加」（問題提起人が自分で追加できるようになった）は外した（2026-09-10）
+        `<br><a id="stPresentersAdmin">ニックネームを管理</a>`+
         `<br><span class="status-sub">バックアップ（複数件をまとめて登録・復元するとき用）：`+
         `<a id="stExport">書き出す</a><span class="sep">・</span>`+
         `<a id="stImport">ファイルから取り込む</a></span>`;
-      el.querySelector("#stAddCase").addEventListener("click",()=>{ location.href="case-edit.html"; });
       el.querySelector("#stPresentersAdmin").addEventListener("click",()=>{ location.href="presenters-admin.html"; });
-      el.querySelector("#stLock").addEventListener("click",lockEditing);
       el.querySelector("#stExport").addEventListener("click",exportData);
       el.querySelector("#stImport").addEventListener("click",()=>{
         const fi=document.getElementById("fileInput"); if(fi) fi.click();
@@ -1252,12 +1250,13 @@ window.CC = (function(){
     let edInited=false;   // フォームを一度充填したか（onChangeのたびに入力中の内容を上書きしないため）
     let edDirty=false;    // 未保存の入力があるか（ページを離れる前の確認に使う）
     let edIsAdmin=true;   // 運営として編集しているか（false＝ログイン中の問題提起人が自分の事件を編集している）
+    let edFocus=null;     // ?open= で来て1件の入力窓だけを出している種類（"img"／"ev"／"mat"。null＝ふつうの編集ページ）
 
     // ================= 掲載レベル（最小限／標準的／詳細、2026-09-01） =================
     // 既存事件の編集で「赤の編集」から来たとき、慣れていない人が詳細な入力欄に迷わないよう、
     // まずどこまで入力するか選んでもらう。data-tier-min="std"/"detail" を持つ節・欄は、選んだ
     // 掲載レベルがそれ未満だと隠す（値そのものはフォームの裏に残り続けるので保存で消えない）。
-    // 新規作成・?open=の深いリンクからは選ばせず、常に detail（フル項目）扱いにする
+    // ?open=の深いリンク（1件の入力窓だけを出す）では選ばせない（期日はその人の掲載レベル、画像・資料は detail）
     let edTier=null;   // null＝未選択（選択カードを出したまま）
     const TIER_ORDER={min:0, std:1, detail:2};
     function tierAllows(min){ return !min || (!!edTier && TIER_ORDER[edTier]>=TIER_ORDER[min]); }
@@ -1288,17 +1287,32 @@ window.CC = (function(){
       autosizeAll($("ceForm"));   // グリッドが表示されたこの時点で測る（隠れているとscrollHeightが0になるため）
       // いま選んでいるカードを目立たせる（タブのon状態と同じ考え方）
       TIER_CARDS.forEach(([elId,t])=>{ $(elId).classList.toggle("on", t===tier); });
-      // リロード・共有時に同じ掲載レベルへ戻れるようURLへ反映する
-      const url=new URL(location.href);
-      url.searchParams.set("tier", tier);
-      history.replaceState(null, "", url);
+      // リロード・共有時に同じ掲載レベルへ戻れるようURLへ反映する（1件の入力窓だけを出しているときは
+      // 掲載レベルを選ぶ画面ではないので付けない）
+      if(!edFocus){
+        const url=new URL(location.href);
+        url.searchParams.set("tier", tier);
+        history.replaceState(null, "", url);
+      }
     }
     // カードを自分でクリック／Enterで選んだときだけ、この端末の既定として覚える（2026-09-10）。
     // applyTier自体は新規作成・深いリンクの「常にdetail扱い」等でも呼ばれるため、そちらでは
     // 覚えない（本人が選んだのでない値で好みを上書きしないよう、ここで分けている）
+    // 掲載レベルの記憶は人ごと（ログイン中の問題提起人ごと。運営は運営で1つ）。初めての人は必ず「最小限」から始まる
+    function tierMemoryKey(){ return TIER_LS + "." + (me.canWrite ? "admin" : (me.presenterId || "guest")); }
+    // 初期状態：URL指定 ＞ この人が前回自分から選んだ値 ＞ 「最小限」
+    function rememberedTier(){
+      const urlTier=new URLSearchParams(location.search).get("tier");
+      let saved=null;
+      try{
+        localStorage.removeItem(TIER_LS);   // 端末ごとに1つ覚えていた頃の値は使わない（初めての人に引き継がないため）
+        saved=localStorage.getItem(tierMemoryKey());
+      }catch(e){}
+      return TIER_ORDER.hasOwnProperty(urlTier) ? urlTier : TIER_ORDER.hasOwnProperty(saved) ? saved : "min";
+    }
     function chooseTier(tier){
       applyTier(tier);
-      try{ localStorage.setItem(TIER_LS, tier); }catch(e){}
+      try{ localStorage.setItem(tierMemoryKey(), tier); }catch(e){}
     }
     // 問題提起人プルダウンの選択肢を作る（未設定／既存の問題提起人／＋新規作成）。
     // 問題提起人本人が編集しているときは、付け替え・新規作成はできないので自分の分だけ固定で出す
@@ -1783,7 +1797,9 @@ window.CC = (function(){
       updateCaseCardTextUI(c);
     }
     async function saveCase(){
-      if(!(edCaseId ? canEditCase(edCaseId) : me.canWrite)) return;
+      // 新規作成は運営のほか、ログイン中の問題提起人も可（initCaseEditPage の allowed と同じ条件。
+      // ここが me.canWrite だけのままだと、問題提起人が保存を押しても黙って何も起きなかった。2026-09-10）
+      if(!(edCaseId ? canEditCase(edCaseId) : (me.canWrite || !!me.presenterId))) return;
       const name=cFields.name.value.trim();
       if(!name){ alert("事件名を入力してください。"); cFields.name.focus(); return; }
       // 関連裁判：1行1事件名→サイトに登録済みの事件のIDに変換する（期日の事件名と同じく、未登録の事件名は指定できない）
@@ -1951,17 +1967,14 @@ window.CC = (function(){
       // 迷うため。以前は新規作成だけ常にフル項目＝詳細だった）。URLに掲載レベル指定（?tier=）が
       // あればそれを、無ければこの端末の記憶、それも無ければ「最小限」を初期状態にする。
       // autosize・画像/期日案内等の表示切り替えは applyTier() の中で行う
-      const openParam=params.get("open");
-      if(!openParam){
+      // ?open= の深いリンク（事件ページの「＋ 期日を編集」「編集」など）は、その1件の入力窓だけを出す
+      // （2026-09-10。事件情報の全項目の中に放り込まれると、慣れていない人が迷うため）。
+      // その1件が見つからないときは、ふつうの編集ページとして開く
+      const [openKind, openId] = (params.get("open")||"").split(":");
+      edFocus = (id && LIST[openKind] && (openId==="new" || LIST[openKind].items().some(x=>x.id===openId))) ? openKind : null;
+      if(!edFocus){
         tierPick.hidden=false;
-        // URL指定 ＞ この端末で前回自分から選んだ値 ＞ 「最小限」の順で初期状態を決める（2026-09-10）
-        const urlTier=params.get("tier");
-        let savedTier=null;
-        try{ savedTier=localStorage.getItem(TIER_LS); }catch(e){}
-        const initialTier = TIER_ORDER.hasOwnProperty(urlTier) ? urlTier
-                           : TIER_ORDER.hasOwnProperty(savedTier) ? savedTier
-                           : "min";
-        applyTier(initialTier);
+        applyTier(rememberedTier());
         // 画像・期日・資料は、節を開いた状態にし、「追加」の新規入力欄も最初から出しておく
         // （クリック待ちにしない。2026-09-01。深いリンク（?open=）で来たときは openDeepLink() 側が
         // 個別に1件だけ開くので、二重に開かないようこちらは通らない）
@@ -1981,10 +1994,9 @@ window.CC = (function(){
         });
       }else{
         tierPick.hidden=true;
-        // 新規作成は fillCaseForm() を通らないので、カードの文言・SEOのうすい文字（自動のときの
-        // 中身）と検索結果のプレビューだけここで初期化しておく
-        if(!id) updateCaseCardTextUI(null);
-        applyTier("detail");
+        // 期日の入力窓は、その人の掲載レベルに合わせる（最小限なら主張欄・報告会は出さない）。
+        // 画像・資料は「詳細」でしか出ない節なので詳細にする
+        applyTier(edFocus==="ev" ? rememberedTier() : "detail");
       }
       openDeepLink();
     };
@@ -1992,6 +2004,8 @@ window.CC = (function(){
     // ================= 画像・期日・資料（1件ずつ、行を開いてその場で編集する。2026-08-27） =================
     // 事件情報の保存とは別に、1件ごとにその場で保存する。開けるのは同時に1件だけ
     // （どれかを開くと、他の行・他の節で開いていたエディタは閉じる）。
+    // 入力窓だけを出しているとき（edFocus）は、保存・閉じる・削除のあと事件ページへ戻る（結果をその場で見られるように）
+    function backToCase(){ location.href="case?id="+encodeURIComponent(edCaseId); }
     function closeEditor(){
       document.querySelectorAll(".ieditor").forEach(x=>x.remove());
       document.querySelectorAll(".irow.editing").forEach(x=>x.classList.remove("editing"));
@@ -2072,6 +2086,7 @@ window.CC = (function(){
           const created=await apiCreateImage(fd);
           images.push(created);
         }
+        if(edFocus) return backToCase();
         closeEditor(); renderImgList();
       }catch(err){ alert(saveErr(err)); btn.disabled=false; }
     }
@@ -2081,6 +2096,7 @@ window.CC = (function(){
       try{
         await apiDeleteImage(id);
         images=images.filter(x=>x.id!==id);
+        if(edFocus) return backToCase();
         closeEditor(); renderImgList();
       }catch(err){ alert(saveErr(err)); }
     }
@@ -2151,6 +2167,7 @@ window.CC = (function(){
           const created=await apiCreate(data);
           events.push(created);
         }
+        if(edFocus) return backToCase();
         closeEditor(); renderEvList(); renderMatList();  // 資料の「どの期日か」候補も変わりうる
       }catch(err){ alert(saveErr(err)); btn.disabled=false; }
     }
@@ -2162,6 +2179,7 @@ window.CC = (function(){
         events=events.filter(e=>e.id!==id);
         posts=posts.filter(p=>p.eventId!==id);
         materials.forEach(m=>{ if(m.eventId===id) m.eventId=""; });
+        if(edFocus) return backToCase();
         closeEditor(); renderEvList(); renderMatList();
       }catch(err){ alert(saveErr(err)); }
     }
@@ -2266,6 +2284,7 @@ window.CC = (function(){
           const created=await apiCreateMat(fd);
           materials.push(created);
         }
+        if(edFocus) return backToCase();
         closeEditor(); renderMatList();
       }catch(err){ alert(saveErr(err)); btn.disabled=false; }
     }
@@ -2275,6 +2294,7 @@ window.CC = (function(){
       try{
         await apiDeleteMat(id);
         materials=materials.filter(m=>m.id!==id);
+        if(edFocus) return backToCase();
         closeEditor(); renderMatList();
       }catch(err){ alert(saveErr(err)); }
     }
@@ -2300,7 +2320,7 @@ window.CC = (function(){
         }
 
         const close=e.target.closest("[data-close]");
-        if(close){ closeEditor(); return; }
+        if(close){ if(edFocus) return backToCase(); closeEditor(); return; }
 
         const save=e.target.closest("[data-save]");
         if(save){
@@ -2340,28 +2360,30 @@ window.CC = (function(){
     }
 
     // ---- 深いリンク：case.html の「編集」「＋◯◯を編集」から ?open=img:new / ev:<id> / mat:<id> で来たとき、
-    // 該当節を開いて、そのエディタも開いた状態にする ----
+    // その1件の入力窓だけを出す（edFocus は initCaseEditPage で決める。ほかの節・掲載レベルの選択・
+    // ページ下の保存バーは CSS の .focus で隠す。保存・閉じる・削除のあとは事件ページへ戻る＝backToCase）----
     function openDeepLink(){
-      const open=new URLSearchParams(location.search).get("open");
-      if(!open || !edCaseId) return;
-      const [kind, idOrNew] = open.split(":");
-      const def=LIST[kind]; if(!def) return;
-      const sec=document.getElementById("sec-"+kind); if(sec) sec.classList.add("open");
+      if(!edFocus) return;
+      const [kind, idOrNew] = new URLSearchParams(location.search).get("open").split(":");
+      const def=LIST[kind];
+      const what={img:"画像",ev:"期日",mat:"資料"}[kind] + (idOrNew==="new" ? "を追加" : "を編集");
+      $("ceTitle").textContent=what;
+      document.title=caseById(edCaseId).name+"の"+what+" ｜ 応援傍聴ナビ";
+      $("ceGrid").classList.add("focus");
+      $("ceForm").classList.add("focus");
+      document.getElementById("sec-"+kind).classList.add("open","focus-target");
       if(idOrNew==="new"){
         const addBtn=$(def.addBtn);
         addBtn.insertAdjacentHTML("beforebegin", def.editorHtml(null));
         const root=addBtn.previousElementSibling;
         wireAutosize(root); autosizeAll(root);
-        requestAnimationFrame(()=>root.scrollIntoView({block:"center"}));
+        // 挿入が applyTier() より後なので、この入力窓だけ掲載レベルの出し分けをかけ直す（最小限なら主張欄などを隠す）
+        root.querySelectorAll("[data-tier-min]").forEach(el=>{ el.hidden = !tierAllows(el.dataset.tierMin); });
       }else{
         const item=def.items().find(x=>x.id===idOrNew);
-        if(!item) return;
         const row=document.querySelector(`.irow[data-kind="${kind}"][data-id="${CSS.escape(idOrNew)}"]`);
-        if(!row) return;
-        row.classList.add("editing");
         openEditorAfter(row, def.editorHtml(item));
         row.classList.add("editing");
-        requestAnimationFrame(()=>row.scrollIntoView({block:"center"}));
       }
     }
   }
