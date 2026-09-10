@@ -5,7 +5,7 @@ import {
 } from "../_common.js";
 export { putFile };
 
-export const SELECT = `SELECT ${MATERIAL_COLS} FROM materials m WHERE m.hidden = 0`;
+export const SELECT = `SELECT ${MATERIAL_COLS} FROM materials m LEFT JOIN cases c ON c.id = m.case_id WHERE m.hidden = 0`;
 
 // 一覧（誰でも閲覧可）。?case=<id> で1つの事件にしぼれる。
 // 非公開にした事件の資料は合言葉が合った人にだけ返す（自分の事件は常に見える）。

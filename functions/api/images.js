@@ -3,7 +3,7 @@ import {
   getIdentity, hiddenCaseIds, authorizeCaseWrite, actorLabel, getPresenterSession, myCaseIds,
 } from "../_common.js";
 
-export const SELECT = `SELECT ${IMAGE_COLS} FROM case_images i`;
+export const SELECT = `SELECT ${IMAGE_COLS} FROM case_images i LEFT JOIN cases c ON c.id = i.case_id`;
 
 // 一覧（誰でも閲覧可）。?case=<id> で1つの事件にしぼれる。
 // 非公開にした事件の写真は合言葉が合った人にだけ返す（自分の事件は常に見える）。

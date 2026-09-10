@@ -18,9 +18,12 @@ export async function onRequestGet({ request, env }) {
     ? await env.DB.prepare(`SELECT id, name, call_text, view_key, seo_title, seo_description, updated_at FROM cases WHERE id = ?`).bind(id).first()
     : await env.DB.prepare(`SELECT id, name, call_text, view_key, seo_title, seo_description, updated_at FROM cases WHERE name = ?`).bind(legacyName).first();
   if (!c) return assetRes;
-  // 非公開にした事件は、URLの ?key= が合言葉と一致しない限り、事件名・説明をカードに出さない
-  // （SNSの展開カードやクローラーに漏れないように、書き換えず素の案内文のまま返す）
-  if (c.view_key && url.searchParams.get("key") !== c.view_key) return assetRes;
+  // 非公開にした事件は、URLの ?key= が合っていてもカード・タイトル・説明を一切出さない
+  // （正しい鍵付きURLをチャットアプリに貼ると、そのアプリのリンク展開ボットが実物のカードを
+  // 取得して表示してしまい、共有先の全員に中身が見えてしまうため。書き換えず素の案内文のまま
+  // 返す。2026-09-11。中身そのものは、ページを開いた後クライアント側APIが鍵を照合して見せる
+  // ので、閲覧自体はこれまで通り鍵を持つ人にだけ許される）
+  if (c.view_key) return assetRes;
 
   // OGP画像：事件ごとの「傍聴券」カード（直近期日・問題提起人をその場で描画。2026-08-30）。
   // 手作りでPNGを作って case_images に upload していた旧運用（ogcard.png／正方形版との出し分け）は、

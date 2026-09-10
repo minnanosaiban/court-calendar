@@ -65,7 +65,7 @@ export function rowToCase(r) {
     closeType: r.close_type || "",
     boardEnabled: r.board_enabled === 0 || r.board_enabled === false ? false : true,
     boardRestricted: r.board_restricted === 1 || r.board_restricted === true,
-    noticeUrl: r.notice_r2_key ? "/files/" + r.notice_r2_key : "",
+    noticeUrl: r.notice_r2_key ? withFileKey("/files/" + r.notice_r2_key, r.view_key) : "",
     noticeFileName: r.notice_file_name || "",
     noticeMime: r.notice_mime || "",
     cardUrl: r.card_r2_key ? "/files/" + r.card_r2_key : "",
@@ -121,6 +121,32 @@ export function caseFromBody(body) {
 }
 export function isYmd(s) {
   return typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s);
+}
+
+// 非公開事件のファイルURL（/files/...）に、その事件の合言葉を ?key= として埋め込む。
+// viewKeyが空（公開事件）ならそのまま返す。/files/ 以外のURL（資料の外部リンク等）には何もしない
+export function withFileKey(url, viewKey) {
+  if (!url || !viewKey || !url.startsWith("/files/")) return url;
+  return url + (url.includes("?") ? "&" : "?") + "key=" + encodeURIComponent(viewKey);
+}
+
+// /files/ 配下のキーから、その持ち主の事件の view_key を引く（無ければ null＝誰でも見てよい）。
+// 資料(m/)・写真(i/・iw/)・期日案内(no/) だけを対象にする。それ以外（カード画像・アイコン等）は
+// 誰でも見てよい前提のままなので常に null を返す
+export async function fileOwnerViewKey(env, key) {
+  let row = null;
+  if (key.startsWith("m/")) {
+    row = await env.DB.prepare(
+      `SELECT c.view_key AS view_key FROM materials m JOIN cases c ON c.id = m.case_id WHERE m.r2_key = ?`
+    ).bind(key).first();
+  } else if (key.startsWith("i/") || key.startsWith("iw/")) {
+    row = await env.DB.prepare(
+      `SELECT c.view_key AS view_key FROM case_images i JOIN cases c ON c.id = i.case_id WHERE i.r2_key = ? OR i.web_r2_key = ?`
+    ).bind(key, key).first();
+  } else if (key.startsWith("no/")) {
+    row = await env.DB.prepare(`SELECT view_key FROM cases WHERE notice_r2_key = ?`).bind(key).first();
+  }
+  return row && row.view_key ? row.view_key : null;
 }
 
 // 事件名（cases.name）はUNIQUE制約があるが、同種の事件（同じ内容で被告違いなど）が複数件になる
@@ -179,6 +205,14 @@ export function parseViewKeys(request) {
 // このリクエストからは見せてはいけない事件idの集合を返す
 // （view_key が設定されている事件のうち、合言葉が一致しなかったもの）。
 // 一覧系APIは、結果を返す前にこの集合で自分の行を除く。
+// ※事件・その資料・写真・期日・投稿・問題提起人など、事件に紐づく行を返すエンドポイントを
+//   新しく足すときは、必ずこの hiddenCaseIds（または presenterCaseVisibility）で絞ってから
+//   返すこと。うっかり通さないと、非公開にしたはずの事件の中身がそのまま見えてしまう
+//   （2026-09-10、presenter.js のOGPで実際にこの抜けが起きた）。
+// ※なお /files/ 配下の実ファイル（資料PDF・写真・期日案内）自体は、この判定を経由しない
+//   （files/[[path]].js が withFileKey/fileOwnerViewKey で別途 ?key= を照合する。2026-09-11）。
+//   一覧・詳細APIがここで正しく絞っていれば、鍵を持たない人にそのURLが渡ることはないが、
+//   一度渡ったURLは（鍵が変わっても）以後ずっと有効なままなので、URLの取り扱いに注意すること。
 export async function hiddenCaseIds(env, request) {
   const { results } = await env.DB.prepare(
     `SELECT id, view_key FROM cases WHERE view_key IS NOT NULL AND view_key <> ''`
@@ -325,7 +359,7 @@ export const MATERIAL_COLS = `m.id, m.case_id, m.event_id, m.title, m.side, m.fi
                               m.url, m.r2_key, m.file_name, m.file_size, m.mime, m.claims, m.body,
                               m.body_model, m.body_date, m.summary,
                               m.summary_model, m.summary_date,
-                              m.created_at, m.updated_at`;
+                              m.created_at, m.updated_at, c.view_key`;
 
 // 資料の「ファイルのURL」に入れてよい形：https/http の絶対URL、またはこのサイト内の /docs/… （public/docs/ に置いたPDF）
 export function isMaterialUrl(s) {
@@ -343,7 +377,7 @@ export function rowToMaterial(r) {
     side: r.side || "",
     filedOn: r.filed_on || "",
     url: r.url || "",                                   // 手入力のURL（public/docs/ や外部）
-    fileUrl: r.r2_key ? "/files/" + r.r2_key : (r.url || ""),   // 画面が開くリンク（R2 があればそちら）
+    fileUrl: r.r2_key ? withFileKey("/files/" + r.r2_key, r.view_key) : (r.url || ""),   // 画面が開くリンク（R2 があればそちら）
     fileName: r.file_name || "",
     fileSize: Number(r.file_size || 0),
     mime: r.mime || "",
@@ -397,18 +431,18 @@ export const ICON_MAX_BYTES = 5 * 1024 * 1024;
 
 export const IMAGE_COLS = `i.id, i.case_id, i.r2_key, i.file_name, i.file_size, i.mime,
                            i.web_r2_key, i.web_file_name, i.web_file_size, i.web_mime,
-                           i.caption, i.sort_order, i.created_at`;
+                           i.caption, i.sort_order, i.created_at, c.view_key`;
 
 export function rowToImage(r) {
   return {
     id: r.id,
     caseId: r.case_id,
-    url: "/files/" + r.r2_key,
+    url: withFileKey("/files/" + r.r2_key, r.view_key),
     fileName: r.file_name || "",
     fileSize: Number(r.file_size || 0),
     mime: r.mime || "",
     // Web用（このサイトに合うフォント・サイズで作った版。任意）。あれば表示側はこちらを優先する
-    webUrl: r.web_r2_key ? "/files/" + r.web_r2_key : "",
+    webUrl: r.web_r2_key ? withFileKey("/files/" + r.web_r2_key, r.view_key) : "",
     webFileName: r.web_file_name || "",
     webMime: r.web_mime || "",
     caption: r.caption || "",

@@ -2,9 +2,8 @@
 // ファイル名が _ で始まるので Pages Functions のルーティング対象にはならない（_common.js と同じ扱い）。
 import React from "react";
 import { ImageResponse, CustomFont, cache } from "@cf-wasm/og/workerd";
-import { parseViewKeys } from "../../_common.js";
 
-export { cache, ImageResponse, CustomFont, parseViewKeys };
+export { cache, ImageResponse, CustomFont };
 
 const h = React.createElement;
 export { h };
@@ -171,10 +170,12 @@ export async function loadCardContext(env, request, id) {
   ).bind(id).first();
   if (!c) return null;
 
-  const isPrivate = !!c.view_key;
-  if (isPrivate && parseViewKeys(request)[c.id] !== c.view_key) return null;
+  // 非公開事件は、鍵が合っていてもカードを一切生成・配信しない（2026-09-11）。
+  // 正しい鍵付きURLをチャットアプリ等に貼ると、そのアプリのリンク展開ボットが勝手にURLを
+  // 取得して実物のカードを表示してしまい、鍵を知らない人にも中身が見える経路になるため
+  if (c.view_key) return null;
 
-  return { row: c, isPrivate };
+  return { row: c, isPrivate: false };
 }
 
 export async function loadPresenterIconDataUri(env, c) {
