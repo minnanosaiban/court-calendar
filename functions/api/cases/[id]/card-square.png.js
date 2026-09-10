@@ -7,36 +7,32 @@
 //
 // URL: /api/cases/:id/card-square.png（非公開事件は ?key=閲覧キー が必要。case.js と同じ規則）
 import {
-  h, BG, PAPER, RING, GO_M, INK,
+  h, BG, RING, GO_M, INK,
   SITE_LABEL, stamp,
   loadFonts, fontList, loadCardContext, loadPresenterIconDataUri, overrideResponse,
   ImageResponse, cache,
 } from "../_card.js";
 
 // 正方形版（Summary）は、X・チャットアプリが小さく縮めて出すため、いつ・誰の事件かの詳細は
-// 横長版に任せ、アイコンとサイト名だけの素朴な見た目に簡略化する（2026-09-11）
+// 横長版に任せ、アイコンとサイト名だけの素朴な見た目に簡略化する（2026-09-11）。
+// 表示サイズが小さいので、内側に白い枠（PAPER）を入れ子にする二重の余白はやめ、
+// キャンバスいっぱいに直接アイコン・文字を大きく置く（同日、実物を見た本人の指摘で
+// 140px→280px→この形に変更。アイコン自体の縁取りだけは残す）
 function buildSquareTree(c) {
-  // 1000×1000の枠に対してアイコン140px・文字44ptだと余白ばかりで小さく見えたため、
-  // アイコン280px・文字64ptに拡大した（2026-09-11、実物を見た本人の指摘）
   const icon = c.iconDataUri
-    ? h("img", { key: "av", src: c.iconDataUri, width: 280, height: 280, style: { borderRadius: "50%", border: `4px solid ${RING}` } })
-    : stamp(280);
+    ? h("img", { key: "av", src: c.iconDataUri, width: 480, height: 480, style: { borderRadius: "50%", border: `5px solid ${RING}` } })
+    : stamp(480);
 
-  const card = h(
+  const content = [
+    icon,
+    h("div", { key: "label", style: { display: "flex", marginTop: 64, fontFamily: GO_M, fontSize: 80, color: INK, letterSpacing: 1.5 } }, SITE_LABEL),
+  ];
+
+  return h(
     "div",
-    {
-      style: {
-        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-        width: 1000, height: 1000, padding: 64, borderRadius: 24, border: `2px solid ${RING}`, background: PAPER,
-      },
-    },
-    [
-      icon,
-      h("div", { key: "label", style: { display: "flex", marginTop: 56, fontFamily: GO_M, fontSize: 64, color: INK, letterSpacing: 1.5 } }, SITE_LABEL),
-    ]
+    { style: { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", width: 1200, height: 1200, background: BG } },
+    content
   );
-
-  return h("div", { style: { display: "flex", width: 1200, height: 1200, background: BG, alignItems: "center", justifyContent: "center" } }, card);
 }
 
 export async function onRequestGet(context) {
