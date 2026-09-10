@@ -9,7 +9,7 @@
 import {
   h, BG, PAPER, RING, GO_R, GO_M, INK, RED, GRAY,
   SITE_LABEL, MESSAGE, stamp, perforation, cheerSection,
-  loadFonts, fontList, loadPresenterIconDataUri,
+  loadFonts, fontList, loadPresenterIconDataUri, overrideResponse,
   ImageResponse, cache,
 } from "../../cases/_card.js";
 import { loadPresenterCardData, presenterSubLine } from "../_card.js";
@@ -43,8 +43,8 @@ function buildTree(p) {
             stamp(46),
             h("div", { key: "label", style: { display: "flex", marginLeft: 16, fontFamily: GO_M, fontSize: 25, color: INK, letterSpacing: 1.5 } }, SITE_LABEL),
           ]),
-          cheerSection(p.subLine),
-          h("div", { key: "msg", style: { display: "flex", fontFamily: GO_M, fontSize: 27, color: RED, letterSpacing: 1.5 } }, MESSAGE),
+          cheerSection(p.subLine, { headline: p.headline }),
+          h("div", { key: "msg", style: { display: "flex", fontFamily: GO_M, fontSize: 27, color: RED, letterSpacing: 1.5 } }, p.message),
         ]
       ),
       perforation(),
@@ -71,8 +71,18 @@ export async function onRequestGet(context) {
   const loaded = await loadPresenterCardData(env, params.id);
   if (!loaded) return new Response("not found", { status: 404 });
 
+  // 手動でカード画像を差し替えていれば、自動生成せずそちらをそのまま返す（事件カードと同じ）
+  const overridden = await overrideResponse(env, loaded.row.card_r2_key, false, cacheKey, context);
+  if (overridden) return overridden;
+
   const iconDataUri = await loadPresenterIconDataUri(env, loaded.row);
-  const data = { nickname: loaded.row.nickname || "", iconDataUri, subLine: presenterSubLine(loaded) };
+  const data = {
+    nickname: loaded.row.nickname || "",
+    iconDataUri,
+    headline: loaded.row.card_headline || "",
+    subLine: loaded.row.card_sub || presenterSubLine(loaded),
+    message: loaded.row.card_message || MESSAGE,
+  };
 
   const fonts = await loadFonts(env, request);
   cache.setExecutionContext(context);

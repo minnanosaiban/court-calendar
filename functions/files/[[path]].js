@@ -7,7 +7,7 @@
 export async function onRequestGet({ env, params }) {
   if (!env.FILES) return new Response("not configured", { status: 500 });
   const key = (params.path || []).join("/");
-  const ALLOWED_PREFIXES = ["m/", "i/", "iw/", "ic/", "no/", "cd/", "cds/"];
+  const ALLOWED_PREFIXES = ["m/", "i/", "iw/", "ic/", "no/", "cd/", "cds/", "pd/", "pds/"];
   if (!ALLOWED_PREFIXES.some((p) => key.startsWith(p))) return new Response("not found", { status: 404 });
 
   const obj = await env.FILES.get(key);

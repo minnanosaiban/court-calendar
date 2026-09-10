@@ -49,6 +49,18 @@ export async function onRequestPut({ request, env, params }) {
     sql += `, x_url=?`;
     bind.push(xUrl || null);
   }
+  // カードの文言・検索結果の見え方（運営・本人のどちらも変更できる。空欄で保存すると自動に戻る）。
+  // 送られてこなかったキーには触らない＝別画面からの更新で消えないようにする
+  for (const [key, col] of [
+    ["cardHeadline", "card_headline"], ["cardSub", "card_sub"], ["cardMessage", "card_message"],
+    ["seoTitle", "seo_title"], ["seoDescription", "seo_description"],
+  ]) {
+    if (typeof body[key] === "string") {
+      sql += `, ${col}=?`;
+      bind.push(body[key].trim() || null);
+    }
+  }
+
   let newPassword = null;
   let revokeSessions = false;
   if (admin) {

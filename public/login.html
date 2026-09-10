@@ -45,6 +45,9 @@
     <p class="fnote">ログインIDをお持ちでない方は、掲載をご依頼の際に運営へお問い合わせください。</p>
   </div>
 
+  <!-- バックアップの「ファイルから取り込む」用（ページ下部の編集パネルから呼ぶ。表示はしない） -->
+  <input type="file" id="fileInput" accept="application/json,.json" style="display:none;">
+
   <footer class="site-footer">
     <p class="status-row"><span id="status"></span></p>
   </footer>
@@ -67,7 +70,9 @@
     btn.disabled=true; stEl.hidden=false; stEl.textContent="確認しています…";
     try{
       const r = await CC.presenterLogin(username, password);
-      location.href = "presenter.html?id="+encodeURIComponent(r.presenterId);
+      // ログインできたら自分のページへ進む。ページが動かないと成功したのか分かりにくく、
+      // 「次に何をすればよいか」も伝わらないため（2026-09-10に一度やめたが戻した）
+      location.href = "presenter?id="+encodeURIComponent(r.presenterId);
     }catch(err){
       stEl.textContent = "ログインできませんでした：" + (err && err.message || err);
       btn.disabled=false;

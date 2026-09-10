@@ -47,8 +47,8 @@ function buildTree(c) {
             h("div", { key: "label", style: { display: "flex", marginLeft: 16, fontFamily: GO_M, fontSize: 25, color: INK, letterSpacing: 1.5 } }, SITE_LABEL),
           ]),
           // 期日が決まっていない事件は、空白を報告せず応援の面に差し替える（2026-09-10）
-          c.nextEvent || c.archivedAt ? dateSection(c) : cheerSection("次の期日は調整中です"),
-          h("div", { key: "msg", style: { display: "flex", fontFamily: GO_M, fontSize: 27, color: RED, letterSpacing: 1.5 } }, MESSAGE),
+          c.nextEvent || c.archivedAt ? dateSection(c) : cheerSection(c.cardSub || "次の期日は調整中です", { headline: c.cardHeadline }),
+          h("div", { key: "msg", style: { display: "flex", fontFamily: GO_M, fontSize: 27, color: RED, letterSpacing: 1.5 } }, c.message),
         ]
       ),
       perforation(),
@@ -94,6 +94,10 @@ export async function onRequestGet(context) {
     nextEvent,
     archivedAt: c.archived_at || "",
     closeType: c.close_type || "",
+    // カードの文言（空＝自動。期日があるときは日付が主役なので効くのは赤い行だけ）
+    cardHeadline: c.card_headline || "",
+    cardSub: c.card_sub || "",
+    message: c.card_message || MESSAGE,
   };
 
   const fonts = await loadFonts(env, request);

@@ -46,9 +46,9 @@ function buildSquareTree(c) {
         h("div", { key: "label", style: { display: "flex", marginLeft: 18, fontFamily: GO_M, fontSize: 30, color: INK, letterSpacing: 1.5 } }, SITE_LABEL),
       ]),
       h("div", { key: "date", style: { display: "flex", marginTop: 64 } },
-        c.nextEvent || c.archivedAt ? dateSection(c, true) : cheerSection("次の期日は調整中です", { center: true, size: 48 })),
+        c.nextEvent || c.archivedAt ? dateSection(c, true) : cheerSection(c.cardSub || "次の期日は調整中です", { center: true, size: 48, headline: c.cardHeadline })),
       h("div", { key: "presenter", style: { display: "flex", flexDirection: "column", alignItems: "center", marginTop: 64 } }, presenter),
-      h("div", { key: "msg", style: { display: "flex", fontFamily: GO_M, fontSize: 32, color: RED, letterSpacing: 1.5, marginTop: 64, textAlign: "center" } }, MESSAGE),
+      h("div", { key: "msg", style: { display: "flex", fontFamily: GO_M, fontSize: 32, color: RED, letterSpacing: 1.5, marginTop: 64, textAlign: "center" } }, c.message),
     ]
   );
 
@@ -85,6 +85,9 @@ export async function onRequestGet(context) {
     nextEvent,
     archivedAt: c.archived_at || "",
     closeType: c.close_type || "",
+    cardHeadline: c.card_headline || "",
+    cardSub: c.card_sub || "",
+    message: c.card_message || MESSAGE,
   };
 
   const fonts = await loadFonts(env, request);

@@ -8,7 +8,9 @@ import { todayJst, jpDate } from "../cases/_card.js";
 export async function loadPresenterCardData(env, id) {
   const today = todayJst();
   const [p, nextEvent, count] = await Promise.all([
-    env.DB.prepare(`SELECT id, nickname, icon_r2_key AS presenter_icon_r2_key FROM presenters WHERE id = ?`).bind(id).first(),
+    env.DB.prepare(`SELECT id, nickname, icon_r2_key AS presenter_icon_r2_key,
+              card_r2_key, card_square_r2_key, card_headline, card_sub, card_message
+         FROM presenters WHERE id = ?`).bind(id).first(),
     env.DB.prepare(
       `SELECT e.date, e.time, e.court, e.place
          FROM events e JOIN cases c ON c.id = e.case_id

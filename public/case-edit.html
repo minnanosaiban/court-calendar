@@ -25,33 +25,6 @@
 
   <a class="pillbtn backlink" id="ceBack" href="index.html"><i class="bi bi-arrow-left" aria-hidden="true"></i> <span id="ceBackLabel">戻る</span></a>
 
-  <!-- case.html の自己確認バー（#caseSelfBar）と同じ余白に揃える（2026-09-01） -->
-  <div id="ceSelfBar" style="margin-top:16px"></div>
-
-  <!-- パスワード変更（case.html・presenter.htmlと同じページ内フォーム。自己確認バーの
-       「パスワード変更」から開閉する。2026-09-01） -->
-  <div class="card" id="pwCard" hidden style="margin-top:16px;padding:20px 22px;max-width:420px">
-    <p class="msec" style="margin-top:0">パスワードの変更</p>
-    <div class="field">
-      <label>いまのパスワード</label>
-      <input type="password" id="pwCurrent" autocomplete="current-password">
-    </div>
-    <div class="field">
-      <label>新しいパスワード</label>
-      <input type="password" id="pwNew" autocomplete="new-password">
-      <p class="fnote">8文字以上にしてください。</p>
-    </div>
-    <div class="field">
-      <label>新しいパスワード（確認）</label>
-      <input type="password" id="pwConfirm" autocomplete="new-password">
-    </div>
-    <p class="fnote" id="pwStatus" hidden></p>
-    <div class="formfoot">
-      <button type="button" class="btn-cancel" id="pwCancel">キャンセル</button>
-      <button type="button" class="btn-save" id="pwSubmit">変更する</button>
-    </div>
-  </div>
-
   <div class="ce-case" id="ceCaseName"></div>
   <div class="ce-title-row">
     <div class="ce-title" id="ceTitle">事件情報を編集</div>
@@ -112,7 +85,7 @@
             <div class="ccard ccard-noicon" id="ceTierDetail" role="link" tabindex="0">
               <div class="cbody">
                 <div class="ctitle">詳細な掲載の入力へ</div>
-                <p class="fnote">画像・資料・関連裁判なども含め、すべての項目を使いたい方に。</p>
+                <p class="fnote">画像・資料など、すべての項目をカスタマイズしたい方に。リンクカードや文言も変更できます</p>
               </div>
               <i class="bi bi-chevron-double-right c-arrow" aria-hidden="true"></i>
             </div>
@@ -166,6 +139,73 @@
           <p class="fnote">設定すると、ニックネームの右にXアイコンのリンクが出ます。空欄で保存すると外れます。</p>
         </div>
 
+        <!-- Twitterカード（アカウントのページ＝/presenter?id=…）。2026-09-10。
+             事件ごとのカード（下の「Twitterカード（事件のページ）」）と同じ仕組みで、
+             画像の差し替えとカードに描かれる文言を、この人のページの分だけまとめて設定する。
+             ニックネーム・アイコンと同じく問題提起人に紐づく値なので、同じ人の他の事件でも共通。
+             どの欄も空欄なら自動生成（プレースホルダに出ているのが、いま実際に描かれている文言） -->
+        <div class="field" id="cPresenterCardRow" data-tier-min="detail" hidden>
+          <p class="msec">Twitterカード（アカウントのページ）</p>
+          <p class="fnote">ニックネームのページ（/presenter?id=…）がX・LINEなどでシェアされたときに出るカードです。同じニックネームを使う他の事件でも共通です。</p>
+
+          <label>横長版<span id="cPCardRemoveWrap" hidden>（<a id="cPCardRemove" class="cicon-remove">自動生成に戻す</a>）</span></label>
+          <div class="cicon-row">
+            <span id="cPCardPreview"></span>
+            <input type="file" id="cPCardFile" accept="image/jpeg,image/png" aria-label="アカウントのTwitterカード（横長）">
+          </div>
+          <p class="fnote" id="cPCardStatus" hidden></p>
+
+          <div class="subfield subfield-plain">
+            <label>正方形版<span id="cPCardSquareRemoveWrap" hidden>（<a id="cPCardSquareRemove" class="cicon-remove">自動生成に戻す</a>）</span></label>
+            <div class="cicon-row">
+              <span id="cPCardSquarePreview"></span>
+              <input type="file" id="cPCardSquareFile" accept="image/jpeg,image/png" aria-label="アカウントのTwitterカード（正方形）">
+            </div>
+            <p class="fnote">カードの画像は自動生成されます。画像を差し替えることもできます。（JPEG・PNG、1200×1200推奨、8MBまで）</p>
+            <p class="fnote" id="cPCardSquareStatus" hidden></p>
+          </div>
+
+          <div class="subfield subfield-plain">
+            <label>カードに入る文言</label>
+            <span class="lhint">空欄なら、うすい文字で出ている内容がそのまま入ります</span>
+            <textarea id="cPCardHeadline" rows="2" aria-label="カードの大きい文字"></textarea>
+            <p class="fnote">大きい文字（改行すると2行になります）</p>
+            <input type="text" id="cPCardSub" aria-label="カードの小さい1行">
+            <p class="fnote">その下の小さい1行</p>
+            <div class="cicon-row">
+              <input type="text" id="cPCardMessage" aria-label="カードの赤い1行">
+              <button type="button" class="btn-save btn-round" id="cPCardTextSave">変更</button>
+            </div>
+            <p class="fnote">一番下の赤い1行</p>
+            <p class="fnote" id="cPCardTextStatus" hidden></p>
+          </div>
+        </div>
+
+        <!-- SEOとタイトル（アカウントのページ）。Google検索に出る見出し・説明と、
+             シェアしたときのカードの文字（og:title／og:description）を兼ねる -->
+        <div class="field" id="cPresenterSeoRow" data-tier-min="detail" hidden>
+          <p class="msec">SEOとタイトル（アカウントのページ）</p>
+          <p class="fnote">Google検索の結果に出る見出しと説明です。空欄なら自動で作られます。</p>
+          <div class="gprev" id="cPSeoPreview">
+            <div class="gprev-url" id="cPSeoPrevUrl"></div>
+            <div class="gprev-title" id="cPSeoPrevTitle"></div>
+            <div class="gprev-desc" id="cPSeoPrevDesc"></div>
+          </div>
+          <label>タイトル</label>
+          <input type="text" id="cPSeoTitle" aria-label="アカウントのページのタイトル">
+          <label>説明</label>
+          <div class="cicon-row">
+            <textarea id="cPSeoDescription" rows="2" aria-label="アカウントのページの説明"></textarea>
+            <button type="button" class="btn-save btn-round" id="cPSeoSave">変更</button>
+          </div>
+          <p class="fnote">説明は140字までが検索結果に出ます。</p>
+          <p class="fnote" id="cPSeoStatus" hidden></p>
+        </div>
+
+        <!-- ここまでが「アカウントのページ」の設定、ここからが「この事件のページ」の設定。
+             同じ「Twitterカード」「SEOとタイトル」という見出しが2度出るので、線で群を分ける -->
+        <hr class="ce-rule" data-tier-min="detail">
+
         <!-- アクセス制限（閲覧キー）：2026-09-02。事件ページ・一覧・問題提起人一覧・サイトマップ等、
              すべての公開経路を一括で隠す・見せるスイッチなので、掲載レベルに関わらず常に出す
              （「情報へのアクセス」群の先頭・2026-09-05）。キーは空欄で✓を入れると
@@ -201,9 +241,10 @@
              説明は横長版・正方形版で繰り返さず、正方形版の枠の下に1本だけ置く（2026-09-02）。
              「自動生成に戻す」は見出しの隣に置き、差し替え済みのときだけ出す（updateCardFieldUI等が
              hidden を切り替える。以前は説明文の中に埋めていた）。
-             掲載レベル「最小限」では出さない（初めての人には差し替えまで要らないため。2026-09-10） -->
-        <div class="field" id="sec-card" data-tier-min="std" hidden>
-          <p class="msec">Twitterカード</p>
+             掲載レベルは「詳細」のみ（差し替えは慣れた人向けの作業なので、最小限・標準的には出さない。2026-09-10） -->
+        <div class="field" id="sec-card" data-tier-min="detail" hidden>
+          <p class="msec">Twitterカード（事件のページ）</p>
+          <p class="fnote">この事件のページ（/case?id=…）がX・LINEなどでシェアされたときに出るカードです。</p>
 
           <label>横長版<span id="cCardRemoveWrap" hidden>（<a id="cCardRemove" class="cicon-remove">自動生成に戻す</a>）</span></label>
           <div class="cicon-row">
@@ -221,6 +262,35 @@
             <p class="fnote">Twitterカードの画像は自動生成されます。画像を変更することもできます。（JPEG・PNG、1200×1200推奨、8MBまで）</p>
             <p class="fnote" id="cCardSquareStatus" hidden></p>
           </div>
+
+          <!-- カードに描かれる文言。次回期日が入っている事件は日付が主役なので、
+               大きい文字と小さい1行が効くのは「期日が決まっていないとき」だけ（赤い1行は常に効く） -->
+          <div class="subfield subfield-plain">
+            <label>カードに入る文言</label>
+            <span class="lhint">空欄なら、うすい文字で出ている内容がそのまま入ります</span>
+            <textarea id="cCardHeadline" rows="2" aria-label="カードの大きい文字"></textarea>
+            <p class="fnote">大きい文字（改行すると2行になります）。次回期日が入っているあいだは日付が出るので、この欄は期日が決まっていないときだけ使われます。</p>
+            <input type="text" id="cCardSub" aria-label="カードの小さい1行">
+            <p class="fnote">その下の小さい1行（同上）</p>
+            <input type="text" id="cCardMessage" aria-label="カードの赤い1行">
+            <p class="fnote">一番下の赤い1行（いつでも使われます）</p>
+          </div>
+        </div>
+
+        <!-- SEOとタイトル（この事件のページ）。下の「保存」でまとめて保存する -->
+        <div class="field" id="sec-seo" data-tier-min="detail">
+          <p class="msec">SEOとタイトル（事件のページ）</p>
+          <p class="fnote">Google検索の結果に出る見出しと説明です。空欄なら事件名と「裁判について」から自動で作られます。</p>
+          <div class="gprev" id="cSeoPreview">
+            <div class="gprev-url" id="cSeoPrevUrl"></div>
+            <div class="gprev-title" id="cSeoPrevTitle"></div>
+            <div class="gprev-desc" id="cSeoPrevDesc"></div>
+          </div>
+          <label>タイトル</label>
+          <input type="text" id="cSeoTitle" aria-label="事件のページのタイトル">
+          <label>説明</label>
+          <textarea id="cSeoDescription" rows="2" aria-label="事件のページの説明"></textarea>
+          <p class="fnote">説明は140字までが検索結果に出ます。</p>
         </div>
 
         <!-- 期日案内：事件につき1枚・差し替え専用（問題提起人アイコンと同じ仕組み）。JPEGのみ
@@ -381,6 +451,9 @@
       </div>
     </div>
   </div>
+
+  <!-- バックアップの「ファイルから取り込む」用（ページ下部の編集パネルから呼ぶ。表示はしない） -->
+  <input type="file" id="fileInput" accept="application/json,.json" style="display:none;">
 
   <footer class="site-footer">
     <p class="status-row"><span id="status"></span></p>

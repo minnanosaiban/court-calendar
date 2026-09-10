@@ -53,7 +53,15 @@
       </div>
     </div>
     <div class="clist" id="clist" style="margin-top:20px"></div>
+    <!-- ご本人としてログイン中のときだけ出す「事件を追加」（2026-09-10）。
+         作った事件は自分名義になり、公開するかどうかは作成画面のアクセス制限で自分で選ぶ -->
+    <p id="phAddCase" hidden style="margin-top:20px">
+      <a class="pillbtn" href="case-edit.html"><i class="bi bi-plus-lg" aria-hidden="true"></i> 事件を追加</a>
+    </p>
   </section>
+
+  <!-- バックアップの「ファイルから取り込む」用（ページ下部の編集パネルから呼ぶ。表示はしない） -->
+  <input type="file" id="fileInput" accept="application/json,.json" style="display:none;">
 
   <footer class="site-footer">
     <div class="footer-request">
@@ -119,17 +127,22 @@
     }
     const icon = p.icon ? `<img class="cicon" src="${CC.escapeAttr(p.icon)}" alt="" style="width:72px;height:72px">`
       : `<span class="cicon-ph" aria-hidden="true" style="width:72px;height:72px;font-size:1.7rem"><i class="bi bi-person" aria-hidden="true"></i></span>`;
-    // 状態（バッジ）と操作（パスワード変更・ログアウト）を同じ行にまとめる（2026-08-30。
-    // 以前はここに「パスワードを変更」だけがあり、ログアウトはページ最下部にしかなかった）
+    // ログイン中の操作。アイコンとログアウトは他のページと同じく見出し直下の共通バーに出るので、
+    // ここでは重ねない。「ご本人としてログイン中」の名乗りも、そのバーで分かるので外した。
+    // 残るのはパスワードの変更だけで、これはサイト全体でこの自分のページにだけ置く。
+    // 名前・件数の下ではなく見出しの右端に置き、名前がアイコンのすぐ右に素直に並ぶようにする（2026-09-10）
     const selfNote = CC.me.presenterId===presenterId
-      ? `<div class="selfbar"><span class="badge">ご本人としてログイン中</span>`+
-        `<a id="pwChangeLink">パスワードを変更</a><span class="sep">・</span>`+
-        `<a id="selfLogoutLink">ログアウト</a></div>` : "";
-    headEl.innerHTML = `<div class="d-head" style="align-items:center">
-        ${icon}
-        <div>
+      ? `<div class="selfbar"><a id="pwChangeLink">パスワードを変更</a></div>` : "";
+    // 件数はアイコンの下、パスワードの変更はニックネームの下に置く（2026-09-10）。
+    // 横1列に4つ並べると、スマホ幅で「ご本人…」や件数が途中で折り返して読みにくかったため、
+    // 「アイコン＋件数」「名前＋操作」の2列にして、どの幅でも同じ形で収まるようにした
+    headEl.innerHTML = `<div class="d-head ph-head">
+        <div class="ph-id">
+          ${icon}
+          <p class="mut ph-count">${p.caseCount||0}件の事件</p>
+        </div>
+        <div class="d-head-main">
           <h2 class="d-title" id="presenter-h">${CC.escapeHtml(p.nickname)}さん${p.xUrl?`<a class="presenter-x" style="margin-left:6px" href="${CC.escapeAttr(p.xUrl)}" target="_blank" rel="noopener" aria-label="Xで見る"><i class="bi bi-twitter-x" aria-hidden="true"></i></a>`:""}</h2>
-          <p class="mut">${p.caseCount||0}件の事件</p>
           ${selfNote}
         </div>
       </div>`;
@@ -176,6 +189,8 @@
         return a.name.localeCompare(b.name,"ja");
       });
     clistEl.innerHTML = list.length ? list.map(rowHtml).join("") : `<p class="empty-msg">この方の事件はまだありません。</p>`;
+    // 「事件を追加」はご本人（または運営）にだけ出す
+    document.getElementById("phAddCase").hidden = !(CC.me.presenterId===presenterId || CC.me.canWrite);
     clistEl.querySelectorAll("[data-open]").forEach(el=>{
       const go=()=>{ location.href="case?id="+encodeURIComponent(el.dataset.open); };
       // 中の「＋ 事件情報を編集」リンクをクリックしたときは、カード自体の「開く」を発動させない

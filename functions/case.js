@@ -15,8 +15,8 @@ export async function onRequestGet({ request, env }) {
   if (!assetRes.ok || (!id && !legacyName)) return assetRes;
 
   const c = id
-    ? await env.DB.prepare(`SELECT id, name, call_text, view_key FROM cases WHERE id = ?`).bind(id).first()
-    : await env.DB.prepare(`SELECT id, name, call_text, view_key FROM cases WHERE name = ?`).bind(legacyName).first();
+    ? await env.DB.prepare(`SELECT id, name, call_text, view_key, seo_title, seo_description, updated_at FROM cases WHERE id = ?`).bind(id).first()
+    : await env.DB.prepare(`SELECT id, name, call_text, view_key, seo_title, seo_description, updated_at FROM cases WHERE name = ?`).bind(legacyName).first();
   if (!c) return assetRes;
   // 非公開にした事件は、URLの ?key= が合言葉と一致しない限り、事件名・説明をカードに出さない
   // （SNSの展開カードやクローラーに漏れないように、書き換えず素の案内文のまま返す）
@@ -33,13 +33,17 @@ export async function onRequestGet({ request, env }) {
   function cardUrlFor(path) {
     const u = new URL(`/api/cases/${encodeURIComponent(c.id)}/${path}`, request.url);
     if (c.view_key) u.searchParams.set("key", c.view_key);
+    // 更新時刻を付けておくと、カードの文言を変えたときに古いキャッシュを引かずに済む（2026-09-10）
+    const v = String(c.updated_at || "").replace(/\D/g, "");
+    if (v) u.searchParams.set("v", v);
     return u.toString();
   }
   const cardWideUrl = cardUrlFor("card.png");
   const cardSquareUrl = cardUrlFor("card-square.png");
 
-  const title = `${c.name} ｜ 応援傍聴ナビ`;
-  const description = (c.call_text || "傍聴席に、ひとり増える。それだけで法廷は変わる。").slice(0, 140);
+  // 検索結果・シェアの見出しは、編集画面で入れてあればそれを使う（空＝これまでどおり自動。2026-09-10）
+  const title = c.seo_title || `${c.name} ｜ 応援傍聴ナビ`;
+  const description = (c.seo_description || c.call_text || "傍聴席に、ひとり増える。それだけで法廷は変わる。").slice(0, 140);
 
   const extraTags = [
     `<meta property="og:title" content="${escAttr(title)}">`,

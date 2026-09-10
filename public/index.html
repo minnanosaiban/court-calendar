@@ -60,7 +60,7 @@
          二重になるので index.html の下部からは削除した（他のページの .disc はそのまま）。
          下部では朱色の下線（.disc-warn）で強調していたが、カレンダーの真上に単独で置くならその強調は
          要らないとの判断で、ここでは地の文のまま出す（2026-09-10） -->
-    <p class="hint">掲載情報の正確性・完全性・最新性は保証せず、期日は変更されたり非公開になったりすることがあります。傍聴の前に当事者の<i class="bi bi-twitter-x" role="img" aria-label="X"></i>などでご確認ください。</p>
+    <p class="hint">掲載情報の正確性・完全性・最新性は保証せず、期日は変更されたり非公開になったりすることがあります。傍聴の前に当事者の連絡などでご確認ください。</p>
     <div class="calhead">
       <div class="navbtns">
         <span id="prev"><i class="bi bi-chevron-left" aria-hidden="true"></i> 前の月</span>
@@ -117,7 +117,7 @@
       </div>
       <img src="frog-mic.png" alt="" class="request-frog">
     </div>
-    <p class="disc">本サイトは有志による非公式のツールで、法的助言を提供するものではありません。事件の説明はご本人の主張であり、裁判所が認定した事実とは限りません。当事者のお名前は、ご本人が実名での掲載を望まれる場合をのぞき掲載しません。本サイトの利用により生じたいかなる損害についても、運営者は責任を負いません。</p>
+    <p class="disc">本サイトは有志による非公式のツールで、法的助言を提供するものではありません。事件の説明はご本人の主張であり、裁判所が認定した事実とは限りません。当事者のお名前は、ご本人が実名での掲載を望まれる場合をのぞき掲載しません。<span class="disc-warn">掲載情報の正確性・完全性・最新性は保証せず、期日は変更されたり非公開になったりすることがあります。</span>本サイトの利用により生じたいかなる損害についても、運営者は責任を負いません。</p>
     <!-- 期日の追加・編集（ひっそり） -->
     <p class="status-row"><a href="https://github.com/minnanosaiban/court-calendar" target="_blank" rel="noopener"><i class="bi bi-github" aria-hidden="true"></i> ソースコード</a><span id="status"></span></p>
 
@@ -391,7 +391,7 @@
   function renderAll(){
     renderCalendars();
     renderUpcoming();
-    CC.renderStatus(statusEl, {hideWhenUnlocked:true});
+    CC.renderStatus(statusEl);
   }
   CC.setOnChange(renderAll);
 

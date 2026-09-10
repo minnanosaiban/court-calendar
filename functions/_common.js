@@ -32,6 +32,7 @@ export const CASE_COLS = `c.id, c.name, c.presenter_id, p.nickname AS presenter_
                           c.related_case_ids, c.archived_at, c.close_type,
                           c.board_enabled, c.board_restricted, c.notice_r2_key, c.notice_file_name, c.notice_file_size, c.notice_mime,
                           c.card_r2_key, c.card_square_r2_key,
+                          c.card_headline, c.card_sub, c.card_message, c.seo_title, c.seo_description,
                           c.created_by, c.updated_by, c.updated_at`;
 
 export function rowToCase(r) {
@@ -69,6 +70,11 @@ export function rowToCase(r) {
     noticeMime: r.notice_mime || "",
     cardUrl: r.card_r2_key ? "/files/" + r.card_r2_key : "",
     cardSquareUrl: r.card_square_r2_key ? "/files/" + r.card_square_r2_key : "",
+    cardHeadline: r.card_headline || "",
+    cardSub: r.card_sub || "",
+    cardMessage: r.card_message || "",
+    seoTitle: r.seo_title || "",
+    seoDescription: r.seo_description || "",
     likes: Number(r.likes || 0),
     liked: !!r.liked,
     updatedAt: r.updated_at || "",
@@ -105,6 +111,12 @@ export function caseFromBody(body) {
     close_type: String(body.closeType || "").trim(),
     board_enabled: body.boardEnabled === false ? 0 : 1,
     board_restricted: body.boardRestricted === true ? 1 : 0,
+    // カードの文言・検索結果の見え方。空文字は「自動に戻す」なので NULL で持つ
+    card_headline: String(body.cardHeadline || "").trim() || null,
+    card_sub: String(body.cardSub || "").trim() || null,
+    card_message: String(body.cardMessage || "").trim() || null,
+    seo_title: String(body.seoTitle || "").trim() || null,
+    seo_description: String(body.seoDescription || "").trim() || null,
   };
 }
 export function isYmd(s) {
@@ -181,7 +193,10 @@ export async function hiddenCaseIds(env, request) {
 }
 
 // ---- 問題提起人（アイコン＋ニックネーム。1人が複数の事件を持てる） ----
-export const PRESENTER_COLS = `id, nickname, icon_r2_key, x_url, login_username, login_password_hash, created_by, updated_by, updated_at`;
+export const PRESENTER_COLS = `id, nickname, icon_r2_key, x_url, login_username, login_password_hash,
+                               card_r2_key, card_square_r2_key, card_headline, card_sub, card_message,
+                               seo_title, seo_description,
+                               created_by, updated_by, updated_at`;
 
 // admin=true のときだけ、ログインID・ログイン発行済みかどうかを含める
 // （ログインIDは個人のメールアドレス等になりうるため、運営以外には見せない）
@@ -191,6 +206,14 @@ export function rowToPresenter(r, admin) {
     nickname: r.nickname,
     icon: r.icon_r2_key ? "/files/" + r.icon_r2_key : "",
     xUrl: r.x_url || "",
+    // カード画像の差し替え・カードの文言・検索結果の見え方（いずれも空＝自動生成のまま）
+    cardUrl: r.card_r2_key ? "/files/" + r.card_r2_key : "",
+    cardSquareUrl: r.card_square_r2_key ? "/files/" + r.card_square_r2_key : "",
+    cardHeadline: r.card_headline || "",
+    cardSub: r.card_sub || "",
+    cardMessage: r.card_message || "",
+    seoTitle: r.seo_title || "",
+    seoDescription: r.seo_description || "",
     caseCount: r.case_count != null ? Number(r.case_count) : undefined,
     updatedAt: r.updated_at || "",
   };

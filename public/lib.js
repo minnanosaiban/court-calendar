@@ -129,6 +129,11 @@ window.CC = (function(){
   const apiDeleteCaseCard = (id)=> api("DELETE","/api/cases/"+encodeURIComponent(id)+"/card");
   const apiUpdateCaseCardSquare = (id,fd)=> api("PUT","/api/cases/"+encodeURIComponent(id)+"/card-square", fd);
   const apiDeleteCaseCardSquare = (id)=> api("DELETE","/api/cases/"+encodeURIComponent(id)+"/card-square");
+  // 問題提起人（アカウントのページ）のカード画像。事件側と同じ差し替え専用の仕組み
+  const apiUpdatePresenterCard = (id,fd)=> api("PUT","/api/presenters/"+encodeURIComponent(id)+"/card", fd);
+  const apiDeletePresenterCard = (id)=> api("DELETE","/api/presenters/"+encodeURIComponent(id)+"/card");
+  const apiUpdatePresenterCardSquare = (id,fd)=> api("PUT","/api/presenters/"+encodeURIComponent(id)+"/card-square", fd);
+  const apiDeletePresenterCardSquare = (id)=> api("DELETE","/api/presenters/"+encodeURIComponent(id)+"/card-square");
   const apiPresenterCases = (id)=> api("GET","/api/presenters/"+encodeURIComponent(id)+"/cases");
   const apiPresenterLogin = (username,password)=> api("POST","/api/presenter-login", {username,password});
   const apiPresenterLogout = ()=> api("POST","/api/presenter-logout");
@@ -356,7 +361,7 @@ window.CC = (function(){
   // 問題提起人）としてログイン中のどちらでも「＋ 事件情報を編集」を出す（2026-08-30。以前はdcardの
   // 中、タイトルの上に小さく置いていたが、写真・掲示板より下でスクロールしないと見えず、初見の人が
   // 見つけづらかったため、ここへ一本化した）。ご本人のときは、case-edit.htmlの自己確認バーと
-  // 同じ見た目（アイコン＋「ログイン中」バッジ＋その下にログアウト・パスワード変更）に揃える
+  // 同じ見た目（アイコン＋「ログイン中」バッジ＋その下にログアウト）に揃える
   // （2026-09-01。以前は文字リンクの「自分の事件一覧」を並べていたが、アイコン自体が同じ
   // リンク先（presenter.html）を兼ねるので廃止した）。旧・ページ最下部の「Xさんとしてログイン中
   // です」はcase.html・presenter.htmlのどちらでも廃止しここへ一本化。画像等より上、ページの
@@ -370,16 +375,53 @@ window.CC = (function(){
     // 以前は.pillbtnの横並びだったが、すぐ上の「事件をさがすに戻る」と見分けがつかず、ナビの帯
     // として素通りされてしまっていた）
     const editLink = `<a class="edit-fab" href="case-edit.html?id=${encodeURIComponent(c.id)}" aria-label="事件情報を編集"><span class="edit-fab-circle"><i class="bi bi-pencil-square" aria-hidden="true"></i></span><span class="edit-fab-label">編集</span></a>`;
-    const isSelf = me.presenterId && c.presenterId===me.presenterId;
-    if(!isSelf){
-      // 運営（事務局）としてログイン中：編集リンクだけを出す（「ご本人」の名乗りは不要なため）
-      return `<div class="selfbar">${editLink}</div>`;
-    }
-    return `<div class="selfbar">${presenterHeaderHtml(c)}<div class="selfbar-body">`+
-      `<span class="badge">ログイン中</span>`+
-      `<div><a id="caseSelfLogoutLink">ログアウト</a><span class="sep">・</span><a id="caseSelfPwLink">パスワード変更</a></div>`+
-      `</div>${editLink}</div>`;
+    // アイコンとログアウトは、他のページと同じく「事件をさがすに戻る」の上（見出しの直下）に
+    // 全ページ共通バーとして出すので、ここには置かない。この欄は「編集」ボタンだけ（2026-09-10）
+    return `<div class="selfbar">${editLink}</div>`;
   }
+  // ---- 一番上のバー（全ページ共通。2026-09-10）----
+  // 見出し（応援傍聴ナビ）のさらに上に、ログインの入り口／ログイン中の目印を右寄せで置く。
+  // ログアウト中は「ログイン」、問題提起人としてログイン中は「アイコン＋ログアウト」。
+  // 以前は3ページだけ、しかも見出しの下に出していたので、他のページでは自分の状態が分からなかった。
+  // ページ下部の「◯◯さんとしてログイン中です／自分の事件一覧・ログアウト」はここへ一本化して廃止。
+  // パスワードの変更は自分のページ（presenter?id=…）にだけ置くので、ここには出さない。
+  function topBarHtml(){
+    // 運営（事務局）として編集ロックを外しているときは、同じ場所に「ロックする」を出す
+    // （解除したまま離席しないよう、どのページからでも1押しで戻せるように。2026-09-10）
+    if(!me.presenterId && me.canWrite){
+      return `<div class="topbar"><a id="ccTopLock">`+
+        `<i class="bi bi-unlock" aria-hidden="true"></i> ロックする</a></div>`;
+    }
+    if(!me.presenterId){
+      return `<div class="topbar"><a class="topbar-login" href="login.html">`+
+        `<i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> ログイン</a></div>`;
+    }
+    // アイコンは問題提起人の一覧から引く（/api/me はニックネームまでしか返さないため）。
+    // 以前は「自分の事件のどれか」から借りていたので、事件を1件も持っていない人だと
+    // 仮アイコンのままだった（2026-09-10に修正）。一覧に無いときだけ事件側から拾う
+    const self = presenterById(me.presenterId);
+    const mine = self ? null : cases.find(c=>c.presenterId===me.presenterId);
+    const pseudo = { presenterId: me.presenterId,
+                     presenterNickname: (self && self.nickname) || me.presenterNickname || "",
+                     presenterIcon: self ? self.icon : (mine ? mine.presenterIcon : ""),
+                     name: me.presenterNickname||"" };
+    return `<div class="topbar">${presenterHeaderHtml(pseudo)}<a id="ccSelfLogout">ログアウト</a></div>`;
+  }
+  function ensureTopBar(){
+    let el=document.getElementById("ccTopBar");
+    const host=document.querySelector(".masthead");
+    if(!host) return;
+    if(!el){
+      el=document.createElement("div"); el.id="ccTopBar";
+      host.insertAdjacentElement("beforebegin", el);
+    }
+    el.innerHTML=topBarHtml();
+    const out=el.querySelector("#ccSelfLogout");
+    if(out) out.addEventListener("click", async ()=>{ await presenterLogout(); location.href="index.html"; });
+    const lock=el.querySelector("#ccTopLock");
+    if(lock) lock.addEventListener("click", lockEditing);
+  }
+
   // 仮アイコンに使う頭文字。「【サンプル】」「【控訴審】」のような先頭の囲みは、どの事件でも同じ文字になって
   // 見分けの役に立たないので読み飛ばし、囲みの後ろの頭文字を拾う（囲みだけで中身が無い名前は元の頭文字に戻す）
   function placeholderChar(name){
@@ -1071,7 +1113,8 @@ window.CC = (function(){
   }
 
   // ================= 下部のひっそりしたステータス =================
-  // opts.hideWhenUnlocked: トップページ用。トップはシンプルにしたいので、編集ロック解除中は何も表示しない
+  // opts.hideWhenUnlocked: 編集ロック解除中は何も表示しない指定。2026-09-10にトップページでも
+  //   編集パネルを出すことにしたので、いまはどのページも使っていない（将来のために残す）
   // （編集の導線は事件ページ・事件をさがすページに集約する。ロックされている間の案内はトップにも出す）
   // el は「ソースコード」リンクと同じ行に続ける想定（区切りは付けず、間は半角スペースだけで空ける）
   function renderStatus(el, opts){
@@ -1095,16 +1138,9 @@ window.CC = (function(){
         const fi=document.getElementById("fileInput"); if(fi) fi.click();
       });
     }else if(me.presenterId){
-      if(opts.hideWhenUnlocked){ el.innerHTML=""; return; }
-      // 事件ページ（case.html）は同じ内容を上部の自己確認バー（caseSelfBarHtml）に集約したので、
-      // ここでは出さない（2026-08-30）
-      if(opts.hidePresenterSelf){ el.innerHTML=""; return; }
-      el.innerHTML =
-        `<br>${escapeHtml(me.presenterNickname||"")}さんとしてログイン中です。`+
-        `<br><a id="stMyPage">自分の事件一覧</a><span class="sep">・</span>`+
-        `<a id="stPresenterLogout">ログアウト</a>`;
-      el.querySelector("#stMyPage").addEventListener("click",()=>{ location.href="presenter.html?id="+encodeURIComponent(me.presenterId); });
-      el.querySelector("#stPresenterLogout").addEventListener("click",presenterLogout);
+      // 「◯◯さんとしてログイン中です／自分の事件一覧・ログアウト」は、どのページでも見出しの下に
+      // 出る一番上のバー（ensureTopBar）へ一本化したので、ページ下部には出さない（2026-09-10）
+      el.innerHTML="";
     }else{
       // 問題提起人ログインへの入口は「掲載をご希望の方へ」の中（.login-invite）に移した（2026-08-30）。
       // ここは運営専用のまま、事務局用だけを出す
@@ -1112,6 +1148,8 @@ window.CC = (function(){
         ` <a id="stUnlock" title="期日の追加・編集には、パスワードが必要です。"><i class="bi bi-lock" aria-hidden="true"></i> 事務局用</a>`;
       el.querySelector("#stUnlock").addEventListener("click",unlockEditing);
     }
+    // 一番上のバーは、呼び出し元の描画が一巡してから置く
+    setTimeout(ensureTopBar, 0);
   }
   async function unlockEditing(){
     const pw = prompt("編集パスワードを入力してください");
@@ -1293,6 +1331,7 @@ window.CC = (function(){
       if(v==="__new__"){
         cPresenterNewRow.hidden=false; cPresenterIconRow.hidden=true; cPresenterRenameRow.hidden=true;
         cPresenterXUrlRow.hidden=true; cPresenterLoginRow.hidden=true;
+        cPresenterCardRow.hidden=true; cPresenterSeoRow.hidden=true;
         cPresenterNewNickname.value="";
       }else if(v){
         cPresenterNewRow.hidden=true; cPresenterIconRow.hidden=false; cPresenterRenameRow.hidden=false;
@@ -1309,6 +1348,11 @@ window.CC = (function(){
         // ログイン設定は運営専用（問題提起人本人が自分の付け替え等をできないのと同じ理由）。
         // 掲載レベルが「詳細」でないときも隠す
         cPresenterLoginRow.hidden = !edIsAdmin || !tierAllows(cPresenterLoginRow.dataset.tierMin);
+        // Twitterカード・SEOはニックネームに紐づく設定なので、選ばれているときだけ出す
+        cPresenterCardRow.hidden = !tierAllows(cPresenterCardRow.dataset.tierMin);
+        cPresenterSeoRow.hidden = !tierAllows(cPresenterSeoRow.dataset.tierMin);
+        updatePresenterCardUI(p);
+        updatePresenterSeoUI(p);
         if(edIsAdmin){
           cPresenterLoginUsername.value = p && p.loginUsername || "";
           cPresenterLoginRemoveWrap.hidden = !(p && p.hasLogin);
@@ -1317,6 +1361,7 @@ window.CC = (function(){
       }else{
         cPresenterNewRow.hidden=true; cPresenterIconRow.hidden=true; cPresenterRenameRow.hidden=true;
         cPresenterXUrlRow.hidden=true; cPresenterLoginRow.hidden=true;
+        cPresenterCardRow.hidden=true; cPresenterSeoRow.hidden=true;
       }
     }
     cPresenterSelect.addEventListener("change", updatePresenterFieldUI);
@@ -1554,6 +1599,133 @@ window.CC = (function(){
       }catch(err){ cCardSquareStatus.hidden=false; cCardSquareStatus.textContent="アップロードできませんでした：" + (err && err.message || err); }
       finally{ cCardSquareFile.value=""; }
     });
+    // ================= カードの文言・SEO（2026-09-10） =================
+    // カードに実際に描かれる文字を、そのままの並び（大きい2行／小さい1行／赤い1行）で編集する。
+    // どの欄も空欄＝自動生成で、うすい文字（placeholder）に自動のときの中身を出しておく。
+    // 事件側の値は下の「保存」でまとめて保存し、アカウント側の値はその場で「変更」する
+    // （ニックネーム・アイコン・Xアカウントと同じ扱い＝同じ人の他の事件にも効くため）。
+    const CARD_HEADLINE_PH = "傍聴席に、ひとり増える。\nそれだけで法廷は変わる。";
+    const CARD_SUB_PH_PRESENTER = "自動（次回期日、無ければ「応援している裁判 ◯件」）";
+    const CARD_SUB_PH_CASE = "次の期日は調整中です";
+    const CARD_MESSAGE_PH = "傍聴に行って応援しよう！";
+    const SEO_DESC_PH = "傍聴席に、ひとり増える。それだけで法廷は変わる。";
+    function cardImgTag(src){
+      return src ? `<img src="${escapeAttr(src)}" alt="" style="width:180px;border-radius:8px;border:1px solid var(--tint)">` : "";
+    }
+    // 自動生成のカードは1時間エッジキャッシュされるので、編集画面のプレビューだけは毎回作り直させる
+    function bustUrl(u){ return u + (u.indexOf("?") < 0 ? "?" : "&") + "t=" + Date.now(); }
+    // 検索結果の見え方。空欄なら placeholder（＝自動のときの中身）をそのまま出す
+    function renderSeoPreview(urlEl, titleEl, descEl, url, titleInput, descInput){
+      urlEl.textContent = url;
+      titleEl.textContent = titleInput.value.trim() || titleInput.placeholder;
+      descEl.textContent = (descInput.value.trim() || descInput.placeholder).slice(0,140);
+    }
+
+    // ---- アカウントのページ（/presenter?id=…）----
+    function updatePresenterCardUI(p){
+      if(!p) return;
+      const base = "/api/presenters/" + encodeURIComponent(p.id);
+      cPCardPreview.innerHTML = cardImgTag(p.cardUrl || bustUrl(base + "/card.png"));
+      cPCardSquarePreview.innerHTML = cardImgTag(p.cardSquareUrl || bustUrl(base + "/card-square.png"));
+      cPCardRemoveWrap.hidden = !p.cardUrl;
+      cPCardSquareRemoveWrap.hidden = !p.cardSquareUrl;
+      cPCardHeadline.value = p.cardHeadline || ""; cPCardHeadline.placeholder = CARD_HEADLINE_PH;
+      cPCardSub.value = p.cardSub || "";          cPCardSub.placeholder = CARD_SUB_PH_PRESENTER;
+      cPCardMessage.value = p.cardMessage || "";  cPCardMessage.placeholder = CARD_MESSAGE_PH;
+      autosizeAll(cPresenterCardRow);
+    }
+    function updatePresenterSeoUI(p){
+      if(!p) return;
+      cPSeoTitle.value = p.seoTitle || "";
+      cPSeoTitle.placeholder = p.nickname + "さん ｜ 応援傍聴ナビ";
+      cPSeoDescription.value = p.seoDescription || "";
+      cPSeoDescription.placeholder = p.nickname + "さんが応援を呼びかけている裁判です。" + SEO_DESC_PH;
+      renderSeoPreview(cPSeoPrevUrl, cPSeoPrevTitle, cPSeoPrevDesc,
+        location.origin + "/presenter?id=" + encodeURIComponent(p.id), cPSeoTitle, cPSeoDescription);
+      autosizeAll(cPresenterSeoRow);
+    }
+    [cPSeoTitle, cPSeoDescription].forEach(el=>el.addEventListener("input", ()=>{
+      const p = presenterById(cPresenterSelect.value);
+      if(p) updatePresenterSeoUIPreviewOnly(p);
+    }));
+    function updatePresenterSeoUIPreviewOnly(p){
+      renderSeoPreview(cPSeoPrevUrl, cPSeoPrevTitle, cPSeoPrevDesc,
+        location.origin + "/presenter?id=" + encodeURIComponent(p.id), cPSeoTitle, cPSeoDescription);
+    }
+    // カードの画像の差し替え／自動生成に戻す（事件側 cCardFile 等と同じ作り）
+    function wirePresenterCardFile(fileEl, statusEl, upload, after){
+      fileEl.addEventListener("change", async ()=>{
+        const f=fileEl.files[0];
+        const pid=cPresenterSelect.value;
+        if(!f || !pid || pid==="__new__") return;
+        if(!["image/jpeg","image/png"].includes(f.type)){ alert("カードは JPEG・PNG のみ登録できます。"); fileEl.value=""; return; }
+        if(f.size>8*1024*1024){ alert("カードは8MBまでです。"); fileEl.value=""; return; }
+        const fd=new FormData(); fd.append("file", f, f.name);
+        statusEl.hidden=false; statusEl.textContent="アップロード中…";
+        try{
+          const up=await upload(pid,fd);
+          const i=presenters.findIndex(x=>x.id===pid); if(i>=0) presenters[i]=up;
+          updatePresenterCardUI(up);
+          statusEl.hidden=false; statusEl.textContent="差し替えました。";
+        }catch(err){ statusEl.hidden=false; statusEl.textContent="アップロードできませんでした：" + (err && err.message || err); }
+        finally{ fileEl.value=""; if(after) after(); }
+      });
+    }
+    function wirePresenterCardRemove(linkEl, statusEl, remove){
+      linkEl.addEventListener("click", async ()=>{
+        const pid=cPresenterSelect.value;
+        if(!pid || pid==="__new__") return;
+        if(!confirm("差し替えた画像を外し、自動生成のカードに戻します。よろしいですか？")) return;
+        try{
+          const up=await remove(pid);
+          const i=presenters.findIndex(x=>x.id===pid); if(i>=0) presenters[i]=up;
+          updatePresenterCardUI(up);
+          statusEl.hidden=false; statusEl.textContent="自動生成に戻しました。";
+        }catch(err){ statusEl.hidden=false; statusEl.textContent="外せませんでした：" + (err && err.message || err); }
+      });
+    }
+    wirePresenterCardFile(cPCardFile, cPCardStatus, apiUpdatePresenterCard);
+    wirePresenterCardFile(cPCardSquareFile, cPCardSquareStatus, apiUpdatePresenterCardSquare);
+    wirePresenterCardRemove(cPCardRemove, cPCardStatus, apiDeletePresenterCard);
+    wirePresenterCardRemove(cPCardSquareRemove, cPCardSquareStatus, apiDeletePresenterCardSquare);
+    // カードの文言・SEOの保存（その場で反映。ニックネームと同じくアカウントに紐づく）
+    async function savePresenterFields(fields, statusEl, doneText){
+      const pid=cPresenterSelect.value;
+      if(!pid || pid==="__new__") return;
+      const p=presenterById(pid);
+      statusEl.hidden=false; statusEl.textContent="変更しています…";
+      try{
+        const up=await apiUpdatePresenter(pid, Object.assign({nickname:p?p.nickname:""}, fields));
+        const i=presenters.findIndex(x=>x.id===pid); if(i>=0) presenters[i]=up;
+        updatePresenterCardUI(up); updatePresenterSeoUI(up);
+        statusEl.hidden=false; statusEl.textContent=doneText;
+      }catch(err){ statusEl.hidden=false; statusEl.textContent="変更できませんでした：" + (err && err.message || err); }
+    }
+    cPCardTextSave.addEventListener("click", ()=>savePresenterFields({
+      cardHeadline:cPCardHeadline.value, cardSub:cPCardSub.value, cardMessage:cPCardMessage.value,
+    }, cPCardTextStatus, "カードの文言を変更しました。"));
+    cPSeoSave.addEventListener("click", ()=>savePresenterFields({
+      seoTitle:cPSeoTitle.value, seoDescription:cPSeoDescription.value,
+    }, cPSeoStatus, "検索結果の見え方を変更しました。"));
+
+    // ---- 事件のページ（/case?id=…）。値は下の「保存」でまとめて保存する ----
+    function updateCaseCardTextUI(c){
+      cCardHeadline.value=(c&&c.cardHeadline)||""; cCardHeadline.placeholder=CARD_HEADLINE_PH;
+      cCardSub.value=(c&&c.cardSub)||"";           cCardSub.placeholder=CARD_SUB_PH_CASE;
+      cCardMessage.value=(c&&c.cardMessage)||"";   cCardMessage.placeholder=CARD_MESSAGE_PH;
+      cSeoTitle.value=(c&&c.seoTitle)||"";
+      cSeoDescription.value=(c&&c.seoDescription)||"";
+      updateCaseSeoPreview();
+    }
+    function updateCaseSeoPreview(){
+      const name=(cFields.name.value||"").trim();
+      cSeoTitle.placeholder=(name || "事件名") + " ｜ 応援傍聴ナビ";
+      cSeoDescription.placeholder=(cFields.callText.value||"").trim() || SEO_DESC_PH;
+      renderSeoPreview(cSeoPrevUrl, cSeoPrevTitle, cSeoPrevDesc,
+        location.origin + "/case?id=" + (edCaseId || "…"), cSeoTitle, cSeoDescription);
+    }
+    [cSeoTitle, cSeoDescription, cFields.name, cFields.callText].forEach(el=>el.addEventListener("input", updateCaseSeoPreview));
+
     // 事件番号「公開する」のいまの状態を1行で示す（外れていると、誰に見えているのか分からなかったため。2026-08-30）
     function updateCaseNoPublicNote(){
       cCaseNoPublicNote.textContent = cCaseNoPublic.checked
@@ -1608,6 +1780,7 @@ window.CC = (function(){
       updateNoticeFieldUI(c);
       updateCardFieldUI(c);
       updateCardSquareFieldUI(c);
+      updateCaseCardTextUI(c);
     }
     async function saveCase(){
       if(!(edCaseId ? canEditCase(edCaseId) : me.canWrite)) return;
@@ -1656,6 +1829,8 @@ window.CC = (function(){
         relatedCaseIds,
         archivedAt:cFields.archivedAt.value, closeType:cFields.closeType.value.trim(),
         boardEnabled:cBoardEnabled.checked, boardRestricted:cBoardRestricted.checked,
+        cardHeadline:cCardHeadline.value.trim(), cardSub:cCardSub.value.trim(), cardMessage:cCardMessage.value.trim(),
+        seoTitle:cSeoTitle.value.trim(), seoDescription:cSeoDescription.value.trim(),
       };
       $("cSave").disabled=true;
       try{
@@ -1673,19 +1848,29 @@ window.CC = (function(){
       }catch(err){ alert(saveErr(err)); $("cSave").disabled=false; }
     }
     async function deleteCase(){
-      if(!edCaseId || !me.canWrite) return;
-      if(!confirm("この事件を削除します。よろしいですか？（期日や資料が残っていると削除できません）")) return;
+      if(!edCaseId || !canEditCase(edCaseId)) return;
+      // 何が一緒に消えるのかを数えて見せる（取り消せない操作なので、押す前に分かるようにする）
+      const evs=caseEvents(edCaseId), mats=caseMaterials(edCaseId), imgs=caseImages(edCaseId);
+      const nPosts=casePosts(edCaseId).length;
+      const parts=[];
+      if(evs.length) parts.push("期日"+evs.length+"件");
+      if(nPosts) parts.push("掲示板の投稿"+nPosts+"件");
+      if(mats.length) parts.push("訴訟資料"+mats.length+"件");
+      if(imgs.length) parts.push("写真"+imgs.length+"枚");
+      const detail = parts.length ? "\n\n一緒に消えるもの：" + parts.join("・") : "";
+      if(!confirm("この事件を削除します。元に戻せません。よろしいですか？" + detail)) return;
       $("cDelete").disabled=true;
       try{
         await apiDeleteCase(edCaseId);
         edDirty=false;
-        location.href="index.html";
+        location.href = (!edIsAdmin && me.presenterId) ? ("presenter?id="+encodeURIComponent(me.presenterId)) : "index.html";
       }catch(err){ alert(saveErr(err)); $("cDelete").disabled=false; }
     }
     $("cSave").addEventListener("click",saveCase);
     $("cCancel").addEventListener("click",()=>{
       edDirty=false;   // キャンセル＝破棄の意思表示なので、beforeunloadの確認は出さない
-      location.href = edCaseId ? "case?id="+encodeURIComponent(edCaseId) : "index.html";
+      location.href = edCaseId ? "case?id="+encodeURIComponent(edCaseId)
+        : (!edIsAdmin && me.presenterId ? "presenter?id="+encodeURIComponent(me.presenterId) : "index.html");
     });
     $("cDelete").addEventListener("click",deleteCase);
     const ceForm=$("ceForm");
@@ -1703,26 +1888,6 @@ window.CC = (function(){
       el.addEventListener("click", ()=>chooseTier(tier));
       el.addEventListener("keydown",(e)=>{ if(e.key==="Enter") chooseTier(tier); });
     });
-    // パスワード変更（自己確認バーの「パスワード変更」から開くページ内フォーム。
-    // case.html・presenter.htmlと同じ仕組み。2026-09-01）
-    const pwCard=$("pwCard"), pwCurrent=$("pwCurrent"), pwNew=$("pwNew"), pwConfirm=$("pwConfirm"), pwStatus=$("pwStatus");
-    function showPwStatus(t){ pwStatus.hidden=false; pwStatus.textContent=t; }
-    function openPwCard(){
-      pwCurrent.value=""; pwNew.value=""; pwConfirm.value=""; pwStatus.hidden=true;
-      pwCard.hidden=false;
-      pwCurrent.focus();
-    }
-    $("pwCancel").addEventListener("click",()=>{ pwCard.hidden=true; });
-    $("pwSubmit").addEventListener("click", async ()=>{
-      const current=pwCurrent.value, next=pwNew.value, confirm2=pwConfirm.value;
-      if(!next || next.length<8){ showPwStatus("新しいパスワードは8文字以上にしてください。"); return; }
-      if(next!==confirm2){ showPwStatus("新しいパスワード（確認）が一致しません。"); return; }
-      try{
-        await apiPresenterChangePassword(current, next);
-        pwCard.hidden=true;
-        alert("パスワードを変更しました。");
-      }catch(err){ showPwStatus("変更できませんでした：" + (err && err.message || err)); }
-    });
     // ページの初期化。CC.load() 後にページ側から呼ぶ。編集ロック解除（onChange）でも呼ばれるが、
     // フォームの充填は一度だけ（アイコン即時反映などの onChange で入力中の内容を上書きしない）
     initCaseEditPage = function(){
@@ -1731,14 +1896,15 @@ window.CC = (function(){
       const params=new URLSearchParams(location.search);
       const id=params.get("id")||"";
       // 新しい事件を起こすのは運営のみ（問題提起人は、運営が作った事件の中身だけを編集できる）
-      const allowed = id ? canEditCase(id) : me.canWrite;
+      // 新規作成は運営のほか、ログイン中の問題提起人も自分名義で作れる（2026-09-10）
+      const allowed = id ? canEditCase(id) : (me.canWrite || !!me.presenterId);
       if(!allowed){
         locked.hidden=false; grid.hidden=true; tierPick.hidden=true;
         // この画面（case-edit.html）には「掲載をご希望の方へ」の枠が無いので、ログインへの
         // 入口をここにも添える（セッション切れ・ブックマークからの再訪などで来ることがあるため。2026-08-30）
         locked.querySelector(".empty-msg").innerHTML = id
           ? `この事件を編集する権限がありません。ご本人は<a href="login.html">こちらからログイン</a>してください。`
-          : "新しい事件の登録は運営にご連絡ください。";
+          : `事件を追加するにはログインが必要です。<a href="login.html">こちらからログイン</a>してください。`;
         return;
       }
       edIsAdmin = me.canWrite;
@@ -1758,41 +1924,35 @@ window.CC = (function(){
         document.title=c.name+"の編集 ｜ 応援傍聴ナビ";
         $("ceBack").href="case?id="+encodeURIComponent(id);
         $("ceBackLabel").textContent="事件ページに戻る";
-        $("cDelete").style.display = edIsAdmin ? "" : "none";
-        // ご本人（この事件の問題提起人）としてログイン中のときだけ出す自己確認バー。
-        // アイコンはcase.htmlの見出しと同じ「問題提起人ページ（＝自分の事件一覧）へのリンク」なので
-        // バッジの左に置き、「自分の事件一覧」の文字リンクは廃止する（2026-09-01）。バッジ「ログイン中」
-        // の下にログアウト・パスワード変更を並べる2行構成にし、アイコンは2行ぶんの高さに見合うよう
-        // 少し大きくする（#ceSelfBar .cicon、style.css側）
-        const selfBarEl = $("ceSelfBar");
-        if(!edIsAdmin && me.presenterId){
-          selfBarEl.innerHTML = `<div class="selfbar">${presenterHeaderHtml(c)}<div class="selfbar-body">`+
-            `<span class="badge">ログイン中</span>`+
-            `<div><a id="ceSelfLogout">ログアウト</a><span class="sep">・</span><a id="ceSelfPwLink">パスワード変更</a></div>`+
-            `</div></div>`;
-          $("ceSelfLogout").addEventListener("click", async ()=>{ await presenterLogout(); location.href="index.html"; });
-          $("ceSelfPwLink").addEventListener("click", openPwCard);
-        }else{
-          selfBarEl.innerHTML = "";
-        }
+        // 削除はご本人にも開いた（2026-09-10）。中身ごと消えるので、確認の文で件数を並べる
+        $("cDelete").style.display = canEditCase(id) ? "" : "none";
         fillCaseForm(c);
       }else{
         edCaseId=null;
         $("ceTitle").textContent="事件を追加";
         document.title="事件を追加 ｜ 応援傍聴ナビ";
-        $("ceBack").href="index.html";
-        $("ceBackLabel").textContent="トップに戻る";
+        // 本人が「＋ 事件を追加」から来たときは、やめたら自分のページへ戻れるようにする
+        // （トップに戻すと、事件を1件作るまで自分のページに戻れなくなるため。2026-09-10）
+        if(!edIsAdmin && me.presenterId){
+          $("ceBack").href="presenter?id="+encodeURIComponent(me.presenterId);
+          $("ceBackLabel").textContent="自分のページに戻る";
+        }else{
+          $("ceBack").href="index.html";
+          $("ceBackLabel").textContent="トップに戻る";
+        }
         $("cDelete").style.display="none";
-        fillCaseForm({});
+        // 本人が作るときはニックネームを自分に固定する（サーバー側でも自分名義に強制している）
+        fillCaseForm({ presenterId: edIsAdmin ? "" : (me.presenterId||"") });
       }
       renderImgList(); renderEvList(); renderMatList();
-      // 掲載レベルの決定（2026-09-01）。既存事件の編集で、期日・資料等への深いリンク（?open=）で
-      // 来たのでなければ、「最小限／標準的／詳細」の選択カードをタブのように出したままにする
-      // （新規作成・深いリンクからは選ばせず、従来どおりフル項目＝詳細にする）。URLに掲載レベル
-      // 指定（?tier=）があればそれを、無ければ「最小限」を初期状態にする。autosize・画像/期日案内等の
-      // 表示切り替えは applyTier() の中で行う（グリッドが実際に表示されるタイミングで測るため）
+      // 掲載レベルの決定（2026-09-01）。期日・資料等への深いリンク（?open=）で来たのでなければ、
+      // 「最小限／標準的／詳細」の選択カードをタブのように出したままにする。新規作成も2026-09-10から
+      // ここに含める（本人が自分で事件を追加できるようになり、初めての人がいきなり全項目に出会うと
+      // 迷うため。以前は新規作成だけ常にフル項目＝詳細だった）。URLに掲載レベル指定（?tier=）が
+      // あればそれを、無ければこの端末の記憶、それも無ければ「最小限」を初期状態にする。
+      // autosize・画像/期日案内等の表示切り替えは applyTier() の中で行う
       const openParam=params.get("open");
-      if(id && !openParam){
+      if(!openParam){
         tierPick.hidden=false;
         // URL指定 ＞ この端末で前回自分から選んだ値 ＞ 「最小限」の順で初期状態を決める（2026-09-10）
         const urlTier=params.get("tier");
@@ -1805,7 +1965,7 @@ window.CC = (function(){
         // 画像・期日・資料は、節を開いた状態にし、「追加」の新規入力欄も最初から出しておく
         // （クリック待ちにしない。2026-09-01。深いリンク（?open=）で来たときは openDeepLink() 側が
         // 個別に1件だけ開くので、二重に開かないようこちらは通らない）
-        ["img","ev","mat"].forEach(kind=>{
+        if(id) ["img","ev","mat"].forEach(kind=>{
           const def=LIST[kind];
           document.getElementById("sec-"+kind).classList.add("open");
           const addBtn=$(def.addBtn);
@@ -1821,6 +1981,9 @@ window.CC = (function(){
         });
       }else{
         tierPick.hidden=true;
+        // 新規作成は fillCaseForm() を通らないので、カードの文言・SEOのうすい文字（自動のときの
+        // 中身）と検索結果のプレビューだけここで初期化しておく
+        if(!id) updateCaseCardTextUI(null);
         applyTier("detail");
       }
       openDeepLink();

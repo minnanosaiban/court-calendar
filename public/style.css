@@ -34,25 +34,28 @@ body{
   overflow-x:hidden;
 }
 .mincho{font-family:"Shippori Mincho","Yu Mincho","Hiragino Mincho ProN",serif}
-.wrap{max-width:720px;margin:0 auto;padding:32px 16px 72px}
+.wrap{max-width:720px;margin:0 auto;padding:12px 16px 72px}
 a{color:inherit}
 
 /* ---- masthead ---- */
-.masthead{display:flex;align-items:center;gap:16px}
+/* 2026-09-10：見出しは中央寄せ、キャッチコピーは幅にかかわらず2行で見せる
+   （2行はどちらも12文字・同じ幅で揃う）。一番上の余白も詰めた（.wrap の padding-top） */
+.masthead{display:flex;align-items:center;justify-content:center;gap:16px}
 .stamp{flex:none;width:52px;height:52px;border:2.5px solid var(--stamp);border-radius:8px;
   display:grid;place-content:center;color:var(--stamp);
   font-family:"Shippori Mincho",serif;font-weight:700;font-size:17px;line-height:1.1;
   letter-spacing:.04em;text-align:center;transform:rotate(-4deg)}
-.masthead h1{font-family:"Shippori Mincho",serif;font-size:1.8rem;font-weight:700;letter-spacing:.05em;line-height:1.4}
+.masthead h1{font-family:"Shippori Mincho",serif;font-size:2.2rem;font-weight:700;letter-spacing:.05em;line-height:1.35}
 .masthead h1 a{color:inherit;text-decoration:none}
 .masthead h1 a:hover{opacity:.75}
 .masthead p{font-size:.8rem;color:var(--mut);letter-spacing:.02em;margin-top:2px}
 /* スマホ幅だけで改行したい箇所に <br class="mobile-break"> を挟む（例：キャッチコピー） */
-.mobile-break{display:none}
-@media(max-width:559.98px){.mobile-break{display:inline}}
+.mobile-break{display:inline}
 /* 「←トップに戻る」は .pillbtn（「事件をさがす→」等）と同じ見た目にする（HTML側は
    class="pillbtn backlink"）。.pillbtn の margin 一括指定より後に置き、上だけ上書きする */
-.pillbtn.backlink{margin-top:24px}
+/* 「◯◯に戻る」の下は、次の内容と近すぎて帯のように見えていたので広めに取る（2026-09-10）。
+   次の要素の margin-top（24〜28px）と相殺されるので、ここを40pxにして下側の余白を決める */
+.pillbtn.backlink{display:flex;width:fit-content;margin:24px auto 40px}
 .pillbtn i:first-child{margin-left:0;margin-right:.4em}
 
 /* ---- section label ---- */
@@ -161,7 +164,10 @@ a{color:inherit}
    付いて浮いて見えたため、枠なし・角丸の自前の吹き出しに置き換えた（data-tip。2026-08-30） */
 [data-tip]{position:relative}
 [data-tip]::after{
-  content:attr(data-tip);position:absolute;left:50%;bottom:100%;transform:translateX(-50%);
+  /* 吹き出しはアイコンの左端に揃える。中央寄せ（left:50%＋translateX(-50%)）だと、
+     アイコンは本文の左端にあり吹き出しの方がずっと幅広なので、左へはみ出していた
+     （スマホでは画面外に切れていた。2026-09-10） */
+  content:attr(data-tip);position:absolute;left:0;bottom:100%;
   margin-bottom:6px;background:var(--ink);color:#fff;font-size:.7rem;line-height:1.4;
   white-space:nowrap;padding:4px 10px;border-radius:6px;
   opacity:0;pointer-events:none;transition:opacity .12s;z-index:20}
@@ -193,9 +199,29 @@ a{color:inherit}
 /* タイトル行 */
 .d-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
 .d-head-main{flex:1;min-width:0}
+/* 問題提起人ページの見出し（2026-09-10）。「アイコン＋件数」を左の列、「ニックネーム＋操作」を
+   右の列にして、スマホ幅でも折り返さずに同じ形で収まるようにする */
+.ph-head{align-items:flex-start;justify-content:flex-start}
+.ph-id{display:flex;flex-direction:column;align-items:center;gap:6px;flex:none}
+.ph-count{font-size:.8rem;text-align:center;line-height:1.4}
+.ph-head .d-head-main .selfbar{justify-content:flex-start;margin-top:10px}
+
 /* 問題提起人が自分としてログイン中の目印（presenter.html）。状態（バッジ）と操作
    （パスワード変更・ログアウト）を同じ行にまとめる（2026-08-30） */
-.selfbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:.85rem;color:var(--mut);margin-top:8px}
+/* 一番上のバー（全ページ共通。2026-09-10）。見出し（応援傍聴ナビ）より上に、
+   ログインの入り口／ログイン中の目印だけを右寄せで置く。罫線は引かず余白で切る */
+.topbar{display:flex;align-items:center;justify-content:flex-end;gap:8px;
+  font-size:.85rem;color:var(--mut);margin-bottom:12px;min-height:36px}
+.topbar a{cursor:pointer;color:var(--mut);text-decoration:underline;text-underline-offset:3px}
+.topbar a:hover{color:var(--ink)}
+.topbar .cicon,.topbar .cicon-ph{width:36px;height:36px}
+.topbar .cicon-ph{font-size:.9rem}
+/* ログアウト中の「ログイン」だけは、押せる入り口とわかるよう下線ではなく枠の無いピル型に寄せる */
+.topbar-login{text-decoration:none !important}
+.topbar-login:hover{text-decoration:underline !important}
+/* 事件ページの「編集」ボタンを収める帯（旧・自己確認バー） */
+.selfbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px;
+  font-size:.85rem;color:var(--mut);margin-top:8px}
 /* 文字色だけ.edit-fab（右端の編集ボタン）と同じ赤系に揃える。以前は薄い赤の背景で囲んだピル型
    だったが、枠っぽく見えるため外し、地の文に朱色の文字だけを乗せる形にした（2026-09-01） */
 .selfbar .badge{color:var(--stamp);font-size:.78rem}
@@ -206,8 +232,8 @@ a{color:inherit}
    2行構成。presenter.htmlは見出し側に別サイズのアイコンを出しているので対象外。2026-09-01）。
    アイコンは2行ぶんの高さに見合うよう、通常の.cicon（56px）より少し大きくする */
 .selfbar-body{display:flex;flex-direction:column;gap:4px}
-.selfbar .cicon,.selfbar .cicon-ph{width:64px;height:64px}
-.selfbar .cicon-ph{font-size:1.5rem}
+.selfbar .cicon,.selfbar .cicon-ph{width:36px;height:36px}
+.selfbar .cicon-ph{font-size:.9rem}
 /* いいね：タイトルに続けて置く。押すと朱色で塗る。
    枠・背景は持たず、タイトルに寄り添う"添え物"にする（2026-08-24。それまでは枠線のピル型だった）。
    押した状態はハートの塗り（bi-heart-fill）と朱色で示すので、面で囲う必要がない。
@@ -511,7 +537,8 @@ a{color:inherit}
 .hint{color:var(--mut);font-size:.8rem;margin:12px 8px 24px}
 /* ヘッダーと掲示板の間に置く案内ボタンの帯。上下に同じだけ余白をとって「帯」として独立させる
    （掲示板パネル側に margin を足すと、事件ページで写真カードとの継ぎ目に隙間ができてしまう） */
-.jumplink{margin:24px 0 32px}
+.jumplink{margin:24px 0 32px;text-align:center}
+.jumplink .pillbtn{margin:0 4px 8px}
 /* .bwrite a（報告を書く）・.btn と同じ枠線ピルのイメージ・同じ寸法にそろえる。
    色だけ主役の朱色ではなく、.btn と同じ控えめなグレー枠にする（サイトの主操作ではないため） */
 .pillbtn{display:inline-flex;align-items:center;background:none;border:1px solid #e6e4dd;
@@ -528,7 +555,7 @@ a{color:inherit}
    合わないため、title属性はやめてこちらにした。読み上げ用のaria-labelは残す） */
 /* .selfbar a{text-decoration:underline} より詳しく指定して、下線を確実に消す
    （.edit-fab単体だと.selfbar aと詳しさが同点で、後者の下線が勝ってしまうため） */
-.selfbar .edit-fab{margin-left:auto;flex:none;display:flex;flex-direction:column;align-items:center;
+.selfbar .edit-fab{margin-left:12px;flex:none;display:flex;flex-direction:column;align-items:center;
   gap:4px;text-decoration:none}
 .edit-fab-circle{display:grid;place-content:center;width:48px;height:48px;border-radius:50%;
   background:var(--stamp);color:#fff}
@@ -767,6 +794,8 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
    同居させると、欄名（明朝）から書式説明（ゴシック）へ行の途中で書体が切り替わってしまうため。
    冒頭の注意書きの置き換え（2026-08-27）→ 単独行に変更（2026-08-28） */
 .field > .lhint{display:block;font-size:.7rem;color:var(--mut);margin-bottom:4px;line-height:1.7}
+/* 入れ子の欄（.subfield）の中でも、欄名の下の一言は同じ小ささにする（2026-09-10） */
+.subfield > .lhint{display:block;font-size:.7rem;color:var(--mut);margin-bottom:4px;line-height:1.7}
 /* 期日タブで、事件が決まっているときの固定表示（入力欄の代わり。書き換え事故を防ぐ） */
 .fixedcase{font-size:.9rem;padding:4px 0}
 .field .check{display:flex;align-items:center;gap:8px;font-size:.9rem;color:var(--ink)}
@@ -900,6 +929,16 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
    :first-child ではない。掲載レベルを出さないとき（新規作成・?open=の深いリンク）は
    #ceTierPick が hidden で消えるため、上に40pxの空白だけが残ってしまう。それを打ち消す */
 #ceTierPick[hidden] + .msec{margin-top:0}
+/* Google検索での見え方のプレビュー（編集画面。2026-09-10）。
+   何を設定しているのかが一目で分かることを優先して、見出しだけは実物に寄せた青にする
+   （サイト本体の「装飾は無彩色寄り」の例外。ここは実物の再現そのものが目的） */
+.gprev{border:1px solid var(--tint);border-radius:12px;padding:14px 16px;background:#fff;margin-bottom:16px}
+.gprev-url{font-size:.75rem;color:var(--mut);word-break:break-all}
+.gprev-title{font-family:"Shippori Mincho",serif;font-size:1.1rem;font-weight:600;color:#1a4fa0;margin-top:4px;line-height:1.5}
+.gprev-desc{font-size:.8rem;color:var(--mut);margin-top:6px;line-height:1.7}
+/* 「アカウントのページ」の設定と「この事件のページ」の設定を分ける線。
+   同じ見出し（Twitterカード／SEOとタイトル）が2度出るので、群の切れ目をはっきりさせる */
+.ce-rule{border:0;border-top:1px solid var(--tint);margin:40px 0 0}
 .editcol .msec .lhint{font-family:"Zen Kaku Gothic New",sans-serif;font-size:.8rem;color:var(--mut);font-weight:400;margin-left:8px}
 /* ---- 写真・期日・資料（1件ずつ、行を開いてその場で編集する節）----
    件数が多くなりうる（実データで写真13・期日8・資料18件）ので、畳んだ一覧＋その場エディタにして

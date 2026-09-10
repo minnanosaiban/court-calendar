@@ -14,14 +14,23 @@ export async function onRequestGet({ request, env }) {
   const assetRes = await env.ASSETS.fetch(new URL("/presenter.html", request.url));
   if (!assetRes.ok || !id) return assetRes;
 
-  const p = await env.DB.prepare(`SELECT id, nickname FROM presenters WHERE id = ?`).bind(id).first();
+  const p = await env.DB.prepare(`SELECT id, nickname, seo_title, seo_description, updated_at FROM presenters WHERE id = ?`).bind(id).first();
   if (!p) return assetRes;
 
-  const cardWideUrl = new URL(`/api/presenters/${encodeURIComponent(p.id)}/card.png`, request.url).toString();
-  const cardSquareUrl = new URL(`/api/presenters/${encodeURIComponent(p.id)}/card-square.png`, request.url).toString();
+  // 更新時刻を付けておくと、カードの文言を変えたときに古いキャッシュを引かずに済む（2026-09-10）
+  const ver = String(p.updated_at || "").replace(/\D/g, "");
+  function cardUrlFor(path) {
+    const u = new URL(`/api/presenters/${encodeURIComponent(p.id)}/${path}`, request.url);
+    if (ver) u.searchParams.set("v", ver);
+    return u.toString();
+  }
+  const cardWideUrl = cardUrlFor("card.png");
+  const cardSquareUrl = cardUrlFor("card-square.png");
 
-  const title = `${p.nickname}さん ｜ 応援傍聴ナビ`;
-  const description = `${p.nickname}さんが応援を呼びかけている裁判です。傍聴席に、ひとり増える。それだけで法廷は変わる。`;
+  // 検索結果・シェアの見出しは、編集画面で入れてあればそれを使う（空＝自動。2026-09-10）
+  const title = p.seo_title || `${p.nickname}さん ｜ 応援傍聴ナビ`;
+  const description = (p.seo_description ||
+    `${p.nickname}さんが応援を呼びかけている裁判です。傍聴席に、ひとり増える。それだけで法廷は変わる。`).slice(0, 140);
 
   const extraTags = [
     `<meta property="og:title" content="${escAttr(title)}">`,

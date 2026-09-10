@@ -35,29 +35,6 @@
 
   <section aria-labelledby="case-h" style="margin-top:28px">
     <div id="caseBody"></div>
-    <!-- パスワード変更（この事件のご本人としてログイン中のときだけ、caseBody内の自己確認バーから開閉する） -->
-    <div class="card" id="pwCard" hidden style="margin-top:16px;padding:20px 22px;max-width:420px">
-      <p class="msec" style="margin-top:0">パスワードの変更</p>
-      <div class="field">
-        <label>いまのパスワード</label>
-        <input type="password" id="pwCurrent" autocomplete="current-password">
-      </div>
-      <div class="field">
-        <label>新しいパスワード</label>
-        <input type="password" id="pwNew" autocomplete="new-password">
-        <p class="fnote">8文字以上にしてください。</p>
-      </div>
-      <div class="field">
-        <label>新しいパスワード（確認）</label>
-        <input type="password" id="pwConfirm" autocomplete="new-password">
-      </div>
-      <p class="fnote" id="pwStatus" hidden></p>
-      <div class="formfoot">
-        <button type="button" class="btn-cancel" id="pwCancel">キャンセル</button>
-        <button type="button" class="btn-save" id="pwSubmit">変更する</button>
-      </div>
-    </div>
-    <p class="hint">各事件のページは、<a href="cases.html?tag=%E6%8E%B2%E8%BC%89%E8%A6%8B%E6%9C%AC">掲載見本</a>のように編集することができます。その他、掲載したい内容がある場合も対応しますので、事務局までご連絡ください。</p>
   </section>
 
   <input type="file" id="fileInput" accept="application/json,.json" style="display:none;">
@@ -112,42 +89,12 @@
     const c=CC.caseById(caseId);
     if(c) document.title = c.name + " ｜ 応援傍聴ナビ";
     // 自己確認バーは画像・タイトルより上、ページの一番上に出す（2026-08-30）。
-    // caseSelfBarのinnerHTMLは毎回作り直すので、中のリンクは毎回付け直す
+    // caseSelfBarのinnerHTMLは毎回作り直す（中身は「編集」ボタンだけ。ログイン中のアイコン・
+    // ログアウトは全ページ共通のバーへ一本化した。2026-09-10）
     const selfBarEl = document.getElementById("caseSelfBar");
     selfBarEl.innerHTML = c ? CC.caseSelfBarHtml(c) : "";
-    // 「自分の事件一覧」への文字リンクは廃止した。caseSelfBarHtml内のアイコン
-    // （.cicon-link、presenterHeaderHtml）が同じリンク先を兼ねる（2026-09-01）
-    const pwLink = document.getElementById("caseSelfPwLink");
-    if(pwLink) pwLink.addEventListener("click", openPwCard);
-    const logoutLink = document.getElementById("caseSelfLogoutLink");
-    if(logoutLink) logoutLink.addEventListener("click", async ()=>{
-      await CC.presenterLogout();
-      location.href = "index.html";
-    });
   }
   CC.setOnChange(renderAll);
-
-  // パスワード変更：presenter.htmlと同じ、ページ内の小さなフォーム（2026-08-30）
-  const pwCard=document.getElementById("pwCard"), pwCurrent=document.getElementById("pwCurrent"),
-        pwNew=document.getElementById("pwNew"), pwConfirm=document.getElementById("pwConfirm"),
-        pwStatus=document.getElementById("pwStatus");
-  function showPwStatus(t){ pwStatus.hidden=false; pwStatus.textContent=t; }
-  function openPwCard(){
-    pwCurrent.value=""; pwNew.value=""; pwConfirm.value=""; pwStatus.hidden=true;
-    pwCard.hidden=false;
-    pwCurrent.focus();
-  }
-  document.getElementById("pwCancel").addEventListener("click",()=>{ pwCard.hidden=true; });
-  document.getElementById("pwSubmit").addEventListener("click", async ()=>{
-    const current=pwCurrent.value, next=pwNew.value, confirm2=pwConfirm.value;
-    if(!next || next.length<8){ showPwStatus("新しいパスワードは8文字以上にしてください。"); return; }
-    if(next!==confirm2){ showPwStatus("新しいパスワード（確認）が一致しません。"); return; }
-    try{
-      await CC.apiPresenterChangePassword(current, next);
-      pwCard.hidden=true;
-      alert("パスワードを変更しました。");
-    }catch(err){ showPwStatus("変更できませんでした：" + (err && err.message || err)); }
-  });
 
   (async function init(){
     renderAll();
