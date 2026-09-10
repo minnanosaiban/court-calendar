@@ -951,6 +951,17 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
    同じ見出し（Twitterカード／SEOとタイトル）が2度出るので、群の切れ目をはっきりさせる */
 .ce-rule{border:0;border-top:1px solid var(--tint);margin:40px 0 0}
 .editcol .msec .lhint{font-family:"Zen Kaku Gothic New",sans-serif;font-size:.8rem;color:var(--mut);font-weight:400;margin-left:8px}
+/* 4つの囲み（アカウントについて／事件について／TwitterカードとSEO／運営者用）。2026-09-11。
+   罫線ではなく背景色差で区切る（.subfield・.arg と同じ薄いグレー地 --tint。.editcol の白地に対する
+   「箱の中の箱」＝角丸12px）。見出しは太字にせず、節見出し（.msec）と同じ1.2remのサイズだけで
+   立てる（「見出しは太字でなくサイズで立てる」というサイト方針どおり。太さは指定しない＝body既定） */
+.ceGroup{background:var(--tint);border-radius:12px;padding:16px}
+.ceGroup+.ceGroup{margin-top:24px}
+.ceGroupHead{font-size:1.2rem;margin:0 0 12px}
+@media(min-width:560px){
+  .ceGroup{padding:24px}
+  .ceGroup+.ceGroup{margin-top:32px}
+}
 /* ---- 写真・期日・資料（1件ずつ、行を開いてその場で編集する節）----
    件数が多くなりうる（実データで写真13・期日8・資料18件）ので、畳んだ一覧＋その場エディタにして
    事件情報の本文が埋もれないようにする（2026-08-27） */
@@ -963,15 +974,25 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .lssec.open .lschev{transform:rotate(180deg)}
 .lsbody{display:none;margin-top:12px}
 .lssec.open .lsbody{display:block}
-/* 事件ページの「＋ 期日を編集」「編集」など（?open=）から来たときは、その1件の入力窓だけを出す
-   （lib.js の edFocus／openDeepLink。事件情報の全項目の中に放り込まれると、慣れていない人が迷うため。
-   2026-09-10）。入力窓の見出し（期日を追加 等）はページのタイトルと重なるので文字だけ隠し、右の
-   「閉じる」「保存」は残す。ページ下の保存バー（事件情報をまとめて保存する方）も出さない */
-#ceForm.focus > :not(.focus-target),
+/* 事件ページの「＋ 期日を追加」「編集」など（?open=）から来たときは、事件情報など他の節は
+   隠すが、その節（期日・資料）だけは一覧も出したままにする（一覧から他の行をクリックすれば
+   その場で編集に切り替えられる。「追加」ボタンも出す＝この窓の中で追加・編集どちらもできる。
+   2026-09-11。以前は1件の入力窓だけを出し一覧ごと隠していたが、編集したい別の行へたどり着けず
+   分かりにくいという指摘があったため、節の外（事件情報の全項目・タブ等）だけを隠す形に改めた）。
+   入力窓の見出し（期日を追加 等）はページのタイトルと重なるので文字だけ隠し、右の
+   「閉じる」「保存」は残す。ページ下の保存バー（事件情報をまとめて保存する方）も出さない。
+   2026-09-11、4つの囲み（.ceGroup）を導入したことで、期日・資料・画像（.lssec）は
+   #ceForm の直接の子ではなく「事件について」の囲みの中の孫要素になった。#ceForm直下だけを
+   見て隠す元のやり方だと、focus-targetを持つ.lssecごと親の囲みが隠れてしまうため、
+   :has() で「focus-targetを含む囲み」を素通しし、その囲みの中だけであらためて
+   focus-target以外を隠す2段構えにした。素通しした囲み自身の背景・角丸・余白も、
+   フォーカス中は元の見た目（枠なし）に戻す */
+#ceForm.focus > :not(.focus-target):not(:has(.focus-target)),
+#ceForm.focus .ceGroup:has(.focus-target) > :not(.focus-target),
 #ceForm.focus .focus-target .lshead,
-#ceForm.focus .focus-target .addbtn,
-#ceForm.focus :is(#imgList,#evList,#matList) > :not(.ieditor),
+#ceForm.focus .lssec:not(.focus-target) :is(#imgList,#evList,#matList) > :not(.ieditor),
 #ceGrid.focus .savebar{display:none}
+#ceForm.focus .ceGroup:has(.focus-target){background:none;padding:0;border-radius:0}
 #ceForm.focus .focus-target{border-top:none;padding-top:0}
 #ceForm.focus .focus-target .lsbody{margin-top:0}
 #ceForm.focus .ihead > span:first-child{visibility:hidden}

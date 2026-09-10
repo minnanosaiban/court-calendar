@@ -712,7 +712,7 @@ window.CC = (function(){
       </li>`;
     }).join("");
     return `<p class="subhead">タイムライン</p>
-      ${canEditCase(caseId)?`<p class="qact"><a href="case-edit.html?id=${encodeURIComponent(caseId)}&open=ev:new">＋ 期日を編集</a></p>`:""}
+      ${canEditCase(caseId)?`<p class="qact"><a href="case-edit.html?id=${encodeURIComponent(caseId)}&open=ev:new">＋ 期日を追加</a></p>`:""}
       ${rounds.length?`<ol class="tl">${items}</ol>`:`<p class="d-body mut">期日はまだ登録されていません。</p>`}`;
   }
   function matRowHtml(m, caseId){
@@ -753,7 +753,7 @@ window.CC = (function(){
       (hasMd?`<button type="button" class="btn" data-bulkzip="md" data-case="${escapeAttr(caseId)}"><i class="bi bi-file-earmark-zip" aria-hidden="true"></i><span class="zlabel">.mdをまとめてダウンロード</span></button>`:"")+
       `</p>` : "";
     return `<p class="subhead">訴訟資料一覧</p>
-      ${canEditCase(caseId)?`<p class="qact"><a href="case-edit.html?id=${encodeURIComponent(caseId)}&open=mat:new">＋ 資料を編集</a></p>`:""}
+      ${canEditCase(caseId)?`<p class="qact"><a href="case-edit.html?id=${encodeURIComponent(caseId)}&open=mat:new">＋ 資料を追加</a></p>`:""}
       ${bulkHtml}
       ${body}`;
   }
@@ -1378,6 +1378,10 @@ window.CC = (function(){
         cPresenterXUrlRow.hidden=true; cPresenterLoginRow.hidden=true;
         cPresenterCardRow.hidden=true; cPresenterSeoRow.hidden=true;
       }
+      // 「運営者用」の囲み（.ceGroup#grp-admin）は、中身がログイン設定（cPresenterLoginRow）1つだけ
+      // なので、その計算済みの表示状態（掲載レベル・admin・presenter選択の3条件を既に反映済み）を
+      // そのまま囲み側にも映す（2026-09-11）
+      $("grp-admin").hidden = cPresenterLoginRow.hidden;
     }
     cPresenterSelect.addEventListener("change", updatePresenterFieldUI);
     // 「作成」を押すとその場ですぐ問題提起人を作り、続けてアイコンも設定できるようにする
@@ -1968,7 +1972,7 @@ window.CC = (function(){
       // 迷うため。以前は新規作成だけ常にフル項目＝詳細だった）。URLに掲載レベル指定（?tier=）が
       // あればそれを、無ければこの端末の記憶、それも無ければ「最小限」を初期状態にする。
       // autosize・画像/期日案内等の表示切り替えは applyTier() の中で行う
-      // ?open= の深いリンク（事件ページの「＋ 期日を編集」「編集」など）は、その1件の入力窓だけを出す
+      // ?open= の深いリンク（事件ページの「＋ 期日を追加」「編集」など）は、その1件の入力窓だけを出す
       // （2026-09-10。事件情報の全項目の中に放り込まれると、慣れていない人が迷うため）。
       // その1件が見つからないときは、ふつうの編集ページとして開く
       const [openKind, openId] = (params.get("open")||"").split(":");
