@@ -990,7 +990,6 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 #ceForm.focus > :not(.focus-target):not(:has(.focus-target)),
 #ceForm.focus .ceGroup:has(.focus-target) > :not(.focus-target),
 #ceForm.focus .focus-target .lshead,
-#ceForm.focus .lssec:not(.focus-target) :is(#imgList,#evList,#matList) > :not(.ieditor),
 #ceGrid.focus .savebar{display:none}
 #ceForm.focus .ceGroup:has(.focus-target){background:none;padding:0;border-radius:0}
 #ceForm.focus .focus-target{border-top:none;padding-top:0}

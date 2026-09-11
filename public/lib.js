@@ -406,7 +406,13 @@ window.CC = (function(){
                      presenterNickname: (self && self.nickname) || me.presenterNickname || "",
                      presenterIcon: self ? self.icon : (mine ? mine.presenterIcon : ""),
                      name: me.presenterNickname||"" };
-    return `<div class="topbar">${presenterHeaderHtml(pseudo)}<a id="ccSelfLogout">ログアウト</a></div>`;
+    // 問題提起人としてログイン中でも、同時に運営として編集ロックを外していることがある
+    // （運営が自分の問題提起人アカウントにもログインしている等）。上のme.canWrite分岐は
+    // !me.presenterIdの人しか通らないため、この場合「ロックする」がどこにも出せず、
+    // 編集ロックを外したまま戻せなくなっていた。ログアウトの隣に並べて出す（2026-09-11）
+    const lockLink = me.canWrite
+      ? `<a id="ccTopLock"><i class="bi bi-unlock" aria-hidden="true"></i> ロックする</a>` : "";
+    return `<div class="topbar">${presenterHeaderHtml(pseudo)}<a id="ccSelfLogout">ログアウト</a>${lockLink}</div>`;
   }
   function ensureTopBar(){
     let el=document.getElementById("ccTopBar");
@@ -1222,6 +1228,12 @@ window.CC = (function(){
     const cNoticeFile=$("cNoticeFile"), cNoticeRemove=$("cNoticeRemove"), cNoticeNote=$("cNoticeNote"), cNoticeStatus=$("cNoticeStatus");
     const cCardFile=$("cCardFile"), cCardPreview=$("cCardPreview"), cCardRemove=$("cCardRemove"), cCardRemoveWrap=$("cCardRemoveWrap"), cCardStatus=$("cCardStatus");
     const cCardSquareFile=$("cCardSquareFile"), cCardSquarePreview=$("cCardSquarePreview"), cCardSquareRemove=$("cCardSquareRemove"), cCardSquareRemoveWrap=$("cCardSquareRemoveWrap"), cCardSquareStatus=$("cCardSquareStatus");
+    // 検索結果の見え方（SEOタイトル・説明）のプレビュー欄。以前はここに宣言が無く、id="cSeoTitle"等が
+    // ブラウザのwindow名前付きアクセスで裸のグローバル変数として解決される状態に頼っていた
+    // （他をシャドーイングする変数名が現れると壊れる、要素が無いとエラーになる等、他の箇所と違って
+    //  脆い書き方だったため統一した。2026-09-11）
+    const cSeoTitle=$("cSeoTitle"), cSeoDescription=$("cSeoDescription"),
+          cSeoPrevTitle=$("cSeoPrevTitle"), cSeoPrevDesc=$("cSeoPrevDesc"), cSeoPrevUrl=$("cSeoPrevUrl");
     const cPresenterSelect=$("cPresenterSelect"), cPresenterNewRow=$("cPresenterNewRow"), cPresenterNewNickname=$("cPresenterNewNickname"),
           cPresenterNewSave=$("cPresenterNewSave"), cPresenterIconRow=$("cPresenterIconRow"), cPresenterIconPreview=$("cPresenterIconPreview"),
           cPresenterIconFile=$("cPresenterIconFile"), cPresenterIconRemove=$("cPresenterIconRemove"),
@@ -1232,7 +1244,16 @@ window.CC = (function(){
           cPresenterLoginUsernameSave=$("cPresenterLoginUsernameSave"), cPresenterLoginReset=$("cPresenterLoginReset"),
           cPresenterLoginRemoveWrap=$("cPresenterLoginRemoveWrap"), cPresenterLoginRemove=$("cPresenterLoginRemove"),
           cPresenterLoginStatus=$("cPresenterLoginStatus"),
+          cPresenterIconNote=$("cPresenterIconNote"),
+          cPresenterCardRow=$("cPresenterCardRow"), cPresenterSeoRow=$("cPresenterSeoRow"),
           cCaseNoPublicNote=$("cCaseNoPublicNote");
+    // 問題提起人側のTwitterカード差し替え・検索結果の見え方。事件側のcCard*/cSeo*と同じ理由で、
+    // ここも宣言を欠いてwindow名前付きアクセスに頼っていたので統一した（2026-09-11）
+    const cPCardFile=$("cPCardFile"), cPCardPreview=$("cPCardPreview"), cPCardRemove=$("cPCardRemove"), cPCardRemoveWrap=$("cPCardRemoveWrap"), cPCardStatus=$("cPCardStatus");
+    const cPCardSquareFile=$("cPCardSquareFile"), cPCardSquarePreview=$("cPCardSquarePreview"), cPCardSquareRemove=$("cPCardSquareRemove"), cPCardSquareRemoveWrap=$("cPCardSquareRemoveWrap"), cPCardSquareStatus=$("cPCardSquareStatus");
+    const cPSeoTitle=$("cPSeoTitle"), cPSeoDescription=$("cPSeoDescription"),
+          cPSeoPrevTitle=$("cPSeoPrevTitle"), cPSeoPrevDesc=$("cPSeoPrevDesc"), cPSeoPrevUrl=$("cPSeoPrevUrl"),
+          cPSeoSave=$("cPSeoSave"), cPSeoStatus=$("cPSeoStatus");
     const cIsPrivate=$("cIsPrivate"), cIsPrivateNote=$("cIsPrivateNote"),
           cViewKeyRow=$("cViewKeyRow"), cViewKey=$("cViewKey"), cViewKeyRegen=$("cViewKeyRegen");
     // 閲覧キーの自動生成：presenterのパスワード発行（サーバー側 generatePassword()）と同じ文字種
@@ -1887,7 +1908,9 @@ window.CC = (function(){
     // しただけで「事件情報に未保存の変更がある」という誤った警告が出てしまう）
     ceForm.addEventListener("input",(e)=>{ if(!e.target.closest(".ieditor")) edDirty=true; });
     ceForm.addEventListener("change",(e)=>{ if(!e.target.closest(".ieditor")) edDirty=true; });
-    window.addEventListener("beforeunload",(e)=>{ if(edDirty){ e.preventDefault(); e.returnValue=""; } });
+    // editorDirty()＝画像・期日・資料の行内エディタ側の未保存判定（2026-09-11に追加。タブ内の
+    // 切り替えだけでなく、タブを閉じる・リロードする場合もここで一緒に守る）
+    window.addEventListener("beforeunload",(e)=>{ if(edDirty || editorDirty()){ e.preventDefault(); e.returnValue=""; } });
     // 掲載レベルの選択カード（クリック・Enterキーどちらでも選べる。cases.htmlの事件カードと同じ配線）。
     // タブのようにいつでも選び直せるので、常時ここで配線しておく
     TIER_CARDS.forEach(([elId,tier])=>{
@@ -1962,7 +1985,11 @@ window.CC = (function(){
       // （2026-09-10。事件情報の全項目の中に放り込まれると、慣れていない人が迷うため）。
       // その1件が見つからないときは、ふつうの編集ページとして開く
       const [openKind, openId] = (params.get("open")||"").split(":");
-      edFocus = (id && LIST[openKind] && (openId==="new" || LIST[openKind].items().some(x=>x.id===openId))) ? openKind : null;
+      // LISTはただのオブジェクトなので、URLの?open=にconstructor等を入れられるとLIST[openKind]が
+      // Object.prototype経由の値を拾って真扱いになり、その先でエラーになり編集ページが白紙になる
+      // （2026-09-11。hasOwnPropertyで実在するキーかどうかを確かめてから使う）
+      const openKindValid = Object.prototype.hasOwnProperty.call(LIST, openKind);
+      edFocus = (id && openKindValid && (openId==="new" || LIST[openKind].items().some(x=>x.id===openId))) ? openKind : null;
       if(!edFocus){
         tierPick.hidden=false;
         applyTier(rememberedTier());
@@ -1982,6 +2009,7 @@ window.CC = (function(){
           // 有無と両方で決めている欄まで上書きしてしまうため。2026-09-01。他のカードへ切り替えて
           // から最小限へ戻すと直って見えたのは、そのとき初めてこの欄にも出し分けがかかるため）
           root.querySelectorAll("[data-tier-min]").forEach(el=>{ el.hidden = !tierAllows(el.dataset.tierMin); });
+          armEditorSnapshot(root);
         });
       }else{
         tierPick.hidden=true;
@@ -1997,9 +2025,38 @@ window.CC = (function(){
     // （どれかを開くと、他の行・他の節で開いていたエディタは閉じる）。
     // 入力窓だけを出しているとき（edFocus）は、保存・閉じる・削除のあと事件ページへ戻る（結果をその場で見られるように）
     function backToCase(){ location.href="case?id="+encodeURIComponent(edCaseId); }
+    // 開いている各エディタ（.ieditor）の「開いた直後の入力値」のスナップショット（DOM要素→文字列）。
+    // 画像・期日・資料は節ごとに「追加」欄を常に開いたままにしているため、既存行の編集を1つ開くと
+    // 合わせて2〜3個の .ieditor が同時に存在しうる。どれか1つでも未保存の変更があれば
+    // confirmDiscardEditor() が確認する（2026-09-11、他の行・追加ボタン・閉じるを押すと
+    // 無確認で入力中の内容が消えるバグの修正。1個しか見ないとこの複数同時オープンを見落とすため、
+    // 単一のスナップショットではなくMapで全部を追う）
+    let edEditorSnapshots = new Map();
+    function serializeEditor(root){
+      if(!root) return null;
+      return Array.from(root.querySelectorAll("input,textarea,select"))
+        .map(el => (el.name||el.id||"") + "=" + ((el.type==="checkbox"||el.type==="radio") ? el.checked : el.value))
+        .join("\n");
+    }
+    // .ieditor を挿入した直後に呼ぶ。以後、この要素の変更を未保存判定の対象にする
+    function armEditorSnapshot(root){
+      if(root) edEditorSnapshots.set(root, serializeEditor(root));
+    }
+    function editorDirty(){
+      for(const [root, snap] of edEditorSnapshots){
+        if(document.contains(root) && serializeEditor(root)!==snap) return true;
+      }
+      return false;
+    }
+    // 未保存の変更があるときだけ確認する。無ければ何も聞かず true（呼び出し側はfalseならその場で中断する）
+    function confirmDiscardEditor(){
+      if(!editorDirty()) return true;
+      return confirm("保存していない入力があります。このまま閉じると内容が失われます。よろしいですか？");
+    }
     function closeEditor(){
       document.querySelectorAll(".ieditor").forEach(x=>x.remove());
       document.querySelectorAll(".irow.editing").forEach(x=>x.classList.remove("editing"));
+      edEditorSnapshots.clear();
     }
     function openEditorAfter(afterEl, html){
       closeEditor();
@@ -2007,6 +2064,7 @@ window.CC = (function(){
       const root = afterEl.nextElementSibling;
       wireAutosize(root); autosizeAll(root);
       applyTierGates();   // 期日エディタの主張欄・報告会チェックなど、掲載レベル未満の欄を隠す
+      armEditorSnapshot(root);
       const first = root.querySelector("input,textarea,select");
       if(first) first.focus();
       return root;
@@ -2311,7 +2369,11 @@ window.CC = (function(){
         }
 
         const close=e.target.closest("[data-close]");
-        if(close){ if(edFocus) return backToCase(); closeEditor(); return; }
+        if(close){
+          if(!confirmDiscardEditor()) return;
+          if(edFocus) return backToCase();
+          closeEditor(); return;
+        }
 
         const save=e.target.closest("[data-save]");
         if(save){
@@ -2327,10 +2389,12 @@ window.CC = (function(){
         if(add){
           const kind=Object.keys(LIST).find(k=>LIST[k].addBtn===add.id);
           if(!kind || !edCaseId) return;
+          if(!confirmDiscardEditor()) return;
           closeEditor();
           add.insertAdjacentHTML("beforebegin", LIST[kind].editorHtml(null));
           const root=add.previousElementSibling;
           wireAutosize(root); autosizeAll(root);
+          armEditorSnapshot(root);
           const first=root.querySelector("input,textarea,select"); if(first) first.focus();
           return;
         }
@@ -2338,6 +2402,7 @@ window.CC = (function(){
         const row=e.target.closest(".irow");
         if(row){
           if(e.target.closest(".imove")) return;   // 並び替えは編集を開かない
+          if(!confirmDiscardEditor()) return;
           const alreadyOpen = row.nextElementSibling && row.nextElementSibling.classList.contains("ieditor");
           if(alreadyOpen){ closeEditor(); return; }
           const kind=row.dataset.kind, id=row.dataset.id;
@@ -2370,6 +2435,7 @@ window.CC = (function(){
         wireAutosize(root); autosizeAll(root);
         // 挿入が applyTier() より後なので、この入力窓だけ掲載レベルの出し分けをかけ直す（最小限なら主張欄などを隠す）
         root.querySelectorAll("[data-tier-min]").forEach(el=>{ el.hidden = !tierAllows(el.dataset.tierMin); });
+        armEditorSnapshot(root);
       }else{
         const item=def.items().find(x=>x.id===idOrNew);
         const row=document.querySelector(`.irow[data-kind="${kind}"][data-id="${CSS.escape(idOrNew)}"]`);

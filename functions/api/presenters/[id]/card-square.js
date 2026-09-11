@@ -1,5 +1,5 @@
 import {
-  json, rowToPresenter, putFile, authorizeSelfOrAdmin,
+  json, rowToPresenter, putValidatedImage, authorizeSelfOrAdmin, deleteR2,
   CARD_MIMES, CARD_MAX_BYTES,
 } from "../../../_common.js";
 import { presentersSelect } from "../../presenters.js";
@@ -21,23 +21,20 @@ export async function onRequestPut({ request, env, params }) {
   const cur = await env.DB.prepare(`SELECT card_square_r2_key FROM presenters WHERE id = ?`).bind(pid).first();
   if (!cur) return json({ error: "not found" }, 404);
 
-  let form;
-  try { form = await request.formData(); } catch { return json({ error: "bad form" }, 400); }
-  const f = form.get("file");
-  if (!f || typeof f !== "object" || typeof f.arrayBuffer !== "function" || f.size === 0) {
-    return json({ error: "カードの画像ファイルを選んでください" }, 400);
-  }
-  if (!env.FILES) return json({ error: "画像のアップロード（R2）はまだ使えません" }, 400);
-  const ext = CARD_MIMES[f.type];
-  if (!ext) return json({ error: "カードは JPEG・PNG のみ登録できます" }, 400);
-  if (f.size > CARD_MAX_BYTES) return json({ error: "カードは8MBまでです" }, 400);
-
-  const file = { blob: f, ext, name: f.name || ("card-square." + ext), size: f.size, mime: f.type };
-  const key = await putFile(env, "pds", pid, file);
+  const put = await putValidatedImage(env, request, {
+    mimes: CARD_MIMES, maxBytes: CARD_MAX_BYTES, keyPrefix: "pds", ownerId: pid, defaultName: "card-square",
+    emptyFileMsg: "カードの画像ファイルを選んでください",
+    disabledMsg: "画像のアップロード（R2）はまだ使えません",
+    wrongTypeMsg: "カードは JPEG・PNG のみ登録できます",
+    tooBigMsg: "カードは8MBまでです",
+  });
+  if (put.error) return json({ error: put.error }, 400);
+  const key = put.key;
   await env.DB.prepare(
     `UPDATE presenters SET card_square_r2_key=?, updated_by=?, updated_at=? WHERE id=?`
   ).bind(key, auth.actor, new Date().toISOString(), pid).run();
-  if (cur.card_square_r2_key && cur.card_square_r2_key !== key && env.FILES) await env.FILES.delete(cur.card_square_r2_key).catch(() => {});
+  // 失敗は握りつぶさずログに残す（2026-09-11、R2孤立バグの再発防止）
+  if (cur.card_square_r2_key && cur.card_square_r2_key !== key) await deleteR2(env, [cur.card_square_r2_key], "presenter-card-square:" + pid);
 
   return json(rowToPresenter(await loadRow(env, pid), auth.admin));
 }
@@ -54,7 +51,7 @@ export async function onRequestDelete({ request, env, params }) {
   await env.DB.prepare(
     `UPDATE presenters SET card_square_r2_key=NULL, updated_by=?, updated_at=? WHERE id=?`
   ).bind(auth.actor, new Date().toISOString(), pid).run();
-  if (cur.card_square_r2_key && env.FILES) await env.FILES.delete(cur.card_square_r2_key).catch(() => {});
+  if (cur.card_square_r2_key) await deleteR2(env, [cur.card_square_r2_key], "presenter-card-square:" + pid);
 
   return json(rowToPresenter(await loadRow(env, pid), auth.admin));
 }

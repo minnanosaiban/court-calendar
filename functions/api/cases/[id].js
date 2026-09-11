@@ -1,6 +1,6 @@
 import {
   json, rowToCase, caseFromBody, getIdentity, viewerHash, uniqueCaseName,
-  authorizeCaseWrite, actorLabel, deleteR2, validateCardText,
+  authorizeCaseWrite, actorLabel, deleteR2, validateCardText, textToLines, linesToText,
 } from "../../_common.js";
 import { casesSelect } from "../cases.js";
 
@@ -32,25 +32,37 @@ export async function onRequestPut({ request, env, params }) {
   }
 
   const actor = actorLabel(id, auth);
-  const res = await env.DB.prepare(
-    `UPDATE cases
+  let sql = `UPDATE cases
         SET name=?, presenter_id=?, view_key=?, case_no=?, case_no_public=?,
             plaintiff_name=?, defendant_name=?,
             judge=?, points=?, call_text=?,
             contact=?, press=?,
             plaintiff_links=?, defendant_links=?, tags=?,
             related_case_ids=?, archived_at=?, close_type=?, board_enabled=?, board_restricted=?,
-            card_headline=?, card_sub=?, card_message=?, seo_title=?, seo_description=?,
-            updated_by=?, updated_at=?
-      WHERE id=?`
-  ).bind(c.name, c.presenter_id, c.view_key, c.case_no, c.case_no_public,
+            updated_by=?, updated_at=?`;
+  const bind = [c.name, c.presenter_id, c.view_key, c.case_no, c.case_no_public,
          c.plaintiff_name, c.defendant_name,
          c.judge, c.points, c.call_text,
          c.contact, c.press,
          c.plaintiff_links, c.defendant_links, c.tags,
          c.related_case_ids, c.archived_at, c.close_type, c.board_enabled, c.board_restricted,
-         c.card_headline, c.card_sub, c.card_message, c.seo_title, c.seo_description,
-         actor, new Date().toISOString(), cid).run();
+         actor, new Date().toISOString()];
+  // カードの文言・検索結果の見え方（空欄で保存すると自動に戻る）。送られてこなかったキーには
+  // 触らない＝別画面からの更新で消えないようにする（presenters/[id].js の同種フィールドと同じ
+  // ガード。2026-09-11、case-edit.html の通常保存は cardHeadline/cardSub/cardMessage を送らない
+  // ため、caseFromBody 経由の一律null化のままだと保存のたびにNULLへ巻き戻っていた不備の修正）
+  for (const [key, col] of [
+    ["cardHeadline", "card_headline"], ["cardSub", "card_sub"], ["cardMessage", "card_message"],
+    ["seoTitle", "seo_title"], ["seoDescription", "seo_description"],
+  ]) {
+    if (typeof body[key] === "string") {
+      sql += `, ${col}=?`;
+      bind.push(body[key].trim() || null);
+    }
+  }
+  sql += ` WHERE id=?`;
+  bind.push(cid);
+  const res = await env.DB.prepare(sql).bind(...bind).run();
   if (!res.meta || res.meta.changes === 0) return json({ error: "not found" }, 404);
 
   const viewer = (await viewerHash(request)) || "";
@@ -64,6 +76,10 @@ export async function onRequestPut({ request, env, params }) {
 // 当事者が自分の事件を自分で片付けられるようにした（掲示板に他の人が書いた応援メッセージが
 // あっても、当事者の判断で消してよい、という整理）。取り消せないので、画面側は消える中身の
 // 件数を並べて確認してから呼ぶこと。
+//
+// ※schema.sqlの外部キーにON DELETE CASCADEは無い（D1でのFK制約強制も前提にしていない）ので、
+//   case_id／event_idでこの事件にぶら下がる新しいテーブルを足したときは、必ずこのbatch()にも
+//   DELETE文を足すこと（忘れると、そのテーブルにだけ孤児レコードが残り続ける。2026-09-11）。
 //
 // D1側の削除は env.DB.batch() で1回にまとめて呼ぶ（D1がまとめて原子的に実行するので、
 // 途中の1文が失敗してもデータベースは変化しない）。子テーブル（posts・event_bookmarks）は
@@ -80,14 +96,27 @@ export async function onRequestDelete({ request, env, params }) {
   ).bind(cid).first();
   if (!cur) return json({ error: "not found" }, 404);
 
-  // R2のキーは、D1の行を消してしまうと拾えなくなるので、batchの前に集めておく
-  const { results: mats } = await env.DB.prepare(`SELECT r2_key FROM materials WHERE case_id = ?`).bind(cid).all();
-  const { results: imgs } = await env.DB.prepare(`SELECT r2_key, web_r2_key FROM case_images WHERE case_id = ?`).bind(cid).all();
+  // R2のキーは、D1の行を消してしまうと拾えなくなるので、batchの前に集めておく（3クエリは互いに
+  // 独立なので並行に投げる）。related_case_ids はUUID同士の部分一致誤爆を避けるため改行区切りの
+  // 完全一致で絞り込む（LIKEは候補を広めに拾うだけの一次フィルタ）
+  const [{ results: mats }, { results: imgs }, { results: referrers }] = await Promise.all([
+    env.DB.prepare(`SELECT r2_key FROM materials WHERE case_id = ?`).bind(cid).all(),
+    env.DB.prepare(`SELECT r2_key, web_r2_key FROM case_images WHERE case_id = ?`).bind(cid).all(),
+    env.DB.prepare(`SELECT id, related_case_ids FROM cases WHERE related_case_ids LIKE ?`).bind(`%${cid}%`).all(),
+  ]);
   const r2Keys = [
     ...(mats || []).map((m) => m.r2_key),
-    ...(imgs || []).flatMap((i) => [i.r2_key, i.web_r2_key]),
+    // 1枚の写真アップロードは r2_key と web_r2_key が同じキーを指すことがあるため重複削除を避ける
+    ...new Set((imgs || []).flatMap((i) => [i.r2_key, i.web_r2_key])),
     cur.notice_r2_key, cur.card_r2_key, cur.card_square_r2_key,
   ];
+
+  // この事件を「関連裁判」として挙げている他事件があれば、削除に合わせてそちらの参照も外す
+  // （外さないと、消えたはずの事件idが related_case_ids にゴミとして残り続ける。2026-09-11）
+  const relatedUpdates = (referrers || [])
+    .map((r) => ({ id: r.id, ids: textToLines(r.related_case_ids) }))
+    .filter((r) => r.ids.includes(cid))
+    .map((r) => ({ id: r.id, text: linesToText(r.ids.filter((x) => x !== cid)) || null }));
 
   const results = await env.DB.batch([
     env.DB.prepare(`DELETE FROM posts WHERE event_id IN (SELECT id FROM events WHERE case_id = ?)`).bind(cid),
@@ -96,6 +125,7 @@ export async function onRequestDelete({ request, env, params }) {
     env.DB.prepare(`DELETE FROM materials WHERE case_id = ?`).bind(cid),
     env.DB.prepare(`DELETE FROM case_images WHERE case_id = ?`).bind(cid),
     env.DB.prepare(`DELETE FROM likes WHERE case_id = ?`).bind(cid),
+    ...relatedUpdates.map((u) => env.DB.prepare(`UPDATE cases SET related_case_ids=? WHERE id=?`).bind(u.text, u.id)),
     env.DB.prepare(`DELETE FROM cases WHERE id = ?`).bind(cid),
   ]);
   const caseDeleteRes = results[results.length - 1];

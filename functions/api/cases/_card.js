@@ -107,12 +107,16 @@ export function perforation() {
 // 「次回期日は未定です」と空白を報告して終わるより、サイトのコピーをカードの主役に据えて
 // 「傍聴に行く意味」をそのまま伝えるほうが、シェアされたときに効くという判断。
 // sub には小さなグレーの1行（期日の状況・件数など、その場で言える事実）を渡す。
-export const CHEER_DEFAULT = ["傍聴席に、ひとり増える。", "それだけで法廷は変わる。"];
+// headline は呼び出し側（card.png.js / presenters/card.png.js）が cardHeadlineFrom() 経由で渡す。
+// cardHeadlineFrom は常にfallback（事件名／ニックネーム由来）を持つため、実運用で headline が
+// 空になることはない。以下の CHEER_DEFAULT は headline が万一空文字のときだけの保険
+// （2026-09-11、専用のカード文言欄を廃止しSEOタイトル由来に一本化した際、既定の2行が主役だった頃の名残）。
+const CHEER_DEFAULT = ["傍聴席に、ひとり増える。", "それだけで法廷は変わる。"];
 
 export function cheerSection(sub, opts) {
   const { center = false, size = 40, headline = "" } = opts || {};
   const align = center ? { alignItems: "center", textAlign: "center" } : {};
-  // headline は改行区切りで何行でも受ける（未入力なら既定の2行）
+  // headline は改行区切りで何行でも受ける（空文字のときだけ保険としてCHEER_DEFAULTを使う）
   const lines = String(headline || "").split(/\r?\n/).map((t) => t.trim()).filter(Boolean);
   const rows = (lines.length ? lines : CHEER_DEFAULT).map((t, i) =>
     h("div", { key: "l" + i, style: { display: "flex", fontFamily: MIN_B, fontSize: size, color: INK, marginTop: i ? Math.round(size * 0.25) : 0 } }, t)
@@ -185,6 +189,10 @@ export async function loadCardContext(env, request, id) {
   // 取得して実物のカードを表示してしまい、鍵を知らない人にも中身が見える経路になるため
   if (c.view_key) return null;
 
+  // ここに来る時点で非公開事件は全てnullで弾かれているので isPrivate は常にfalse。
+  // それでも呼び出し側（card.png.js等）はこのフィールド経由でキャッシュ可否を判定させ、
+  // ベタ書きのtrue/falseを持たせない：将来「本人だけ非公開カードをプレビューできる」機能を
+  // 足すなら、この関数のこの1箇所だけ直せば済むようにするため（2026-09-11）
   return { row: c, isPrivate: false };
 }
 

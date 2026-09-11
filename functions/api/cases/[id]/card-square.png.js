@@ -5,7 +5,7 @@
 // twitter:image を優先して読むので、そちらには引き続き横長版を渡す。
 // レイアウトの部品（フォント・ハンコ・期日欄など）は card.png.js と共通（_card.js）。
 //
-// URL: /api/cases/:id/card-square.png（非公開事件は ?key=閲覧キー が必要。case.js と同じ規則）
+// URL: /api/cases/:id/card-square.png（非公開事件はカードそのものを配信しない。card.png.js参照）
 import {
   h, BG, RING, GO_M, INK,
   SITE_LABEL, stamp,

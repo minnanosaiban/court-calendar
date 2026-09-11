@@ -20,6 +20,17 @@ export function textToLines(s) {
   return s ? String(s).split("\n").map((x) => x.trim()).filter(Boolean) : [];
 }
 
+// meta descriptionなど、公開ページのHTMLに直接差し込む文字列を長さで切り詰めるときに使う。
+// String#sliceはUTF-16のコードユニット単位なので、サロゲートペア（絵文字など）がちょうど
+// 上限の位置に来ると片割れだけが残って文字化けする。validateCardText/cardHeadlineFromと同じ
+// コードポイント単位（[...s]）で数える（2026-09-11、case.js/presenter.jsのOGP descriptionで
+// 素のsliceを使っていた抜けの修正）
+export function truncateChars(s, max) {
+  const str = String(s || "");
+  const chars = [...str];
+  return chars.length > max ? chars.slice(0, max).join("") : str;
+}
+
 // ---- 事件 ----
 // presenters は LEFT JOIN で引く（p. で参照。FROM 句は casesSelect() 側で JOIN する）
 export const CASE_COLS = `c.id, c.name, c.presenter_id, p.nickname AS presenter_nickname, p.icon_r2_key AS presenter_icon_r2_key,
@@ -130,22 +141,45 @@ export function withFileKey(url, viewKey) {
   return url + (url.includes("?") ? "&" : "?") + "key=" + encodeURIComponent(viewKey);
 }
 
-// /files/ 配下のキーから、その持ち主の事件の view_key を引く（無ければ null＝誰でも見てよい）。
-// 資料(m/)・写真(i/・iw/)・期日案内(no/) だけを対象にする。それ以外（カード画像・アイコン等）は
-// 誰でも見てよい前提のままなので常に null を返す
-export async function fileOwnerViewKey(env, key) {
-  let row = null;
-  if (key.startsWith("m/")) {
-    row = await env.DB.prepare(
+// /files/ 配下で配信してよいR2キーのprefix一覧＋非公開判定の唯一の定義元。
+// lookup を持つ種別（資料m/・写真i/・iw/・期日案内no/）は、持ち主の事件が非公開なら
+// fileOwnerViewKey() がその view_key を返し、files/[[path]].js が ?key= と照合する。
+// lookup が無い種別（カード画像・アイコン）は、カード共有・OGP用途なので常に誰でも見てよい仕様
+// （files/[[path]].js参照）。
+// 以前はこの「配信してよいprefix一覧」（files/[[path]].jsのALLOWED_PREFIXES）と
+// 「非公開判定が要るprefix一覧」（このオブジェクトのlookup分岐）が別々のファイルに
+// 手書きされていて、新しい非公開系prefixを足すとき片方だけ更新して漏れる事故が過去にあった。
+// 1箇所にまとめ、ALLOWED_PREFIXESはこのオブジェクトのキーから機械的に作る（2026-09-11）
+export const FILE_PREFIXES = {
+  "m/": {
+    lookup: (env, key) => env.DB.prepare(
       `SELECT c.view_key AS view_key FROM materials m JOIN cases c ON c.id = m.case_id WHERE m.r2_key = ?`
-    ).bind(key).first();
-  } else if (key.startsWith("i/") || key.startsWith("iw/")) {
-    row = await env.DB.prepare(
+    ).bind(key).first(),
+  },
+  "i/": {
+    lookup: (env, key) => env.DB.prepare(
       `SELECT c.view_key AS view_key FROM case_images i JOIN cases c ON c.id = i.case_id WHERE i.r2_key = ? OR i.web_r2_key = ?`
-    ).bind(key, key).first();
-  } else if (key.startsWith("no/")) {
-    row = await env.DB.prepare(`SELECT view_key FROM cases WHERE notice_r2_key = ?`).bind(key).first();
-  }
+    ).bind(key, key).first(),
+  },
+  "iw/": {
+    lookup: (env, key) => env.DB.prepare(
+      `SELECT c.view_key AS view_key FROM case_images i JOIN cases c ON c.id = i.case_id WHERE i.r2_key = ? OR i.web_r2_key = ?`
+    ).bind(key, key).first(),
+  },
+  "no/": { lookup: (env, key) => env.DB.prepare(`SELECT view_key FROM cases WHERE notice_r2_key = ?`).bind(key).first() },
+  "ic/": {},  // 問題提起人のアイコン
+  "cd/": {},  // 事件のTwitterカード横長版
+  "cds/": {}, // 事件のTwitterカード正方形版
+  "pd/": {},  // 問題提起人のTwitterカード横長版
+  "pds/": {}, // 問題提起人のTwitterカード正方形版
+};
+
+// /files/ 配下のキーから、その持ち主の事件の view_key を引く（無ければ null＝誰でも見てよい）
+export async function fileOwnerViewKey(env, key) {
+  const prefix = Object.keys(FILE_PREFIXES).find((p) => key.startsWith(p));
+  const lookup = prefix && FILE_PREFIXES[prefix].lookup;
+  if (!lookup) return null;
+  const row = await lookup(env, key);
   return row && row.view_key ? row.view_key : null;
 }
 
@@ -232,18 +266,40 @@ export const PRESENTER_COLS = `id, nickname, icon_r2_key, x_url, login_username,
                                seo_title, seo_description,
                                created_by, updated_by, updated_at`;
 
-// この問題提起人が持っている事件のうち、いま見せてよい（隠されていない）件数を数える。
-// 非公開にした事件（view_key あり）しか持たない問題提起人は、匿名の訪問者・合言葉を知らない人には
-// 「そんな人はいない」扱いにする（単体取得 /api/presenters/:id と presenter.js のOGPが使う。
-// 一覧 /api/presenters は全員分をまとめて数えるので、同じ規則を api/presenters.js 側に持っている。2026-09-10）。
-// hidden は hiddenCaseIds() の結果、mine はログイン中の問題提起人自身の事件id集合（省略時は空＝純粋な匿名扱い）
-export async function presenterCaseVisibility(env, presenterId, hidden, mine) {
-  const { results } = await env.DB.prepare(`SELECT id FROM cases WHERE presenter_id = ?`).bind(presenterId).all();
-  const rows = results || [];
+// 「見せてよい（隠されていない）」件数の判定そのもの（DBを引かない純粋関数）。
+// hidden は hiddenCaseIds() の結果、mine はログイン中の問題提起人自身の事件id集合（省略時は空＝
+// 純粋な匿名扱い）。単体用（presenterCaseVisibility）・一覧用（allPresenterCaseVisibility）の
+// どちらもこの1箇所を通すことで、可視性のルールが二重管理にならないようにする（2026-09-11。
+// 以前は一覧側 api/presenters.js が同じ判定式を独自に再実装していて、ルールを直すときに
+// 一覧だけ直し忘れる・逆に単体側だけ直し忘れるおそれがあった）
+function computeVisibility(caseIds, hidden, mine) {
   const h = hidden || new Set();
   const m = mine || new Set();
-  const visible = rows.filter((r) => !h.has(r.id) || m.has(r.id)).length;
-  return { total: rows.length, visible };
+  const visible = caseIds.filter((id) => !h.has(id) || m.has(id)).length;
+  return { total: caseIds.length, visible };
+}
+
+// この問題提起人が持っている事件のうち、いま見せてよい件数を数える。
+// 非公開にした事件（view_key あり）しか持たない問題提起人は、匿名の訪問者・合言葉を知らない人には
+// 「そんな人はいない」扱いにする（単体取得 /api/presenters/:id と presenter.js のOGPが使う。2026-09-10）。
+export async function presenterCaseVisibility(env, presenterId, hidden, mine) {
+  const { results } = await env.DB.prepare(`SELECT id FROM cases WHERE presenter_id = ?`).bind(presenterId).all();
+  return computeVisibility((results || []).map((r) => r.id), hidden, mine);
+}
+
+// 一覧 /api/presenters 用：全問題提起人分の {total, visible} を1回のクエリでまとめて計算する。
+// presenterCaseVisibility() を問題提起人の数だけ呼ぶとN+1クエリになるため専用に用意しているが、
+// 可視性の判定式そのものは上の computeVisibility() を共有する
+export async function allPresenterCaseVisibility(env, hidden, mine) {
+  const { results } = await env.DB.prepare(`SELECT id, presenter_id FROM cases WHERE presenter_id IS NOT NULL`).all();
+  const byPresenter = new Map();
+  for (const c of results || []) {
+    if (!byPresenter.has(c.presenter_id)) byPresenter.set(c.presenter_id, []);
+    byPresenter.get(c.presenter_id).push(c.id);
+  }
+  const out = new Map();
+  for (const [pid, ids] of byPresenter) out.set(pid, computeVisibility(ids, hidden, mine));
+  return out;
 }
 
 // admin=true のときだけ、ログインID・ログイン発行済みかどうかを含める
@@ -390,6 +446,32 @@ export function rowToMaterial(r) {
     summaryDate: r.summary_date || "",
     createdAt: r.created_at || "",
   };
+}
+
+// 「事件／問題提起人につき1枚だけ」の画像（アイコン・カード横長・カード正方形）を差し替える
+// PUTハンドラで共通の部分（フォーム受け取り→種類・サイズ検証→R2保存）だけを一本化したもの。
+// 認可・DBの列更新・レスポンス整形は呼び出し側（icon.js／card.js／card-square.js）の役目のまま。
+// メッセージ文言は呼び出し側からそのまま渡す（アイコンとカードで文言が微妙に違うため、
+// ここで作文せず既存の文言を壊さないようにする）。戻り値は { key } か { error }（2026-09-11、
+// presenters/icon.js・presenters/card.js・presenters/card-square.js・cases/card.js・
+// cases/card-square.js にほぼ同じ形でコピペされていたロジックの重複を減らす）
+export async function putValidatedImage(env, request, {
+  mimes, maxBytes, keyPrefix, ownerId, defaultName,
+  emptyFileMsg, disabledMsg, wrongTypeMsg, tooBigMsg,
+}) {
+  let form;
+  try { form = await request.formData(); } catch { return { error: "bad form" }; }
+  const f = form.get("file");
+  if (!f || typeof f !== "object" || typeof f.arrayBuffer !== "function" || f.size === 0) {
+    return { error: emptyFileMsg };
+  }
+  if (!env.FILES) return { error: disabledMsg };
+  const ext = mimes[f.type];
+  if (!ext) return { error: wrongTypeMsg };
+  if (f.size > maxBytes) return { error: tooBigMsg };
+  const file = { blob: f, ext, name: f.name || (defaultName + "." + ext), size: f.size, mime: f.type };
+  const key = await putFile(env, keyPrefix, ownerId, file);
+  return { key };
 }
 
 // R2 にファイルを置く。prefix は "m"（訴訟資料）/ "i"（写真）などキーの先頭に使う
@@ -687,7 +769,10 @@ export async function myCaseIds(env, session) {
 // もとは presenters/[id]/{icon,card,card-square}.js に3つ別々にコピーされていたもの（2026-09-10統合）
 export async function authorizeSelfOrAdmin(request, env, pid) {
   const id = await getIdentity(request, env);
-  if (authorizeWrite(request, env, id)) return { ok: true, admin: true, actor: id.email || "admin" };
+  // actor は actorLabel() と同じ規則にそろえる（2026-09-11。運営の通常運用であるパスワード認証では
+  // identity.email が null のため、ここだけ "admin" 固定にしていると同じ運営操作でも
+  // updated_by が cases/[id].js 等の他の書き込み経路と食い違ってしまっていた）
+  if (authorizeWrite(request, env, id)) return { ok: true, admin: true, actor: actorLabel(id, {}) };
   const session = await getPresenterSession(request, env);
   return { ok: !!session && session.presenterId === pid, admin: false, actor: "presenter:" + pid };
 }

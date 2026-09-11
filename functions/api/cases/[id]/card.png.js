@@ -4,7 +4,9 @@
 // D1 の最新データからその都度描くことで、期日が変わるたびの差し替え作業を無くす。
 // 正方形版（Teams・Slack等がog:imageを中央トリミングして小さく出す対策）は card-square.png.js。
 //
-// URL: /api/cases/:id/card.png（非公開事件は ?key=閲覧キー が必要。case.js と同じ規則）
+// URL: /api/cases/:id/card.png（非公開事件はカードそのものを配信しない。loadCardContext参照。
+//  2026-09-11以前はここに ?key=閲覧キー を付けて非公開事件のカードも見られる規則だったが、
+//  リンク展開ボット経由で鍵を持たない人にも漏れる経路になっていたため廃止した）
 import {
   h, BG, PAPER, RING, GO_R, GO_M, INK, RED, GRAY,
   SITE_LABEL, MESSAGE, stamp, perforation, dateSection, cheerSection,

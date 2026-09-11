@@ -137,6 +137,10 @@ CREATE TABLE IF NOT EXISTS cases (
 
 CREATE INDEX IF NOT EXISTS idx_cases_presenter ON cases(presenter_id);
 
+-- ※case_id／event_idで事件にぶら下がる新しいテーブルを足したら、functions/api/cases/[id].js の
+--   onRequestDelete（事件削除時の一括削除）にも忘れずDELETE文を足すこと。ここに ON DELETE CASCADE
+--   は付けていない（D1でのFK制約強制も前提にしていないため）ので、削除の網羅性はコード側で担保する（2026-09-11）
+
 -- 期日（1期日=1行）
 CREATE TABLE IF NOT EXISTS events (
   id          TEXT PRIMARY KEY,

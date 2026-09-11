@@ -41,10 +41,10 @@ export async function onRequestGet(context) {
   const hit = await caches.default.match(cacheKey);
   if (hit) return hit;
 
-  const loaded = await loadPresenterCardData(env, params.id);
+  const loaded = await loadPresenterCardData(env, params.id, request);
   if (!loaded) return new Response("not found", { status: 404 });
 
-  const overridden = await overrideResponse(env, loaded.row.card_square_r2_key, false, cacheKey, context);
+  const overridden = await overrideResponse(env, loaded.row.card_square_r2_key, loaded.isPrivate, cacheKey, context);
   if (overridden) return overridden;
 
   const iconDataUri = await loadPresenterIconDataUri(env, loaded.row);

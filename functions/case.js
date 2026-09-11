@@ -1,6 +1,7 @@
 // /case?id=... へのアクセスだけ、この関数を通す（public/case.html は静的資産としてそのまま残る）。
 // 目的：X・LINE 等でシェアされたときに正しいタイトル・説明・画像（OGP）でカードが出るように、
 // 配信直前に <head> だけをその場で書き換える。中身の描画は変わらず client 側の lib.js が行う。
+import { truncateChars } from "./_common.js";
 
 function escAttr(s) {
   return String(s || "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -14,9 +15,13 @@ export async function onRequestGet({ request, env }) {
   const assetRes = await env.ASSETS.fetch(new URL("/case.html", request.url));
   if (!assetRes.ok || (!id && !legacyName)) return assetRes;
 
+  // events_updated_at はこの事件にぶら下がる期日の最新更新時刻（キャッシュの?vトークン用。下記参照）
+  const CASE_SELECT = `SELECT c.id, c.name, c.call_text, c.view_key, c.seo_title, c.seo_description, c.updated_at,
+           (SELECT MAX(e.updated_at) FROM events e WHERE e.case_id = c.id) AS events_updated_at
+      FROM cases c WHERE c.`;
   const c = id
-    ? await env.DB.prepare(`SELECT id, name, call_text, view_key, seo_title, seo_description, updated_at FROM cases WHERE id = ?`).bind(id).first()
-    : await env.DB.prepare(`SELECT id, name, call_text, view_key, seo_title, seo_description, updated_at FROM cases WHERE name = ?`).bind(legacyName).first();
+    ? await env.DB.prepare(`${CASE_SELECT}id = ?`).bind(id).first()
+    : await env.DB.prepare(`${CASE_SELECT}name = ?`).bind(legacyName).first();
   if (!c) return assetRes;
   // 非公開にした事件は、URLの ?key= が合っていてもカード・タイトル・説明を一切出さない
   // （正しい鍵付きURLをチャットアプリに貼ると、そのアプリのリンク展開ボットが実物のカードを
@@ -36,8 +41,12 @@ export async function onRequestGet({ request, env }) {
   function cardUrlFor(path) {
     const u = new URL(`/api/cases/${encodeURIComponent(c.id)}/${path}`, request.url);
     if (c.view_key) u.searchParams.set("key", c.view_key);
-    // 更新時刻を付けておくと、カードの文言を変えたときに古いキャッシュを引かずに済む（2026-09-10）
-    const v = String(c.updated_at || "").replace(/\D/g, "");
+    // 更新時刻を付けておくと、カードの文言を変えたときに古いキャッシュを引かずに済む（2026-09-10）。
+    // 事件本体（cases.updated_at）だけでなく期日（events.updated_at）も含める：期日の追加・変更・
+    // 削除はcasesの行自体には触れないため、events側だけ更新した編集がキャッシュに反映されない
+    // 抜けが2026-09-11に見つかった。厳密な新旧比較ではなく両者の桁を連結するだけで十分
+    // （どちらか一方でも変われば連結文字列が変わり、キャッシュキーが変わる）
+    const v = (String(c.updated_at || "") + String(c.events_updated_at || "")).replace(/\D/g, "");
     if (v) u.searchParams.set("v", v);
     return u.toString();
   }
@@ -46,7 +55,7 @@ export async function onRequestGet({ request, env }) {
 
   // 検索結果・シェアの見出しは、編集画面で入れてあればそれを使う（空＝これまでどおり自動。2026-09-10）
   const title = c.seo_title || `${c.name} ｜ 応援傍聴ナビ`;
-  const description = (c.seo_description || c.call_text || "傍聴席に、ひとり増える。それだけで法廷は変わる。").slice(0, 140);
+  const description = truncateChars(c.seo_description || c.call_text || "傍聴席に、ひとり増える。それだけで法廷は変わる。", 140);
 
   const extraTags = [
     `<meta property="og:title" content="${escAttr(title)}">`,

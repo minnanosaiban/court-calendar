@@ -1,6 +1,6 @@
 import {
   json, newId, rowToPresenter, PRESENTER_COLS,
-  getIdentity, authorizeWrite, hiddenCaseIds, getPresenterSession, myCaseIds,
+  getIdentity, authorizeWrite, hiddenCaseIds, getPresenterSession, myCaseIds, allPresenterCaseVisibility,
 } from "../_common.js";
 
 // 問題提起人の一覧は、持っている事件の件数も一緒に返す（事件編集フォームのプルダウン・管理画面用）
@@ -28,16 +28,9 @@ export async function onRequestGet({ request, env }) {
       getPresenterSession(request, env),
     ]);
     const mine = await myCaseIds(env, session);
-    const { results: caseRows } = await env.DB.prepare(
-      `SELECT id, presenter_id FROM cases WHERE presenter_id IS NOT NULL`
-    ).all();
-    const counts = new Map(); // presenterId -> { total, visible }
-    for (const c of caseRows || []) {
-      const s = counts.get(c.presenter_id) || { total: 0, visible: 0 };
-      s.total++;
-      if (!hidden.has(c.id) || mine.has(c.id)) s.visible++;
-      counts.set(c.presenter_id, s);
-    }
+    // 可視性の判定式そのものは _common.js の computeVisibility() に一本化してある
+    // （単体取得側と別々に再実装していると、ルールを直すとき片方だけ直し忘れるおそれがあるため。2026-09-11）
+    const counts = await allPresenterCaseVisibility(env, hidden, mine);
     rows = rows
       .filter((r) => {
         const s = counts.get(r.id);
