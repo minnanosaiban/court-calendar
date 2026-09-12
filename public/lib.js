@@ -2069,6 +2069,24 @@ window.CC = (function(){
       if(first) first.focus();
       return root;
     }
+    // 保存ボタンを押している間・押した直後の結果を、ボタン脇の一行（.ieditor-status）で示す。
+    // 以前はボタンをdisabledにするだけで文字も変わらず、特に?open=…の深いリンク（backToCase）では
+    // 保存直後に画面が切り替わるため「押した効果が見えたか分からない」という声があった（2026-09-13）。
+    // ボタン自体は「保存」の2文字ぴったりに収まる正円（.ihead-actions .btn-round、幅固定）なので
+    // 文字は変えず、隣接するステータス行だけ更新する（Xアカウント変更等の.cPresenterStatusと同じやり方）
+    function ieditorStatus(root){ return root.querySelector(".ieditor-status"); }
+    function markSaving(root, btn){
+      btn.disabled=true;
+      const st=ieditorStatus(root); if(st){ st.hidden=false; st.textContent="保存しています…"; }
+    }
+    function markSaved(root, after){
+      const st=ieditorStatus(root); if(st){ st.hidden=false; st.textContent="保存しました。"; }
+      setTimeout(after, 450);
+    }
+    function markSaveFailed(root, btn){
+      btn.disabled=false;
+      const st=ieditorStatus(root); if(st) st.hidden=true;
+    }
 
     // ---- 画像 ----
     function renderImgList(){
@@ -2096,6 +2114,7 @@ window.CC = (function(){
             <button type="button" class="btn-save btn-round" data-save="img" data-id="${isNew?"":escapeAttr(im.id)}">保存</button>
           </span>
         </div>
+        <p class="fnote ieditor-status" hidden></p>
         ${isNew?`<p class="fnote">Web用画像・スマホ用画像のどちらか一方は必ず選んでください。</p>`:""}
         <div class="field"><label>Web用画像</label>
           <input type="file" class="ef-web-file" accept="image/jpeg,image/png,image/webp">
@@ -2126,7 +2145,7 @@ window.CC = (function(){
       if(f) fd.append("file", f, f.name);
       if(wf) fd.append("webFile", wf, wf.name);
       if(webRemove && webRemove.checked) fd.append("removeWeb", "1");
-      const btn=root.querySelector("[data-save]"); btn.disabled=true;
+      const btn=root.querySelector("[data-save]"); markSaving(root, btn);
       try{
         if(id){
           const up=await apiUpdateImage(id,fd);
@@ -2135,9 +2154,8 @@ window.CC = (function(){
           const created=await apiCreateImage(fd);
           images.push(created);
         }
-        if(edFocus) return backToCase();
-        closeEditor(); renderImgList();
-      }catch(err){ alert(saveErr(err)); btn.disabled=false; }
+        markSaved(root, ()=>{ if(edFocus) return backToCase(); closeEditor(); renderImgList(); });
+      }catch(err){ alert(saveErr(err)); markSaveFailed(root, btn); }
     }
     async function deleteImgRow(id){
       if(!id || !canEditCase(edCaseId)) return;
@@ -2177,6 +2195,7 @@ window.CC = (function(){
             <button type="button" class="btn-save btn-round" data-save="ev" data-id="${isNew?"":escapeAttr(ev.id)}">保存</button>
           </span>
         </div>
+        <p class="fnote ieditor-status" hidden></p>
         <div class="two">
           <div class="field"><label>期日 <span class="reqmark">＊</span></label><input type="date" class="ef-date" value="${escapeAttr(e.date)}"></div>
           <div class="field"><label>時刻</label><input type="time" class="ef-time" value="${escapeAttr(e.time)}"></div>
@@ -2207,7 +2226,7 @@ window.CC = (function(){
         plaintiffArgument: root.querySelector(".ef-plaintiff").value.split("\n").map(s=>s.trim()).filter(Boolean),
         defendantArgument: root.querySelector(".ef-defendant").value.split("\n").map(s=>s.trim()).filter(Boolean),
       };
-      const btn=root.querySelector("[data-save]"); btn.disabled=true;
+      const btn=root.querySelector("[data-save]"); markSaving(root, btn);
       try{
         if(id){
           const up=await apiUpdate(id,data);
@@ -2216,9 +2235,11 @@ window.CC = (function(){
           const created=await apiCreate(data);
           events.push(created);
         }
-        if(edFocus) return backToCase();
-        closeEditor(); renderEvList(); renderMatList();  // 資料の「どの期日か」候補も変わりうる
-      }catch(err){ alert(saveErr(err)); btn.disabled=false; }
+        markSaved(root, ()=>{
+          if(edFocus) return backToCase();
+          closeEditor(); renderEvList(); renderMatList();  // 資料の「どの期日か」候補も変わりうる
+        });
+      }catch(err){ alert(saveErr(err)); markSaveFailed(root, btn); }
     }
     async function deleteEvRow(id){
       if(!id || !canEditCase(edCaseId)) return;
@@ -2266,6 +2287,7 @@ window.CC = (function(){
             <button type="button" class="btn-save btn-round" data-save="mat" data-id="${isNew?"":escapeAttr(m.id)}">保存</button>
           </span>
         </div>
+        <p class="fnote ieditor-status" hidden></p>
         <div class="field"><label>資料名 <span class="reqmark">＊</span></label><input type="text" class="ef-title" value="${escapeAttr(mm.title)}" placeholder="例）訴状、第1準備書面、甲3 ○○"></div>
         <div class="field"><label>提出者側</label>
           <select class="ef-side"><option value=""${!mm.side?" selected":""}>（未選択）</option>${["原告側","被告側","裁判所","その他"].map(s=>`<option${mm.side===s?" selected":""}>${s}</option>`).join("")}</select>
@@ -2324,7 +2346,7 @@ window.CC = (function(){
       }
       const rm=root.querySelector(".ef-removefile");
       if(rm && rm.checked) fd.append("removeFile","1");
-      const btn=root.querySelector("[data-save]"); btn.disabled=true;
+      const btn=root.querySelector("[data-save]"); markSaving(root, btn);
       try{
         if(id){
           const up=await apiUpdateMat(id,fd);
@@ -2333,9 +2355,8 @@ window.CC = (function(){
           const created=await apiCreateMat(fd);
           materials.push(created);
         }
-        if(edFocus) return backToCase();
-        closeEditor(); renderMatList();
-      }catch(err){ alert(saveErr(err)); btn.disabled=false; }
+        markSaved(root, ()=>{ if(edFocus) return backToCase(); closeEditor(); renderMatList(); });
+      }catch(err){ alert(saveErr(err)); markSaveFailed(root, btn); }
     }
     async function deleteMatRow(id){
       if(!id || !canEditCase(edCaseId)) return;

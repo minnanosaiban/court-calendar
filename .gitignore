@@ -19,3 +19,6 @@ local_*.sql
 scripts/case_slides/out/
 scripts/case_slides/plan.json
 scripts/case_slides/update.sql
+
+# 個人的な作業用資料（非公開）。
+paper/
