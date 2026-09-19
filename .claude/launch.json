@@ -1,0 +1,29 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "sidenote-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "C:\\minnanosaiban\\sidenote", "run", "dev"],
+      "port": 8788
+    },
+    {
+      "name": "pdf-merge-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "C:\\minnanosaiban\\pdf-merge", "run", "dev"],
+      "port": 8788
+    },
+    {
+      "name": "pdf-redactor-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "C:\\minnanosaiban\\pdf-redactor", "run", "dev"],
+      "port": 8788
+    },
+    {
+      "name": "pdf-metadata-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "C:\\minnanosaiban\\pdf-metadata", "run", "dev"],
+      "port": 8788
+    }
+  ]
+}

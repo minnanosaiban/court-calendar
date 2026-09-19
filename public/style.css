@@ -37,6 +37,46 @@ body{
 .wrap{max-width:720px;margin:0 auto;padding:12px 16px 72px}
 a{color:inherit}
 
+/* ---- announce（サイト上部のお知らせ帯・全ページ共通）----
+   MkDocs Material の announce／Jupyter Book のバナーに相当する（2026-09-19）。中身は announce.js が
+   <body> の先頭へ差し込む。スマホ幅（360px想定）には3件のサイト名が並びきらないので、右から左へ流す。
+   同じ列（.announce-group）を2つ並べ、それぞれ自分の幅だけ左へ動かして途切れなく繰り返す（列の左右の
+   padding を gap の半分ずつにして、2つ目の頭との継ぎ目も他の間隔と揃える。左の20pxは、動き出しの
+   先頭のラベルが端のフェード16pxに食い込まないための余白も兼ねる）。
+   色は .tag.on や .pform .send と同じ ink 地に白。文字は型スケールの .8rem（ラベルだけ .7rem）。
+   動く内容は止められなければならない（WCAG 2.2.2）。ポインタを乗せている間はここだけで止まり、
+   ⏸ボタン・キーボード操作・OSの「視差効果を減らす」のときは、流すのをやめて全件を並べる（.is-still）。
+   止めたあとも全部のリンクに届くようにするため。 */
+.announce{background:var(--ink);color:#fff;font-size:.8rem;line-height:1.4}
+.announce-inner{display:flex;align-items:flex-start;max-width:720px;margin:0 auto}
+/* 端の16pxだけ薄れさせて、文字が切れ目なく出入りするように見せる（Safari 15.3以前用に -webkit- も） */
+.announce-view{flex:1;min-width:0;display:flex;overflow:hidden;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 16px,#000 calc(100% - 16px),transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 16px,#000 calc(100% - 16px),transparent)}
+.announce-group{flex:none;min-width:100%;display:flex;align-items:center;justify-content:space-around;
+  gap:40px;padding:0 20px;list-style:none;white-space:nowrap;
+  animation:announce-flow 20s linear infinite}
+@keyframes announce-flow{to{transform:translateX(-100%)}}
+/* ホバーのないスマホで「押したまま止まる」ことがないよう、ポインタで乗せられる環境だけに限る */
+@media(hover:hover){.announce-view:hover .announce-group{animation-play-state:paused}}
+.announce-label{font-size:.7rem;letter-spacing:.2em;color:rgba(255,255,255,.7)}
+/* リンクは帯の高さいっぱい（40px）を押せる範囲にする。流れているものを押すので縦は広めに取る */
+.announce a{display:block;line-height:40px;color:inherit;text-decoration:underline;text-underline-offset:3px}
+.announce a .bi{margin-left:.4em;font-size:.7rem;line-height:1;opacity:.7}
+.announce a:focus-visible,.announce-toggle:focus-visible{outline:2px solid #fff;outline-offset:-2px}
+.announce-toggle{flex:none;width:40px;height:40px;display:grid;place-items:center;
+  background:none;border:0;color:inherit;font:inherit;cursor:pointer;opacity:.85}
+.announce-toggle:hover{opacity:1}
+.announce-toggle .bi{font-size:1.1rem;line-height:1}
+/* 止めた状態：全件を折り返して並べる（帯は高くなる。押した本人が選んだ状態なので、ずれてよい） */
+.announce.is-still .announce-view{overflow:visible;-webkit-mask-image:none;mask-image:none}
+.announce.is-still .announce-group{flex:1;min-width:0;flex-wrap:wrap;justify-content:flex-start;
+  gap:0 24px;padding:0 0 0 16px;white-space:normal;animation:none}
+.announce.is-still .announce-group + .announce-group{display:none}
+.announce.is-still a{line-height:32px}
+@media(prefers-reduced-motion:reduce){.announce-toggle{display:none}}
+@media print{.announce{display:none}}
+
 /* ---- masthead ---- */
 /* 2026-09-10：見出しは中央寄せ、キャッチコピーは幅にかかわらず2行で見せる
    （2行はどちらも12文字・同じ幅で揃う）。一番上の余白も詰めた（.wrap の padding-top） */
