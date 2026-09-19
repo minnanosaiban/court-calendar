@@ -43,11 +43,14 @@ a{color:inherit}
    同じ列（.announce-group）を2つ並べ、それぞれ自分の幅だけ左へ動かして途切れなく繰り返す（列の左右の
    padding を gap の半分ずつにして、2つ目の頭との継ぎ目も他の間隔と揃える。左の20pxは、動き出しの
    先頭のラベルが端のフェード16pxに食い込まないための余白も兼ねる）。
-   色は .tag.on や .pform .send と同じ ink 地に白。文字は型スケールの .8rem（ラベルだけ .7rem）。
+   色は .tag.on や .pform .send と同じ ink 地に白。文字は型スケールの本文 .9rem（ラベルだけ .7rem）。
+   目立たせるために、上下の余白より文字の大きさを優先した（2026-09-19）。帯の高さ（--announce-h）は
+   8px刻みの48px。文字は .9rem が上限：型スケールで次の1.2rem は360pxの画面（流れの見える幅は
+   両端のフェードを除いた288px）に1件が収まらず、リンクが一度も全部は見えなくなる。
    動く内容は止められなければならない（WCAG 2.2.2）。ポインタを乗せている間はここだけで止まり、
    ⏸ボタン・キーボード操作・OSの「視差効果を減らす」のときは、流すのをやめて全件を並べる（.is-still）。
    止めたあとも全部のリンクに届くようにするため。 */
-.announce{background:var(--ink);color:#fff;font-size:.8rem;line-height:1.4}
+.announce{--announce-h:48px;background:var(--ink);color:#fff;font-size:.9rem;line-height:1.4}
 .announce-inner{display:flex;align-items:flex-start;max-width:720px;margin:0 auto}
 /* 端の16pxだけ薄れさせて、文字が切れ目なく出入りするように見せる（Safari 15.3以前用に -webkit- も） */
 .announce-view{flex:1;min-width:0;display:flex;overflow:hidden;
@@ -55,16 +58,16 @@ a{color:inherit}
   mask-image:linear-gradient(90deg,transparent,#000 16px,#000 calc(100% - 16px),transparent)}
 .announce-group{flex:none;min-width:100%;display:flex;align-items:center;justify-content:space-around;
   gap:40px;padding:0 20px;list-style:none;white-space:nowrap;
-  animation:announce-flow 20s linear infinite}
+  animation:announce-flow 22s linear infinite}
 @keyframes announce-flow{to{transform:translateX(-100%)}}
 /* ホバーのないスマホで「押したまま止まる」ことがないよう、ポインタで乗せられる環境だけに限る */
 @media(hover:hover){.announce-view:hover .announce-group{animation-play-state:paused}}
 .announce-label{font-size:.7rem;letter-spacing:.2em;color:rgba(255,255,255,.7)}
-/* リンクは帯の高さいっぱい（40px）を押せる範囲にする。流れているものを押すので縦は広めに取る */
-.announce a{display:block;line-height:40px;color:inherit;text-decoration:underline;text-underline-offset:3px}
+/* リンクは帯の高さいっぱいを押せる範囲にする。流れているものを押すので縦は広めに取る */
+.announce a{display:block;line-height:var(--announce-h);color:inherit;text-decoration:underline;text-underline-offset:3px}
 .announce a .bi{margin-left:.4em;font-size:.7rem;line-height:1;opacity:.7}
 .announce a:focus-visible,.announce-toggle:focus-visible{outline:2px solid #fff;outline-offset:-2px}
-.announce-toggle{flex:none;width:40px;height:40px;display:grid;place-items:center;
+.announce-toggle{flex:none;width:40px;height:var(--announce-h);display:grid;place-items:center;
   background:none;border:0;color:inherit;font:inherit;cursor:pointer;opacity:.85}
 .announce-toggle:hover{opacity:1}
 .announce-toggle .bi{font-size:1.1rem;line-height:1}

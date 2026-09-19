@@ -6,7 +6,7 @@
   "use strict";
   const LABEL = "関連サイト";
   const LINKS = [
-    { href:"https://reha-fusei-saiban.jimdofree.com/", text:"獨協埼玉リハビリの診療報酬不正" },
+    { href:"https://reha-fusei-saiban.jimdofree.com/", text:"リハビリ診療不正請求をめぐる訴訟" },
     { href:"https://minnanosaiban.github.io/hotline/", text:"ENEOSの内部通報制度をめぐる訴訟" },
     { href:"https://marumo-fight.com/", text:"バス運転士の槇野圭さんを支える会" },
   ];
