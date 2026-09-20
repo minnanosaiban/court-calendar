@@ -622,6 +622,12 @@ window.CC = (function(){
 
   // ---- タイムラインと訴訟資料 ----
   const SIDE_CLASS = { "原告側":"g", "被告側":"k", "裁判所":"j", "その他":"" };
+  // 裁判文書の無断転載・無断販売を防ぐ文言（2026-09-20）。フッター（各htmlの.disc）と同じ趣旨を、資料一覧の
+  // すぐ下と、ダウンロード・コピーした先（.md・zipのREADME）にも添える。後者はサイトの文脈から切り離された
+  // あとも資料と一緒に残るように（mdExportTextのAI作成の注記と同じ考え方）
+  const RIGHTS_BAN = "無断での転載・複製・改変・再配布・販売を禁止します。";
+  const RIGHTS_ASK = "転載等をご希望の場合は、事前に掲載者ご本人の承諾を得てください。";
+  const RIGHTS_PRIVATE = "ダウンロードした資料は、ご自身の閲覧など私的な利用にとどめてください。";
   function matIcon(m){
     const u=(m.fileUrl||"").toLowerCase();
     if(m.mime==="application/pdf" || /\.pdf(\?|#|$)/.test(u)) return "bi-file-earmark-pdf";
@@ -652,7 +658,8 @@ window.CC = (function(){
     const note = src
       ? `※この本文はPDFをもとにAIが作成したものです（${src}）。${pdfUrl ? `原本PDF：${pdfUrl}` : "原本はPDFでご確認ください。"}`
       : "";
-    return [meta, note, m.body].filter(Boolean).join("\n\n");
+    const rights = `※この文書の${RIGHTS_BAN}${RIGHTS_ASK}`;
+    return [meta, note, rights, m.body].filter(Boolean).join("\n\n");
   }
   // PDF・テキスト・要約の3つのボタン。無いものはグレーのまま押せない（「この資料には無い」ことが分かるように）
   function matButtonsHtml(m){
@@ -759,6 +766,7 @@ window.CC = (function(){
       (hasMd?`<button type="button" class="btn" data-bulkzip="md" data-case="${escapeAttr(caseId)}"><i class="bi bi-file-earmark-zip" aria-hidden="true"></i><span class="zlabel">.mdをまとめてダウンロード</span></button>`:"")+
       `</p>` : "";
     return `<p class="subhead">訴訟資料一覧</p>
+      <p class="fnote">掲載している裁判文書の${RIGHTS_BAN}${RIGHTS_ASK}${RIGHTS_PRIVATE}</p>
       ${canEditCase(caseId)?`<p class="qact"><a href="case-edit.html?id=${encodeURIComponent(caseId)}&open=mat:new">＋ 資料を追加</a></p>`:""}
       ${bulkHtml}
       ${body}`;
@@ -804,6 +812,14 @@ window.CC = (function(){
       }else{
         entries.forEach(({m, side, name})=> zip.folder(side).file(name, mdExportText(m)));
       }
+      // zipを開いた人にも伝わるよう、ルートに注意書きを入れる（PDF本体には書き込めないため）
+      zip.file("はじめにお読みください.txt", [
+        `このファイルは「応援傍聴ナビ」（${location.origin}/）に掲載されている「${c ? c.name : "訴訟資料"}」の資料です。`,
+        "",
+        `この資料の${RIGHTS_BAN}`,
+        RIGHTS_ASK,
+        RIGHTS_PRIVATE,
+      ].join("\n"));
       const blob = await zip.generateAsync({type:"blob"});
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
