@@ -53,12 +53,14 @@
         <button type="button" class="btn-save" id="pwSubmit">変更する</button>
       </div>
     </div>
-    <div class="clist" id="clist" style="margin-top:20px"></div>
     <!-- ご本人としてログイン中のときだけ出す「事件を追加」（2026-09-10）。
-         作った事件は自分名義になり、公開するかどうかは作成画面のアクセス制限で自分で選ぶ -->
-    <p id="phAddCase" hidden style="margin-top:20px">
-      <a class="pillbtn" href="case-edit.html"><i class="bi bi-plus-lg" aria-hidden="true"></i> 事件を追加</a>
+         作った事件は自分名義になり、公開するかどうかは作成画面のアクセス制限で自分で選ぶ。
+         初回ログイン直後は一覧の下端に薄いグレーの小さなピルがあるだけで見落とされたため、
+         名前の直下（事件が増えても下へ押し出されない位置）に朱色の主操作として置く（2026-09-21） -->
+    <p id="phAddCase" hidden style="margin-top:24px">
+      <a class="pillbtn pillbtn-primary" href="case-edit.html"><i class="bi bi-plus-lg" aria-hidden="true"></i> 事件を追加</a>
     </p>
+    <div class="clist" id="clist" style="margin-top:20px"></div>
   </section>
 
   <!-- バックアップの「ファイルから取り込む」用（ページ下部の編集パネルから呼ぶ。表示はしない） -->
@@ -190,9 +192,12 @@
         if(nb) return 1;
         return a.name.localeCompare(b.name,"ja");
       });
-    clistEl.innerHTML = list.length ? list.map(rowHtml).join("") : `<p class="empty-msg">この方の事件はまだありません。</p>`;
     // 「事件を追加」はご本人（または運営）にだけ出す
-    document.getElementById("phAddCase").hidden = !(CC.me.presenterId===presenterId || CC.me.canWrite);
+    const canAdd = CC.me.presenterId===presenterId || CC.me.canWrite;
+    document.getElementById("phAddCase").hidden = !canAdd;
+    // 0件のときは、追加できる人には上の「＋ 事件を追加」へ視線を導く（初回ログイン直後の人向け）
+    clistEl.innerHTML = list.length ? list.map(rowHtml).join("")
+      : `<p class="empty-msg">${canAdd ? "まだ事件がありません。上の「＋ 事件を追加」から、最初の1件を登録できます。" : "この方の事件はまだありません。"}</p>`;
     clistEl.querySelectorAll("[data-open]").forEach(el=>{
       const go=()=>{ location.href="case?id="+encodeURIComponent(el.dataset.open); };
       // 中の「＋ 事件情報を編集」リンクをクリックしたときは、カード自体の「開く」を発動させない

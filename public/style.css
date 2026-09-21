@@ -593,6 +593,15 @@ a{color:inherit}
   font-size:.7rem;color:var(--ink);text-decoration:none;line-height:1.5}
 .pillbtn:hover{border-color:#c9c6bc}
 .pillbtn i{color:var(--stamp);margin-left:.4em;line-height:1}
+/* 主操作のピル（自分のページの「＋ 事件を追加」）。.pillbtn は「戻る」等と同じ控えめなグレー枠なので、
+   初めてログインした人が見落としていた。サイトの主役の朱色（--stamp。contrastは白地の文字で約5.9:1）で
+   塗り、文字は本文サイズ（.9rem）、余白は .mfoot button と同じ 8px 24px にする（高さは約40px。
+   .pillbtn の line-height:1.5 のため .mfoot button の42.6pxより少し低い。2026-09-21）。
+   .pillbtn の margin・アイコン色より後ろに置いて上書きする。ホバー色は .savebar .btn-round と同じ */
+.pillbtn.pillbtn-primary{background:var(--stamp);border-color:var(--stamp);color:#fff;
+  font-size:.9rem;padding:8px 24px;margin:0}
+.pillbtn.pillbtn-primary i{color:#fff}
+.pillbtn.pillbtn-primary:hover{background:#9c2a20;border-color:#9c2a20}
 /* 「事件情報を編集」は .selfbar の右端に置く、正円のアイコンボタン＋下に添えたラベル。地味な
    .pillbtn（戻る等）の並びに紛れないよう、形も色も変える。色はサイトの主役の朱色（--stamp、
    ロゴのスタンプと同じ）で塗って目立たせる（2026-08-31。--stampは.btn-del等「削除」リンクの
