@@ -593,15 +593,14 @@ a{color:inherit}
   font-size:.7rem;color:var(--ink);text-decoration:none;line-height:1.5}
 .pillbtn:hover{border-color:#c9c6bc}
 .pillbtn i{color:var(--stamp);margin-left:.4em;line-height:1}
-/* 「事件を追加」への入り口は正円のアイコンボタン＋下に添えたラベル。地味な.pillbtn（戻る等）の
-   並びに紛れないよう、形も色も変える。色はサイトの主役の朱色（--stamp、ロゴのスタンプと同じ）で
-   塗って目立たせる（2026-08-31。--stampは.btn-del等「削除」リンクの文字色にも使っているが、
-   あちらは下線付きの地味なテキストで形も文脈も違うので、取り違えの実害は小さいと判断）。ラベルは
-   常に見える文字として円の外・下に置く（title属性でのホバー表示だと、ブラウザ既定の枠線つき
-   ツールチップが出てしまい「罫線より余白で区切る」というサイトの方針と合わないため、title属性は
-   やめてこちらにした）。presenter.htmlの「＋ 事件を追加」・case.htmlの事件ページ自己確認バー、
-   どちらの入り口にも共通で使う（2026-09-22。それまではpresenter.htmlだけ朱色のピル型で、
-   case.htmlはこの正円アイコンに「編集」ラベルという、見た目・文言がバラバラな状態だった） */
+/* 正円のアイコンボタン＋下に添えたラベル。地味な.pillbtn（戻る等）の並びに紛れないよう、
+   形も色も変える。色はサイトの主役の朱色（--stamp、ロゴのスタンプと同じ）で塗って目立たせる
+   （2026-08-31。--stampは.btn-del等「削除」リンクの文字色にも使っているが、あちらは下線付きの
+   地味なテキストで形も文脈も違うので、取り違えの実害は小さいと判断）。ラベルは常に見える文字
+   として円の外・下に置く（title属性でのホバー表示だと、ブラウザ既定の枠線つきツールチップが
+   出てしまい「罫線より余白で区切る」というサイトの方針と合わないため、title属性はやめてこちらに
+   した）。presenter.htmlの「事件を追加」・case.htmlの事件ページ自己確認バー「編集」、どちらの
+   入り口にも形だけ共通で使う（文言はページの役割ごとに分ける。2026-09-22） */
 .edit-fab{display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none}
 .edit-fab-circle{display:grid;place-content:center;width:48px;height:48px;border-radius:50%;
   background:var(--stamp);color:#fff}
@@ -611,6 +610,10 @@ a{color:inherit}
 /* .selfbar a{text-decoration:underline} より詳しく指定して、下線を確実に消す
    （.edit-fab単体だと.selfbar aと詳しさが同点で、後者の下線が勝ってしまうため） */
 .selfbar .edit-fab{margin-left:12px;flex:none;text-decoration:none}
+/* presenter.htmlの「事件を追加」は、.edit-fab自体がdisplay:flexで.edit-fabの内容だけを
+   中央寄せする作りなので、ただ置くと名前の下で（.selfbarのように右端ではなく）列の中央に
+   浮いて見えていた。事件ページの「編集」と同じく右端に揃える（2026-09-22） */
+#phAddCase{display:flex;justify-content:flex-end}
 
 /* ---- タグ（事件詳細の下・「事件をさがす」の絞り込みと各行） ---- */
 .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}

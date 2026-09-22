@@ -371,12 +371,13 @@ window.CC = (function(){
   function caseSelfBarHtml(c){
     if(!canEditCase(c.id)) return "";
     // 他の.selfbar内リンク（下線だけの地味なテキスト）と同じ並びだと素通りされてしまうので、
-    // .edit-fab（右端に寄せた正円のアイコンボタン）にして目立たせる（2026-09-22。ラベルは
-    // presenter.htmlの「＋ 事件を追加」に揃え、アイコンも同じ+にした。以前はラベルだけ「編集」で
-    // 自分のページの「事件を追加」ボタンと文言が揃っておらず分かりづらかった）
-    const editLink = `<a class="edit-fab" href="case-edit.html?id=${encodeURIComponent(c.id)}"><span class="edit-fab-circle"><i class="bi bi-plus-lg" aria-hidden="true"></i></span><span class="edit-fab-label">事件を追加</span></a>`;
+    // .edit-fab（右端に寄せた正円のアイコンボタン）にして目立たせる（2026-08-31。この事件は
+    // すでにあるので「編集」。presenter.htmlの「事件を追加」とは形（.edit-fab）だけ揃え、
+    // 文言はページの役割ごとに分ける。2026-09-22に一度「事件を追加」へ揃えたが、既存事件の
+    // 編集であることが伝わらず分かりづらいため「編集」に戻した）
+    const editLink = `<a class="edit-fab" href="case-edit.html?id=${encodeURIComponent(c.id)}" aria-label="事件情報を編集"><span class="edit-fab-circle"><i class="bi bi-pencil-square" aria-hidden="true"></i></span><span class="edit-fab-label">編集</span></a>`;
     // アイコンとログアウトは、他のページと同じく「事件をさがすに戻る」の上（見出しの直下）に
-    // 全ページ共通バーとして出すので、ここには置かない。この欄は「事件を追加」ボタンだけ
+    // 全ページ共通バーとして出すので、ここには置かない。この欄は「編集」ボタンだけ
     return `<div class="selfbar">${editLink}</div>`;
   }
   // ---- 一番上のバー（全ページ共通。2026-09-10）----
