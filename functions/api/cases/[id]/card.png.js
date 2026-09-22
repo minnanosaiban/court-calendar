@@ -50,7 +50,7 @@ function buildTree(c) {
             h("div", { key: "label", style: { display: "flex", marginLeft: 16, fontFamily: GO_M, fontSize: 25, color: INK, letterSpacing: 1.5 } }, SITE_LABEL),
           ]),
           // 期日が決まっていない事件は、空白を報告せず応援の面に差し替える（2026-09-10）
-          c.nextEvent || c.archivedAt ? dateSection(c) : cheerSection(c.cardSub || "次の期日は調整中です", { headline: c.cardHeadline }),
+          c.nextEvent || c.archivedAt || c.isClosed ? dateSection(c) : cheerSection(c.cardSub || "次の期日は調整中です", { headline: c.cardHeadline }),
           h("div", { key: "msg", style: { display: "flex", fontFamily: GO_M, fontSize: 27, color: RED, letterSpacing: 1.5 } }, c.message),
         ]
       ),
@@ -97,6 +97,7 @@ export async function onRequestGet(context) {
     nextEvent,
     archivedAt: c.archived_at || "",
     closeType: c.close_type || "",
+    isClosed: !!c.is_closed,
     // カードの見出しはSEOタイトルと同じ値（空なら同じ既定値）。期日があるときは日付が主役なので、
     // 実際にこの見出しが出るのは期日未定の応援の面だけ
     cardHeadline: cardHeadlineFrom(c.seo_title, `${c.name} ｜ 応援傍聴ナビ`),

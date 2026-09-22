@@ -157,6 +157,15 @@ export function dateSection(c, center) {
         : null,
     ].filter(Boolean));
   }
+  // 終結日が分からない（isClosedだけの）事件は、日付なしで「終結」とだけ出す（2026-09-22）
+  if (c.isClosed) {
+    return h("div", { style: { display: "flex", flexDirection: "column", ...align } }, [
+      h("div", { key: "d", style: { display: "flex", fontFamily: MIN_B, fontSize: 40, color: INK } }, "終結"),
+      c.closeType
+        ? h("div", { key: "p", style: { display: "flex", fontFamily: GO_R, fontSize: 27, color: GRAY, marginTop: 18, ...align } }, c.closeType)
+        : null,
+    ].filter(Boolean));
+  }
   return h("div", { style: { display: "flex", flexDirection: "column", ...align } }, [
     h("div", { key: "d", style: { display: "flex", fontFamily: MIN_B, fontSize: 40, color: INK } }, "次回期日は未定です"),
   ]);
@@ -176,7 +185,7 @@ export function cardHeadlineFrom(seoTitle, fallback) {
 // card_r2_key・card_square_r2_key の両方を読んでおき、どちらを見るかは呼び出し側（variant）に任せる
 export async function loadCardContext(env, request, id) {
   const c = await env.DB.prepare(
-    `SELECT c.id, c.name, c.archived_at, c.close_type, c.view_key, c.card_r2_key, c.card_square_r2_key,
+    `SELECT c.id, c.name, c.archived_at, c.close_type, c.is_closed, c.view_key, c.card_r2_key, c.card_square_r2_key,
             c.card_headline, c.card_sub, c.card_message, c.seo_title,
             p.nickname AS presenter_nickname, p.icon_r2_key AS presenter_icon_r2_key
        FROM cases c LEFT JOIN presenters p ON p.id = c.presenter_id

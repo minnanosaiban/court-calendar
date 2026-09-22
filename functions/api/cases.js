@@ -67,16 +67,16 @@ export async function onRequestPost({ request, env }) {
                         judge, points, call_text,
                         contact, press,
                         plaintiff_links, defendant_links, tags,
-                        related_case_ids, archived_at, close_type, board_enabled, board_restricted,
+                        related_case_ids, archived_at, close_type, is_closed, board_enabled, board_restricted,
                         card_headline, card_sub, card_message, seo_title, seo_description,
                         created_by, updated_by, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).bind(cid, c.name, c.presenter_id, c.view_key, c.case_no, c.case_no_public,
          c.plaintiff_name, c.defendant_name,
          c.judge, c.points, c.call_text,
          c.contact, c.press,
          c.plaintiff_links, c.defendant_links, c.tags,
-         c.related_case_ids, c.archived_at, c.close_type, c.board_enabled, c.board_restricted,
+         c.related_case_ids, c.archived_at, c.close_type, c.is_closed, c.board_enabled, c.board_restricted,
          c.card_headline, c.card_sub, c.card_message, c.seo_title, c.seo_description,
          actor, actor, now).run();
 

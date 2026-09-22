@@ -115,6 +115,8 @@ CREATE TABLE IF NOT EXISTS cases (
   related_case_ids TEXT,            -- 関連する他の事件のID（1行1つ、改行区切り・任意。同じ事実に関連する別争点の訴訟など。双方向表示は画面側で補う）
   archived_at TEXT,                 -- 終結日 YYYY-MM-DD（あれば「裁判アーカイブ」扱い・任意）
   close_type  TEXT,                 -- 終結の種類（判決／和解／取下げ など・任意）
+  is_closed   INTEGER NOT NULL DEFAULT 0, -- 終結日が分からない事件用のフラグ（1=終結扱い）。archived_atがあれば
+                                     -- このフラグが0でも終結扱いにする（isArchivedは両方を見る。2026-09-22）
   view_key    TEXT,                 -- 閲覧キー（値があればこの事件は非公開＝キーが一致する人にだけ見せる。NULLなら今まで通り誰でも公開。
                                      -- 2026-08-26時点ではAPI側のフィルタは未実装で、列を用意しただけ・全事件NULLのまま）
   board_enabled    INTEGER NOT NULL DEFAULT 1, -- 1=「傍聴に行ってきたよ！掲示板」を表示する／0=非表示（掲示板ごと出さない）

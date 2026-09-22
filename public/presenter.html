@@ -101,6 +101,8 @@
     const next = CC.nextEvent(c.id);
     const nextLine = c.archivedAt
       ? `終結：${CC.escapeHtml(CC.jpDate(c.archivedAt))}${c.closeType?"　"+CC.escapeHtml(c.closeType):""}`
+      : c.isClosed
+      ? `終結${c.closeType?"　"+CC.escapeHtml(c.closeType):""}`
       : (next?`<b>次回</b>${CC.escapeHtml(CC.eventLine(next))}`:"まだ期日の登録がありません");
     // 編集リンクは、運営か、この問題提起人本人としてログイン中のときだけ出す
     // （カードの外枠は「開く」のクリック対象なので、中のリンクは <a> クリックで見分けて素通しする）

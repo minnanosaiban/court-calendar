@@ -205,7 +205,7 @@ window.CC = (function(){
   }
   function isArchived(caseId){
     const c=caseById(caseId);
-    return !!(c && c.archivedAt);
+    return !!(c && (c.archivedAt || c.isClosed));
   }
   // その事件の「最近の期日」＝これからの最初の回。すべて済んでいれば最後の回
   function nextEvent(caseId){
@@ -1240,6 +1240,7 @@ window.CC = (function(){
                       callText:$("cCall"), press:$("cPress"), plaintiffLinks:$("cPlaintiffLinks"), defendantLinks:$("cDefendantLinks"),
                       tags:$("cTags"), related:$("cRelated"), archivedAt:$("cArchivedAt"), closeType:$("cCloseType") };
     const cBoardEnabled=$("cBoardEnabled"), cBoardRestricted=$("cBoardRestricted");
+    const cClosed=$("cClosed");
     const cCaseNoPublic=$("cCaseNoPublic");
     const cNoticeFile=$("cNoticeFile"), cNoticeRemove=$("cNoticeRemove"), cNoticeNote=$("cNoticeNote"), cNoticeStatus=$("cNoticeStatus");
     const cCardFile=$("cCardFile"), cCardPreview=$("cCardPreview"), cCardRemove=$("cCardRemove"), cCardRemoveWrap=$("cCardRemoveWrap"), cCardStatus=$("cCardStatus");
@@ -1816,6 +1817,7 @@ window.CC = (function(){
       // 関連裁判はIDで持つが、入力欄には事件名で表示する（見つからないIDは消えている事件なので無視）
       cFields.related.value=(c.relatedCaseIds||[]).map(id=>caseById(id)).filter(Boolean).map(r=>r.name).join("\n");
       cFields.archivedAt.value=c.archivedAt||""; cFields.closeType.value=c.closeType||"";
+      cClosed.checked = c.isClosed===true;
       cBoardEnabled.checked = c.boardEnabled!==false;
       cBoardRestricted.checked = c.boardRestricted===true;
       renderPresenterOptions(c.presenterId||"");
@@ -1873,6 +1875,7 @@ window.CC = (function(){
         tags:cFields.tags.value.split("\n").map(s=>s.trim()).filter(Boolean),
         relatedCaseIds,
         archivedAt:cFields.archivedAt.value, closeType:cFields.closeType.value.trim(),
+        isClosed:cClosed.checked,
         boardEnabled:cBoardEnabled.checked, boardRestricted:cBoardRestricted.checked,
         seoTitle:cSeoTitle.value.trim(), seoDescription:cSeoDescription.value.trim(),
       };
@@ -2525,7 +2528,7 @@ window.CC = (function(){
   // 「incomingが空なら既存の値を残す」対象に含める。漏れているとバックアップの再取り込みで
   // これらだけNULLに巻き戻ってしまう（caseFromBodyは送られてこなかった欄をNULL/falseにするため。2026-09-10）
   const CASE_FIELDS = ["name","caseNo","plaintiffName","defendantName","judge","points","callText","presenterId","contact",
-    "press","plaintiffLinks","defendantLinks","tags","relatedCaseIds","archivedAt","closeType","boardEnabled","boardRestricted",
+    "press","plaintiffLinks","defendantLinks","tags","relatedCaseIds","archivedAt","closeType","isClosed","boardEnabled","boardRestricted",
     "isPrivate","viewKey","caseNoPublic",
     "cardHeadline","cardSub","cardMessage","seoTitle","seoDescription"];
   function mergeCaseFields(existing, incoming){

@@ -303,6 +303,10 @@
                （data-tier-minだけで出し分ける。edCaseIdでの出し分けは不要） -->
           <p class="msec" id="sec-closure" data-tier-min="detail">終結<span class="lhint">終結した事件のみ入れる</span></p>
           <div class="field" data-tier-min="detail">
+            <!-- 終結日が分からない（判決文・裁判所のサイト等で確認できない）事件もあるため、
+                 日付とは別に「終結した」だけをチェックで持てるようにする（2026-09-22）。
+                 チェックを入れなくても終結日を入れれば終結扱いになる（isArchivedは両方を見る） -->
+            <label class="check"><input type="checkbox" id="cClosed"> 終結した（終結日が分からないときもチェックする）</label>
             <div class="two">
               <div class="field"><label>終結日</label><input type="date" id="cArchivedAt"></div>
               <div class="field"><label>終結の種類</label><input type="text" id="cCloseType" placeholder="例）判決、和解、取下げ"></div>

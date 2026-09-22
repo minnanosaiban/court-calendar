@@ -91,8 +91,11 @@
   }
   function rowHtml(c){
     const next = CC.nextEvent(c.id);
+    // 終結日が分からない（isClosedだけの）事件は、日付なしで「終結」とだけ出す
     const nextLine = c.archivedAt
       ? `終結：${CC.escapeHtml(CC.jpDate(c.archivedAt))}${c.closeType?"　"+CC.escapeHtml(c.closeType):""}`
+      : c.isClosed
+      ? `終結${c.closeType?"　"+CC.escapeHtml(c.closeType):""}`
       : (next?`<b>次回</b>${CC.escapeHtml(CC.eventLine(next))}`:"まだ期日の登録がありません");
     return `<div class="card ccard" data-open="${CC.escapeAttr(c.id)}" role="link" tabindex="0">
       ${CC.presenterHeaderHtml(c)}
@@ -114,8 +117,8 @@
   }
   function renderTabs(){
     const base=filteredBase();
-    const openN=base.filter(c=>!c.archivedAt).length;
-    const archN=base.filter(c=>c.archivedAt).length;
+    const openN=base.filter(c=>!c.archivedAt && !c.isClosed).length;
+    const archN=base.filter(c=>c.archivedAt || c.isClosed).length;
     statusTabs.innerHTML = `
       <span class="${activeStatus==="open"?"on":""}" data-statusf="open">進行中 ${openN}</span>
       <span class="${activeStatus==="archived"?"on":""}" data-statusf="archived">終結 ${archN}</span>`;
@@ -126,7 +129,7 @@
   function renderList(){
     if(!CC.loaded){ clistEl.innerHTML=`<p class="empty-msg">読み込んでいます…</p>`; return; }
     const list=filteredBase()
-      .filter(c=> activeStatus==="archived" ? !!c.archivedAt : !c.archivedAt)
+      .filter(c=> activeStatus==="archived" ? !!(c.archivedAt || c.isClosed) : !(c.archivedAt || c.isClosed))
       .sort((a,b)=>{
         if(activeStatus==="archived") return (b.archivedAt||"").localeCompare(a.archivedAt||"");
         const na=CC.nextEvent(a.id), nb=CC.nextEvent(b.id);
