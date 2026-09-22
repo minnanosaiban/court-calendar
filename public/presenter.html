@@ -55,10 +55,10 @@
     </div>
     <!-- ご本人としてログイン中のときだけ出す「事件を追加」（2026-09-10）。
          作った事件は自分名義になり、公開するかどうかは作成画面のアクセス制限で自分で選ぶ。
-         初回ログイン直後は一覧の下端に薄いグレーの小さなピルがあるだけで見落とされたため、
-         名前の直下（事件が増えても下へ押し出されない位置）に朱色の主操作として置く（2026-09-21） -->
+         名前の直下（事件が増えても下へ押し出されない位置）に置く。見た目はcase.htmlの事件ページ
+         自己確認バーと同じ.edit-fab（正円アイコン＋ラベル）に揃える（2026-09-22） -->
     <p id="phAddCase" hidden style="margin-top:24px">
-      <a class="pillbtn pillbtn-primary" href="case-edit.html"><i class="bi bi-plus-lg" aria-hidden="true"></i> 事件を追加</a>
+      <a class="edit-fab" href="case-edit.html"><span class="edit-fab-circle"><i class="bi bi-plus-lg" aria-hidden="true"></i></span><span class="edit-fab-label">事件を追加</span></a>
     </p>
     <div class="clist" id="clist" style="margin-top:20px"></div>
   </section>
