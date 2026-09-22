@@ -371,13 +371,12 @@ window.CC = (function(){
   function caseSelfBarHtml(c){
     if(!canEditCase(c.id)) return "";
     // 他の.selfbar内リンク（下線だけの地味なテキスト）と同じ並びだと素通りされてしまうので、
-    // .edit-fab（右端に寄せた正円のアイコンボタン）にして目立たせる。アイコン・バッジ等は左側に
-    // まとめ、editLinkはDOM順の最後に置いてmargin-left:autoで単独で右へ押し出す（2026-08-31。
-    // 以前は.pillbtnの横並びだったが、すぐ上の「事件をさがすに戻る」と見分けがつかず、ナビの帯
-    // として素通りされてしまっていた）
-    const editLink = `<a class="edit-fab" href="case-edit.html?id=${encodeURIComponent(c.id)}" aria-label="事件情報を編集"><span class="edit-fab-circle"><i class="bi bi-pencil-square" aria-hidden="true"></i></span><span class="edit-fab-label">編集</span></a>`;
+    // presenter.htmlの「＋ 事件を追加」と同じ.pillbtn.pillbtn-primaryにして目立たせる
+    // （2026-09-22。以前は.edit-fab＝右端の正円アイコン＋「編集」ラベルだったが、自分のページの
+    // 「事件を追加」ボタンと見た目・文言が揃っておらず分かりづらかった）
+    const editLink = `<a class="pillbtn pillbtn-primary" href="case-edit.html?id=${encodeURIComponent(c.id)}"><i class="bi bi-plus-lg" aria-hidden="true"></i> 事件を追加</a>`;
     // アイコンとログアウトは、他のページと同じく「事件をさがすに戻る」の上（見出しの直下）に
-    // 全ページ共通バーとして出すので、ここには置かない。この欄は「編集」ボタンだけ（2026-09-10）
+    // 全ページ共通バーとして出すので、ここには置かない。この欄は「事件を追加」ボタンだけ
     return `<div class="selfbar">${editLink}</div>`;
   }
   // ---- 一番上のバー（全ページ共通。2026-09-10）----
