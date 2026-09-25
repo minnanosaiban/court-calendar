@@ -689,6 +689,12 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .site-footer .ccard{text-decoration:none}
 .toolgrid{display:grid;gap:12px;margin-top:16px}
 @media(min-width:560px){.toolgrid{grid-template-columns:1fr 1fr}}
+/* 4枚の説明文の行数が微妙に違うと高さがバラつくので、カード本体を揃える（2026-09-26）。
+   .cbodyをflex縦積みにし、.tdescをflex:1で伸ばすことで、短い説明文のカードも
+   アイコン位置がズレず、単に下に余白ができるだけになる */
+.toolgrid .ccard{min-height:9.5rem}
+.toolgrid .cbody{display:flex;flex-direction:column}
+.toolgrid .tdesc{flex:1}
 /* .stampと同じ寸法・線幅（52px角丸バッジ）だが、こちらは回転させずアイコングリフを載せる。
    色は.stamp・.c-arrowと同じ--stampそのものだと、行末の矢印(.c-arrow・.85rem)より箱が大きい分
    目立ちすぎたため、印象をそろえる目的で薄い朱色（45%）に落としている（2026-09-08） */
