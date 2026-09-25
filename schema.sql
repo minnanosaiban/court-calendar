@@ -62,6 +62,11 @@
 --   （cases.card_headline/card_sub/card_message/seo_title/seo_description、presenters側は同じ5列に
 --   加えてカード画像の差し替え用 card_r2_key/card_square_r2_key も追加）。どの列も空＝これまでどおり自動。
 --   旧スキーマのDBを更新する場合は migrate_040_card_text_and_seo.sql を実行すること。
+--
+-- v17（2026-09-26）：期日の「原告の主張／被告の主張」に、資料の要約（summary_model/summary_date）と
+--   同じ形でAIモデル名・作成日を添えられるようにする（events.plaintiff_argument_model/_date、
+--   defendant_argument_model/_date）。どちらも空＝これまでどおり出所なし（手入力扱い）。
+--   旧スキーマのDBを更新する場合は migrate_042_event_argument_ai.sql を実行すること。
 
 -- 問題提起人（アイコン＋ニックネーム）。1人が複数の事件を持てる。
 CREATE TABLE IF NOT EXISTS presenters (
@@ -155,7 +160,11 @@ CREATE TABLE IF NOT EXISTS events (
   open        INTEGER NOT NULL DEFAULT 1, -- 1=誰でも傍聴できる／0=非公開・要確認
   report_meeting INTEGER NOT NULL DEFAULT 0, -- 1=この期日のあとに期日報告会がある／0=なし
   plaintiff_argument TEXT,     -- この回で原告が主張したこと（1行1項目、改行区切り・任意）
+  plaintiff_argument_model TEXT, -- 上記を作ったAIモデル名（例：Claude Sonnet 5・任意。手入力なら空でよい）
+  plaintiff_argument_date  TEXT, -- 上記を作った年月日（自由書式・任意）
   defendant_argument TEXT,     -- この回で被告が主張したこと（1行1項目、改行区切り・任意）
+  defendant_argument_model TEXT, -- 同上（被告の主張）
+  defendant_argument_date  TEXT, -- 同上（被告の主張）
   created_by  TEXT,
   updated_by  TEXT,
   updated_at  TEXT

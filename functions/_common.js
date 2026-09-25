@@ -359,7 +359,8 @@ export function validateCardText(body) {
 // bookmarked は「この端末がお気に入りにしたか」（件数は出さない、liked と違って likes 相当の集計は無い）。
 // 呼び出し側は SELECT の最初の ? に viewer のハッシュを bind すること（casesSelect() の liked と同じ形）。
 export const EVENT_COLS = `e.id, e.case_id, e.date, e.time, e.type, e.court, e.place, e.open, e.report_meeting,
-                           e.plaintiff_argument, e.defendant_argument,
+                           e.plaintiff_argument, e.plaintiff_argument_model, e.plaintiff_argument_date,
+                           e.defendant_argument, e.defendant_argument_model, e.defendant_argument_date,
                            e.created_by, e.updated_by, e.updated_at, c.name AS case_name,
                            (SELECT COUNT(*) FROM event_bookmarks eb WHERE eb.event_id = e.id AND eb.viewer = ?) AS bookmarked`;
 export const EVENT_FROM = `FROM events e JOIN cases c ON c.id = e.case_id`;
@@ -377,7 +378,11 @@ export function rowToEvent(r) {
     open: r.open === 0 || r.open === false ? false : true,
     reportMeeting: r.report_meeting === 1 || r.report_meeting === true,
     plaintiffArgument: textToLines(r.plaintiff_argument),
+    plaintiffArgumentModel: r.plaintiff_argument_model || "",
+    plaintiffArgumentDate: r.plaintiff_argument_date || "",
     defendantArgument: textToLines(r.defendant_argument),
+    defendantArgumentModel: r.defendant_argument_model || "",
+    defendantArgumentDate: r.defendant_argument_date || "",
     bookmarked: !!r.bookmarked,
     updatedAt: r.updated_at || "",
   };

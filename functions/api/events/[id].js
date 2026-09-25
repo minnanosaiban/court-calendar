@@ -25,7 +25,8 @@ export async function onRequestPut({ request, env, params }) {
   const res = await env.DB.prepare(
     `UPDATE events
         SET case_id=?, date=?, time=?, type=?, court=?, place=?, open=?, report_meeting=?,
-            plaintiff_argument=?, defendant_argument=?,
+            plaintiff_argument=?, plaintiff_argument_model=?, plaintiff_argument_date=?,
+            defendant_argument=?, defendant_argument_model=?, defendant_argument_date=?,
             updated_by=?, updated_at=?
       WHERE id=?`
   ).bind(
@@ -37,7 +38,11 @@ export async function onRequestPut({ request, env, params }) {
     body.open === false ? 0 : 1,
     body.reportMeeting === true ? 1 : 0,
     linesToText(body.plaintiffArgument),
+    String(body.plaintiffArgumentModel || "").trim() || null,
+    String(body.plaintiffArgumentDate || "").trim() || null,
     linesToText(body.defendantArgument),
+    String(body.defendantArgumentModel || "").trim() || null,
+    String(body.defendantArgumentDate || "").trim() || null,
     actorLabel(id, auth), new Date().toISOString(), eid
   ).run();
   if (!res.meta || res.meta.changes === 0) return json({ error: "not found" }, 404);

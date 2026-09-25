@@ -41,17 +41,23 @@ export async function onRequestPost({ request, env }) {
     open: body.open === false ? 0 : 1,
     report_meeting: body.reportMeeting === true ? 1 : 0,
     plaintiff_argument: linesToText(body.plaintiffArgument),
+    plaintiff_argument_model: String(body.plaintiffArgumentModel || "").trim() || null,
+    plaintiff_argument_date: String(body.plaintiffArgumentDate || "").trim() || null,
     defendant_argument: linesToText(body.defendantArgument),
+    defendant_argument_model: String(body.defendantArgumentModel || "").trim() || null,
+    defendant_argument_date: String(body.defendantArgumentDate || "").trim() || null,
   };
   const now = new Date().toISOString();
 
   await env.DB.prepare(
     `INSERT INTO events (id, case_id, date, time, type, court, place, open, report_meeting,
-                         plaintiff_argument, defendant_argument,
+                         plaintiff_argument, plaintiff_argument_model, plaintiff_argument_date,
+                         defendant_argument, defendant_argument_model, defendant_argument_date,
                          created_by, updated_by, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).bind(ev.id, ev.case_id, ev.date, ev.time, ev.type, ev.court, ev.place, ev.open, ev.report_meeting,
-         ev.plaintiff_argument, ev.defendant_argument,
+         ev.plaintiff_argument, ev.plaintiff_argument_model, ev.plaintiff_argument_date,
+         ev.defendant_argument, ev.defendant_argument_model, ev.defendant_argument_date,
          actorLabel(id, auth), actorLabel(id, auth), now).run();
 
   const row = await env.DB.prepare(`SELECT ${EVENT_COLS} ${EVENT_FROM} WHERE e.id = ?`).bind("", ev.id).first();

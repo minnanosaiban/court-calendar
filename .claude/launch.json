@@ -26,16 +26,10 @@
       "port": 8788
     },
     {
-      "name": "eneos-hotline-dev",
+      "name": "hotline-dev",
       "runtimeExecutable": "cmd",
-      "runtimeArgs": ["/c", "cd /d C:\\minnanosaiban\\eneos-hotline && .venv\\Scripts\\zensical.exe serve -a localhost:8791"],
+      "runtimeArgs": ["/c", "cd /d C:\\minnanosaiban\\hotline && .venv\\Scripts\\zensical.exe serve -a localhost:8791"],
       "port": 8791
-    },
-    {
-      "name": "hotline-docsify-dev",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "C:\\minnanosaiban\\hotline-docsify", "run", "dev"],
-      "port": 8790
     }
   ]
 }

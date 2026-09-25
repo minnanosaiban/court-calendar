@@ -690,14 +690,21 @@ window.CC = (function(){
       ${claims?`<ul class="pts mat-claims">${claims}</ul>`:""}
     </div>`;
   }
-  // 期日ごとの「原告の主張／被告の主張」（3行程度の箇条書き）
+  // 期日ごとの「原告の主張／被告の主張」（3行程度の箇条書き）。資料の要約と同じく、AIモデル・作成日を
+  // どちらか一方でも入れていれば、箇条書きの下に「AI要約　Claude Sonnet 5　2026.09.04」のように小さく添える
+  // （手で書いた主張と区別するため。sumModalSourceと同じ考え方。2026-09-26）
+  function argSrcHtml(model, date){
+    if(!model && !date) return "";
+    const text=["AI要約",model,date].filter(Boolean).join("　");
+    return `<p class="fnote">${escapeHtml(text)}</p>`;
+  }
   function argsHtml(ev){
     const p=(ev.plaintiffArgument||[]).map(x=>`<li>${escapeHtml(x)}</li>`).join("");
     const d=(ev.defendantArgument||[]).map(x=>`<li>${escapeHtml(x)}</li>`).join("");
     if(!p && !d) return "";
     return `<div class="args">
-      ${p?`<div class="arg g"><h4>原告の主張</h4><ul>${p}</ul></div>`:""}
-      ${d?`<div class="arg k"><h4>被告の主張</h4><ul>${d}</ul></div>`:""}
+      ${p?`<div class="arg g"><h4>原告の主張</h4><ul>${p}</ul>${argSrcHtml(ev.plaintiffArgumentModel,ev.plaintiffArgumentDate)}</div>`:""}
+      ${d?`<div class="arg k"><h4>被告の主張</h4><ul>${d}</ul>${argSrcHtml(ev.defendantArgumentModel,ev.defendantArgumentDate)}</div>`:""}
     </div>`;
   }
   function timelineHtml(caseId){
@@ -2204,7 +2211,9 @@ window.CC = (function(){
       if(isNew){
         const rounds = caseEvents(edCaseId);
         const src = rounds[rounds.length-1];
-        e = { date:"", time:"", type:"", court:src&&src.court||"", place:src&&src.place||"", open:true, reportMeeting:false, plaintiffArgument:[], defendantArgument:[] };
+        e = { date:"", time:"", type:"", court:src&&src.court||"", place:src&&src.place||"", open:true, reportMeeting:false,
+              plaintiffArgument:[], plaintiffArgumentModel:"", plaintiffArgumentDate:"",
+              defendantArgument:[], defendantArgumentModel:"", defendantArgumentDate:"" };
       }
       return `<div class="ieditor">
         <div class="ihead">
@@ -2227,7 +2236,17 @@ window.CC = (function(){
           <div class="field"><label>法廷</label><input type="text" class="ef-place" value="${escapeAttr(e.place)}" placeholder="例）610号法廷"></div>
         </div>
         <div class="field" data-tier-min="detail"><label>原告の主張</label><span class="lhint">1行に1項目</span><textarea class="ef-plaintiff" placeholder="例）不開示決定の取消しを求める">${escapeHtml((e.plaintiffArgument||[]).join("\n"))}</textarea></div>
+        <div class="two" data-tier-min="detail">
+          <div class="field"><label>原告の主張を作ったAI（任意）</label><input type="text" class="ef-plaintiffargmodel" value="${escapeAttr(e.plaintiffArgumentModel)}" placeholder="例）Claude Sonnet 5"></div>
+          <div class="field"><label>作った年月日（任意）</label><input type="text" class="ef-plaintiffargdate" value="${escapeAttr(e.plaintiffArgumentDate)}" placeholder="例）2026.09.04"></div>
+        </div>
+        <p class="fnote" data-tier-min="detail">どちらか一方でも入れると、原告の主張の下に「AI要約　${escapeHtml(e.plaintiffArgumentModel||"Claude Sonnet 5")}　${escapeHtml(e.plaintiffArgumentDate||"2026.09.04")}」のように出所を添えます。手で書いた主張なら空のままにしてください。</p>
         <div class="field" data-tier-min="detail"><label>被告の主張</label><span class="lhint">1行に1項目</span><textarea class="ef-defendant" placeholder="例）該当する文書は保有していない">${escapeHtml((e.defendantArgument||[]).join("\n"))}</textarea></div>
+        <div class="two" data-tier-min="detail">
+          <div class="field"><label>被告の主張を作ったAI（任意）</label><input type="text" class="ef-defendantargmodel" value="${escapeAttr(e.defendantArgumentModel)}" placeholder="例）Claude Sonnet 5"></div>
+          <div class="field"><label>作った年月日（任意）</label><input type="text" class="ef-defendantargdate" value="${escapeAttr(e.defendantArgumentDate)}" placeholder="例）2026.09.04"></div>
+        </div>
+        <p class="fnote" data-tier-min="detail">どちらか一方でも入れると、被告の主張の下に同じ形で出所を添えます。手で書いた主張なら空のままにしてください。</p>
         <div class="field"><label class="check"><input type="checkbox" class="ef-open" ${e.open!==false?"checked":""}> だれでも傍聴できます（外すと「非公開・要確認」）</label></div>
         <div class="field" data-tier-min="detail"><label class="check"><input type="checkbox" class="ef-report" ${e.reportMeeting?"checked":""}> 期日報告会があります</label></div>
         ${isNew?"":`<div class="ifoot"><button type="button" class="del" data-del="ev" data-id="${escapeAttr(ev.id)}">この期日を削除</button></div>`}
@@ -2243,7 +2262,11 @@ window.CC = (function(){
         court: root.querySelector(".ef-court").value.trim(), place: root.querySelector(".ef-place").value.trim(),
         open: root.querySelector(".ef-open").checked, reportMeeting: root.querySelector(".ef-report").checked,
         plaintiffArgument: root.querySelector(".ef-plaintiff").value.split("\n").map(s=>s.trim()).filter(Boolean),
+        plaintiffArgumentModel: root.querySelector(".ef-plaintiffargmodel").value.trim(),
+        plaintiffArgumentDate: root.querySelector(".ef-plaintiffargdate").value.trim(),
         defendantArgument: root.querySelector(".ef-defendant").value.split("\n").map(s=>s.trim()).filter(Boolean),
+        defendantArgumentModel: root.querySelector(".ef-defendantargmodel").value.trim(),
+        defendantArgumentDate: root.querySelector(".ef-defendantargdate").value.trim(),
       };
       const btn=root.querySelector("[data-save]"); markSaving(root, btn);
       try{
