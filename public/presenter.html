@@ -196,8 +196,10 @@
         if(nb) return 1;
         return a.name.localeCompare(b.name,"ja");
       });
-    // 「事件を追加」はご本人（または運営）にだけ出す
-    const canAdd = CC.me.presenterId===presenterId || CC.me.canWrite;
+    // 「事件を追加」はご本人としてログイン中のときだけ出す（2026-09-26修正：運営がこのページを見ている
+    // ときも出ていたが、リンク先の事件追加フォームはこの問題提起人には紐付かない＝運営には無意味なので外した。
+    // 運営が事件を追加するときは、他の入口から普通に追加すればよい）
+    const canAdd = CC.me.presenterId===presenterId;
     document.getElementById("phAddCase").hidden = !canAdd;
     // 0件のときは、追加できる人には上の「＋ 事件を追加」へ視線を導く（初回ログイン直後の人向け）
     clistEl.innerHTML = list.length ? list.map(rowHtml).join("")
