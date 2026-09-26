@@ -1825,7 +1825,8 @@ window.CC = (function(){
       cFields.related.value=(c.relatedCaseIds||[]).map(id=>caseById(id)).filter(Boolean).map(r=>r.name).join("\n");
       cFields.archivedAt.value=c.archivedAt||""; cFields.closeType.value=c.closeType||"";
       cClosed.checked = c.isClosed===true;
-      cBoardEnabled.checked = c.boardEnabled!==false;
+      // 新規作成時（c.boardEnabledが未指定）はデフォルトでオフにする（2026-09-26）
+      cBoardEnabled.checked = c.boardEnabled===true;
       cBoardRestricted.checked = c.boardRestricted===true;
       renderPresenterOptions(c.presenterId||"");
       updatePresenterFieldUI();
