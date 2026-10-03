@@ -547,7 +547,7 @@ window.CC = (function(){
     // ファクトシート：最近の期日・手続・事件番号・争点・原告・被告・裁判官・掲載（値がある行だけ出す）
     const nextRow = next
       ? factRow("期日",
-          `<div>${escapeHtml(jpDate(next.date))}${next.time?" "+escapeHtml(next.time):""}${next.open===false?`<span class="round-closed">非公開・要確認</span>`:""}${next.reportMeeting?`<span class="round-note">期日報告会あり</span>`:""}</div>`+
+          `<div>${escapeHtml(jpDate(next.date))}${next.time?" "+escapeHtml(next.time):""}${next.open===false?`<span class="round-closed">非公開・その他手続き</span>`:""}${next.reportMeeting?`<span class="round-note">期日報告会あり</span>`:""}</div>`+
           ([next.court,next.place].filter(Boolean).length?`<div>${escapeHtml([next.court,next.place].filter(Boolean).join(" "))}</div>`:"")
         ) + factRow("手続", next.type?escapeHtml(next.type):"")
       : "";
@@ -718,7 +718,7 @@ window.CC = (function(){
       const state = ev.date<today ? "past" : (next&&ev.id===next.id ? "next" : "future");
       const expandable = own.length>0 || hasArgs;
       const place=[ev.court,ev.place].filter(Boolean).join(" ");
-      const closed = ev.open===false ? `<span class="round-closed">非公開・要確認</span>` : "";
+      const closed = ev.open===false ? `<span class="round-closed">非公開・その他手続き</span>` : "";
       const reportNote = ev.reportMeeting ? `<span class="round-note">期日報告会あり</span>` : "";
       const editLink = canEditCase(caseId) ? `<a class="round-edit" href="case-edit.html?id=${encodeURIComponent(caseId)}&open=ev:${encodeURIComponent(ev.id)}">編集</a>` : "";
       return `<li class="tl-item ${state}">
@@ -2248,7 +2248,7 @@ window.CC = (function(){
           <div class="field"><label>作った年月日（任意）</label><input type="text" class="ef-defendantargdate" value="${escapeAttr(e.defendantArgumentDate)}" placeholder="例）2026.09.04"></div>
         </div>
         <p class="fnote" data-tier-min="detail">どちらか一方でも入れると、被告の主張の下に同じ形で出所を添えます。手で書いた主張なら空のままにしてください。</p>
-        <div class="field"><label class="check"><input type="checkbox" class="ef-open" ${e.open!==false?"checked":""}> だれでも傍聴できます（外すと「非公開・要確認」）</label></div>
+        <div class="field"><label class="check"><input type="checkbox" class="ef-open" ${e.open!==false?"checked":""}> 公開（外すと「非公開・その他手続き」）</label></div>
         <div class="field" data-tier-min="detail"><label class="check"><input type="checkbox" class="ef-report" ${e.reportMeeting?"checked":""}> 期日報告会があります</label></div>
         ${isNew?"":`<div class="ifoot"><button type="button" class="del" data-del="ev" data-id="${escapeAttr(ev.id)}">この期日を削除</button></div>`}
       </div>`;

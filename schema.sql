@@ -157,7 +157,7 @@ CREATE TABLE IF NOT EXISTS events (
   type        TEXT,            -- 期日の種類（第3回口頭弁論 など）
   court       TEXT,            -- 裁判所名
   place       TEXT,            -- 法廷
-  open        INTEGER NOT NULL DEFAULT 1, -- 1=公開／0=非公開・要確認
+  open        INTEGER NOT NULL DEFAULT 1, -- 1=公開／0=非公開・その他手続き
   report_meeting INTEGER NOT NULL DEFAULT 0, -- 1=この期日のあとに期日報告会がある／0=なし
   plaintiff_argument TEXT,     -- この回で原告が主張したこと（1行1項目、改行区切り・任意）
   plaintiff_argument_model TEXT, -- 上記を作ったAIモデル名（例：Claude Sonnet 5・任意。手入力なら空でよい）

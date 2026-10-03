@@ -22,3 +22,6 @@ scripts/case_slides/update.sql
 
 # 個人的な作業用資料（非公開）。
 paper/
+
+# 作業中の一時ファイル（誤コミット防止）
+.tmp_token

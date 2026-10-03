@@ -359,7 +359,7 @@ npx wrangler d1 execute court-calendar --remote --file migrate_032_presenter_acc
 
 1期日=1行のまま、傍聴の呼びかけに必要な列に整理した。
 
-- 追加：`case_no`（事件番号）`court`（裁判所）`parties`（当事者）`host`（呼びかけ団体）`contact`（連絡先）`lede`（事件の説明）`points`（争われていること・改行区切り）`open`（1=公開／0=非公開・要確認）`level`（見どころタグ）
+- 追加：`case_no`（事件番号）`court`（裁判所）`parties`（当事者）`host`（呼びかけ団体）`contact`（連絡先）`lede`（事件の説明）`points`（争われていること・改行区切り）`open`（1=公開／0=非公開・その他手続き）`level`（見どころタグ）
 - 削除：`note`（「この日のみどころ・メモ」は廃止）
 
 ### （過去）画面構成（2026-08-20〜21）
