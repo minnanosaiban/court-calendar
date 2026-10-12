@@ -77,7 +77,7 @@ window.CC = (function(){
     const m = raw.match(/[\s　](https?:\/\/\S+)$/);
     if(!m) return escapeHtml(raw);
     const text = raw.slice(0, m.index).trim();
-    return `<a class="plink-text" href="${escapeAttr(m[1])}" target="_blank" rel="noopener">${escapeHtml(text)}<i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>`;
+    return `<a class="plink-text" href="${escapeAttr(m[1])}" target="_blank" rel="noopener">${escapeHtml(text)}</a>`;
   }
   function cssEsc(s){ return String(s).replace(/"/g,'\\"'); }
   function jpDate(s){ const d=parseYmd(s); return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${WD[d.getDay()]}）`; }
