@@ -65,7 +65,7 @@ def label(img, xy, scale):
     d = ImageDraw.Draw(tile)
     d.rounded_rectangle((10, 10, 10 + w, 10 + h), radius=int(8 * scale), outline=RED, width=max(3, int(4 * scale)))
     paste_text(tile, (10 + pad_x, 10 + h / 2), LABEL, f, RED, anchor="lm", spacing=int(4 * scale))
-    tile = tile.rotate(3, resample=Image.BICUBIC, expand=True)
+    tile = tile.rotate(-3, resample=Image.BICUBIC, expand=True)
     img.paste(tile, xy, tile)
 
 def card(W, H, wide):

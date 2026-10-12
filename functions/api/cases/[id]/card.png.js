@@ -26,7 +26,7 @@ function buildNoticeTree(c) {
   const lines = title.split(/(?<=[、。])/).filter(Boolean);
   const place = [ev.court, ev.place].filter(Boolean).join("　");
   const label = h("div", {
-    style: { display: "flex", alignSelf: "flex-start", border: `4px solid ${RED}`, borderRadius: 8, padding: "6px 22px", color: RED, fontFamily: MIN_B, fontSize: 34, letterSpacing: 4, transform: "rotate(3deg)" },
+    style: { display: "flex", alignSelf: "flex-start", border: `4px solid ${RED}`, borderRadius: 8, padding: "6px 22px", color: RED, fontFamily: MIN_B, fontSize: 34, letterSpacing: 4, transform: "rotate(-3deg)" },
   }, "傍聴案内");
   const ticket = h("div", {
     style: { display: "flex", flexDirection: "column", position: "relative", width: 1120, height: 550, borderRadius: 28, border: `2px solid ${RING}`, background: PAPER, padding: "34px 56px 0 56px" },
