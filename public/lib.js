@@ -2142,7 +2142,11 @@ window.CC = (function(){
           </span>
         </div>
         <p class="fnote ieditor-status" hidden></p>
-        ${isNew?`<p class="fnote">Web用画像・スマホ用画像のどちらか一方は必ず選んでください。</p>`:""}
+        ${isNew?`<div class="field"><label>PDFから追加</label>
+          <input type="file" class="ef-pdf" accept="application/pdf">
+          <p class="fnote">PDFを選ぶと、各ページを1枚ずつの画像にして、ページ順にスライドへ追加します（このブラウザの中で変換します。PDF自体は保存しません）。ページは横長（16:9）が最もきれいに収まります。100ページまで、20MBまで。下の「説明」を入れると各ページに「説明（1/23）」のように付きます。</p>
+        </div>
+        <p class="fnote">PDFを使わないときは、Web用画像・スマホ用画像のどちらか一方を必ず選んでください。</p>`:""}
         <div class="field"><label>Web用画像</label>
           <input type="file" class="ef-web-file" accept="image/jpeg,image/png,image/webp">
           ${hasWeb?`<p class="fnote">いまのWeb用：<img src="${escapeAttr(im.webUrl)}" alt="" style="width:64px;height:46px;object-fit:cover;border-radius:6px;vertical-align:middle;margin-left:6px">　ファイルを選ぶと差し替わります。</p>
@@ -2158,8 +2162,64 @@ window.CC = (function(){
         ${isNew?"":`<div class="ifoot"><button type="button" class="del" data-del="img" data-id="${escapeAttr(im.id)}">この画像を削除</button></div>`}
       </div>`;
     }
+    // PDF → 1ページ1枚のJPEG（pdf.jsをCDNから必要になったときだけ読み込む。サーバー側は画像として受けるだけ）
+    const PDFJS_VER = "4.10.38";
+    const PDF_MAX_PAGES = 100, PDF_MAX_BYTES = 20*1024*1024, PDF_PAGE_WIDTH = 1600;
+    async function pdfToJpegs(file, onProgress){
+      const pdfjs = await import(`https://cdn.jsdelivr.net/npm/pdfjs-dist@${PDFJS_VER}/build/pdf.min.mjs`);
+      pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${PDFJS_VER}/build/pdf.worker.min.mjs`;
+      const pdf = await pdfjs.getDocument({ data: await file.arrayBuffer() }).promise;
+      if(pdf.numPages>PDF_MAX_PAGES) throw new Error(`ページ数が多すぎます（${pdf.numPages}ページ。${PDF_MAX_PAGES}ページまで）`);
+      const base = file.name.replace(/\.pdf$/i,"");
+      const out = [];
+      for(let n=1;n<=pdf.numPages;n++){
+        onProgress(n, pdf.numPages);
+        const page = await pdf.getPage(n);
+        const vp1 = page.getViewport({ scale:1 });
+        const vp = page.getViewport({ scale: PDF_PAGE_WIDTH/vp1.width });
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(vp.width); canvas.height = Math.round(vp.height);
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#fff"; ctx.fillRect(0,0,canvas.width,canvas.height);   // 透明部分が黒くならないように
+        await page.render({ canvasContext: ctx, viewport: vp }).promise;
+        let blob = await new Promise(r=>canvas.toBlob(r,"image/jpeg",0.85));
+        if(blob && blob.size>12*1024*1024) blob = await new Promise(r=>canvas.toBlob(r,"image/jpeg",0.6));
+        if(!blob || blob.size>12*1024*1024) throw new Error(`${n}ページ目の画像が大きすぎます`);
+        out.push(new File([blob], `${base}_p${String(n).padStart(2,"0")}.jpg`, { type:"image/jpeg" }));
+        canvas.width = canvas.height = 0;
+      }
+      return out;
+    }
+    async function savePdfPages(root, pdf){
+      if(pdf.type!=="application/pdf" && !/\.pdf$/i.test(pdf.name)){ alert("PDFファイルを選んでください。"); return; }
+      if(pdf.size>PDF_MAX_BYTES){ alert("PDFは20MBまでです。"); return; }
+      const cap = root.querySelector(".ef-caption").value.trim();
+      const btn = root.querySelector("[data-save]"); markSaving(root, btn);
+      const st = ieditorStatus(root);
+      let done = 0;
+      try{
+        const pages = await pdfToJpegs(pdf, (n,t)=>{ st.textContent = `PDFを変換しています… ${n}/${t}ページ`; });
+        // 順番を守るため1枚ずつ送る（並び順はサーバーが「末尾に追加」で採番する）
+        for(let i=0;i<pages.length;i++){
+          st.textContent = `アップロードしています… ${i+1}/${pages.length}ページ`;
+          const fd=new FormData();
+          fd.append("caseId", edCaseId);
+          fd.append("caption", cap ? (pages.length>1 ? `${cap}（${i+1}/${pages.length}）` : cap) : "");
+          fd.append("file", pages[i], pages[i].name);
+          images.push(await apiCreateImage(fd));
+          done++;
+        }
+        markSaved(root, ()=>{ if(edFocus) return backToCase(); closeEditor(); renderImgList(); });
+      }catch(err){
+        if(done){ renderImgList(); alert(`${done}ページまで追加して、途中で止まりました：` + (err && err.message || err)); }
+        else alert("PDFを追加できませんでした：" + (err && err.message || err));
+        markSaveFailed(root, btn);
+      }
+    }
     async function saveImgRow(root, id){
       if(!canEditCase(edCaseId)) return;
+      const pdfEl = root.querySelector(".ef-pdf");
+      if(!id && pdfEl && pdfEl.files[0]) return savePdfPages(root, pdfEl.files[0]);
       const f = root.querySelector(".ef-file").files[0];
       const wf = root.querySelector(".ef-web-file").files[0];
       if(!id && !f && !wf){ alert("Web用画像・スマホ用画像のどちらか一方を選んでください。"); return; }
