@@ -172,6 +172,14 @@ a{color:inherit}
 /* ページ送りの点は、写真の上に重ねず下に置く（隣の写真がチラ見えする分、写真に重ねると窮屈なため）。
    中央の1枚が下にも約21pxはみ出す分、詰まって見えないよう間隔を広げてある（14px→35px、2026-09-07） */
 .gal .swiper-pagination{position:static;margin-top:35px}
+/* ←→ボタン（早送り・巻き戻し用）。写真の縦中央あたりの左右端に重ねる。中央の拡大写真(z-index:2)より手前に */
+.gal-nav{position:absolute;top:50%;z-index:10;width:40px;height:40px;margin-top:-8px;border:0;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:1.2rem;cursor:pointer;
+  background:rgba(0,0,0,.5);color:#fff;transition:background .2s ease}
+.gal-nav:hover,.gal-nav:focus-visible{background:rgba(0,0,0,.75)}
+.gal-prev{left:8px}
+.gal-next{right:8px}
+@media (max-width:559px){.gal-nav{width:34px;height:34px;font-size:1rem}}
 .gal .swiper-pagination-bullet{background:var(--faint);opacity:1}
 .gal .swiper-pagination-bullet-active{background:var(--stamp)}
 /* 写真の管理（編集権限があるときだけ）：ギャラリーの下に小さな一覧 */

@@ -498,6 +498,8 @@ window.CC = (function(){
     return `<div class="gal swiper" data-gal="${escapeAttr(caseId)}">
       <div class="swiper-wrapper">${slides}</div>
       <div class="swiper-pagination"></div>
+      <button type="button" class="gal-nav gal-prev" aria-label="前のスライド"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+      <button type="button" class="gal-nav gal-next" aria-label="次のスライド"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
     </div>`;
   }
   // Swiperの初期化（2枚以上のときだけ .gal.swiper が出るので、それだけを拾う）。
@@ -506,16 +508,20 @@ window.CC = (function(){
   // 768px以上でだけ枚数を増やす意味がある。2026-09-05、hotline側のagmページを実測してそろえた。
   // 一度、画面幅を問わず1.5に固定していたが、狭い画面で大きすぎ・広い画面で小さすぎと
   // 両方から出てしまっていたのはこのbreakpointを外していたのが原因だった）
-  // pauseOnMouseEnterだけはhotline側に無いオプションだが、旧実装（ホバー中は止める）を引き継ぐため付けている
+  // ホバー中に止める設定（pauseOnMouseEnter）は、見ている間ずっと止まって「自動で流れない」と見えるため外した（2026-10-12）
   function wireGallery(gal){
     new Swiper(gal, {
       slidesPerView: 1.3,
       spaceBetween: 16,
       centeredSlides: true,
       loop: true,
-      autoplay: { delay: 4500, disableOnInteraction: false, pauseOnMouseEnter: true },
+      autoplay: { delay: 4500, disableOnInteraction: false },
       speed: 700,
       pagination: { el: gal.querySelector(".swiper-pagination"), clickable: true },
+      // 自動送りの途中で早送り・巻き戻しできるよう、←→ボタンとキーボードの←→キーを追加（2026-10-12）。
+      // キーボードは画面内にギャラリーが見えているときだけ効く（入力欄での←→は邪魔しない）
+      navigation: { prevEl: gal.querySelector(".gal-prev"), nextEl: gal.querySelector(".gal-next") },
+      keyboard: { enabled: true, onlyInViewport: true },
       breakpoints: { 768: { slidesPerView: 2.2, spaceBetween: 28 } }
     });
   }
