@@ -1660,7 +1660,7 @@ window.CC = (function(){
     // 「自動生成に戻す」リンクの表示・非表示だけ切り替える（2026-09-02、以前はnoteごと作り直していた） ----
     function updateCardFieldUI(c){
       const has = !!(c && c.cardUrl);
-      const autoUrl = edCaseId ? ("/api/cases/"+encodeURIComponent(edCaseId)+"/card.png") : "";
+      const autoUrl = edCaseId ? bustUrl("/api/cases/"+encodeURIComponent(edCaseId)+"/card.png") : "";
       const previewSrc = has ? c.cardUrl : autoUrl;
       cCardPreview.innerHTML = previewSrc
         ? `<img src="${escapeAttr(previewSrc)}" alt="" style="width:180px;border-radius:8px;border:1px solid var(--tint)">`
@@ -1699,7 +1699,7 @@ window.CC = (function(){
     // 横長版（cCardFile等）と全く同じ作り ----
     function updateCardSquareFieldUI(c){
       const has = !!(c && c.cardSquareUrl);
-      const autoUrl = edCaseId ? ("/api/cases/"+encodeURIComponent(edCaseId)+"/card-square.png") : "";
+      const autoUrl = edCaseId ? bustUrl("/api/cases/"+encodeURIComponent(edCaseId)+"/card-square.png") : "";
       const previewSrc = has ? c.cardSquareUrl : autoUrl;
       cCardSquarePreview.innerHTML = previewSrc
         ? `<img src="${escapeAttr(previewSrc)}" alt="" style="width:120px;border-radius:8px;border:1px solid var(--tint)">`
