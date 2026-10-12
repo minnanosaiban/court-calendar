@@ -48,6 +48,8 @@ export async function onRequestGet({ request, env }) {
     // （どちらか一方でも変われば連結文字列が変わり、キャッシュキーが変わる）
     const v = (String(c.updated_at || "") + String(c.events_updated_at || "")).replace(/\D/g, "");
     if (v) u.searchParams.set("v", v);
+    // カードのデザインを変えたときは、この番号を上げる（エッジに残る古い画像を引かないため。2026-10-13「傍聴案内」版で 2）
+    u.searchParams.set("d", "2");
     return u.toString();
   }
   const cardWideUrl = cardUrlFor("card.png");
