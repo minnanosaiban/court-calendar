@@ -25,6 +25,18 @@ export const SITE_LABEL = "応援傍聴ナビ";
 export const MESSAGE = "傍聴に行って応援しよう！";
 const WEEK = ["月", "火", "水", "木", "金", "土", "日"];
 
+// 横長カード「傍聴案内」版の日付：数字と時刻は大きく、月・日・曜日は小さく（2026-10-13）
+export function wideDateRow(dateStr, time) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const wd = WEEK[(new Date(Date.UTC(y, m - 1, d)).getUTCDay() + 6) % 7] + "曜日";
+  const big = (key, t, ml) => h("div", { key, style: { display: "flex", fontFamily: MIN_B, fontSize: 92, lineHeight: 1, color: INK, marginLeft: ml || 0 } }, t);
+  const small = (key, t, ml) => h("div", { key, style: { display: "flex", fontFamily: MIN_B, fontSize: 46, lineHeight: 1, color: INK, marginLeft: ml || 0 } }, t);
+  return h("div", { style: { display: "flex", alignItems: "baseline" } }, [
+    big("m", String(m)), small("mu", "月", 8), big("d", String(d), 8), small("du", "日", 8),
+    small("wd", wd, 30), time ? big("t", time, 40) : null,
+  ].filter(Boolean));
+}
+
 export function jpDate(dateStr) {
   const [y, m, d] = dateStr.split("-").map(Number);
   const wd = WEEK[(new Date(Date.UTC(y, m - 1, d)).getUTCDay() + 6) % 7];
@@ -219,7 +231,7 @@ export async function loadPresenterIconDataUri(env, c) {
 export async function loadCardData(env, id) {
   const today = todayJst();
   const nextEvent = await env.DB.prepare(
-    `SELECT date, time, court, place FROM events WHERE case_id = ? AND date >= ? ORDER BY date ASC, time ASC LIMIT 1`
+    `SELECT date, time, court, place, report_meeting FROM events WHERE case_id = ? AND date >= ? ORDER BY date ASC, time ASC LIMIT 1`
   ).bind(id, today).first();
   return nextEvent || null;
 }

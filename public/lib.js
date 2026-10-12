@@ -2379,7 +2379,7 @@ window.CC = (function(){
         </div>
         <p class="fnote" data-tier-min="detail">どちらか一方でも入れると、被告の主張の下に同じ形で出所を添えます。手で書いた主張なら空のままにしてください。</p>
         <div class="field"><label class="check"><input type="checkbox" class="ef-open" ${e.open!==false?"checked":""}> 公開（外すと「非公開・その他手続き」）</label></div>
-        <div class="field" data-tier-min="detail"><label class="check"><input type="checkbox" class="ef-report" ${e.reportMeeting?"checked":""}> 期日報告会があります</label></div>
+        <div class="field"><label class="check"><input type="checkbox" class="ef-report" ${e.reportMeeting?"checked":""}> 期日報告会があります</label></div>
         ${isNew?"":`<div class="ifoot"><button type="button" class="del" data-del="ev" data-id="${escapeAttr(ev.id)}">この期日を削除</button></div>`}
       </div>`;
     }

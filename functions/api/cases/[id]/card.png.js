@@ -11,11 +11,42 @@ import {
   h, BG, PAPER, RING, GO_R, GO_M, INK, RED, GRAY,
   SITE_LABEL, MESSAGE, stamp, perforation, dateSection, cheerSection,
   loadFonts, fontList, loadCardContext, loadPresenterIconDataUri, loadCardData, overrideResponse,
-  cardHeadlineFrom,
+  cardHeadlineFrom, wideDateRow, MIN_B,
   ImageResponse, cache,
 } from "../_card.js";
 
+// 次回期日がある事件の「傍聴案内」カード（2026-10-13）。
+// 事件名／期日（数字と時刻は大きく）／場所／報告会の有無／右下にハンコ＋サイト名
+function buildNoticeTree(c) {
+  const ev = c.nextEvent;
+  const name = [...c.name];
+  const size = name.length > 38 ? 44 : 52;
+  const title = name.length > 44 ? name.slice(0, 43).join("") + "…" : c.name;
+  // 読点・句点のあとで改行して、2行に収める（文字数での機械的な折り返しだと語の途中で切れるため）
+  const lines = title.split(/(?<=[、。])/).filter(Boolean);
+  const place = [ev.court, ev.place].filter(Boolean).join("　");
+  const label = h("div", {
+    style: { display: "flex", alignSelf: "flex-start", border: `4px solid ${RED}`, borderRadius: 8, padding: "6px 22px", color: RED, fontFamily: MIN_B, fontSize: 34, letterSpacing: 4, transform: "rotate(3deg)" },
+  }, "傍聴案内");
+  const ticket = h("div", {
+    style: { display: "flex", flexDirection: "column", position: "relative", width: 1120, height: 550, borderRadius: 28, border: `2px solid ${RING}`, background: PAPER, padding: "34px 56px 0 56px" },
+  }, [
+    label,
+    h("div", { key: "title", style: { display: "flex", flexDirection: "column", marginTop: 20 } },
+      lines.map((t, i) => h("div", { key: "t" + i, style: { display: "flex", fontFamily: MIN_B, fontSize: size, color: INK, lineHeight: 1.25 } }, t))),
+    h("div", { key: "date", style: { display: "flex", marginTop: 22 } }, wideDateRow(ev.date, ev.time)),
+    place ? h("div", { key: "place", style: { display: "flex", fontFamily: GO_M, fontSize: 34, lineHeight: 1.2, color: GRAY, marginTop: 24 } }, place) : null,
+    ev.report_meeting ? h("div", { key: "rm", style: { display: "flex", fontFamily: MIN_B, fontSize: 36, lineHeight: 1.2, color: RED, letterSpacing: 3, marginTop: 14 } }, "報告会あります") : null,
+    h("div", { key: "brand", style: { display: "flex", alignItems: "center", position: "absolute", right: 56, bottom: 38 } }, [
+      stamp(52),
+      h("div", { key: "bn", style: { display: "flex", marginLeft: 14, fontFamily: MIN_B, fontSize: 34, color: INK, letterSpacing: 3 } }, SITE_LABEL),
+    ]),
+  ].filter(Boolean));
+  return h("div", { style: { display: "flex", width: 1200, height: 630, background: BG, alignItems: "center", justifyContent: "center" } }, ticket);
+}
+
 function buildTree(c) {
+  if (c.nextEvent) return buildNoticeTree(c);
   const right = [];
   if (c.iconDataUri) {
     right.push(h("img", { key: "av", src: c.iconDataUri, width: 112, height: 112, style: { borderRadius: "50%", border: `3px solid ${RING}` } }));
@@ -92,6 +123,7 @@ export async function onRequestGet(context) {
   const iconDataUri = await loadPresenterIconDataUri(env, c);
 
   const data = {
+    name: c.name || "",
     presenterNickname: c.presenter_nickname || "",
     iconDataUri,
     nextEvent,
