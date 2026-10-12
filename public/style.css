@@ -345,8 +345,9 @@ a{color:inherit}
 .facts .plink:hover{color:var(--ink)}
 /* 報道がWEB記事のときのリンク（.pts内、URLがそのまま文字で見える）は下線で示す */
 .pts a{text-decoration:underline;text-underline-offset:3px}
-.pts a.plink-text{color:var(--ink);word-break:break-all}
-.pts a.plink-text .bi{margin-left:4px;font-size:.75em;color:var(--faint);vertical-align:0}
+.pts a.plink-text{color:var(--ink);text-decoration:none;word-break:break-all}
+.pts a.plink-text:hover{text-decoration:underline;text-underline-offset:3px}
+.pts a.plink-text .bi{display:inline-block;margin-left:.45em;font-size:.75em;color:var(--faint);text-decoration:none;vertical-align:baseline}
 /* 裁判官マップ等へのリンク（.jlink）はアイコンだけなので下線は付けない（当事者アイコン.plinkと同じ扱い）。
    色・フォントサイズも当事者アイコン.plinkの薄いほうに完全にそろえる（2026-08-28） */
 .jlink{display:inline-block;font-size:.86rem;color:var(--faint);text-decoration:none;vertical-align:-1px}
