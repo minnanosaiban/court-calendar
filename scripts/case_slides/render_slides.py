@@ -46,40 +46,40 @@ def font(path, size):
 # body: [(テキスト, 強調するか), ...] のリスト。強調した部分だけ朱色で塗る。
 # n: ファイル名に使う通し番号（sort_orderと合わせておくと分かりやすい）。
 SLIDES = [
-    dict(n=1, label="本サイトの問題提起",
+    dict(n=1, label="問題提起",
          head=["通報の後、通報者は", "情報から遮断された"],
          body=[("そのうえで、", False), ("裏づけの確認できない情報", True), ("を知らされました。", False)]),
-    dict(n=2, label="通報した内容",
+    dict(n=2, label="通報内容",
          head=["支払う必要のない", "海外消費税を払っている"],
          body=[("社内の通報窓口へ伝えたのは、この問題でした。", False)]),
-    dict(n=3, label="通報を受けてからの会社の対応　①",
+    dict(n=3, label="会社対応①",
          head=["調査事項を曖昧にして", "回答された"],
          body=[("海外消費税を支払う必要があるか否かは、示されませんでした。", False)]),
-    dict(n=4, label="通報を受けてからの会社の対応　②",
+    dict(n=4, label="会社対応②",
          head=["裏づけが確認できない", "情報を知らされた"],
          body=[("「法改正があったため」「子会社が返金を受けた」と知らされました。", False)]),
-    dict(n=5, label="通報を受けてからの会社の対応　③",
+    dict(n=5, label="会社対応③",
          head=["海外消費税の支払を", "契約化した"],
          body=[("「海外企業がＥＮＥＯＳへ請求できる」形へ契約変更。通報者に知らせず。", False)]),
-    dict(n=6, label="裁判の争点",
+    dict(n=6, label="これが、裁判の争点",
          head=["是正措置を通報者に", "通知しなかったこと"],
-         body=[("通報を受けた後の契約変更について、これが争点になりました。", False)]),
-    dict(n=7, label="裁判所の判断",
+         body=[("通報を受けた後の契約変更を、通報者に知らせなかったことが問われました。", False)]),
+    dict(n=7, label="裁判所の判断は？①",
          head=["「支払う合意」が", "あったと推認"],
          body=[("契約書に海外消費税の定めはなかったものの、そう推認されました。", False)]),
-    dict(n=8, label="裁判所の判断（結論）",
+    dict(n=8, label="裁判所の判断は？②",
          head=["違反がなければ", "通知すべき是正措置もない"],
          body=[("そう判断し、通知しなかったことを問題にする主張は退けられました。", False)]),
-    dict(n=9, label="裏づけが確認できない情報　①",
+    dict(n=9, label="事実の裏付けは？①",
          head=["「法改正があったため」"], sub="ただし、その法改正は特定されていない",
          body=[("会社は通報者にそう知らせました。いつの・どの法律なのかは、未だに分かりません。", False)]),
-    dict(n=10, label="裏づけが確認できない情報　②",
+    dict(n=10, label="事実の裏付けは？②",
          head=["「子会社が返金を受けた」"], sub="ただし、記録は「子会社→本社」の送金だけ",
          body=[("外部から実際に回収したことを示す記録は、見つかりません。", False)]),
-    dict(n=11, label="裏づけが確認できない情報　③",
+    dict(n=11, label="事実の裏付けは？③",
          head=["「コンサルに相談した」"], sub="ただし、何を相談したのかが分からない",
          body=[("「違反ではない」という結論だけが伝えられ、やりとりは記録にありません。", False)]),
-    dict(n=12, label="再通報と新たな問題",
+    dict(n=12, label="新たな問題",
          head=["『解決済み』と", "だけ伝えられた"],
          body=[("不正の有無がどちらなのかすら、判然としないままでした。", True)]),
 ]
@@ -135,12 +135,31 @@ def draw_segs(draw, x, y, segs, gfont):
         draw.text((cx, y), text, font=gfont, fill=color)
         cx += draw.textlength(text, font=gfont)
 
+LABEL_FONT = os.path.join(FONT_DIR, "ShipporiMincho-Bold.ttf")  # 分類名：見出しと同じ明朝の太字
+LABEL_ANGLE = 5  # 分類名の傾き（度、右上がり）。付箋・判子のような軽い傾き
+
+def make_label(text, size, max_w):
+    """分類名（朱色・明朝太字・少し右上がり）の画像を作って返す（RGBA、余白なしに切り詰め済み）。
+    幅がmax_wを超える場合は文字を縮めて収める"""
+    tmp = ImageDraw.Draw(Image.new("RGB", (1, 1)))
+    f = font(LABEL_FONT, size)
+    while tmp.textlength(text, font=f) > max_w and size > 40:
+        size -= 2
+        f = font(LABEL_FONT, size)
+    w = int(tmp.textlength(text, font=f)) + 20
+    h = int(size * 1.5)
+    layer = Image.new("RGBA", (w, h), (255, 255, 255, 0))
+    ImageDraw.Draw(layer).text((10, int(size * 0.2)), text, font=f, fill=STAMP)
+    rot = layer.rotate(LABEL_ANGLE, expand=True, resample=Image.BICUBIC)
+    return rot.crop(rot.getbbox())
+
 def render(slide, variant, out_path):
     if variant == "mobile":
         W, H = 1200, 675
         left = 96
-        top = 64
-        label_size, head_size, sub_size, body_size, wm_size = 36, 76, 36, 46, 24
+        top = 56
+        label_size, head_size, sub_size, body_size, wm_size = 68, 72, 34, 44, 24
+        gap_label = 30
         bar_w, bar_gap = 8, 28
         gap_label_head, gap_head_sub, gap_head_body, gap_sub_body = 28, 16, 44, 28
         head_lh, body_lh = 1.4, 1.6
@@ -150,7 +169,8 @@ def render(slide, variant, out_path):
         W, H = 1600, 900
         left = 176
         top = 150
-        label_size, head_size, sub_size, body_size, wm_size = 38, 86, 38, 46, 26
+        label_size, head_size, sub_size, body_size, wm_size = 84, 86, 38, 46, 26
+        gap_label = 44
         bar_w, bar_gap = 8, 32
         gap_label_head, gap_head_sub, gap_head_body, gap_sub_body = 36, 20, 52, 32
         head_lh, body_lh = 1.4, 1.7
@@ -160,7 +180,6 @@ def render(slide, variant, out_path):
     img = Image.new("RGB", (W, H), CARD)
     draw = ImageDraw.Draw(img)
 
-    f_label = font(MINCHO, label_size)
     f_head = font(MINCHO, head_size)
     f_sub = font(GOTHIC, sub_size)
     f_body = font(GOTHIC, body_size)
@@ -170,19 +189,20 @@ def render(slide, variant, out_path):
     body_lines = wrap_runs(slide["body"], f_body, max_body_w, draw)
 
     # ブロック全体の高さを先に計算（縦中央寄せ用）
-    h_label = int(label_size * 1.2)
     h_head = int(head_size * head_lh) * len(slide["head"])
     h_sub = int(sub_size * 1.3) if slide.get("sub") else 0
     h_body = int(body_size * body_lh) * len(body_lines)
-    total_h = (h_label + gap_label_head + h_head
+    total_h = (h_head
                + (gap_head_sub + h_sub if slide.get("sub") else 0)
                + (gap_sub_body if slide.get("sub") else gap_head_body) + h_body)
 
-    y = (H - total_h) // 2 if vcenter else top
-
-    # ラベル
-    draw.text((left, y), slide["label"], font=f_label, fill=STAMP)
-    y += h_label + gap_label_head
+    # 分類名は本文ブロックの上に置き、本文と同じ左端（縦棒の位置）にそろえる。
+    # Web用は「分類名＋本文」をまとめて縦中央寄せ、スマホ用は上から詰める
+    lab = make_label(slide["label"], label_size, int(W * 0.6))
+    block_h = lab.size[1] + gap_label + total_h
+    y = (H - block_h) // 2 - 10 if vcenter else top
+    img.paste(lab, (left - 4, y), lab)
+    y += lab.size[1] + gap_label
 
     # 見出し（縦棒＋本文）
     head_top = y
