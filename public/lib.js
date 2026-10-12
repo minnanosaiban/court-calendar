@@ -71,6 +71,14 @@ window.CC = (function(){
     return escapeHtml(text)
       + ` <a class="jlink" href="${escapeAttr(m[1])}" target="_blank" rel="noopener" title="外部サイトを見る" aria-label="外部サイトを見る"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>`;
   }
+  // 報道・掲載用：文字そのものをリンクにする（アイコンだけだと薄くて見落とされるため）。URLが無い行はそのまま文字
+  function linkifyText(s){
+    const raw = String(s||"");
+    const m = raw.match(/[\s　](https?:\/\/\S+)$/);
+    if(!m) return escapeHtml(raw);
+    const text = raw.slice(0, m.index).trim();
+    return `<a class="plink-text" href="${escapeAttr(m[1])}" target="_blank" rel="noopener">${escapeHtml(text)}<i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>`;
+  }
   function cssEsc(s){ return String(s).replace(/"/g,'\\"'); }
   function jpDate(s){ const d=parseYmd(s); return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${WD[d.getDay()]}）`; }
   function dotDate(s){ return s ? s.replace(/-/g,".") : ""; }
@@ -615,7 +623,7 @@ window.CC = (function(){
     const plaintiffRow = factRow("原告", partyNameHtml(c.plaintiffName)+partyLinksHtml(c.plaintiffLinks));
     const defendantRow = factRow("被告", partyNameHtml(c.defendantName)+partyLinksHtml(c.defendantLinks));
     const judgeRow = factRow("裁判官", c.judge?courtLinesHtml(c.judge):"");
-    const pressRow = factRow("掲載", c.press.length?`<ul class="pts">${c.press.map(line=>`<li>${linkify(line)}</li>`).join("")}</ul>`:"");
+    const pressRow = factRow("掲載", c.press.length?`<ul class="pts">${c.press.map(line=>`<li>${linkifyText(line)}</li>`).join("")}</ul>`:"");
     const facts1 = nextRow+caseNoRow+pointsRow+plaintiffRow+defendantRow+judgeRow+pressRow;
 
     // 掲示板・事件本体（dcard）は、1つの塊として続けて出す（箱の中に箱、を解消するため）。
