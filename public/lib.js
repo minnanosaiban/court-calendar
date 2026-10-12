@@ -493,14 +493,67 @@ window.CC = (function(){
     // 本文と同じ列幅に収める（.gal-single、2026-09-05）。フルブリードのままだと1枚だけ
     // 極端に大きく見えてしまっていた（複数枚のときはSwiperのslidesPerView指定で1枚あたりの
     // 幅が自然に抑えられるが、1枚だけの場合はSwiperを使わないためこの抑えが効かない）
-    if(imgs.length===1) return `<div class="gal gal-single">${itemHtml(imgs[0])}</div>`;
+    // スライドをPDFにして保存するボタン（ギャラリーの直下、2026-10-12）
+    const pdfBtn = `<p class="gal-pdf"><button type="button" class="btn" data-galpdf="${escapeAttr(caseId)}"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i><span class="zlabel">スライドをPDFでダウンロード</span></button></p>`;
+    if(imgs.length===1) return `<div class="gal gal-single">${itemHtml(imgs[0])}</div>` + pdfBtn;
     const slides = imgs.map(im=>`<div class="swiper-slide">${itemHtml(im)}</div>`).join("");
     return `<div class="gal swiper" data-gal="${escapeAttr(caseId)}">
       <div class="swiper-wrapper">${slides}</div>
       <div class="swiper-pagination"></div>
       <button type="button" class="gal-nav gal-prev" aria-label="前のスライド"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
       <button type="button" class="gal-nav gal-next" aria-label="次のスライド"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
-    </div>`;
+    </div>` + pdfBtn;
+  }
+  // スライド画像を1枚1ページ（画像の縦横比のまま）のPDFにして保存する。jsPDFは押されたときだけCDNから読む。
+  // 画像は同一オリジンの /files/ から取る（非公開事件のURLには?key=が埋め込み済み）。
+  // webp等でも確実に入るよう、一度canvasでJPEGにしてから貼る
+  const JSPDF_SRC = "https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js";
+  function loadJsPdf(){
+    if(window.jspdf) return Promise.resolve();
+    return new Promise((res, rej)=>{
+      const s = document.createElement("script");
+      s.src = JSPDF_SRC; s.onload = ()=>res(); s.onerror = ()=>rej(new Error("PDF作成用の部品を読み込めませんでした。通信環境をご確認ください"));
+      document.head.appendChild(s);
+    });
+  }
+  async function imageToJpeg(url){
+    const res = await fetch(url);
+    if(!res.ok) throw new Error("画像の取得に失敗しました");
+    const bmp = await createImageBitmap(await res.blob());
+    const cv = document.createElement("canvas");
+    cv.width = bmp.width; cv.height = bmp.height;
+    const ctx = cv.getContext("2d");
+    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, cv.width, cv.height);
+    ctx.drawImage(bmp, 0, 0);
+    return { data: cv.toDataURL("image/jpeg", 0.9), w: cv.width, h: cv.height };
+  }
+  async function galleryPdf(caseId, btn){
+    const c = caseById(caseId);
+    const imgs = caseImages(caseId);
+    if(!imgs.length) return;
+    const label = btn.querySelector(".zlabel");
+    const orig = label ? label.textContent : "";
+    btn.disabled = true;
+    try{
+      if(label) label.textContent = "準備中…";
+      await loadJsPdf();
+      let doc = null;
+      for(let i=0;i<imgs.length;i++){
+        if(label) label.textContent = `作成中… ${i+1}/${imgs.length}`;
+        const im = await imageToJpeg(imgs[i].webUrl || imgs[i].url);
+        // 1ページ＝画像の大きさ（幅297mm基準）。余白なしで画像をそのまま敷く
+        const pw = 297, ph = pw * im.h / im.w, orient = pw >= ph ? "l" : "p";
+        if(!doc) doc = new window.jspdf.jsPDF({ orientation: orient, unit: "mm", format: [pw, ph] });
+        else doc.addPage([pw, ph], orient);
+        doc.addImage(im.data, "JPEG", 0, 0, pw, ph);
+      }
+      doc.save(`${sanitizeFileName(c ? c.name : "スライド")}_スライド.pdf`);
+    }catch(err){
+      alert("PDFを作成できませんでした：" + (err && err.message || err));
+    }finally{
+      btn.disabled = false;
+      if(label) label.textContent = orig;
+    }
   }
   // Swiperの初期化（2枚以上のときだけ .gal.swiper が出るので、それだけを拾う）。
   // 設定値はhotline側（docs/js/qa-carousel.js）とそろえた：中央寄せ・ループ・自動送り、
@@ -1060,6 +1113,9 @@ window.CC = (function(){
   function wireCaseDetail(container, caseId){
     const rerender=()=>renderCaseDetail(container, caseId);
     container.querySelectorAll("[data-gal]").forEach(gal=>wireGallery(gal));
+    container.querySelectorAll("[data-galpdf]").forEach(b=>{
+      b.addEventListener("click",()=> galleryPdf(b.dataset.galpdf, b));
+    });
     // 画像・期日・資料の追加・編集・並び替えは、すべて事件情報の編集ページ（case-edit.html）への
     // 普通のリンクになった（2026-08-27）。ここでのJSでの配線は不要
     container.querySelectorAll("[data-like]").forEach(b=>{

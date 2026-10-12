@@ -1137,3 +1137,6 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
   .cal-block2{display:block}
   .cell .n{width:26px;height:26px;font-size:.8rem}
 }
+/* スライドをPDFで保存するボタン（ギャラリー直下） */
+.gal-pdf{margin:-8px 0 24px;text-align:center}
+.gal-pdf .btn:disabled{opacity:.5;cursor:default}
