@@ -1616,13 +1616,13 @@ window.CC = (function(){
         cPresenterLoginStatus.textContent="ログインを外しました。";
       }catch(err){ cPresenterLoginStatus.textContent="外せませんでした：" + (err && err.message || err); }
     });
-    // ---- 期日案内（JPEGのみ。事件につき1枚・差し替え専用。選ぶとすぐ反映される＝presenterアイコンと同じ挙動） ----
+    // ---- 期日案内（JPEG・PNG。事件につき1枚・差し替え専用。選ぶとすぐ反映される＝presenterアイコンと同じ挙動） ----
     function updateNoticeFieldUI(c){
       const has = !!(c && c.noticeUrl);
       cNoticeRemove.hidden = !has;
       cNoticeNote.innerHTML = (has
         ? `いまの案内：<a href="${escapeAttr(c.noticeUrl)}" target="_blank" rel="noopener">${escapeHtml(c.noticeFileName||"ファイル")}</a>　ファイルを選ぶと差し替わります。`
-        : `JPEG、20MBまで。支援者向けの「裁判期日一覧のご案内」のようなチラシを想定しています。選ぶとすぐ反映され（「保存」を待ちません）、事件ページとトップに埋め込み表示されます。`)
+        : `JPEG・PNG、20MBまで。支援者向けの「裁判期日一覧のご案内」のようなチラシを想定しています。選ぶとすぐ反映され（「保存」を待ちません）、事件ページとトップに埋め込み表示されます。`)
         + `<a id="cNoticeRemove" class="cicon-remove" ${has?"":"hidden"}>外す</a>`;
       // innerHTML で作り直したので、id="cNoticeRemove" は同じidの新しい要素に置き換わっている。参照を取り直して配線する
       const removeLink = $("cNoticeRemove");
@@ -1642,7 +1642,7 @@ window.CC = (function(){
     cNoticeFile.addEventListener("change", async ()=>{
       const f=cNoticeFile.files[0];
       if(!f || !edCaseId) return;
-      if(f.type!=="image/jpeg"){ alert("期日案内は JPEG のみ登録できます。"); cNoticeFile.value=""; return; }
+      if(f.type!=="image/jpeg" && f.type!=="image/png"){ alert("期日案内は JPEG・PNG のみ登録できます。"); cNoticeFile.value=""; return; }
       if(f.size>20*1024*1024){ alert("ファイルは20MBまでです。"); cNoticeFile.value=""; return; }
       const fd=new FormData(); fd.append("file", f, f.name);
       cNoticeStatus.hidden=false; cNoticeStatus.textContent="アップロード中…";

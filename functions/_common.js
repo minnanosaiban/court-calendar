@@ -403,10 +403,10 @@ export async function resolveCaseId(env, body, email) {
   return found ? found.id : null;
 }
 
-// ---- 期日案内（支援者が作る一覧チラシ。JPEGのみ。1事件につき1枚・差し替え専用） ----
+// ---- 期日案内（支援者が作る一覧チラシ。JPEG・PNG。1事件につき1枚・差し替え専用） ----
 // 2026-08-28：PDF・PNGも受け付けていたが、ファイルサイズが小さく済むJPEGのみに絞った。
-// 既存データにPDF・PNGの期日案内が残っている場合、表示（noticeHtml）は引き続き対応する（新規アップロードのみ制限）
-export const NOTICE_MIMES = { "image/jpeg": "jpg" };
+// その後、PNGを再び許可した（PDFは新規アップロード不可のまま。既存のPDFの表示（noticeHtml）は引き続き対応する）
+export const NOTICE_MIMES = { "image/jpeg": "jpg", "image/png": "png" };
 export const NOTICE_MAX_BYTES = 20 * 1024 * 1024;
 
 // ---- 事件のTwitterカード（OGP画像。未設定なら card.png.js が自動生成する） ----
