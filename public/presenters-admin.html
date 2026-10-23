@@ -90,6 +90,10 @@
       ? `<a id="paLoginRemove" style="cursor:pointer;text-decoration:underline;margin-left:8px">ログインを外す</a>` : "";
     return `<div class="ieditor">
       <div class="field">
+        <a class="pillbtn" href="case-edit.html?presenter=${encodeURIComponent(p.id)}"><i class="bi bi-plus-lg" aria-hidden="true"></i> このニックネームで事件を追加</a>
+        <p class="fnote">ログインを発行していなくても、運営のパスワードで登録できます。</p>
+      </div>
+      <div class="field">
         <label>ニックネーム</label>
         <div class="cicon-row">
           <input type="text" id="paNickname" value="${CC.escapeAttr(p.nickname)}">
