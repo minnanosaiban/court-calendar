@@ -2069,7 +2069,9 @@ window.CC = (function(){
         }
         $("cDelete").style.display="none";
         // 本人が作るときはニックネームを自分に固定する（サーバー側でも自分名義に強制している）
-        fillCaseForm({ presenterId: edIsAdmin ? "" : (me.presenterId||"") });
+        // 運営が presenters-admin から来たときは ?presenter= で、作ったばかりのニックネームを選んだ状態にする
+        const preP = edIsAdmin ? presenterById(params.get("presenter")||"") : null;
+        fillCaseForm({ presenterId: edIsAdmin ? (preP ? preP.id : "") : (me.presenterId||"") });
       }
       renderImgList(); renderEvList(); renderMatList();
       // 掲載レベルの決定（2026-09-01）。期日・資料等への深いリンク（?open=）で来たのでなければ、

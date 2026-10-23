@@ -41,7 +41,7 @@
         <input type="text" id="paNewNickname" placeholder="ニックネーム（例：〇〇支援の会）">
         <button type="button" class="btn-save btn-round" id="paNewSave">作成</button>
       </div>
-      <p class="fnote">事件に紐づけるのは、その事件の「事件情報を編集」画面から行います。ここではニックネームの"箱"だけを先に作れます。</p>
+      <p class="fnote">「作成」を押すと、そのニックネームで事件を登録する画面にそのまま進みます（ログインの発行は不要です）。ログインは、あとで下の一覧から発行できます。</p>
     </div>
 
     <div class="card" style="margin-top:16px;padding:20px 22px">
@@ -277,10 +277,10 @@
     const nickname = $("paNewNickname").value.trim();
     if(!nickname){ alert("ニックネームを入力してください。"); return; }
     try{
-      await CC.apiCreatePresenter({nickname});
-      $("paNewNickname").value="";
-      await CC.reloadPresenters();
-      render();
+      const created = await CC.apiCreatePresenter({nickname});
+      // 運営が最初にやることは、そのニックネームで事件を登録すること。ログインの発行を待たず、
+      // そのまま事件の追加画面へ進む（ニックネームは選択済みの状態で開く）
+      location.href = "case-edit.html?presenter=" + encodeURIComponent(created.id);
     }catch(err){ alert(CC.saveErr(err)); }
   });
 
