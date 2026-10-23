@@ -196,10 +196,14 @@
         if(nb) return 1;
         return a.name.localeCompare(b.name,"ja");
       });
-    // 「事件を追加」はご本人としてログイン中のときだけ出す（2026-09-26修正：運営がこのページを見ている
-    // ときも出ていたが、リンク先の事件追加フォームはこの問題提起人には紐付かない＝運営には無意味なので外した。
-    // 運営が事件を追加するときは、他の入口から普通に追加すればよい）
-    const canAdd = CC.me.presenterId===presenterId;
+    // 「事件を追加」はご本人としてログイン中のとき、または運営（編集パスワード）のときに出す。
+    // 運営の場合は ?presenter= でこの問題提起人を選んだ状態の追加フォームを開く
+    // （以前は運営だと紐付かなかったので外していたが、紐付けられるようにしたため復活。
+    // ログインを発行する前でも、運営が最初の1件を登録できる）
+    const isSelf = CC.me.presenterId===presenterId;
+    const canAdd = isSelf || CC.me.canWrite;
+    const addLink = document.querySelector("#phAddCase a");
+    addLink.href = isSelf ? "case-edit.html" : "case-edit.html?presenter=" + encodeURIComponent(presenterId);
     document.getElementById("phAddCase").hidden = !canAdd;
     // 0件のときは、追加できる人には上の「＋ 事件を追加」へ視線を導く（初回ログイン直後の人向け）
     clistEl.innerHTML = list.length ? list.map(rowHtml).join("")
