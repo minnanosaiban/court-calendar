@@ -787,7 +787,8 @@ window.CC = (function(){
       const hasArgs = (ev.plaintiffArgument&&ev.plaintiffArgument.length) || (ev.defendantArgument&&ev.defendantArgument.length);
       const state = ev.date<today ? "past" : (next&&ev.id===next.id ? "next" : "future");
       const expandable = own.length>0 || hasArgs;
-      const place=[ev.court,ev.place].filter(Boolean).join(" ");
+      // 正式名称（東京地方裁判所）だと1行に収まらず2段になるので、タイムラインでは略称（東京地裁）にする
+      const place=[courtAbbr(ev.court),ev.place].filter(Boolean).join(" ");
       const closed = ev.open===false ? `<span class="round-closed">非公開・その他手続き</span>` : "";
       const reportNote = ev.reportMeeting ? `<span class="round-note">期日報告会あり</span>` : "";
       const editLink = canEditCase(caseId) ? `<a class="round-edit" href="case-edit.html?id=${encodeURIComponent(caseId)}&open=ev:${encodeURIComponent(ev.id)}">編集</a>` : "";
