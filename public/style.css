@@ -625,6 +625,9 @@ a{color:inherit}
    中央寄せする作りなので、ただ置くと名前の下で（.selfbarのように右端ではなく）列の中央に
    浮いて見えていた。事件ページの「編集」と同じく右端に揃える（2026-09-22） */
 #phAddCase{display:flex;justify-content:flex-end}
+/* display:flex が hidden 属性（UA の display:none）に勝ってしまい、ログインしていない人にも
+   「事件を追加」が出ていた。hidden のときは確実に隠す（2026-10-24） */
+#phAddCase[hidden]{display:none}
 
 /* ---- タグ（事件詳細の下・「事件をさがす」の絞り込みと各行） ---- */
 .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}

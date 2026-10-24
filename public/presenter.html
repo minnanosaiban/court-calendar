@@ -109,7 +109,7 @@
     // 編集リンクは、運営か、この問題提起人本人としてログイン中のときだけ出す
     // （カードの外枠は「開く」のクリック対象なので、中のリンクは <a> クリックで見分けて素通しする）
     const editLink = CC.canEditCase(c.id)
-      ? `<p class="qact"><a href="case-edit.html?id=${encodeURIComponent(c.id)}">＋ 事件情報を編集</a></p>` : "";
+      ? `<p class="qact"><a href="case-edit.html?id=${encodeURIComponent(c.id)}&open=ev:new">＋ 期日を追加</a>　<a href="case-edit.html?id=${encodeURIComponent(c.id)}">＋ 事件情報を編集</a></p>` : "";
     // このページはすでに上でその問題提起人のアイコンを大きく出しているので、カードごとには
     // 繰り返さない（同じ人の事件しか並ばないため、アイコンを重ねても見分けの役に立たず、
     // むしろ画面がアイコンだらけになる。2026-08-26）
