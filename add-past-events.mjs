@@ -8,14 +8,14 @@ if (!KEY) { console.error("環境変数 EDIT_KEY（編集パスワード）を�
 
 const T = "東京地方裁判所";
 const events = [
-  { date: "2024-12-25", time: "15:30", type: "第1回口頭弁論", place: "522号法廷", reportMeeting: false },
-  { date: "2025-03-12", time: "15:30", type: "第2回口頭弁論", place: "522号法廷" },
-  { date: "2025-06-12", time: "14:00", type: "第3回口頭弁論", place: "103号法廷" },
-  { date: "2025-10-09", time: "11:00", type: "第4回口頭弁論", place: "103号法廷" },
-  { date: "2025-12-23", time: "13:30", type: "第5回口頭弁論", place: "103号法廷" },
-  { date: "2026-03-19", time: "14:00", type: "第6回口頭弁論", place: "103号法廷" },
-  { date: "2026-05-12", time: "15:00", type: "第7回口頭弁論", place: "103号法廷" },
-  { date: "2026-06-23", time: "10:30", type: "第8回口頭弁論", place: "103号法廷" },
+  { date: "2024-12-25", time: "15:30", type: "第1回弁論", place: "522号法廷", reportMeeting: false },
+  { date: "2025-03-12", time: "15:30", type: "第2回弁論", place: "522号法廷" },
+  { date: "2025-06-12", time: "14:00", type: "第3回弁論", place: "103号法廷" },
+  { date: "2025-10-09", time: "11:00", type: "第4回弁論", place: "103号法廷" },
+  { date: "2025-12-23", time: "13:30", type: "第5回弁論", place: "103号法廷" },
+  { date: "2026-03-19", time: "14:00", type: "第6回弁論", place: "103号法廷" },
+  { date: "2026-05-12", time: "15:00", type: "第7回弁論", place: "103号法廷" },
+  { date: "2026-06-23", time: "10:30", type: "第8回弁論", place: "103号法廷" },
   { date: "2026-08-21", time: "10:15", type: "証人尋問（1日目）", place: "103号法廷" },
   { date: "2026-08-24", time: "13:25", type: "証人尋問（2日目）", place: "103号法廷" },
 ];
