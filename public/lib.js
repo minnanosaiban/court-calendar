@@ -2369,7 +2369,7 @@ window.CC = (function(){
           <datalist id="evTypeList">${EVENT_TYPES.map(t=>`<option value="${escapeAttr(t)}">`).join("")}</datalist>
         </div>
         <div class="two">
-          <div class="field"><label>裁判所</label><input type="text" class="ef-court" value="${escapeAttr(e.court)}" placeholder="例）東京地方裁判所"></div>
+          <div class="field"><label>裁判所</label><input type="text" class="ef-court" value="${escapeAttr(e.court)}" placeholder="例）東京地裁"></div>
           <div class="field"><label>法廷</label><input type="text" class="ef-place" value="${escapeAttr(e.place)}" placeholder="例）610号法廷"></div>
         </div>
         <div class="field" data-tier-min="detail"><label>原告の主張</label><span class="lhint">1行に1項目</span><textarea class="ef-plaintiff" placeholder="例）不開示決定の取消しを求める">${escapeHtml((e.plaintiffArgument||[]).join("\n"))}</textarea></div>
