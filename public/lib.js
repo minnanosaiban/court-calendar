@@ -274,11 +274,14 @@ window.CC = (function(){
   }
   // ---- 原告・被告名：1行目=本人の名前、2行目以降は「代理人　〇〇」のような補足（任意・改行を
   // 増やすだけで複数行書ける）。2行目以降はひとまわり小さく添える ----
-  function partyNameHtml(raw){
+  // inlineHtml（当事者のリンクアイコン）は、1行目の本人の名前のすぐ隣に置く。代理人などの2行目以降より
+  // 下に回ってしまうと、誰のリンクか分かりにくいため。名前が空のときはアイコンだけを出す
+  function partyNameHtml(raw, inlineHtml){
     const lines = String(raw||"").split("\n").map(s=>s.trim()).filter(Boolean);
-    if(!lines.length) return "";
+    const extra = inlineHtml || "";
+    if(!lines.length) return extra;
     return lines.map((line,i)=> i===0
-      ? escapeHtml(line)
+      ? escapeHtml(line) + extra
       : `<div class="party-sub">${escapeHtml(line)}</div>`
     ).join("");
   }
@@ -620,8 +623,8 @@ window.CC = (function(){
       : "";
     const caseNoRow = c.caseNoPublic ? factRow("事件番号", courtLinesHtml(c.caseNo)) : "";
     const pointsRow = factRow("争点", points?`<ul class="pts">${points}</ul>`:"");
-    const plaintiffRow = factRow("原告", partyNameHtml(c.plaintiffName)+partyLinksHtml(c.plaintiffLinks));
-    const defendantRow = factRow("被告", partyNameHtml(c.defendantName)+partyLinksHtml(c.defendantLinks));
+    const plaintiffRow = factRow("原告", partyNameHtml(c.plaintiffName, partyLinksHtml(c.plaintiffLinks)));
+    const defendantRow = factRow("被告", partyNameHtml(c.defendantName, partyLinksHtml(c.defendantLinks)));
     const judgeRow = factRow("裁判官", c.judge?courtLinesHtml(c.judge):"");
     const pressRow = factRow("掲載", c.press.length?`<ul class="pts">${c.press.map(line=>`<li>${linkifyText(line)}</li>`).join("")}</ul>`:"");
     const facts1 = nextRow+caseNoRow+pointsRow+plaintiffRow+defendantRow+judgeRow+pressRow;
