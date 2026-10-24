@@ -2341,7 +2341,7 @@ window.CC = (function(){
       $("evList").innerHTML = html;
       $("evCount").textContent = evs.length + "件";
     }
-    const EVENT_TYPES = ["口頭弁論","弁論準備","進行協議","和解","尋問","当事者尋問","判決言渡","控訴審 第1回","提出期限（書面）"];
+    const EVENT_TYPES = ["弁論","弁論準備","進行協議","和解","尋問","当事者尋問","判決言渡","控訴審 第1回","提出期限（書面）"];
     function evEditorHtml(ev){
       const isNew = !ev;
       let e = ev;
@@ -2365,7 +2365,7 @@ window.CC = (function(){
           <div class="field"><label>期日 <span class="reqmark">＊</span></label><input type="date" class="ef-date" value="${escapeAttr(e.date)}"></div>
           <div class="field"><label>時刻</label><input type="time" class="ef-time" value="${escapeAttr(e.time)}"></div>
         </div>
-        <div class="field"><label>手続</label><input type="text" class="ef-type" list="evTypeList" value="${escapeAttr(e.type)}" placeholder="例）第3回口頭弁論">
+        <div class="field"><label>手続</label><input type="text" class="ef-type" list="evTypeList" value="${escapeAttr(e.type)}" placeholder="例）第3回弁論">
           <datalist id="evTypeList">${EVENT_TYPES.map(t=>`<option value="${escapeAttr(t)}">`).join("")}</datalist>
         </div>
         <div class="two">
