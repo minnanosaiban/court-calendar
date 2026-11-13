@@ -42,6 +42,7 @@ export async function onRequestGet({ request, env }) {
   function cardUrlFor(path) {
     const u = new URL(`/api/presenters/${encodeURIComponent(p.id)}/${path}`, request.url);
     if (ver) u.searchParams.set("v", ver);
+    u.searchParams.set("d", "2"); // 横長カードを「傍聴案内」版にした（2026-11-13）。デザイン変更時に上げる
     return u.toString();
   }
   const cardWideUrl = cardUrlFor("card.png");

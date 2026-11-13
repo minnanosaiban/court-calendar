@@ -10,7 +10,7 @@ import {
   h, BG, PAPER, RING, GO_R, GO_M, INK, RED, GRAY,
   SITE_LABEL, MESSAGE, stamp, perforation, cheerSection,
   loadFonts, fontList, loadPresenterIconDataUri, overrideResponse,
-  cardHeadlineFrom,
+  cardHeadlineFrom, buildNoticeTree,
   ImageResponse, cache,
 } from "../../cases/_card.js";
 import { loadPresenterCardData, presenterSubLine } from "../_card.js";
@@ -85,9 +85,14 @@ export async function onRequestGet(context) {
     message: loaded.row.card_message || MESSAGE,
   };
 
+  // 次回期日があるときは事件カードと同じ「傍聴案内」デザイン（事件名＝その期日の事件）。
+  // 無いときは従来の応援の面
+  const tree = loaded.nextEvent
+    ? buildNoticeTree({ name: loaded.nextEvent.case_name || "", nextEvent: loaded.nextEvent })
+    : buildTree(data);
   const fonts = await loadFonts(env, request);
   cache.setExecutionContext(context);
-  const imgRes = await ImageResponse.async(buildTree(data), {
+  const imgRes = await ImageResponse.async(tree, {
     width: 1200, height: 630, format: "png",
     fonts: fontList(fonts),
   });

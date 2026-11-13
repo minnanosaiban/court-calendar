@@ -17,7 +17,7 @@ export async function loadPresenterCardData(env, id, request) {
               card_r2_key, card_square_r2_key, card_headline, card_sub, card_message, seo_title
          FROM presenters WHERE id = ?`).bind(id).first(),
     env.DB.prepare(
-      `SELECT e.date, e.time, e.court, e.place
+      `SELECT e.date, e.time, e.court, e.place, e.report_meeting, c.name AS case_name
          FROM events e JOIN cases c ON c.id = e.case_id
         WHERE c.presenter_id = ? AND (c.view_key IS NULL OR c.view_key = '') AND e.date >= ?
         ORDER BY e.date ASC, e.time ASC LIMIT 1`
