@@ -274,7 +274,7 @@ a{color:inherit}
 /* 一番上のバー（全ページ共通。2026-09-10）。見出し（応援傍聴ナビ）より上に、
    ログインの入り口／ログイン中の目印だけを右寄せで置く。罫線は引かず余白で切る */
 .topbar{display:flex;align-items:center;justify-content:flex-end;gap:8px;
-  font-size:.85rem;color:var(--mut);margin-bottom:12px;min-height:36px}
+  font-size:.8rem;color:var(--mut);margin-bottom:12px;min-height:36px}
 .topbar a{cursor:pointer;color:var(--mut);text-decoration:underline;text-underline-offset:3px}
 .topbar a:hover{color:var(--ink)}
 .topbar .cicon,.topbar .cicon-ph{width:36px;height:36px}
@@ -361,7 +361,7 @@ a{color:inherit}
 .jlink{display:inline-block;font-size:.86rem;color:var(--faint);text-decoration:none;vertical-align:-1px}
 .pts .bi{font-size:.8em}
 /* 原告・被告：1行目は本人の名前と同じ並び、2行目以降（代理人など）はひとまわり小さく添える */
-.party-sub{font-size:.85em;color:var(--mut);margin-top:2px}
+.party-sub{font-size:.8rem;color:var(--mut);margin-top:2px}
 
 /* ---- 期日案内（支援者が作る一覧チラシの埋め込み。PDFまたは画像。2026-08-27） ----
    PDFはブラウザのネイティブビューアで表示（拡大・ページ送りはそちら任せ）。
@@ -470,10 +470,6 @@ a{color:inherit}
   background:#fff;border:1px solid #e6e4dd;border-radius:999px;padding:4px 12px;
   cursor:pointer;text-decoration:none;line-height:1.5;font-family:inherit}
 .btn:hover{border-color:#c9c6bc}
-/* 資料のPDF・.md・要約ボタンは、指で押す主役なので他の.btn（.7rem・27px）より大きくする（2026-11-15。
-   .8rem＝キャプションの段・高さ約36px）。.tagなど他の小さなボタンは変えない */
-.btns .btn{font-size:.8rem;padding:8px 16px}
-.btns .btn .bi{font-size:.9rem}
 /* アイコンは flex アイテムなので line-height がそのまま高さになる。1にしないと
    文字より背が高くなり、同じ .7rem の .tag と高さがそろわない */
 .btn .bi{font-size:.8rem;line-height:1;color:var(--mut)}
@@ -978,7 +974,7 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 /* 事件ページの先頭に置く、非公式・AI要約・原典確認の注意書き。アイコンも枠も付けず、カードの左端に
    そろえた小さな補助文字だけにする（--mut。読み飛ばされにくい濃さ）。中央揃え。上は
    「事件をさがすに戻る」との間を広めにあける（上107px・下16px。黒いバー下〜ロゴ上の120pxに、ボタン下〜注意書きの見た目をそろえた） */
-.unofficial-note{color:var(--mut);font-size:.75rem;line-height:1.7;letter-spacing:.04em;text-align:center;margin:107px 0 16px}
+.unofficial-note{color:var(--mut);font-size:.8rem;line-height:1.7;letter-spacing:.04em;text-align:center;margin:107px 0 16px}
 /* スマホ幅（.mdateなどと同じ559.98px境界）では折り返すので、中央ではなく左揃えにする */
 @media(max-width:559.98px){.unofficial-note{text-align:left}}
 .fnote a{text-underline-offset:3px}
