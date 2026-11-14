@@ -409,8 +409,14 @@ a{color:inherit}
 /* 期日の行（○の隣）は型スケールの段に乗せる（2026-11-15）：期日の名前＝小見出し1rem、日付＝本文.9rem（黒）、
    法廷＝キャプション.8rem（灰、.tl-meta）。以前は日付が.8remの灰色、名前が.9remで、直下の主張カード（.9rem）と
    同じ大きさだったため、展開すると期日の行が中身に埋もれてタイムラインに見えなかった */
-.tl-date{color:var(--ink);font-size:.9rem;font-variant-numeric:tabular-nums}
-.tl-type{font-family:"Shippori Mincho",serif;font-weight:600;font-size:1rem}
+.tl-date{color:var(--mut);font-size:.8rem;font-variant-numeric:tabular-nums}
+.tl-type{font-family:"Shippori Mincho",serif;font-weight:600}
+/* 上の大きさはPC幅（560px以上）だけ。スマホは元の大きさ（日付.8rem・灰、名前.9rem）のまま。
+   スマホは1画面に入る量が少なく、節が縦に並んで見えにくい問題はPC幅のもの（2026-11-15） */
+@media(min-width:560px){
+  .tl-date{color:var(--ink);font-size:.9rem}
+  .tl-type{font-size:1rem}
+}
 .tl-item.next .tl-type{color:var(--stamp)}
 .tl-meta{color:var(--mut);font-size:.8rem}
 /* 期日の行（節）と中身（主張カード・資料）を余白で切り離す（2026-11-15）。展開すると中身が期日の行に
@@ -419,9 +425,16 @@ a{color:inherit}
    スマホ幅は横の余裕が無いので上下の余白だけ */
 .tl-body{margin:16px 0 24px}
 @media(min-width:560px){.tl-body{margin:24px 0 40px;padding-left:32px}}
-/* 折り畳み：期日の行だけ残し、主張・資料は隠す。行間は少し詰める */
-.tl.collapsed .tl-body{display:none}
-.tl.collapsed .tl-item{padding-bottom:12px}
+/* 期日ごとの開け閉め（2026-11-15）：中身のある期日（.xp）は、日付と名前をひとつのボタン（.tl-tog）にして、
+   押すと中身（主張・資料）を開け閉めする。閉じている回（.xp:not(.open)）は中身を隠し、行間を少し詰める。
+   末尾の山形が「押せる」目印で、開くと下向きに回る。枠や線は足さない。上下の padding は押しやすさのため */
+.tl-tog{display:inline-flex;align-items:baseline;gap:12px;background:none;border:none;padding:4px 0;
+  font:inherit;color:inherit;cursor:pointer;text-align:left;line-height:inherit}
+.tl-tog .bi{align-self:center;font-size:.75rem;color:var(--mut);transition:transform .15s ease}
+.tl-item.open .tl-tog .bi{transform:rotate(90deg)}
+.tl-tog:hover .bi{color:var(--ink)}
+.tl-item.xp:not(.open) .tl-body{display:none}
+.tl-item.xp:not(.open){padding-bottom:12px}
 /* 見出し「タイムライン」の下の折り畳み/展開スイッチ */
 .tl-togglerow{margin-top:8px}
 .tl-toggle{display:inline-flex;align-items:center;gap:4px;font-size:.7rem;color:var(--ink);background:#fff;

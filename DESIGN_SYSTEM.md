@@ -20,8 +20,8 @@ hotline の `DESIGN_SYSTEM.md` と同じ位置づけ（今後の手直しで一�
 | サイト名 | **1.8rem** | `.masthead h1`（「応援傍聴ナビ」） |
 | 主見出し | **1.6rem** | `.d-title`（事件名）・`.btitle`（掲示板見出し）・`.home-title` |
 | 節見出し | **1.2rem** | `.lede-title`（裁判について）・`.subhead`（タイムライン・訴訟資料一覧）・`.modal .mhead`（編集モーダル見出し）・`.ctitle`（事件をさがす一覧の事件名）・`.month`（カレンダーの年月） |
-| 小見出し | **1rem** | `.tl-type`（タイムラインの期日の名前＝「第1回弁論」。明朝・太字）・`.presenter-name`（事件名の下の掲載者名）。節の中で、ひとかたまりの頭に立つ文字 |
-| 本文 | **.9rem** | `.d-body`・`.facts`（ファクトシート）・`.pts`（箇条書き）・`.tl-date`（タイムラインの期日の日付。黒）・`.tl-head`（タイムライン）・`.bubble`（掲示板の投稿）・`.board-name`（掲示板の中の事件名）・`.pop-title`（カレンダーpopoverの事件名）・フォームの input/textarea/select・空状態のメッセージ（`.empty-msg`/`.board-empty`/`.u-empty`）など |
+| 小見出し | **1rem** | `.tl-type`（タイムラインの期日の名前＝「第1回弁論」。明朝・太字。PC幅＝560px以上のみ、スマホは.9rem）・`.presenter-name`（事件名の下の掲載者名）。節の中で、ひとかたまりの頭に立つ文字 |
+| 本文 | **.9rem** | `.d-body`・`.facts`（ファクトシート）・`.pts`（箇条書き）・`.tl-date`（タイムラインの期日の日付。PC幅は黒、スマホは.8remの灰色）・`.tl-head`（タイムライン）・`.bubble`（掲示板の投稿）・`.board-name`（掲示板の中の事件名）・`.pop-title`（カレンダーpopoverの事件名）・フォームの input/textarea/select・空状態のメッセージ（`.empty-msg`/`.board-empty`/`.u-empty`）など |
 | キャプション | **.8rem** | 日付・法廷名などのメタ情報（`.tl-meta`・`.mdate`・`.pop-date`・`.ud`/`.um`）・小さい編集/削除リンク（`.d-edit`・`.round-edit`・`.bubble .del`）・`.status`・`.site-footer`・`.fnote` など |
 | ラベル | **.7rem** | 字間を広げた小見出し系（`.minih`・`.sech`・`.msec`）・`.mside-h`・`.tag`・`.btn`（資料の.pdf/.md/要約ボタン）・`.field label`（編集モーダルの各欄名） |
 

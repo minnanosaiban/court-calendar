@@ -785,41 +785,54 @@ window.CC = (function(){
       ${d?`<div class="arg k"><h4>被告の主張</h4><ul>${d}</ul>${argSrcHtml(ev.defendantArgumentModel,ev.defendantArgumentDate)}</div>`:""}
     </div>`;
   }
-  // タイムラインの折り畳み（2026-11-14）。既定は展開。折り畳むと期日の行だけにして、主張・資料は隠す。
-  // 状態は画面の再描画（いいね等）をまたいで保つ
-  let tlCollapsed=false;
+  // タイムラインの開け閉め（2026-11-14に全体の折り畳み、2026-11-15に期日ごとへ変更）。
+  // 中身（主張カード・資料）のある期日だけが開け閉めできる。既定は「いちばん新しい中身のある回」だけを開く：
+  // 開いている1回が見本になり、ほかの回にも同じ中身があると気づいてもらえる。全部閉じると主張カードに
+  // 気づかれず、全部開くと約25画面（スマホ）の縦長になって節が縦に並んだ形に見えないため。
+  // 「すべて展開／すべて折り畳む」で一括も切り替えられる。状態は画面の再描画（いいね等）をまたいで保つ
+  let tlOpen=null;   // 開いている期日のid（Set）。null＝まだ決めていない（最初の描画で既定を入れる）
   function timelineHtml(caseId){
     const rounds=caseEvents(caseId);
     const mats=caseMaterials(caseId);
     const today=todayStr();
     const next=nextEvent(caseId);
+    const hasBody = ev => !!(mats.some(m=>m.eventId===ev.id) || (ev.plaintiffArgument&&ev.plaintiffArgument.length) || (ev.defendantArgument&&ev.defendantArgument.length));
+    const expandables = rounds.filter(hasBody);
+    if(tlOpen===null) tlOpen = new Set(expandables.length ? [expandables[expandables.length-1].id] : []);
+    const allOpen = expandables.length>0 && expandables.every(ev=>tlOpen.has(ev.id));
     const items=rounds.map(ev=>{
       const own=mats.filter(m=>m.eventId===ev.id);
-      const hasArgs = (ev.plaintiffArgument&&ev.plaintiffArgument.length) || (ev.defendantArgument&&ev.defendantArgument.length);
       const state = ev.date<today ? "past" : (next&&ev.id===next.id ? "next" : "future");
-      const expandable = own.length>0 || hasArgs;
+      const expandable = hasBody(ev);
+      const isOpen = expandable && tlOpen.has(ev.id);
       // 正式名称（東京地方裁判所）だと1行に収まらず2段になるので、タイムラインでは略称（東京地裁）にする
       const place=[courtAbbr(ev.court),ev.place].filter(Boolean).join(" ");
       const closed = ev.open===false ? `<span class="round-closed">非公開・その他手続き</span>` : "";
       const reportNote = ev.reportMeeting ? `<span class="round-note">期日報告会あり</span>` : "";
       const editLink = canEditCase(caseId) ? `<a class="round-edit" href="case-edit.html?id=${encodeURIComponent(caseId)}&open=ev:${encodeURIComponent(ev.id)}">編集</a>` : "";
-      return `<li class="tl-item ${state}">
+      // 中身のある期日は、日付と名前をひとつのボタンにして押すと開け閉めできる（末尾の山形が目印。
+      // 開くと下向きに回る）。中身の無い期日は、これまでどおり文字だけ
+      const dateType = `<span class="tl-date">${escapeHtml(jpDate(ev.date))}${ev.time?" "+escapeHtml(ev.time):""}</span><span class="tl-type">${escapeHtml(ev.type||"期日")}</span>`;
+      const headMain = expandable
+        ? `<button type="button" class="tl-tog" data-evtoggle="${escapeAttr(ev.id)}" aria-expanded="${isOpen}">${dateType}<i class="bi bi-chevron-right" aria-hidden="true"></i></button>`
+        : dateType;
+      return `<li class="tl-item ${state}${expandable?" xp":""}${isOpen?" open":""}" data-evid="${escapeAttr(ev.id)}">
         <span class="tl-dot" aria-hidden="true"></span>
         <div class="tl-head">
-          <span class="tl-date">${escapeHtml(jpDate(ev.date))}${ev.time?" "+escapeHtml(ev.time):""}</span>
-          <span class="tl-type">${escapeHtml(ev.type||"期日")}</span>
+          ${headMain}
           <span class="tl-meta">${escapeHtml(place)}${closed}${reportNote}${bookmarkHtml(ev)}${editLink}</span>
         </div>
         ${expandable?`<div class="tl-body">${argsHtml(ev)}${own.map(matBlockHtml).join("")}</div>`:""}
       </li>`;
     }).join("");
-    const tlToggle = rounds.some(ev=>/*中身のある期日があるときだけ*/ mats.some(m=>m.eventId===ev.id) || (ev.plaintiffArgument&&ev.plaintiffArgument.length) || (ev.defendantArgument&&ev.defendantArgument.length))
-      ? `<button type="button" class="tl-toggle" data-tltoggle aria-expanded="${tlCollapsed?"false":"true"}"><i class="bi ${tlCollapsed?"bi-arrows-expand":"bi-arrows-collapse"}" aria-hidden="true"></i>${tlCollapsed?"展開する":"折り畳む"}</button>`
+    // 一括スイッチは、中身のある期日があるときだけ出す
+    const tlToggle = expandables.length
+      ? `<button type="button" class="tl-toggle" data-tltoggle aria-expanded="${allOpen}"><i class="bi ${allOpen?"bi-arrows-collapse":"bi-arrows-expand"}" aria-hidden="true"></i>${allOpen?"すべて折り畳む":"すべて展開"}</button>`
       : "";
     return `<p class="subhead">タイムライン</p>
       ${tlToggle?`<p class="tl-togglerow">${tlToggle}</p>`:""}
       ${canEditCase(caseId)?`<p class="qact"><a href="case-edit.html?id=${encodeURIComponent(caseId)}&open=ev:new">＋ 期日を追加</a></p>`:""}
-      ${rounds.length?`<ol class="tl${tlCollapsed?" collapsed":""}">${items}</ol>`:`<p class="d-body mut">期日はまだ登録されていません。</p>`}`;
+      ${rounds.length?`<ol class="tl">${items}</ol>`:`<p class="d-body mut">期日はまだ登録されていません。</p>`}`;
   }
   function matRowHtml(m, caseId){
     const edit = canEditCase(caseId) ? `<a class="round-edit" href="case-edit.html?id=${encodeURIComponent(caseId)}&open=mat:${encodeURIComponent(m.id)}">編集</a>` : "";
@@ -1145,12 +1158,33 @@ window.CC = (function(){
     });
     // 画像・期日・資料の追加・編集・並び替えは、すべて事件情報の編集ページ（case-edit.html）への
     // 普通のリンクになった（2026-08-27）。ここでのJSでの配線は不要
+    // タイムラインの開け閉め：期日の行のボタン（data-evtoggle）はその回だけ、見出し下のスイッチ
+    // （data-tltoggle）は全部を、ぜんぶ開いていれば閉じ、そうでなければ開く。状態は tlOpen に残す
+    if(!tlOpen) tlOpen=new Set();
+    const tlItems=()=>[...container.querySelectorAll(".tl-item.xp")];
+    const tlSyncAll=()=>{
+      const b=container.querySelector("[data-tltoggle]"); if(!b) return;
+      const its=tlItems(), all=its.length>0 && its.every(li=>li.classList.contains("open"));
+      b.setAttribute("aria-expanded",all?"true":"false");
+      b.innerHTML=`<i class="bi ${all?"bi-arrows-collapse":"bi-arrows-expand"}" aria-hidden="true"></i>`+(all?"すべて折り畳む":"すべて展開");
+    };
+    const tlSetOpen=(li,open)=>{
+      li.classList.toggle("open",open);
+      const t=li.querySelector("[data-evtoggle]"); if(t) t.setAttribute("aria-expanded",open?"true":"false");
+      if(open) tlOpen.add(li.dataset.evid); else tlOpen.delete(li.dataset.evid);
+    };
+    container.querySelectorAll("[data-evtoggle]").forEach(t=>{
+      t.addEventListener("click",()=>{
+        const li=t.closest(".tl-item");
+        tlSetOpen(li,!li.classList.contains("open"));
+        tlSyncAll();
+      });
+    });
     container.querySelectorAll("[data-tltoggle]").forEach(b=>{
       b.addEventListener("click",()=>{
-        tlCollapsed=!tlCollapsed;
-        const tl=container.querySelector(".tl"); if(tl) tl.classList.toggle("collapsed",tlCollapsed);
-        b.setAttribute("aria-expanded",tlCollapsed?"false":"true");
-        b.innerHTML=`<i class="bi ${tlCollapsed?"bi-arrows-expand":"bi-arrows-collapse"}" aria-hidden="true"></i>`+(tlCollapsed?"展開する":"折り畳む");
+        const its=tlItems(), all=its.every(li=>li.classList.contains("open"));
+        its.forEach(li=>tlSetOpen(li,!all));
+        tlSyncAll();
       });
     });
     container.querySelectorAll("[data-like]").forEach(b=>{
