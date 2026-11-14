@@ -37,14 +37,14 @@ export async function onRequestPut({ request, env, params }) {
             plaintiff_name=?, defendant_name=?,
             judge=?, points=?, call_text=?,
             contact=?, press=?,
-            plaintiff_links=?, defendant_links=?, tags=?,
+            tags=?,
             related_case_ids=?, archived_at=?, close_type=?, is_closed=?, board_enabled=?, board_restricted=?,
             updated_by=?, updated_at=?`;
   const bind = [c.name, c.presenter_id, c.view_key, c.case_no, c.case_no_public,
          c.plaintiff_name, c.defendant_name,
          c.judge, c.points, c.call_text,
          c.contact, c.press,
-         c.plaintiff_links, c.defendant_links, c.tags,
+         c.tags,
          c.related_case_ids, c.archived_at, c.close_type, c.is_closed, c.board_enabled, c.board_restricted,
          actor, new Date().toISOString()];
   // カードの文言・検索結果の見え方（空欄で保存すると自動に戻る）。送られてこなかったキーには

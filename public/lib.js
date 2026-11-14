@@ -237,14 +237,6 @@ window.CC = (function(){
     if(h==="note.com") return ["bi-journal-text","note"];
     return ["bi-box-arrow-up-right", "ウェブサイト"];
   }
-  // 原告のリンク（原告のみ。被告側の欄は defendantLinks を渡す）
-  function partyLinksHtml(links){
-    if(!links.length) return "";
-    return `<div class="facts-links">${links.map(u=>{
-      const [cls,label]=linkIcon(u);
-      return `<a class="plink" href="${escapeAttr(u)}" target="_blank" rel="noopener" title="${escapeAttr(label)}" aria-label="${escapeAttr(label)}"><i class="bi ${cls}" aria-hidden="true"></i></a>`;
-    }).join("")}</div>`;
-  }
   // ---- 裁判官・事件番号：1行1件で書く（複数あれば改行を増やすだけ。「地裁　坂巻陽士裁判官」のように
   // 書きたい文言をそのまま1行に書く）。行頭が「地裁」「高裁」などの審級＋スペースなら、名前の位置が
   // そろうように審級部分だけ幅をそろえて表示する（審級を書かなければ、その行はそのまま表示する）。
@@ -276,14 +268,21 @@ window.CC = (function(){
   // 増やすだけで複数行書ける）。2行目以降はひとまわり小さく添える ----
   // inlineHtml（当事者のリンクアイコン）は、1行目の本人の名前のすぐ隣に置く。代理人などの2行目以降より
   // 下に回ってしまうと、誰のリンクか分かりにくいため。名前が空のときはアイコンだけを出す
-  function partyNameHtml(raw, inlineHtml){
+  function partyNameHtml(raw){
     const lines = String(raw||"").split("\n").map(s=>s.trim()).filter(Boolean);
-    const extra = inlineHtml || "";
-    if(!lines.length) return extra;
-    return lines.map((line,i)=> i===0
-      ? escapeHtml(line) + extra
-      : `<div class="party-sub">${escapeHtml(line)}</div>`
-    ).join("");
+    const urlRe = /[\s　](https?:\/\/\S+)$/;
+    return lines.map((line,i)=>{
+      let linkHtml = "";
+      const um = line.match(urlRe);
+      if(um){
+        const [cls,label]=linkIcon(um[1]);
+        linkHtml = ` <a class="plink" href="${escapeAttr(um[1])}" target="_blank" rel="noopener" title="${escapeAttr(label)}" aria-label="${escapeAttr(label)}"><i class="bi ${cls}" aria-hidden="true"></i></a>`;
+        line = line.slice(0, um.index).trim();
+      }
+      return i===0
+        ? escapeHtml(line) + linkHtml
+        : `<div class="party-sub">${escapeHtml(line)}${linkHtml}</div>`;
+    }).join("");
   }
   // ファクトシートの1行。値が無ければ何も出さない（dt/ddのペアをまとめて返す）
   function factRow(label, valueHtml){ return valueHtml ? `<dt>${escapeHtml(label)}</dt><dd>${valueHtml}</dd>` : ""; }
@@ -624,8 +623,8 @@ window.CC = (function(){
       : "";
     const caseNoRow = c.caseNoPublic ? factRow("事件番号", courtLinesHtml(c.caseNo)) : "";
     const pointsRow = factRow("争点", points?`<ul class="pts">${points}</ul>`:"");
-    const plaintiffRow = factRow("原告", partyNameHtml(c.plaintiffName, partyLinksHtml(c.plaintiffLinks)));
-    const defendantRow = factRow("被告", partyNameHtml(c.defendantName, partyLinksHtml(c.defendantLinks)));
+    const plaintiffRow = factRow("原告", partyNameHtml(c.plaintiffName));
+    const defendantRow = factRow("被告", partyNameHtml(c.defendantName));
     const judgeRow = factRow("裁判官", c.judge?courtLinesHtml(c.judge):"");
     const pressRow = factRow("掲載", c.press.length?`<ul class="pts">${c.press.map(line=>`<li>${linkifyText(line)}</li>`).join("")}</ul>`:"");
     const facts1 = nextRow+caseNoRow+pointsRow+plaintiffRow+defendantRow+judgeRow+pressRow;
@@ -1334,7 +1333,7 @@ window.CC = (function(){
   let initCaseEditPage = function(){};
   if(document.getElementById("cName")){
     const cFields = { name:$("cName"), caseNo:$("cCaseNo"), plaintiff:$("cPlaintiff"), defendant:$("cDefendant"), judge:$("cJudge"), points:$("cPoints"),
-                      callText:$("cCall"), press:$("cPress"), plaintiffLinks:$("cPlaintiffLinks"), defendantLinks:$("cDefendantLinks"),
+                      callText:$("cCall"), press:$("cPress"),
                       tags:$("cTags"), related:$("cRelated"), archivedAt:$("cArchivedAt"), closeType:$("cCloseType") };
     const cBoardEnabled=$("cBoardEnabled"), cBoardRestricted=$("cBoardRestricted");
     const cClosed=$("cClosed");
@@ -1403,11 +1402,6 @@ window.CC = (function(){
     // 掲載レベルの両方を見て上書きするので、ここで先に触れても問題ない
     function applyTierGates(){
       document.querySelectorAll("[data-tier-min]").forEach(el=>{ el.hidden = !tierAllows(el.dataset.tierMin); });
-      // 当事者欄：原告/被告のリンク欄を隠しているあいだは、空の列を残さず単列にする
-      document.querySelectorAll(".two-links").forEach(t=>{
-        const lf = t.querySelector("[data-tier-min]");
-        t.classList.toggle("solo", !!(lf && lf.hidden));
-      });
     }
     const TIER_CARDS=[["ceTierMin","min"],["ceTierStd","std"],["ceTierDetail","detail"]];
     // 選択カードから呼ぶ。掲載レベルを確定し、下の入力欄をそのレベルに合わせて出し分ける。
@@ -1928,8 +1922,6 @@ window.CC = (function(){
       cFields.points.value=(c.points||[]).join("\n"); cFields.callText.value=c.callText||"";
       editingCaseContact=c.contact||"";
       cFields.press.value=(c.press||[]).join("\n");
-      cFields.plaintiffLinks.value=(c.plaintiffLinks||[]).join("\n");
-      cFields.defendantLinks.value=(c.defendantLinks||[]).join("\n");
       cFields.tags.value=(c.tags||[]).join("\n");
       // 関連裁判はIDで持つが、入力欄には事件名で表示する（見つからないIDは消えている事件なので無視）
       cFields.related.value=(c.relatedCaseIds||[]).map(id=>caseById(id)).filter(Boolean).map(r=>r.name).join("\n");
@@ -1988,8 +1980,6 @@ window.CC = (function(){
         callText:cFields.callText.value.trim(),
         contact:editingCaseContact,
         press:cFields.press.value.split("\n").map(s=>s.trim()).filter(Boolean),
-        plaintiffLinks:cFields.plaintiffLinks.value.split("\n").map(s=>s.trim()).filter(Boolean),
-        defendantLinks:cFields.defendantLinks.value.split("\n").map(s=>s.trim()).filter(Boolean),
         tags:cFields.tags.value.split("\n").map(s=>s.trim()).filter(Boolean),
         relatedCaseIds,
         archivedAt:cFields.archivedAt.value, closeType:cFields.closeType.value.trim(),
@@ -2724,7 +2714,7 @@ window.CC = (function(){
   // 「incomingが空なら既存の値を残す」対象に含める。漏れているとバックアップの再取り込みで
   // これらだけNULLに巻き戻ってしまう（caseFromBodyは送られてこなかった欄をNULL/falseにするため。2026-09-10）
   const CASE_FIELDS = ["name","caseNo","plaintiffName","defendantName","judge","points","callText","presenterId","contact",
-    "press","plaintiffLinks","defendantLinks","tags","relatedCaseIds","archivedAt","closeType","isClosed","boardEnabled","boardRestricted",
+    "press","tags","relatedCaseIds","archivedAt","closeType","isClosed","boardEnabled","boardRestricted",
     "isPrivate","viewKey","caseNoPublic",
     "cardHeadline","cardSub","cardMessage","seoTitle","seoDescription"];
   function mergeCaseFields(existing, incoming){

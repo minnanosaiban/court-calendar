@@ -347,7 +347,7 @@ a{color:inherit}
    「最高裁」(3文字)が最長なのでそれに合わせた幅にする */
 .court-line{display:grid;grid-template-columns:3.4em 1fr;column-gap:4px}
 .cl-level{color:var(--mut)}
-.facts .plink{display:inline-block;margin-right:6px;font-size:.86rem;color:var(--faint);vertical-align:-1px;text-decoration:none}
+.facts .plink{display:inline-block;margin-left:4px;margin-right:2px;font-size:.86rem;color:var(--faint);vertical-align:-1px;text-decoration:none}
 .facts .plink:hover{color:var(--ink)}
 /* 報道がWEB記事のときのリンク（.pts内、URLがそのまま文字で見える）は下線で示す */
 .pts a{text-decoration:underline;text-underline-offset:3px}

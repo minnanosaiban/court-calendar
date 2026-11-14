@@ -217,29 +217,15 @@
           </div>
 
           <p class="msec" id="sec-parties" data-tier-min="std">当事者</p>
-          <div class="two two-links" data-tier-min="std">
-            <div class="field">
-              <label>原告名</label>
-              <span class="lhint">2行目以降は代理人名など（任意）</span>
-              <textarea id="cPlaintiff" placeholder="例）従業員&#10;代理人　〇〇"></textarea>
-            </div>
-            <div class="field" data-tier-min="detail">
-              <label>原告のリンク</label>
-              <span class="lhint">1行に1つ</span>
-              <textarea id="cPlaintiffLinks" placeholder="https://x.com/..."></textarea>
-            </div>
+          <div class="field" data-tier-min="std">
+            <label>原告名</label>
+            <span class="lhint">2行目以降は代理人名など（任意）。末尾に半角スペース＋URLで、その行にウェブサイトやXなどのリンクを添えられます（任意）</span>
+            <textarea id="cPlaintiff" placeholder="例）従業員 https://x.com/...&#10;代理人　〇〇弁護士 https://example.com"></textarea>
           </div>
-          <div class="two two-links" data-tier-min="std">
-            <div class="field">
-              <label>被告名</label>
-              <span class="lhint">2行目以降は代理人名など（任意）</span>
-              <textarea id="cDefendant" placeholder="例）〇〇株式会社&#10;代理人　〇〇"></textarea>
-            </div>
-            <div class="field" data-tier-min="detail">
-              <label>被告のリンク</label>
-              <span class="lhint">1行に1つ</span>
-              <textarea id="cDefendantLinks" placeholder="https://x.com/..."></textarea>
-            </div>
+          <div class="field" data-tier-min="std">
+            <label>被告名</label>
+            <span class="lhint">2行目以降は代理人名など（任意）。末尾に半角スペース＋URLで、その行にリンクを添えられます（任意）</span>
+            <textarea id="cDefendant" placeholder="例）〇〇株式会社&#10;代理人　〇〇弁護士 https://example.com"></textarea>
           </div>
           <div class="field" data-tier-min="std">
             <label>裁判官</label>
