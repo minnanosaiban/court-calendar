@@ -1025,6 +1025,15 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
    スマホ幅では max-width が効かないので表示は変わらない */
 .wrap-case{max-width:960px}
 body:has(.wrap-case) .announce-inner,body:has(.wrap-home) .announce-inner{max-width:960px}
+/* 事件ページは、事件名（.d-title）が画面の上のほうに来るよう、ヘッダー周りを詰める（2026-11-15）。
+   PCで事件名が縦467px→約290pxに上がる。トップページ・他のページの余白（黒い帯の下〜ロゴ120px等）はそのまま。
+   サイト名は設計表の1.8rem（トップは2.2rem）、スタンプも小さくする。「戻る」ボタン下と注意書きの上余白は
+   詰め、注意書きは戻るボタンのすぐ下に続ける */
+@media(min-width:560px){.wrap.wrap-case{padding-top:16px}}
+.wrap-case .masthead h1{font-size:1.8rem}
+.wrap-case .stamp{width:44px;height:44px;font-size:14px}
+.wrap-case .pillbtn.backlink{margin:16px auto 24px}
+.wrap-case .unofficial-note{margin:0 0 16px}
 .ce-title{font-family:"Shippori Mincho",serif;font-size:1.6rem;font-weight:600;line-height:1.4;margin-top:24px}
 /* タイトルの隣に「入力は公開情報」の注意を添える（2026-08-30）。折り返しても崩れないよう
    align-items:baseline＋flex-wrap（.ce-title 側の margin-top は行が2つに分かれても保つ） */
