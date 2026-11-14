@@ -83,7 +83,9 @@ a{color:inherit}
 /* ---- masthead ---- */
 /* 2026-09-10：見出しは中央寄せ、キャッチコピーは幅にかかわらず2行で見せる
    （2行はどちらも12文字・同じ幅で揃う）。一番上の余白も詰めた（.wrap の padding-top） */
-.masthead{display:flex;align-items:center;justify-content:center;gap:16px}
+/* 黒いお知らせ帯の下から「応援傍聴ナビ」の上端までを120pxにそろえる（実測119pxだったので1px足す。2026-11-14。
+   全ページ共通＝トップページも同じ。事件ページの注意書き.unofficial-noteの上余白も、ボタン下から120pxに合わせる） */
+.masthead{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:1px}
 .stamp{flex:none;width:52px;height:52px;border:2.5px solid var(--stamp);border-radius:8px;
   display:grid;place-content:center;color:var(--stamp);
   font-family:"Shippori Mincho",serif;font-weight:700;font-size:17px;line-height:1.1;
@@ -948,8 +950,8 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .fnote{color:var(--mut);font-size:.8rem;margin-top:4px;line-height:1.7}
 /* 事件ページの先頭に置く、非公式・AI要約・原典確認の注意書き。アイコンも枠も付けず、カードの左端に
    そろえた小さな補助文字だけにする（--mut。読み飛ばされにくい濃さ）。中央揃え。上は
-   「事件をさがすに戻る」との間を広めにあける（上64px・下16px） */
-.unofficial-note{color:var(--mut);font-size:.75rem;line-height:1.7;letter-spacing:.04em;text-align:center;margin:64px 0 16px}
+   「事件をさがすに戻る」との間を広めにあける（上107px・下16px。黒いバー下〜ロゴ上の120pxに、ボタン下〜注意書きの見た目をそろえた） */
+.unofficial-note{color:var(--mut);font-size:.75rem;line-height:1.7;letter-spacing:.04em;text-align:center;margin:107px 0 16px}
 /* スマホ幅（.mdateなどと同じ559.98px境界）では折り返すので、中央ではなく左揃えにする */
 @media(max-width:559.98px){.unofficial-note{text-align:left}}
 .fnote a{text-underline-offset:3px}
