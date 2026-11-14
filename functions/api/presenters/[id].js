@@ -1,5 +1,5 @@
 import {
-  json, rowToPresenter, getIdentity, authorizeWrite, isHttpUrl,
+  json, rowToPresenter, getIdentity, authorizeWrite, isHttpUrl, textToLines,
   getPresenterSession, generatePassword, randomHex, hashPassword,
   hiddenCaseIds, myCaseIds, presenterCaseVisibility, deleteR2, validateCardText,
 } from "../../_common.js";
@@ -44,17 +44,14 @@ export async function onRequestPut({ request, env, params }) {
 
   let sql = `UPDATE presenters SET nickname=?, updated_by=?, updated_at=?`;
   const bind = [nickname, admin ? id.email : ("presenter:" + params.id), new Date().toISOString()];
-  if (typeof body.xUrl === "string") {
-    const xUrl = body.xUrl.trim();
-    if (xUrl && !isHttpUrl(xUrl)) return json({ error: "X URLの形式が正しくありません" }, 400);
-    sql += `, x_url=?`;
-    bind.push(xUrl || null);
-  }
-  if (typeof body.websiteUrl === "string") {
-    const websiteUrl = body.websiteUrl.trim();
-    if (websiteUrl && !isHttpUrl(websiteUrl)) return json({ error: "ウェブサイトURLの形式が正しくありません" }, 400);
-    sql += `, website_url=?`;
-    bind.push(websiteUrl || null);
+  // X・ウェブサイトのURLは複数持てる（改行区切りで1行1つ。DBの列も同じ形で保存。最大10個まで）
+  for (const [key, col, label] of [["xUrl", "x_url", "X URL"], ["websiteUrl", "website_url", "ウェブサイトURL"]]) {
+    if (typeof body[key] !== "string") continue;
+    const urls = textToLines(body[key]);
+    if (urls.length > 10) return json({ error: label + "は10個までです" }, 400);
+    if (urls.some((u) => !isHttpUrl(u))) return json({ error: label + "の形式が正しくありません（1行に1つ、http:// または https:// で始まるURL）" }, 400);
+    sql += `, ${col}=?`;
+    bind.push(urls.join("\n") || null);
   }
   // カードの文言・検索結果の見え方（運営・本人のどちらも変更できる。空欄で保存すると自動に戻る）。
   // 送られてこなかったキーには触らない＝別画面からの更新で消えないようにする

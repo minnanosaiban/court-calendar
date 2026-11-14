@@ -360,14 +360,19 @@ window.CC = (function(){
   // 事件名の下に添える、問題提起人のニックネーム（リンク）。アイコンの下だと名前が長いと省略されて
   // 読めなくなるため、タイトルの下の広い幅で全文出す（2026-08-26）。
   // 閲覧者向けの表示なので敬称「さん」を付ける（管理画面のプルダウン等、運営者向けの表示には付けない）
+  // 問題提起人のウェブサイト（地球儀）・Xのアイコンリンク。どちらも複数並べられる（ウェブサイト→Xの順）
+  function presenterLinksHtml(webs, xs, style){
+    const st = style ? ` style="${style}"` : "";
+    const mk=(u,icon,label)=>`<a class="presenter-x"${st} href="${escapeAttr(u)}" target="_blank" rel="noopener" title="${escapeAttr(u)}" aria-label="${label}"><i class="bi ${icon}" aria-hidden="true"></i></a>`;
+    return (webs||[]).map(u=>mk(u,"bi-globe2","ウェブサイトを見る")).join("") + (xs||[]).map(u=>mk(u,"bi-twitter-x","Xで見る")).join("");
+  }
   function presenterNameHtml(c){
     if(!c.presenterId || !c.presenterNickname) return "";
     const nameLink = `<a class="presenter-name" href="presenter?id=${encodeURIComponent(c.presenterId)}">${escapeHtml(c.presenterNickname)}さん</a>`;
     // Xアカウントを登録している問題提起人だけ、ニックネームの右にXアイコンのリンクを添える（2026-08-30）
-    if(!c.presenterXUrl && !c.presenterWebsiteUrl) return nameLink;
-    const webLink = c.presenterWebsiteUrl ? `<a class="presenter-x" href="${escapeAttr(c.presenterWebsiteUrl)}" target="_blank" rel="noopener" aria-label="ウェブサイトを見る"><i class="bi bi-globe2" aria-hidden="true"></i></a>` : "";
-    const xLink = c.presenterXUrl ? `<a class="presenter-x" href="${escapeAttr(c.presenterXUrl)}" target="_blank" rel="noopener" aria-label="Xで見る"><i class="bi bi-twitter-x" aria-hidden="true"></i></a>` : "";
-    return `<span class="presenter-line">${nameLink}${webLink}${xLink}</span>`;
+    const icons = presenterLinksHtml(c.presenterWebsiteUrls, c.presenterXUrls);
+    if(!icons) return nameLink;
+    return `<span class="presenter-line">${nameLink}${icons}</span>`;
   }
   // 事件ページの一番上に出す、編集できる人だけのバー。運営（事務局）・ご本人（この事件の
   // 問題提起人）としてログイン中のどちらでも「＋ 事件情報を編集」を出す（2026-08-30。以前はdcardの
@@ -1489,9 +1494,9 @@ window.CC = (function(){
         // X URLはニックネーム・アイコンと同じく、運営・本人のどちらも変更できる（掲載レベルが
         // 「標準的」以上のときだけ出す）
         cPresenterXUrlRow.hidden = !tierAllows(cPresenterXUrlRow.dataset.tierMin);
-        cPresenterXUrl.value = p && p.xUrl || "";
+        cPresenterXUrl.value = (p && p.xUrls || []).join("\n");
         cPresenterWebsiteUrlRow.hidden = !tierAllows(cPresenterWebsiteUrlRow.dataset.tierMin);
-        cPresenterWebsiteUrl.value = p && p.websiteUrl || "";
+        cPresenterWebsiteUrl.value = (p && p.websiteUrls || []).join("\n");
         // ログイン設定は運営専用（問題提起人本人が自分の付け替え等をできないのと同じ理由）。
         // 掲載レベルが「詳細」でないときも隠す
         cPresenterLoginRow.hidden = !edIsAdmin || !tierAllows(cPresenterLoginRow.dataset.tierMin);
@@ -2818,7 +2823,7 @@ window.CC = (function(){
     get me(){ return me; },
     get loaded(){ return loaded; },
     caseById, caseByName, presenterById, caseEvents, casePosts, caseMaterials, caseImages, nearestCase, nextEvent, eventLine, jpDate,
-    likeHtml, toggleLike, bookmarkHtml, toggleBookmark, typePlaceHtml, isArchived, iconHtml, presenterHeaderHtml,
+    likeHtml, toggleLike, bookmarkHtml, toggleBookmark, typePlaceHtml, isArchived, iconHtml, presenterHeaderHtml, presenterLinksHtml,
     apiListPresenters, apiCreatePresenter, apiUpdatePresenter, apiDeletePresenter,
     apiUpdatePresenterIcon, apiDeletePresenterIcon, reloadPresenters, saveErr,
     canEditCase, presenterLogin, presenterLogout, apiPresenterChangePassword, caseSelfBarHtml,

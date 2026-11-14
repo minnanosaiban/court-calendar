@@ -111,18 +111,18 @@
       <div class="field">
         <label>ウェブサイトURL</label>
         <div class="cicon-row">
-          <input type="text" id="paWebsiteUrl" value="${CC.escapeAttr(p.websiteUrl||"")}" placeholder="例）https://example.com">
+          <textarea id="paWebsiteUrl" rows="2" placeholder="例）https://example.com">${CC.escapeHtml((p.websiteUrls||[]).join("\n"))}</textarea>
           <button type="button" class="btn-save btn-round" id="paWebsiteUrlSave">変更</button>
         </div>
-        <p class="fnote">設定すると、ニックネームの右に地球儀アイコンのリンクが出ます。空欄で保存すると外れます。</p>
+        <p class="fnote">1行に1つ、複数置けます。設定すると、ニックネームの右に地球儀アイコンのリンクが出ます。空欄で保存すると外れます。</p>
       </div>
       <div class="field">
         <label>X（Twitter）URL</label>
         <div class="cicon-row">
-          <input type="text" id="paXUrl" value="${CC.escapeAttr(p.xUrl||"")}" placeholder="例）https://x.com/example">
+          <textarea id="paXUrl" rows="2" placeholder="例）https://x.com/example">${CC.escapeHtml((p.xUrls||[]).join("\n"))}</textarea>
           <button type="button" class="btn-save btn-round" id="paXUrlSave">変更</button>
         </div>
-        <p class="fnote">設定すると、ニックネームの右にXアイコンのリンクが出ます。空欄で保存すると外れます。</p>
+        <p class="fnote">1行に1つ、複数置けます。設定すると、ニックネームの右にXアイコンのリンクが出ます。空欄で保存すると外れます。</p>
       </div>
       <div class="field">
         <p class="msec" style="margin-top:12px">ログイン設定（運営専用）</p>

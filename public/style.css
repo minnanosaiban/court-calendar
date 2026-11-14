@@ -921,6 +921,7 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .cicon-row{display:flex;align-items:center;gap:12px}
 .cicon-row input[type=file]{flex:1;min-width:0}
 .cicon-row input[type=text]{flex:1;min-width:0;width:auto}
+.cicon-row textarea{flex:1;min-width:0;width:auto;min-height:0}
 /* 行の中のボタン（「作成」）。.mfoot の外にあるため .btn-save だけでは体裁が付かず、
    flex で潰れて文字が縦積みになっていた（2026-08-26）。隣の入力欄と高さをそろえる。
    .mfoot button と違い line-height:inherit は指定しない（input と同じ normal のままにして

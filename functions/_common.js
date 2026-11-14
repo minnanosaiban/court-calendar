@@ -53,8 +53,8 @@ export function rowToCase(r) {
     presenterId: r.presenter_id || "",
     presenterNickname: r.presenter_nickname || "",
     presenterIcon: r.presenter_icon_r2_key ? "/files/" + r.presenter_icon_r2_key : "",
-    presenterXUrl: r.presenter_x_url || "",
-    presenterWebsiteUrl: r.presenter_website_url || "",
+    presenterXUrls: textToLines(r.presenter_x_url).filter(isHttpUrl),
+    presenterWebsiteUrls: textToLines(r.presenter_website_url).filter(isHttpUrl),
     // 閲覧キー（view_key）：この行がここまで来ている時点で、呼び出し側（一覧の絞り込み・
     // authorizeCaseWrite等）で「見せてよい」判定は既に済んでいる（非公開でキーが合っていない
     // 行はそもそもrowToCaseに渡る前に除かれる）。なので生の値をそのまま返してよい（2026-09-02）。
@@ -308,8 +308,8 @@ export function rowToPresenter(r, admin) {
     id: r.id,
     nickname: r.nickname,
     icon: r.icon_r2_key ? "/files/" + r.icon_r2_key : "",
-    xUrl: r.x_url || "",
-    websiteUrl: r.website_url || "",
+    xUrls: textToLines(r.x_url).filter(isHttpUrl),
+    websiteUrls: textToLines(r.website_url).filter(isHttpUrl),
     // カード画像の差し替え・カードの文言・検索結果の見え方（いずれも空＝自動生成のまま）
     cardUrl: r.card_r2_key ? "/files/" + r.card_r2_key : "",
     cardSquareUrl: r.card_square_r2_key ? "/files/" + r.card_square_r2_key : "",

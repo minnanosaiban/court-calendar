@@ -150,7 +150,7 @@
           <p class="mut ph-count">${p.caseCount||0}件の事件</p>
         </div>
         <div class="d-head-main">
-          <h2 class="d-title" id="presenter-h">${CC.escapeHtml(p.nickname)}さん${p.websiteUrl?`<a class="presenter-x" style="margin-left:6px" href="${CC.escapeAttr(p.websiteUrl)}" target="_blank" rel="noopener" aria-label="ウェブサイトを見る"><i class="bi bi-globe2" aria-hidden="true"></i></a>`:""}${p.xUrl?`<a class="presenter-x" style="margin-left:6px" href="${CC.escapeAttr(p.xUrl)}" target="_blank" rel="noopener" aria-label="Xで見る"><i class="bi bi-twitter-x" aria-hidden="true"></i></a>`:""}</h2>
+          <h2 class="d-title" id="presenter-h">${CC.escapeHtml(p.nickname)}さん${CC.presenterLinksHtml(p.websiteUrls,p.xUrls,"margin-left:6px")}</h2>
           ${selfNote}
         </div>
       </div>`;
