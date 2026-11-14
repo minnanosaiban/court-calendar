@@ -406,8 +406,11 @@ a{color:inherit}
 .tl-item.past .tl-dot{background:#a9a7a0;border-color:#a9a7a0}
 .tl-item.next .tl-dot{background:var(--stamp);border-color:var(--stamp);box-shadow:0 0 0 3px rgba(185,50,38,.15)}
 .tl-head{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:12px;row-gap:4px;font-size:.9rem;line-height:1.7}
-.tl-date{color:var(--mut);font-size:.8rem;font-variant-numeric:tabular-nums}
-.tl-type{font-family:"Shippori Mincho",serif;font-weight:600}
+/* 期日の行（○の隣）は型スケールの段に乗せる（2026-11-15）：期日の名前＝小見出し1rem、日付＝本文.9rem（黒）、
+   法廷＝キャプション.8rem（灰、.tl-meta）。以前は日付が.8remの灰色、名前が.9remで、直下の主張カード（.9rem）と
+   同じ大きさだったため、展開すると期日の行が中身に埋もれてタイムラインに見えなかった */
+.tl-date{color:var(--ink);font-size:.9rem;font-variant-numeric:tabular-nums}
+.tl-type{font-family:"Shippori Mincho",serif;font-weight:600;font-size:1rem}
 .tl-item.next .tl-type{color:var(--stamp)}
 .tl-meta{color:var(--mut);font-size:.8rem}
 /* 期日の行（節）と中身（主張カード・資料）を余白で切り離す（2026-11-15）。展開すると中身が期日の行に
