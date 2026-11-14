@@ -946,13 +946,9 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .subfield-plain{background:none;padding:0}
 .cicon-remove{color:var(--edit);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .fnote{color:var(--mut);font-size:.8rem;margin-top:4px;line-height:1.7}
-/* 事件ページの先頭に置く、非公式・AI要約・原典確認の注意書き。カードと同じ幅の、枠線だけの薄い帯にして
-   目立たせすぎず、読み飛ばされない濃さ（--mut）にする。文は<span>1つにまとめる（flexの直下に文字と<b>を
-   並べると、それぞれが別の列になって折り返しが崩れるため） */
-.unofficial-note{display:flex;gap:8px;align-items:flex-start;color:var(--mut);font-size:.75rem;line-height:1.7;
-  letter-spacing:.04em;border:1px solid #e6e4dd;border-radius:12px;padding:8px 14px;margin:0 0 16px}
-.unofficial-note .bi{flex:none;font-size:.85rem;line-height:1;margin-top:.25em}
-.unofficial-note span{min-width:0}
+/* 事件ページの先頭に置く、非公式・AI要約・原典確認の注意書き。アイコンも枠も付けず、カードの左端に
+   そろえた小さな補助文字だけにする（--mut。読み飛ばされにくい濃さ） */
+.unofficial-note{color:var(--mut);font-size:.75rem;line-height:1.7;letter-spacing:.04em;margin:0 0 12px 4px}
 .unofficial-note b{font-weight:600;color:var(--ink)}
 .fnote a{text-underline-offset:3px}
 .fnote code{font-size:.92em;background:var(--tint);padding:1px 4px;border-radius:4px}
