@@ -1031,7 +1031,7 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
    1枚だけの画像（.gal-single）は720pxのまま中央に置く（広げると1枚が大きくなりすぎる）。
    スマホ幅では max-width が効かないので表示は変わらない */
 .wrap-case{max-width:960px}
-body:has(.wrap-case) .announce-inner,body:has(.wrap-home) .announce-inner,body:has(.wrap-list) .announce-inner{max-width:960px}
+body:has(.wrap-case) .announce-inner,body:has(.wrap-home) .announce-inner,body:has(.wrap-list) .announce-inner,body:has(.wrap-wide) .announce-inner{max-width:960px}
 .ce-title{font-family:"Shippori Mincho",serif;font-size:1.6rem;font-weight:600;line-height:1.4;margin-top:24px}
 /* タイトルの隣に「入力は公開情報」の注意を添える（2026-08-30）。折り返しても崩れないよう
    align-items:baseline＋flex-wrap（.ce-title 側の margin-top は行が2つに分かれても保つ） */
