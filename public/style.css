@@ -410,7 +410,12 @@ a{color:inherit}
 .tl-type{font-family:"Shippori Mincho",serif;font-weight:600}
 .tl-item.next .tl-type{color:var(--stamp)}
 .tl-meta{color:var(--mut);font-size:.8rem}
-.tl-body{margin-top:8px}
+/* 期日の行（節）と中身（主張カード・資料）を余白で切り離す（2026-11-15）。展開すると中身が期日の行に
+   くっついて続き、節が縦に並ぶタイムラインに見えなかったため。上下をあけて「期日ごとのひとかたまり」に
+   し、PC幅では中身を左に32px下げて、縦線の右に期日の行だけが立つようにする（枠や線は足さない）。
+   スマホ幅は横の余裕が無いので上下の余白だけ */
+.tl-body{margin:16px 0 24px}
+@media(min-width:560px){.tl-body{margin:24px 0 40px;padding-left:32px}}
 /* 折り畳み：期日の行だけ残し、主張・資料は隠す。行間は少し詰める */
 .tl.collapsed .tl-body{display:none}
 .tl.collapsed .tl-item{padding-bottom:12px}
@@ -989,14 +994,15 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
    欄の並びは事件ページの実際の掲載順に合わせる */
 /* 編集ページだけ少し広く使う（長文編集が主役のため。他ページは720pxのまま） */
 .wrap-wide{max-width:960px}
-/* 事件ページ（case.html）はPC優先で列を880pxに広げる（2026-11-14）。720pxでは原告/被告の2カラム
-   （.args）が1行16字ほどで改行だらけになっていたため。880pxで1行23字前後になる。
+/* 事件ページ（case.html）はPC優先で列を960pxに広げる（2026-11-14に880px、タイムラインの中身を
+   左に下げた2026-11-15に、その分を足して960px＝編集ページの .wrap-wide と同じ）。720pxでは原告/被告の2カラム
+   （.args）が1行16字ほどで改行だらけになっていたため。
    上部のお知らせ帯（.announce-inner）も同じ幅にそろえる（announce.js が body 直下に差し込むので
    :has で拾う。:has 非対応のブラウザでは帯だけ720pxのまま＝崩れはしない）。
    1枚だけの画像（.gal-single）は720pxのまま中央に置く（広げると1枚が大きくなりすぎる）。
    スマホ幅では max-width が効かないので表示は変わらない */
-.wrap-case{max-width:880px}
-body:has(.wrap-case) .announce-inner{max-width:880px}
+.wrap-case{max-width:960px}
+body:has(.wrap-case) .announce-inner{max-width:960px}
 /* 列を広げた分、2カラムの主張カードも広い画面でだけ文字を1remに上げる（.9rem のままだと列の広さに対して
    文字が小さく見えるため） */
 @media(min-width:860px){
