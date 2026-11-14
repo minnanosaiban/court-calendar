@@ -403,6 +403,15 @@ a{color:inherit}
 .tl-item.next .tl-type{color:var(--stamp)}
 .tl-meta{color:var(--mut);font-size:.8rem}
 .tl-body{margin-top:8px}
+/* 折り畳み：期日の行だけ残し、主張・資料は隠す。行間は少し詰める */
+.tl.collapsed .tl-body{display:none}
+.tl.collapsed .tl-item{padding-bottom:12px}
+/* 見出し「タイムライン」の右の折り畳み/展開スイッチ */
+.tl-headrow{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap}
+.tl-toggle{display:inline-flex;align-items:center;gap:4px;font-size:.7rem;color:var(--ink);background:#fff;
+  border:1px solid #e6e4dd;border-radius:999px;padding:4px 12px;cursor:pointer;line-height:1.5;font-family:inherit}
+.tl-toggle:hover{border-color:#c9c6bc}
+.tl-toggle .bi{font-size:.8rem;line-height:1;color:var(--mut)}
 
 /* ---- 訴訟資料（タイムラインの中身／一覧） ---- */
 .mat{font-size:.9rem}

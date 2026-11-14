@@ -365,9 +365,10 @@ window.CC = (function(){
     if(!c.presenterId || !c.presenterNickname) return "";
     const nameLink = `<a class="presenter-name" href="presenter?id=${encodeURIComponent(c.presenterId)}">${escapeHtml(c.presenterNickname)}さん</a>`;
     // Xアカウントを登録している問題提起人だけ、ニックネームの右にXアイコンのリンクを添える（2026-08-30）
-    if(!c.presenterXUrl) return nameLink;
-    const xLink = `<a class="presenter-x" href="${escapeAttr(c.presenterXUrl)}" target="_blank" rel="noopener" aria-label="Xで見る"><i class="bi bi-twitter-x" aria-hidden="true"></i></a>`;
-    return `<span class="presenter-line">${nameLink}${xLink}</span>`;
+    if(!c.presenterXUrl && !c.presenterWebsiteUrl) return nameLink;
+    const webLink = c.presenterWebsiteUrl ? `<a class="presenter-x" href="${escapeAttr(c.presenterWebsiteUrl)}" target="_blank" rel="noopener" aria-label="ウェブサイトを見る"><i class="bi bi-globe2" aria-hidden="true"></i></a>` : "";
+    const xLink = c.presenterXUrl ? `<a class="presenter-x" href="${escapeAttr(c.presenterXUrl)}" target="_blank" rel="noopener" aria-label="Xで見る"><i class="bi bi-twitter-x" aria-hidden="true"></i></a>` : "";
+    return `<span class="presenter-line">${nameLink}${webLink}${xLink}</span>`;
   }
   // 事件ページの一番上に出す、編集できる人だけのバー。運営（事務局）・ご本人（この事件の
   // 問題提起人）としてログイン中のどちらでも「＋ 事件情報を編集」を出す（2026-08-30。以前はdcardの
@@ -777,6 +778,9 @@ window.CC = (function(){
       ${d?`<div class="arg k"><h4>被告の主張</h4><ul>${d}</ul>${argSrcHtml(ev.defendantArgumentModel,ev.defendantArgumentDate)}</div>`:""}
     </div>`;
   }
+  // タイムラインの折り畳み（2026-11-14）。既定は展開。折り畳むと期日の行だけにして、主張・資料は隠す。
+  // 状態は画面の再描画（いいね等）をまたいで保つ
+  let tlCollapsed=false;
   function timelineHtml(caseId){
     const rounds=caseEvents(caseId);
     const mats=caseMaterials(caseId);
@@ -802,9 +806,12 @@ window.CC = (function(){
         ${expandable?`<div class="tl-body">${argsHtml(ev)}${own.map(matBlockHtml).join("")}</div>`:""}
       </li>`;
     }).join("");
-    return `<p class="subhead">タイムライン</p>
+    const tlToggle = rounds.some(ev=>/*中身のある期日があるときだけ*/ mats.some(m=>m.eventId===ev.id) || (ev.plaintiffArgument&&ev.plaintiffArgument.length) || (ev.defendantArgument&&ev.defendantArgument.length))
+      ? `<button type="button" class="tl-toggle" data-tltoggle aria-expanded="${tlCollapsed?"false":"true"}"><i class="bi ${tlCollapsed?"bi-arrows-expand":"bi-arrows-collapse"}" aria-hidden="true"></i>${tlCollapsed?"展開する":"折り畳む"}</button>`
+      : "";
+    return `<div class="tl-headrow"><p class="subhead">タイムライン</p>${tlToggle}</div>
       ${canEditCase(caseId)?`<p class="qact"><a href="case-edit.html?id=${encodeURIComponent(caseId)}&open=ev:new">＋ 期日を追加</a></p>`:""}
-      ${rounds.length?`<ol class="tl">${items}</ol>`:`<p class="d-body mut">期日はまだ登録されていません。</p>`}`;
+      ${rounds.length?`<ol class="tl${tlCollapsed?" collapsed":""}">${items}</ol>`:`<p class="d-body mut">期日はまだ登録されていません。</p>`}`;
   }
   function matRowHtml(m, caseId){
     const edit = canEditCase(caseId) ? `<a class="round-edit" href="case-edit.html?id=${encodeURIComponent(caseId)}&open=mat:${encodeURIComponent(m.id)}">編集</a>` : "";
@@ -1130,6 +1137,14 @@ window.CC = (function(){
     });
     // 画像・期日・資料の追加・編集・並び替えは、すべて事件情報の編集ページ（case-edit.html）への
     // 普通のリンクになった（2026-08-27）。ここでのJSでの配線は不要
+    container.querySelectorAll("[data-tltoggle]").forEach(b=>{
+      b.addEventListener("click",()=>{
+        tlCollapsed=!tlCollapsed;
+        const tl=container.querySelector(".tl"); if(tl) tl.classList.toggle("collapsed",tlCollapsed);
+        b.setAttribute("aria-expanded",tlCollapsed?"false":"true");
+        b.innerHTML=`<i class="bi ${tlCollapsed?"bi-arrows-expand":"bi-arrows-collapse"}" aria-hidden="true"></i>`+(tlCollapsed?"展開する":"折り畳む");
+      });
+    });
     container.querySelectorAll("[data-like]").forEach(b=>{
       b.addEventListener("click",()=>toggleLike(b.dataset.like, b));
     });
@@ -1336,6 +1351,7 @@ window.CC = (function(){
           cPresenterNewSave=$("cPresenterNewSave"), cPresenterIconRow=$("cPresenterIconRow"), cPresenterIconPreview=$("cPresenterIconPreview"),
           cPresenterIconFile=$("cPresenterIconFile"), cPresenterIconRemove=$("cPresenterIconRemove"),
           cPresenterRenameRow=$("cPresenterRenameRow"), cPresenterRenameNickname=$("cPresenterRenameNickname"), cPresenterRenameSave=$("cPresenterRenameSave"),
+          cPresenterWebsiteUrlRow=$("cPresenterWebsiteUrlRow"), cPresenterWebsiteUrl=$("cPresenterWebsiteUrl"), cPresenterWebsiteUrlSave=$("cPresenterWebsiteUrlSave"),
           cPresenterXUrlRow=$("cPresenterXUrlRow"), cPresenterXUrl=$("cPresenterXUrl"), cPresenterXUrlSave=$("cPresenterXUrlSave"),
           cPresenterStatus=$("cPresenterStatus"),
           cPresenterLoginRow=$("cPresenterLoginRow"), cPresenterLoginUsername=$("cPresenterLoginUsername"),
@@ -1464,7 +1480,7 @@ window.CC = (function(){
       cPresenterStatus.hidden = true;
       if(v==="__new__"){
         cPresenterNewRow.hidden=false; cPresenterIconRow.hidden=true; cPresenterRenameRow.hidden=true;
-        cPresenterXUrlRow.hidden=true; cPresenterLoginRow.hidden=true;
+        cPresenterXUrlRow.hidden=true; cPresenterWebsiteUrlRow.hidden=true; cPresenterLoginRow.hidden=true;
         cPresenterCardRow.hidden=true; cPresenterSeoRow.hidden=true;
         cPresenterNewNickname.value="";
       }else if(v){
@@ -1479,6 +1495,8 @@ window.CC = (function(){
         // 「標準的」以上のときだけ出す）
         cPresenterXUrlRow.hidden = !tierAllows(cPresenterXUrlRow.dataset.tierMin);
         cPresenterXUrl.value = p && p.xUrl || "";
+        cPresenterWebsiteUrlRow.hidden = !tierAllows(cPresenterWebsiteUrlRow.dataset.tierMin);
+        cPresenterWebsiteUrl.value = p && p.websiteUrl || "";
         // ログイン設定は運営専用（問題提起人本人が自分の付け替え等をできないのと同じ理由）。
         // 掲載レベルが「詳細」でないときも隠す
         cPresenterLoginRow.hidden = !edIsAdmin || !tierAllows(cPresenterLoginRow.dataset.tierMin);
@@ -1494,7 +1512,7 @@ window.CC = (function(){
         }
       }else{
         cPresenterNewRow.hidden=true; cPresenterIconRow.hidden=true; cPresenterRenameRow.hidden=true;
-        cPresenterXUrlRow.hidden=true; cPresenterLoginRow.hidden=true;
+        cPresenterXUrlRow.hidden=true; cPresenterWebsiteUrlRow.hidden=true; cPresenterLoginRow.hidden=true;
         cPresenterCardRow.hidden=true; cPresenterSeoRow.hidden=true;
       }
       // 「運営者用」の囲み（.ceGroup#grp-admin）は、中身がログイン設定（cPresenterLoginRow）1つだけ
@@ -1549,6 +1567,23 @@ window.CC = (function(){
         await reloadCases();
       }catch(err){ cPresenterStatus.hidden=false; cPresenterStatus.textContent="変更できませんでした：" + (err && err.message || err); }
       finally{ cPresenterXUrlSave.disabled=false; }
+    });
+    // ウェブサイトURLの変更（X URLと同じ作り）
+    cPresenterWebsiteUrlSave.addEventListener("click", async ()=>{
+      const pid=cPresenterSelect.value;
+      if(!pid || pid==="__new__") return;
+      const p = presenterById(pid);
+      const websiteUrl = cPresenterWebsiteUrl.value.trim();
+      cPresenterWebsiteUrlSave.disabled=true;
+      cPresenterStatus.hidden=false; cPresenterStatus.textContent="変更しています…";
+      try{
+        const up = await apiUpdatePresenter(pid, {nickname:p?p.nickname:"", websiteUrl});
+        const i=presenters.findIndex(x=>x.id===pid); if(i>=0) presenters[i]=up;
+        updatePresenterFieldUI();
+        cPresenterStatus.hidden=false; cPresenterStatus.textContent="ウェブサイトURLを変更しました。";
+        await reloadCases();
+      }catch(err){ cPresenterStatus.hidden=false; cPresenterStatus.textContent="変更できませんでした：" + (err && err.message || err); }
+      finally{ cPresenterWebsiteUrlSave.disabled=false; }
     });
     cPresenterIconFile.addEventListener("change", async ()=>{
       const f=cPresenterIconFile.files[0];

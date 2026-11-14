@@ -50,6 +50,12 @@ export async function onRequestPut({ request, env, params }) {
     sql += `, x_url=?`;
     bind.push(xUrl || null);
   }
+  if (typeof body.websiteUrl === "string") {
+    const websiteUrl = body.websiteUrl.trim();
+    if (websiteUrl && !isHttpUrl(websiteUrl)) return json({ error: "ウェブサイトURLの形式が正しくありません" }, 400);
+    sql += `, website_url=?`;
+    bind.push(websiteUrl || null);
+  }
   // カードの文言・検索結果の見え方（運営・本人のどちらも変更できる。空欄で保存すると自動に戻る）。
   // 送られてこなかったキーには触らない＝別画面からの更新で消えないようにする
   for (const [key, col] of [

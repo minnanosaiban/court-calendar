@@ -34,7 +34,7 @@ export function truncateChars(s, max) {
 // ---- 事件 ----
 // presenters は LEFT JOIN で引く（p. で参照。FROM 句は casesSelect() 側で JOIN する）
 export const CASE_COLS = `c.id, c.name, c.presenter_id, p.nickname AS presenter_nickname, p.icon_r2_key AS presenter_icon_r2_key,
-                          p.x_url AS presenter_x_url,
+                          p.x_url AS presenter_x_url, p.website_url AS presenter_website_url,
                           c.view_key,
                           c.case_no, c.case_no_public,
                           c.plaintiff_name, c.defendant_name,
@@ -54,6 +54,7 @@ export function rowToCase(r) {
     presenterNickname: r.presenter_nickname || "",
     presenterIcon: r.presenter_icon_r2_key ? "/files/" + r.presenter_icon_r2_key : "",
     presenterXUrl: r.presenter_x_url || "",
+    presenterWebsiteUrl: r.presenter_website_url || "",
     // 閲覧キー（view_key）：この行がここまで来ている時点で、呼び出し側（一覧の絞り込み・
     // authorizeCaseWrite等）で「見せてよい」判定は既に済んでいる（非公開でキーが合っていない
     // 行はそもそもrowToCaseに渡る前に除かれる）。なので生の値をそのまま返してよい（2026-09-02）。
@@ -263,7 +264,7 @@ export async function hiddenCaseIds(env, request) {
 }
 
 // ---- 問題提起人（アイコン＋ニックネーム。1人が複数の事件を持てる） ----
-export const PRESENTER_COLS = `id, nickname, icon_r2_key, x_url, login_username, login_password_hash,
+export const PRESENTER_COLS = `id, nickname, icon_r2_key, x_url, website_url, login_username, login_password_hash,
                                card_r2_key, card_square_r2_key, card_headline, card_sub, card_message,
                                seo_title, seo_description,
                                created_by, updated_by, updated_at`;
@@ -312,6 +313,7 @@ export function rowToPresenter(r, admin) {
     nickname: r.nickname,
     icon: r.icon_r2_key ? "/files/" + r.icon_r2_key : "",
     xUrl: r.x_url || "",
+    websiteUrl: r.website_url || "",
     // カード画像の差し替え・カードの文言・検索結果の見え方（いずれも空＝自動生成のまま）
     cardUrl: r.card_r2_key ? "/files/" + r.card_r2_key : "",
     cardSquareUrl: r.card_square_r2_key ? "/files/" + r.card_square_r2_key : "",

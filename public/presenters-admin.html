@@ -109,6 +109,14 @@
         <p class="fnote">JPEG・WebP、5MBまで。選ぶとすぐ反映されます。${p.icon?'<a id="paIconRemove" style="cursor:pointer;text-decoration:underline">アイコンを外す</a>':""}</p>
       </div>
       <div class="field">
+        <label>ウェブサイトURL</label>
+        <div class="cicon-row">
+          <input type="text" id="paWebsiteUrl" value="${CC.escapeAttr(p.websiteUrl||"")}" placeholder="例）https://example.com">
+          <button type="button" class="btn-save btn-round" id="paWebsiteUrlSave">変更</button>
+        </div>
+        <p class="fnote">設定すると、ニックネームの右に地球儀アイコンのリンクが出ます。空欄で保存すると外れます。</p>
+      </div>
+      <div class="field">
         <label>X（Twitter）URL</label>
         <div class="cicon-row">
           <input type="text" id="paXUrl" value="${CC.escapeAttr(p.xUrl||"")}" placeholder="例）https://x.com/example">
@@ -188,6 +196,15 @@
       if(!nickname){ alert("ニックネームを入力してください。"); return; }
       try{
         await CC.apiUpdatePresenter(p.id, {nickname});
+        await CC.reloadPresenters();
+        render();
+      }catch(err){ alert(CC.saveErr(err)); }
+    });
+
+    root.querySelector("#paWebsiteUrlSave").addEventListener("click", async ()=>{
+      const websiteUrl = root.querySelector("#paWebsiteUrl").value.trim();
+      try{
+        await CC.apiUpdatePresenter(p.id, {nickname:p.nickname, websiteUrl});
         await CC.reloadPresenters();
         render();
       }catch(err){ alert(CC.saveErr(err)); }
