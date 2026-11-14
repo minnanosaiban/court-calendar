@@ -605,7 +605,7 @@ a{color:inherit}
 .favtoggle:hover{border-color:rgba(185,50,38,.6)}
 .favtoggle .bi{font-size:.8rem;line-height:1;color:var(--stamp)}
 .cal-row{display:flex;flex-direction:column;gap:32px}
-.cal-block2{display:none}
+.cal-block2,.cal-block3{display:none}
 .month{font-family:"Shippori Mincho",serif;font-size:1.2rem;font-weight:600;
   font-variant-numeric:tabular-nums;letter-spacing:.03em;margin:0 4px 12px}
 .calcard{padding:16px 8px 12px}
@@ -1012,6 +1012,9 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
    欄の並びは事件ページの実際の掲載順に合わせる */
 /* 編集ページだけ少し広く使う（長文編集が主役のため。他ページは720pxのまま） */
 .wrap-wide{max-width:960px}
+/* トップページ（index.html の .wrap-home）も同じ960pxにして、事件ページと列の幅をそろえる（2026-11-15。
+   トップはスマホ優先だが、PC幅ではカレンダーを3か月並べられる広さが要る）。 */
+.wrap-home{max-width:960px}
 /* 事件ページ（case.html）はPC優先で列を960pxに広げる（2026-11-14に880px、タイムラインの中身を
    左に下げた2026-11-15に、その分を足して960px＝編集ページの .wrap-wide と同じ）。720pxでは原告/被告の2カラム
    （.args）が1行16字ほどで改行だらけになっていたため。
@@ -1020,7 +1023,7 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
    1枚だけの画像（.gal-single）は720pxのまま中央に置く（広げると1枚が大きくなりすぎる）。
    スマホ幅では max-width が効かないので表示は変わらない */
 .wrap-case{max-width:960px}
-body:has(.wrap-case) .announce-inner{max-width:960px}
+body:has(.wrap-case) .announce-inner,body:has(.wrap-home) .announce-inner{max-width:960px}
 .ce-title{font-family:"Shippori Mincho",serif;font-size:1.6rem;font-weight:600;line-height:1.4;margin-top:24px}
 /* タイトルの隣に「入力は公開情報」の注意を添える（2026-08-30）。折り返しても崩れないよう
    align-items:baseline＋flex-wrap（.ce-title 側の margin-top は行が2つに分かれても保つ） */
@@ -1197,6 +1200,10 @@ body:has(.wrap-case) .announce-inner{max-width:960px}
   .cal-block{flex:1;min-width:0}
   .cal-block2{display:block}
   .cell .n{width:26px;height:26px;font-size:.8rem}
+}
+/* 960px以上は3か月（列の幅が960pxに届くのはこのとき。1か月あたり約288px・マス約37px） */
+@media(min-width:960px){
+  .cal-block3{display:block}
 }
 /* スライドをPDFで保存するボタン（ギャラリー直下） */
 .gal-pdf{margin:-8px 0 24px;text-align:center}

@@ -37,7 +37,7 @@
 </head>
 <body>
 <script src="announce.js"></script>
-<div class="wrap">
+<div class="wrap wrap-home">
 
   <header class="masthead">
     <div class="stamp" aria-hidden="true">傍聴</div>
@@ -92,6 +92,13 @@
         <div class="card calcard">
           <div class="dow"><div>日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div></div>
           <div class="grid" id="grid2"></div>
+        </div>
+      </div>
+      <div class="cal-block cal-block3">
+        <div class="month" id="monthLabel3"></div>
+        <div class="card calcard">
+          <div class="dow"><div>日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div></div>
+          <div class="grid" id="grid3"></div>
         </div>
       </div>
     </div>
@@ -219,8 +226,10 @@
   "use strict";
   const grid1=document.getElementById("grid1");
   const grid2=document.getElementById("grid2");
+  const grid3=document.getElementById("grid3");
   const monthLabel1=document.getElementById("monthLabel1");
   const monthLabel2=document.getElementById("monthLabel2");
+  const monthLabel3=document.getElementById("monthLabel3");
   const upcomingBox=document.getElementById("upcoming");
   const statusEl=document.getElementById("status");
   const dayPop=document.getElementById("dayPop");
@@ -327,7 +336,7 @@
   // それを拾って即座に閉じてしまう。開いた直後（popOpenedAtから400ms）はこの自動close-on-scrollを無視する
   window.addEventListener("scroll",()=>{ if(!dayPop.hidden && Date.now()-popOpenedAt>=400) closePopoverNow(); },{passive:true});
 
-  // ---- カレンダー（2か月ぶん組み立てて、CSSで狭い画面では2つ目を隠す） ----
+  // ---- カレンダー（3か月ぶん組み立てて、CSSで画面の幅に応じて2・3つ目を隠す。1か月＝スマホ、2か月＝860px以上、3か月＝960px以上） ----
   function buildMonthGrid(monthDate, gridEl, labelEl){
     const y=monthDate.getFullYear(), m=monthDate.getMonth();
     labelEl.textContent=`${y}年 ${m+1}月`;
@@ -387,6 +396,7 @@
     buildMonthGrid(view, grid1, monthLabel1);
     const next=new Date(view.getFullYear(), view.getMonth()+1, 1);
     buildMonthGrid(next, grid2, monthLabel2);
+    buildMonthGrid(new Date(view.getFullYear(), view.getMonth()+2, 1), grid3, monthLabel3);
   }
 
   // ---- 今後の期日 ----
