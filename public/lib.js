@@ -786,11 +786,18 @@ window.CC = (function(){
     </div>`;
   }
   // タイムラインの開け閉め（2026-11-14に全体の折り畳み、2026-11-15に期日ごとへ変更）。
-  // 中身（主張カード・資料）のある期日だけが開け閉めできる。既定は「いちばん新しい中身のある回」だけを開く：
-  // 開いている1回が見本になり、ほかの回にも同じ中身があると気づいてもらえる。全部閉じると主張カードに
-  // 気づかれず、全部開くと約25画面（スマホ）の縦長になって節が縦に並んだ形に見えないため。
-  // 「すべて展開／すべて折り畳む」で一括も切り替えられる。状態は画面の再描画（いいね等）をまたいで保つ
-  let tlOpen=null;   // 開いている期日のid（Set）。null＝まだ決めていない（最初の描画で既定を入れる）
+  // 中身（主張カード・資料）のある期日だけが開け閉めできる。既定は全部閉じる：全部開くと約25画面（スマホ）の
+  // 縦長になり、節が縦に並んだタイムラインに見えないため。閉じていると主張カードがあることに気づかれない
+  // ので、一括スイッチの文言を「原告・被告の主張の要約を読む」と中身が分かる言葉にしている（tlToggleInner）。
+  // 状態は画面の再描画（いいね等）をまたいで保つ
+  const tlOpen=new Set();   // 開いている期日のid
+  // 一括スイッチの中身。kind="args"＝主張カードのある事件、"mats"＝資料だけの事件（主張の要約とは言えない）
+  function tlToggleInner(allOpen, kind){
+    const label = kind==="args"
+      ? (allOpen ? "主張の要約を閉じる" : "原告・被告の主張の要約を読む")
+      : (allOpen ? "資料を閉じる" : "各期日の資料を表示");
+    return `<i class="bi ${allOpen?"bi-arrows-collapse":"bi-arrows-expand"}" aria-hidden="true"></i>${label}`;
+  }
   function timelineHtml(caseId){
     const rounds=caseEvents(caseId);
     const mats=caseMaterials(caseId);
@@ -798,7 +805,7 @@ window.CC = (function(){
     const next=nextEvent(caseId);
     const hasBody = ev => !!(mats.some(m=>m.eventId===ev.id) || (ev.plaintiffArgument&&ev.plaintiffArgument.length) || (ev.defendantArgument&&ev.defendantArgument.length));
     const expandables = rounds.filter(hasBody);
-    if(tlOpen===null) tlOpen = new Set(expandables.length ? [expandables[expandables.length-1].id] : []);
+    const tlKind = rounds.some(ev=>(ev.plaintiffArgument&&ev.plaintiffArgument.length) || (ev.defendantArgument&&ev.defendantArgument.length)) ? "args" : "mats";
     const allOpen = expandables.length>0 && expandables.every(ev=>tlOpen.has(ev.id));
     const items=rounds.map(ev=>{
       const own=mats.filter(m=>m.eventId===ev.id);
@@ -827,7 +834,7 @@ window.CC = (function(){
     }).join("");
     // 一括スイッチは、中身のある期日があるときだけ出す
     const tlToggle = expandables.length
-      ? `<button type="button" class="tl-toggle" data-tltoggle aria-expanded="${allOpen}"><i class="bi ${allOpen?"bi-arrows-collapse":"bi-arrows-expand"}" aria-hidden="true"></i>${allOpen?"すべて折り畳む":"すべて展開"}</button>`
+      ? `<button type="button" class="tl-toggle" data-tltoggle="${tlKind}" aria-expanded="${allOpen}">${tlToggleInner(allOpen, tlKind)}</button>`
       : "";
     return `<p class="subhead">タイムライン</p>
       ${tlToggle?`<p class="tl-togglerow">${tlToggle}</p>`:""}
@@ -1160,13 +1167,12 @@ window.CC = (function(){
     // 普通のリンクになった（2026-08-27）。ここでのJSでの配線は不要
     // タイムラインの開け閉め：期日の行のボタン（data-evtoggle）はその回だけ、見出し下のスイッチ
     // （data-tltoggle）は全部を、ぜんぶ開いていれば閉じ、そうでなければ開く。状態は tlOpen に残す
-    if(!tlOpen) tlOpen=new Set();
     const tlItems=()=>[...container.querySelectorAll(".tl-item.xp")];
     const tlSyncAll=()=>{
       const b=container.querySelector("[data-tltoggle]"); if(!b) return;
       const its=tlItems(), all=its.length>0 && its.every(li=>li.classList.contains("open"));
       b.setAttribute("aria-expanded",all?"true":"false");
-      b.innerHTML=`<i class="bi ${all?"bi-arrows-collapse":"bi-arrows-expand"}" aria-hidden="true"></i>`+(all?"すべて折り畳む":"すべて展開");
+      b.innerHTML=tlToggleInner(all, b.dataset.tltoggle);
     };
     const tlSetOpen=(li,open)=>{
       li.classList.toggle("open",open);

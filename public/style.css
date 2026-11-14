@@ -435,12 +435,14 @@ a{color:inherit}
 .tl-tog:hover .bi{color:var(--ink)}
 .tl-item.xp:not(.open) .tl-body{display:none}
 .tl-item.xp:not(.open){padding-bottom:12px}
-/* 見出し「タイムライン」の下の折り畳み/展開スイッチ */
-.tl-togglerow{margin-top:8px}
-.tl-toggle{display:inline-flex;align-items:center;gap:4px;font-size:.7rem;color:var(--ink);background:#fff;
-  border:1px solid #e6e4dd;border-radius:999px;padding:4px 12px;cursor:pointer;line-height:1.5;font-family:inherit}
+/* 見出し「タイムライン」の下の一括スイッチ（「原告・被告の主張の要約を読む」）。既定で全部閉じているので、
+   中身があると気づいてもらう入口になる。小さいピル（.7rem）では見落とされるため、大きいピル
+   （.8rem・8px 20px。.pillbtn と同じ寸法）にしている（2026-11-15） */
+.tl-togglerow{margin-top:12px}
+.tl-toggle{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;color:var(--ink);background:#fff;
+  border:1px solid #e6e4dd;border-radius:999px;padding:8px 20px;cursor:pointer;line-height:1.5;font-family:inherit}
 .tl-toggle:hover{border-color:#c9c6bc}
-.tl-toggle .bi{font-size:.8rem;line-height:1;color:var(--mut)}
+.tl-toggle .bi{font-size:.85rem;line-height:1;color:var(--mut)}
 
 /* ---- 訴訟資料（タイムラインの中身／一覧） ---- */
 .mat{font-size:.9rem}
