@@ -428,6 +428,13 @@ a{color:inherit}
 .args + .mat{margin-top:16px}
 .mat-name{font-weight:500;font-size:.8rem}
 .mat-claims{margin-top:8px;font-size:.9rem}
+/* 資料名そのものが、書面の主張（.mat-claims）を開け閉めするボタン（2026-11-15）。見た目は資料名のまま、
+   頭に小さな山形を付けて「開ける」ことだけ示す（開くと下向きに回る）。上下の padding は押しやすさのため */
+.mat-tog{display:inline-flex;align-items:center;gap:4px;background:none;border:none;padding:4px 0;
+  color:inherit;font-family:inherit;line-height:inherit;cursor:pointer;text-align:left}
+.mat-tog .bi{font-size:.7rem;color:var(--mut);transition:transform .15s ease}
+.mat-tog[aria-expanded="true"] .bi{transform:rotate(90deg)}
+.mat-tog:hover .bi{color:var(--ink)}
 .mlist{list-style:none;margin-top:8px;font-size:.9rem}
 /* 訴訟資料一覧を提出者側ごとに束ねる見出し（色は .arg h4 と同じ組） */
 .mside-h{margin:16px 0 4px;font-size:.7rem;font-weight:700;letter-spacing:.14em}

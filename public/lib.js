@@ -760,11 +760,21 @@ window.CC = (function(){
       : `<span class="btn off"><i class="bi bi-stars" aria-hidden="true"></i>要約</span>`;
     return `<span class="btns">${pdf}${body}${sum}</span>`;
   }
-  function matBlockHtml(m){
+  // 書面ごとの「この書面で主張していること」（m.claims）は、資料名を押して開け閉めできる（2026-11-15）。
+  // 既定の状態は呼び出し側が決める（closedByDefault）：その期日に「原告/被告の主張」のカードがあれば
+  // 閉じておく（カードとほぼ同じ内容が続けて出て、ページが長くなっていたため）。カードの無い期日では
+  // 書面の主張がその期日のただ一つの中身なので、これまでどおり開いて出す。
+  // 開け閉めした書面は claimsFlipped に覚えておき、画面の再描画（いいね等）をまたいで保つ
+  const claimsFlipped=new Set();
+  function matBlockHtml(m, closedByDefault){
     const claims=(m.claims||[]).map(x=>`<li>${escapeHtml(x)}</li>`).join("");
+    const open = claims && (closedByDefault ? claimsFlipped.has(m.id) : !claimsFlipped.has(m.id));
+    const name = claims
+      ? `<button type="button" class="mat-name mat-tog" data-claimstoggle="${escapeAttr(m.id)}" aria-expanded="${open?"true":"false"}"><i class="bi bi-chevron-right" aria-hidden="true"></i>${escapeHtml(m.title)}</button>`
+      : `<span class="mat-name">${escapeHtml(m.title)}</span>`;
     return `<div class="mat">
-      <span class="mmain"><span class="mat-name">${escapeHtml(m.title)}</span>${matButtonsHtml(m)}</span>
-      ${claims?`<ul class="pts mat-claims">${claims}</ul>`:""}
+      <span class="mmain">${name}${matButtonsHtml(m)}</span>
+      ${claims?`<ul class="pts mat-claims"${open?"":" hidden"}>${claims}</ul>`:""}
     </div>`;
   }
   // 期日ごとの「原告の主張／被告の主張」（3行程度の箇条書き）。資料の要約と同じく、AIモデル・作成日を
@@ -809,7 +819,7 @@ window.CC = (function(){
           <span class="tl-type">${escapeHtml(ev.type||"期日")}</span>
           <span class="tl-meta">${escapeHtml(place)}${closed}${reportNote}${bookmarkHtml(ev)}${editLink}</span>
         </div>
-        ${expandable?`<div class="tl-body">${argsHtml(ev)}${own.map(matBlockHtml).join("")}</div>`:""}
+        ${expandable?`<div class="tl-body">${argsHtml(ev)}${own.map(m=>matBlockHtml(m, !!hasArgs)).join("")}</div>`:""}
       </li>`;
     }).join("");
     const tlToggle = rounds.some(ev=>/*中身のある期日があるときだけ*/ mats.some(m=>m.eventId===ev.id) || (ev.plaintiffArgument&&ev.plaintiffArgument.length) || (ev.defendantArgument&&ev.defendantArgument.length))
@@ -1150,6 +1160,16 @@ window.CC = (function(){
         const tl=container.querySelector(".tl"); if(tl) tl.classList.toggle("collapsed",tlCollapsed);
         b.setAttribute("aria-expanded",tlCollapsed?"false":"true");
         b.innerHTML=`<i class="bi ${tlCollapsed?"bi-arrows-expand":"bi-arrows-collapse"}" aria-hidden="true"></i>`+(tlCollapsed?"展開する":"折り畳む");
+      });
+    });
+    // 資料名を押すと、その書面の主張（.mat-claims）を開け閉めする（既定の状態は matBlockHtml 参照）
+    container.querySelectorAll("[data-claimstoggle]").forEach(b=>{
+      b.addEventListener("click",()=>{
+        const id=b.dataset.claimstoggle;
+        if(claimsFlipped.has(id)) claimsFlipped.delete(id); else claimsFlipped.add(id);
+        const open = b.getAttribute("aria-expanded")!=="true";
+        b.setAttribute("aria-expanded", open?"true":"false");
+        const list=b.closest(".mat").querySelector(".mat-claims"); if(list) list.hidden=!open;
       });
     });
     container.querySelectorAll("[data-like]").forEach(b=>{
