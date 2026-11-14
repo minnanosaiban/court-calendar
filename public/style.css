@@ -593,6 +593,10 @@ a{color:inherit}
 /* 事件ページの6種のボタン（資料の.pdf/.md/要約、まとめてダウンロード2つ、「原告・被告の主張の要約を読む」）は
    高さを揃える（2026-11-15）。上下の余白で高さを出すのではなく、中央揃えの min-height で決める。変えるときはここの数字だけ */
 .btns .btn,.mbulk .btn,.tl-toggle{box-sizing:border-box;min-height:27px;padding-top:0;padding-bottom:0}
+/* まとめてダウンロードも、「原告・被告の主張の要約を読む」（.tl-toggle）・「報告を書く」と同じ朱色の枠線ピルにする */
+.mbulk .btn{color:var(--stamp);border-color:rgba(185,50,38,.35)}
+.mbulk .btn:hover{border-color:rgba(185,50,38,.6)}
+.mbulk .btn .bi{color:var(--stamp)}
 .empty-msg{color:var(--mut);font-size:.9rem;padding:24px 16px;text-align:center}
 
 /* ---- calendar ---- */
