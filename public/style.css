@@ -1003,11 +1003,6 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
    スマホ幅では max-width が効かないので表示は変わらない */
 .wrap-case{max-width:960px}
 body:has(.wrap-case) .announce-inner{max-width:960px}
-/* 列を広げた分、2カラムの主張カードも広い画面でだけ文字を1remに上げる（.9rem のままだと列の広さに対して
-   文字が小さく見えるため） */
-@media(min-width:860px){
-  .wrap-case .arg ul{font-size:1rem}
-}
 .ce-title{font-family:"Shippori Mincho",serif;font-size:1.6rem;font-weight:600;line-height:1.4;margin-top:24px}
 /* タイトルの隣に「入力は公開情報」の注意を添える（2026-08-30）。折り返しても崩れないよう
    align-items:baseline＋flex-wrap（.ce-title 側の margin-top は行が2つに分かれても保つ） */
