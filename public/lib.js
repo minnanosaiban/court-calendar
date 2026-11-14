@@ -809,7 +809,8 @@ window.CC = (function(){
     const tlToggle = rounds.some(ev=>/*中身のある期日があるときだけ*/ mats.some(m=>m.eventId===ev.id) || (ev.plaintiffArgument&&ev.plaintiffArgument.length) || (ev.defendantArgument&&ev.defendantArgument.length))
       ? `<button type="button" class="tl-toggle" data-tltoggle aria-expanded="${tlCollapsed?"false":"true"}"><i class="bi ${tlCollapsed?"bi-arrows-expand":"bi-arrows-collapse"}" aria-hidden="true"></i>${tlCollapsed?"展開する":"折り畳む"}</button>`
       : "";
-    return `<div class="tl-headrow"><p class="subhead">タイムライン</p>${tlToggle}</div>
+    return `<p class="subhead">タイムライン</p>
+      ${tlToggle?`<p class="tl-togglerow">${tlToggle}</p>`:""}
       ${canEditCase(caseId)?`<p class="qact"><a href="case-edit.html?id=${encodeURIComponent(caseId)}&open=ev:new">＋ 期日を追加</a></p>`:""}
       ${rounds.length?`<ol class="tl${tlCollapsed?" collapsed":""}">${items}</ol>`:`<p class="d-body mut">期日はまだ登録されていません。</p>`}`;
   }
