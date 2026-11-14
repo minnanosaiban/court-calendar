@@ -948,8 +948,8 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .fnote{color:var(--mut);font-size:.8rem;margin-top:4px;line-height:1.7}
 /* 事件ページの先頭に置く、非公式・AI要約・原典確認の注意書き。アイコンも枠も付けず、カードの左端に
    そろえた小さな補助文字だけにする（--mut。読み飛ばされにくい濃さ）。中央揃え。上は
-   「事件をさがすに戻る」との間を広めにあける */
-.unofficial-note{color:var(--mut);font-size:.75rem;line-height:1.7;letter-spacing:.04em;text-align:center;margin:40px 0 20px}
+   「事件をさがすに戻る」との間を広めにあける（上64px・下16px） */
+.unofficial-note{color:var(--mut);font-size:.75rem;line-height:1.7;letter-spacing:.04em;text-align:center;margin:64px 0 16px}
 .fnote a{text-underline-offset:3px}
 .fnote code{font-size:.92em;background:var(--tint);padding:1px 4px;border-radius:4px}
 .fnote .inl{display:inline-flex;align-items:center;gap:4px}
