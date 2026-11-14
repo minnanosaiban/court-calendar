@@ -1,0 +1,15 @@
+-- 一度だけ実行するマイグレーション（2026-11-15 作成・未実行）
+-- 資料の「この書面で主張していること」（materials.claims）を列ごと削除する。
+-- 表示・入力欄・APIの受け渡しは 2026-11-15 に廃止済み（期日ごとの主張カードで代える）。
+--
+-- 中身のデータは 2026-11-15 に本番で消去済み（63件を空文字に更新。消す前の内容は
+-- backup_before_047.sql にある。国葬文書の訴訟22件・掲載サンプル・開示請求の事件41件）。
+-- 残っているのは空の列だけで、このSQLはその列を取り除く後片付け。
+--
+-- 実行する前に：claims を読み書きしない版のサイトを先にデプロイしておく
+-- （古い版の Functions が動いているうちに列を消すと、資料の取得・保存がエラーになる）。
+--
+-- 実行方法：
+--   npx wrangler d1 execute court-calendar --remote --file migrate_047_drop_materials_claims.sql
+-- 実行後は schema.sql の materials から claims の行も消す。
+ALTER TABLE materials DROP COLUMN claims;

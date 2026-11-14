@@ -427,14 +427,6 @@ a{color:inherit}
 /* 原告/被告の主張（.args）のすぐ下に資料が来るときも、資料どうしと同じだけあける（無いと箱にくっついて見える） */
 .args + .mat{margin-top:16px}
 .mat-name{font-weight:500;font-size:.8rem}
-.mat-claims{margin-top:8px;font-size:.9rem}
-/* 資料名そのものが、書面の主張（.mat-claims）を開け閉めするボタン（2026-11-15）。見た目は資料名のまま、
-   頭に小さな山形を付けて「開ける」ことだけ示す（開くと下向きに回る）。上下の padding は押しやすさのため */
-.mat-tog{display:inline-flex;align-items:center;gap:4px;background:none;border:none;padding:4px 0;
-  color:inherit;font-family:inherit;line-height:inherit;cursor:pointer;text-align:left}
-.mat-tog .bi{font-size:.7rem;color:var(--mut);transition:transform .15s ease}
-.mat-tog[aria-expanded="true"] .bi{transform:rotate(90deg)}
-.mat-tog:hover .bi{color:var(--ink)}
 .mlist{list-style:none;margin-top:8px;font-size:.9rem}
 /* 訴訟資料一覧を提出者側ごとに束ねる見出し（色は .arg h4 と同じ組） */
 .mside-h{margin:16px 0 4px;font-size:.7rem;font-weight:700;letter-spacing:.14em}
@@ -1005,10 +997,10 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
    スマホ幅では max-width が効かないので表示は変わらない */
 .wrap-case{max-width:880px}
 body:has(.wrap-case) .announce-inner{max-width:880px}
-/* 列を広げた分、1カラムの要約（.mat-claims）は .9rem のままだと1行50字を超えて目で追いにくい。
-   広い画面でだけ読み物の文字を1remに上げ、1行45字前後に収める（2カラムの主張も同じ大きさにそろえる） */
+/* 列を広げた分、2カラムの主張カードも広い画面でだけ文字を1remに上げる（.9rem のままだと列の広さに対して
+   文字が小さく見えるため） */
 @media(min-width:860px){
-  .wrap-case .mat-claims,.wrap-case .arg ul{font-size:1rem}
+  .wrap-case .arg ul{font-size:1rem}
 }
 .ce-title{font-family:"Shippori Mincho",serif;font-size:1.6rem;font-weight:600;line-height:1.4;margin-top:24px}
 /* タイトルの隣に「入力は公開情報」の注意を添える（2026-08-30）。折り返しても崩れないよう

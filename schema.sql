@@ -187,7 +187,7 @@ CREATE TABLE IF NOT EXISTS materials (
   file_name   TEXT,            -- 元のファイル名
   file_size   INTEGER,
   mime        TEXT,
-  claims      TEXT,            -- この書面で主張していること（1行1項目、改行区切り・任意）
+  claims      TEXT,            -- 未使用（2026-11-15に表示・入力・APIを廃止。旧「この書面で主張していること」。列とデータは残っている）
   body        TEXT,            -- 本文（Markdownを貼り付け・任意）
   body_model  TEXT,            -- 本文を作ったAIモデル名（例：Claude Sonnet 5・任意。手入力・コピペの本文なら空でよい）
   body_date   TEXT,            -- 本文を作った年月日（自由書式・任意）
