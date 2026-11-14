@@ -990,6 +990,19 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
    欄の並びは事件ページの実際の掲載順に合わせる */
 /* 編集ページだけ少し広く使う（長文編集が主役のため。他ページは720pxのまま） */
 .wrap-wide{max-width:960px}
+/* 事件ページ（case.html）はPC優先で列を880pxに広げる（2026-11-14）。720pxでは原告/被告の2カラム
+   （.args）が1行16字ほどで改行だらけになっていたため。880pxで1行23字前後になる。
+   上部のお知らせ帯（.announce-inner）も同じ幅にそろえる（announce.js が body 直下に差し込むので
+   :has で拾う。:has 非対応のブラウザでは帯だけ720pxのまま＝崩れはしない）。
+   1枚だけの画像（.gal-single）は720pxのまま中央に置く（広げると1枚が大きくなりすぎる）。
+   スマホ幅では max-width が効かないので表示は変わらない */
+.wrap-case{max-width:880px}
+body:has(.wrap-case) .announce-inner{max-width:880px}
+/* 列を広げた分、1カラムの要約（.mat-claims）は .9rem のままだと1行50字を超えて目で追いにくい。
+   広い画面でだけ読み物の文字を1remに上げ、1行45字前後に収める（2カラムの主張も同じ大きさにそろえる） */
+@media(min-width:860px){
+  .wrap-case .mat-claims,.wrap-case .arg ul{font-size:1rem}
+}
 .ce-title{font-family:"Shippori Mincho",serif;font-size:1.6rem;font-weight:600;line-height:1.4;margin-top:24px}
 /* タイトルの隣に「入力は公開情報」の注意を添える（2026-08-30）。折り返しても崩れないよう
    align-items:baseline＋flex-wrap（.ce-title 側の margin-top は行が2つに分かれても保つ） */
