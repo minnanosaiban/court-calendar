@@ -946,6 +946,10 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .subfield-plain{background:none;padding:0}
 .cicon-remove{color:var(--edit);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .fnote{color:var(--mut);font-size:.8rem;margin-top:4px;line-height:1.7}
+/* 事件ページの先頭に置く、非公式・AI要約・原典確認の注意書き。目立たせすぎず、読み飛ばされない濃さ（--mut） */
+.unofficial-note{display:flex;gap:6px;align-items:flex-start;color:var(--mut);font-size:.8rem;line-height:1.7;margin:0 4px 12px}
+.unofficial-note .bi{flex:none;margin-top:3px}
+.unofficial-note b{font-weight:700;color:var(--ink)}
 .fnote a{text-underline-offset:3px}
 .fnote code{font-size:.92em;background:var(--tint);padding:1px 4px;border-radius:4px}
 .fnote .inl{display:inline-flex;align-items:center;gap:4px}
