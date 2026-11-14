@@ -459,6 +459,7 @@ a{color:inherit}
 .mside-h + .mlist{margin-top:0}
 .mrow{display:flex;gap:12px;padding:8px 0;border-top:1px solid var(--tint)}
 .mrow:first-child{border-top:none}
+.mside-tag{color:var(--mut);font-size:.8rem;margin-left:8px;white-space:nowrap}
 .mdate{flex:none;width:6.2em;color:var(--mut);font-size:.8rem;font-variant-numeric:tabular-nums;padding-top:1px}
 /* スマホ幅では提出日の列を削り、資料名＋ボタン列（.mmain）をなるべく1行に収める（2026-09-04） */
 @media(max-width:559.98px){.mdate{display:none}}

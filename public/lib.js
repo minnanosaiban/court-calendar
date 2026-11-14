@@ -740,6 +740,8 @@ window.CC = (function(){
   }
   // PDF・テキスト・要約の3つのボタン。無いものはグレーのまま押せない（「この資料には無い」ことが分かるように）
   function matButtonsHtml(m){
+    // 3つとも無い資料（名前だけ載せている書面）は、灰色のボタンを3つ並べても意味が無いので出さない（2026-11-15）
+    if(!m.fileUrl && !m.body && !m.summary) return "";
     const icon = matIcon(m);
     const pdf = m.fileUrl
       ? `<a class="btn pdf" href="${escapeAttr(m.fileUrl)}" target="_blank" rel="noopener"><i class="bi ${icon}" aria-hidden="true"></i>.pdf</a>`
@@ -836,28 +838,34 @@ window.CC = (function(){
     const tlToggle = expandables.length
       ? `<button type="button" class="tl-toggle" data-tltoggle="${tlKind}" aria-expanded="${allOpen}">${tlToggleInner(allOpen, tlKind)}</button>`
       : "";
+    // 期日が1件も無く資料だけある事件は、「期日はまだ登録されていません」と出すより、下の資料一覧を
+    // 日付順に見せるほうが伝わる。編集できる人には追加リンクのため出す（2026-11-15）
+    if(!rounds.length && mats.length && !canEditCase(caseId)) return "";
     return `<p class="subhead">タイムライン</p>
       ${tlToggle?`<p class="tl-togglerow">${tlToggle}</p>`:""}
       ${canEditCase(caseId)?`<p class="qact"><a href="case-edit.html?id=${encodeURIComponent(caseId)}&open=ev:new">＋ 期日を追加</a></p>`:""}
       ${rounds.length?`<ol class="tl">${items}</ol>`:`<p class="d-body mut">期日はまだ登録されていません。</p>`}`;
   }
-  function matRowHtml(m, caseId){
+  function matRowHtml(m, caseId, showSide){
     const edit = canEditCase(caseId) ? `<a class="round-edit" href="case-edit.html?id=${encodeURIComponent(caseId)}&open=mat:${encodeURIComponent(m.id)}">編集</a>` : "";
     return `<li class="mrow">
       ${m.filedOn?`<span class="mdate">${escapeHtml(dotDate(m.filedOn))}</span>`:""}
-      <span class="mmain"><span class="mat-name">${escapeHtml(m.title)}</span>${matButtonsHtml(m)}${edit}</span>
+      <span class="mmain"><span class="mat-name">${escapeHtml(m.title)}</span>${showSide&&m.side?`<span class="mside-tag">${escapeHtml(m.side)}</span>`:""}${matButtonsHtml(m)}${edit}</span>
     </li>`;
   }
   // 訴訟資料一覧：提出者側ごとに見出しで束ねる（初出の順。側が空のものは「その他」にまとめる）。
   // 全件が側なしなら、旧来どおり見出し無しの1本の並びにする
   function materialsListHtml(caseId){
-    const mats=caseMaterials(caseId);
+    // 提出日の順に並べる（日付なしは末尾。同日は登録順）
+    const mats=caseMaterials(caseId).map((m,i)=>[m,i]).sort((a,b)=>(a[0].filedOn||"9999").localeCompare(b[0].filedOn||"9999")||a[1]-b[1]).map(x=>x[0]);
+    const noEvents = !caseEvents(caseId).length;
     // 訴訟資料が1件も無ければ、見出しごと何も出さない（追加は事件情報の編集ページからいつでもできるため、
     // ここに専用の入り口が無くても困らない）
     if(!mats.length) return "";
     let body;
-    if(mats.every(m=>!m.side)){
-      body = `<ul class="mlist">${mats.map(m=>matRowHtml(m,caseId)).join("")}</ul>`;
+    if(mats.every(m=>!m.side) || noEvents){
+      // 期日が無い事件は、側で分けず日付順の1本の並びにする（側は各行の小さな注記で残す）
+      body = `<ul class="mlist">${mats.map(m=>matRowHtml(m,caseId,noEvents)).join("")}</ul>`;
     }else{
       const order=[], groups={};
       mats.forEach(m=>{
