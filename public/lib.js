@@ -645,7 +645,7 @@ window.CC = (function(){
     // 見えず、初見の人が見つけづらかったため廃止）
     // 公式サイトのある事件も載せているため、非公式であること・要約にAIを使っていること・正確な内容は
     // 公式サイトで確認してほしいことを、事件カードの上に短く添える（2026-11-14）
-    let html = `<p class="unofficial-note"><i class="bi bi-info-circle" aria-hidden="true"></i>当サイトは<b>非公式</b>です。要約には<b>AI</b>を使っています。正確な内容は、公式サイトなどの原典でご確認ください。</p>` + galleryHtml(caseId) + boardHtml(caseId) + `
+    let html = `<p class="unofficial-note"><i class="bi bi-info-circle" aria-hidden="true"></i><span>当サイトは<b>非公式</b>です。要約には<b>AI</b>を使っています。正確な内容は、公式サイトなどの原典でご確認ください。</span></p>` + galleryHtml(caseId) + boardHtml(caseId) + `
       <div class="card dcard">
         <div class="d-head">
           ${presenterHeaderHtml(c)}
