@@ -950,6 +950,8 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
    そろえた小さな補助文字だけにする（--mut。読み飛ばされにくい濃さ）。中央揃え。上は
    「事件をさがすに戻る」との間を広めにあける（上64px・下16px） */
 .unofficial-note{color:var(--mut);font-size:.75rem;line-height:1.7;letter-spacing:.04em;text-align:center;margin:64px 0 16px}
+/* スマホ幅（.mdateなどと同じ559.98px境界）では折り返すので、中央ではなく左揃えにする */
+@media(max-width:559.98px){.unofficial-note{text-align:left}}
 .fnote a{text-underline-offset:3px}
 .fnote code{font-size:.92em;background:var(--tint);padding:1px 4px;border-radius:4px}
 .fnote .inl{display:inline-flex;align-items:center;gap:4px}
