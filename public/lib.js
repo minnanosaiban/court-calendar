@@ -288,7 +288,7 @@ window.CC = (function(){
   function factRow(label, valueHtml){ return valueHtml ? `<dt>${escapeHtml(label)}</dt><dd>${valueHtml}</dd>` : ""; }
   function likeHtml(c){
     return `<button type="button" class="like${c.liked?" on":""}" data-like="${escapeAttr(c.id)}" aria-pressed="${c.liked?"true":"false"}" aria-label="いいね">`+
-      `<i class="bi ${c.liked?"bi-heart-fill":"bi-heart"}" aria-hidden="true"></i><span class="like-n">${c.likes||0}</span></button>`;
+      `<i class="bi ${c.liked?"bi-heart-fill":"bi-heart"}" aria-hidden="true"></i>${c.likes>0?`<span class="like-n">${c.likes}</span>`:""}</button>`;
   }
   // 裁判所名の略称（東京地方裁判所→東京地裁、大宮簡易裁判所→大宮簡裁 等）。
   // スマホでは正式名称だと長すぎるため、一覧ではこちらを出す（.court-abbr参照・2026-09-05）

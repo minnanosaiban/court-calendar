@@ -438,7 +438,7 @@ a{color:inherit}
 /* 見出し「タイムライン」の下の一括スイッチ（「原告・被告の主張の要約を読む」）。既定で全部閉じているので、
    中身があると気づいてもらう入口になる。小さいピル（.7rem）では見落とされるため、大きいピル
    （.8rem・8px 20px。.pillbtn と同じ寸法）にしている（2026-11-15） */
-.tl-togglerow{margin-top:12px}
+.tl-togglerow{margin:24px 0}
 .tl-toggle{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;color:var(--ink);background:#fff;
   border:1px solid #e6e4dd;border-radius:999px;padding:8px 20px;cursor:pointer;line-height:1.5;font-family:inherit}
 .tl-toggle:hover{border-color:#c9c6bc}
@@ -588,8 +588,11 @@ a{color:inherit}
 .qact a{color:var(--edit);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 /* 訴訟資料一覧の「PDF/mdをまとめてダウンロード」。見た目は各資料の.pdf/.md/要約ボタン（.btn）と
    そろえ、2つ並ぶ時は折り返せるようにする（2026-09-04） */
-.mbulk{margin-top:16px;display:flex;gap:8px;flex-wrap:wrap}
+.mbulk{margin:24px 0;display:flex;gap:8px;flex-wrap:wrap}
 .mbulk .btn:disabled{opacity:.5;cursor:default}
+/* 事件ページの6種のボタン（資料の.pdf/.md/要約、まとめてダウンロード2つ、「原告・被告の主張の要約を読む」）は
+   高さを揃える（2026-11-15）。上下の余白で高さを出すのではなく、中央揃えの min-height で決める。変えるときはここの数字だけ */
+.btns .btn,.mbulk .btn,.tl-toggle{box-sizing:border-box;min-height:27px;padding-top:0;padding-bottom:0}
 .empty-msg{color:var(--mut);font-size:.9rem;padding:24px 16px;text-align:center}
 
 /* ---- calendar ---- */
@@ -633,6 +636,9 @@ a{color:inherit}
 .leg i{display:inline-block;width:15px;height:3px;border-radius:999px;background:var(--stamp);margin-right:8px;vertical-align:4px}
 .leg i.o{background:none;box-shadow:inset 0 0 0 1.5px #a9a7a0}
 .hint{color:var(--mut);font-size:.8rem;margin:12px 8px 24px}
+/* スマホ幅では、カレンダーを画面の上のほうに出したいので、案内文（.hint）はカレンダーの下に回す（2026-11-15）。
+   同じ文はページ下部の .disc にもある */
+@media(max-width:559.98px){.hint{order:1;margin:16px 8px 0}section[aria-labelledby=cal-h]{display:flex;flex-direction:column}}
 /* ヘッダーと掲示板の間に置く案内ボタンの帯。上下に同じだけ余白をとって「帯」として独立させる
    （掲示板パネル側に margin を足すと、事件ページで写真カードとの継ぎ目に隙間ができてしまう） */
 .jumplink{margin:24px 0 32px;text-align:center}
@@ -1016,7 +1022,7 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .wrap-wide{max-width:960px}
 /* トップページ（index.html の .wrap-home）も同じ960pxにして、事件ページと列の幅をそろえる（2026-11-15。
    トップはスマホ優先だが、PC幅ではカレンダーを3か月並べられる広さが要る）。 */
-.wrap-home{max-width:960px}
+.wrap-home,.wrap-list{max-width:960px}
 /* 事件ページ（case.html）はPC優先で列を960pxに広げる（2026-11-14に880px、タイムラインの中身を
    左に下げた2026-11-15に、その分を足して960px＝編集ページの .wrap-wide と同じ）。720pxでは原告/被告の2カラム
    （.args）が1行16字ほどで改行だらけになっていたため。
@@ -1025,7 +1031,7 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
    1枚だけの画像（.gal-single）は720pxのまま中央に置く（広げると1枚が大きくなりすぎる）。
    スマホ幅では max-width が効かないので表示は変わらない */
 .wrap-case{max-width:960px}
-body:has(.wrap-case) .announce-inner,body:has(.wrap-home) .announce-inner{max-width:960px}
+body:has(.wrap-case) .announce-inner,body:has(.wrap-home) .announce-inner,body:has(.wrap-list) .announce-inner{max-width:960px}
 .ce-title{font-family:"Shippori Mincho",serif;font-size:1.6rem;font-weight:600;line-height:1.4;margin-top:24px}
 /* タイトルの隣に「入力は公開情報」の注意を添える（2026-08-30）。折り返しても崩れないよう
    align-items:baseline＋flex-wrap（.ce-title 側の margin-top は行が2つに分かれても保つ） */
