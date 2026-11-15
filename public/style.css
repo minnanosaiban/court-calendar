@@ -604,7 +604,7 @@ a{color:inherit}
 
 /* ---- calendar ---- */
 .calhead{display:flex;align-items:baseline;gap:16px;margin:0 4px 16px;flex-wrap:wrap}
-.navbtns{color:var(--mut);font-size:.875rem;display:flex;gap:16px}
+.navbtns{color:var(--mut);font-size:.75rem;display:flex;gap:16px}
 .calhead .favtoggle{margin-left:0}
 /* 2026-11-15 スマホでは「お気に入りのみ」の上の余白が見出し(.home-title の下余白2px)だけで窮屈だったので、
    下の余白(16px)と同じ高さにそろえる（2px+14px=16px） */
