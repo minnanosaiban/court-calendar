@@ -332,7 +332,7 @@ a{color:inherit}
   color:var(--faint);font-size:1rem;text-decoration:none;background:none;border:none;cursor:pointer;font-family:inherit}
 .share a:hover,.share button:hover{color:var(--ink)}
 .share button.copied{color:#2f7d4f}
-.lede{margin-top:24px;background:var(--card);border-radius:4px 12px 12px 4px;border-left:4px solid var(--stamp);padding:16px;font-size:1rem}
+.lede{margin-top:24px;background:var(--card);border-radius:12px;padding:16px;font-size:1rem}
 .lede-title{font-family:"Shippori Mincho",serif;font-size:1.2rem;font-weight:600}
 .lede p + p{margin-top:12px}
 .lede .call{font-family:"Shippori Mincho",serif}
@@ -340,6 +340,7 @@ a{color:inherit}
 /* 節見出し(1.2rem)。タイムライン・訴訟資料一覧など、事件ページ内の大きめの区切り見出しに使う。
    .lede-title と同じ字形・サイズ（節見出しの型スケール） */
 .subhead{font-family:"Shippori Mincho",serif;font-size:1.2rem;font-weight:600;margin-top:24px}
+#caseBody .lede,#caseBody .subhead{margin-top:48px}
 /* ファクトシート：期日・手続・争点・原告・被告・裁判官・掲載・事件番号を1つの定義リストにまとめる
    （旧・見出し3つ＋本文3つの構成を統合。掲載・事件番号は2026-08-24に「裁判について」の後ろの
    別シートから、この1本にまとめ直した） */
