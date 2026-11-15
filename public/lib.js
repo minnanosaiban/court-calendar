@@ -744,7 +744,7 @@ window.CC = (function(){
     return [meta, note, rights, m.body].filter(Boolean).join("\n\n");
   }
   // PDF・テキスト・要約の3つのボタン。無いものはグレーのまま押せない（「この資料には無い」ことが分かるように）
-  function matButtonsHtml(m){
+  function matButtonsHtml(m, noSummary){
     // 3つとも無い資料（名前だけ載せている書面）は、灰色のボタンを3つ並べても意味が無いので出さない（2026-11-15）
     if(!m.fileUrl && !m.body && !m.summary) return "";
     const icon = matIcon(m);
@@ -765,7 +765,7 @@ window.CC = (function(){
     const sum = m.summary
       ? `<button type="button" class="btn" data-sumopen="${escapeAttr(m.id)}"><i class="bi bi-stars" aria-hidden="true"></i>要約</button>`
       : `<span class="btn off"><i class="bi bi-stars" aria-hidden="true"></i>要約</span>`;
-    return `<span class="btns">${pdf}${body}${sum}</span>`;
+    return `<span class="btns">${pdf}${body}${noSummary?"":sum}</span>`;
   }
   // タイムラインの期日にぶら下がる資料は、資料名とボタンだけを出す。以前は書面ごとの箇条書き
   // （この書面で主張していること）もここに出していたが、期日ごとの主張カード（argsHtml）とほぼ同じ内容が
@@ -813,7 +813,7 @@ window.CC = (function(){
     if(!js.length) return "";
     return `<p class="subhead">判決</p>
       <div class="jlist">${js.map(m=>`<div class="jd">
-        <div class="mat"><span class="mmain">${m.filedOn?`<span class="jd-date">${escapeHtml(dotDate(m.filedOn))}</span>`:""}<span class="mat-name">${escapeHtml(m.title)}</span>${matButtonsHtml(m)}</span></div>
+        <div class="mat"><span class="mmain">${m.filedOn?`<span class="jd-date">${escapeHtml(dotDate(m.filedOn))}</span>`:""}<span class="mat-name">${escapeHtml(m.title)}</span>${matButtonsHtml(m,true)}</span></div>
         ${m.summary?`<p class="d-body jd-text">${escapeHtml(m.summary)}</p>`:""}
       </div>`).join("")}</div>`;
   }
