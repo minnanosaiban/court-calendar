@@ -414,7 +414,8 @@ a{color:inherit}
    法廷＝キャプション.8rem（灰、.tl-meta）。以前は日付が.8remの灰色、名前が.9remで、直下の主張カード（.9rem）と
    同じ大きさだったため、展開すると期日の行が中身に埋もれてタイムラインに見えなかった */
 .tl-date{color:var(--mut);font-size:.875rem;font-variant-numeric:tabular-nums}
-.tl-type{font-family:"Shippori Mincho",serif;font-weight:600}
+/* 2026-11-15 「第1回弁論」等は目立たせない：明朝・太字をやめ、本文と同じ書体・太さにする */
+.tl-type{font-family:inherit;font-weight:400}
 /* 上の大きさはPC幅（560px以上）だけ。スマホは元の大きさ（日付.8rem・灰、名前.9rem）のまま。
    スマホは1画面に入る量が少なく、節が縦に並んで見えにくい問題はPC幅のもの（2026-11-15） */
 @media(min-width:560px){
