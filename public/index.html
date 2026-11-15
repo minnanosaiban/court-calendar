@@ -65,20 +65,15 @@
          この案内文は残すので、同じ一文がカレンダー直下とページ下部の両方に出る -->
     <p class="hint">掲載情報の正確性・完全性・最新性は保証せず、期日が変更されたり、非公開になったり、傍聴が抽選になったりすることがあります。傍聴の前に当事者からの連絡などでご確認ください。</p>
     <div class="calhead">
+      <span class="favtoggle" id="favToggle" role="button" tabindex="0" aria-pressed="false">
+        <i class="bi bi-bookmark" id="favToggleIcon" aria-hidden="true"></i>お気に入りのみ
+      </span>
       <div class="navbtns">
         <span id="prev"><i class="bi bi-chevron-left" aria-hidden="true"></i> 前の月</span>
         <span id="next">次の月 <i class="bi bi-chevron-right" aria-hidden="true"></i></span>
         <span id="todayBtn">今日</span>
       </div>
-      <span class="favtoggle" id="favToggle" role="button" tabindex="0" aria-pressed="false">
-        <i class="bi bi-bookmark" id="favToggleIcon" aria-hidden="true"></i>お気に入りのみ
-      </span>
     </div>
-    <!-- 凡例はカレンダーの上（印を見る前に意味が分かるように・2026-08-27） -->
-    <p class="leg">
-      <span><i></i>公開</span>
-      <span><i class="o"></i>非公開・その他手続き</span>
-    </p>
     <div class="cal-row">
       <div class="cal-block">
         <div class="month" id="monthLabel1"></div>
@@ -102,6 +97,11 @@
         </div>
       </div>
     </div>
+    <!-- 凡例はカレンダーの下（2026-11-15。以前は上に置いていた） -->
+    <p class="leg">
+      <span><i></i>公開</span>
+      <span><i class="o"></i>非公開・その他手続き</span>
+    </p>
   </section>
 
   <!-- 今後の期日（見出しは置かず、一覧だけを地の上に置く。2026-08-27） -->
