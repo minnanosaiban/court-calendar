@@ -399,7 +399,7 @@ a{color:inherit}
 /* 左に縦線と節。済んだ回は塗りつぶし、次回は朱色、これからの回は輪郭だけ。最後の節で線を止める */
 .tl{list-style:none;margin-top:12px;padding-left:0}
 .tl-item{position:relative;padding:0 0 16px 24px}
-.tl-item::before{content:"";position:absolute;left:6px;top:17px;bottom:-4px;width:1.5px;background:#f1d6d4}
+.tl-item::before{content:"";position:absolute;left:6px;top:17px;bottom:-20px;width:1.5px;background:#f1d6d4}
 .tl-item:last-child::before{display:none}
 .tl-item:last-child{padding-bottom:4px}
 .tl-dot{position:absolute;left:0;top:11px;width:13px;height:13px;border-radius:50%;background:#eac1be;box-sizing:border-box}
