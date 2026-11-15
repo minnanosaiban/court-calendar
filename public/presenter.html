@@ -133,8 +133,8 @@
       headEl.innerHTML = `<p class="sech">事件一覧</p><p class="empty-msg">${CC.loaded?"見つかりませんでした。":"読み込んでいます…"}</p>`;
       return;
     }
-    const icon = p.icon ? `<img class="cicon" src="${CC.escapeAttr(p.icon)}" alt="" style="width:72px;height:72px">`
-      : `<span class="cicon-ph" aria-hidden="true" style="width:72px;height:72px;font-size:1.7rem"><i class="bi bi-person" aria-hidden="true"></i></span>`;
+    const icon = p.icon ? `<img class="cicon" src="${CC.escapeAttr(p.icon)}" alt="" style="width:64px;height:64px">`
+      : `<span class="cicon-ph" aria-hidden="true" style="width:64px;height:64px;font-size:1.5rem"><i class="bi bi-person" aria-hidden="true"></i></span>`;
     // ログイン中の操作。アイコンとログアウトは他のページと同じく見出し直下の共通バーに出るので、
     // ここでは重ねない。「ご本人としてログイン中」の名乗りも、そのバーで分かるので外した。
     // 残るのはパスワードの変更だけで、これはサイト全体でこの自分のページにだけ置く。
