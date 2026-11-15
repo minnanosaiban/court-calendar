@@ -622,7 +622,7 @@ a{color:inherit}
 .favtoggle .bi{font-size:.8rem;line-height:1;color:var(--stamp)}
 .cal-row{display:flex;flex-direction:column;gap:32px}
 .cal-block2,.cal-block3{display:none}
-.month{font-family:"Shippori Mincho",serif;font-size:1.2rem;font-weight:600;
+.month{font-family:"Shippori Mincho",serif;font-size:1.25rem;font-weight:600;
   font-variant-numeric:tabular-nums;letter-spacing:.03em;margin:0 4px 12px}
 .calcard{padding:16px 8px 12px}
 .dow,.grid{display:grid;grid-template-columns:repeat(7,1fr);text-align:center}
@@ -845,8 +845,8 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .ud{color:var(--mut);font-size:.875rem;font-variant-numeric:tabular-nums;
   text-decoration:underline;text-decoration-color:transparent;text-underline-offset:3px;
   transition:text-decoration-color .15s ease}
-/* 日付の数字だけ一段大きくして目立たせる（事件名.9remより大きい1.05rem・2026-08-27） */
-.ud b{color:var(--ink);font-weight:600;font-size:1.05rem;font-family:"Shippori Mincho",serif}
+/* 日付の数字だけ一段大きくして目立たせる（2026-08-27は1.05rem。2026-11-15に1.25remへ。月見出し.monthと同じ） */
+.ud b{color:var(--ink);font-weight:600;font-size:1.25rem;font-family:"Shippori Mincho",serif}
 /* カードに触れると、矢印(.u-arrow)と同じく日付に赤い下線が引かれる（.pop-dateと同じ扱い。
    アイコンに乗っている間は:has()で除外＝アイコンは別リンクだと分かる。
    まずPC（:hover）から。スマホの「触れている間」対応は次の段階で。2026-08-30） */
