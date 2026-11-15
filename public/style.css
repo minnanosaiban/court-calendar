@@ -249,7 +249,7 @@ a{color:inherit}
    自身のmargin-topは打ち消して箱側に持たせる */
 .presenter-line{display:inline-flex;align-items:center;gap:2px;margin-top:2px}
 .presenter-line .presenter-name{margin-top:0}
-.presenter-links{color:var(--mut);font-size:.875rem;white-space:nowrap}
+.presenter-links{color:var(--mut);font-size:.75rem;white-space:nowrap}
 .presenter-x{color:var(--mut);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
 .presenter-x:hover{color:var(--ink)}
 /* 事件ページの見出し（.d-head-main）だけ、問題提起人名とアイコンを一段大きくする（2026-11-14）。
@@ -257,7 +257,7 @@ a{color:inherit}
    名前と本文の差は1.1倍にして、名前が本文に埋もれず、かつ事件名を食わない大きさにする */
 .d-head-main .presenter-name{font-size:1rem}
 .d-head-main .presenter-line{gap:2px;margin-top:4px}
-.d-head-main .presenter-links{font-size:.875rem}
+.d-head-main .presenter-links{font-size:.75rem}
 .d-title{font-family:"Shippori Mincho",serif;font-size:1.6rem;font-weight:600;line-height:1.4}
 .d-body{font-size:1rem;margin-top:8px}
 .mut{color:var(--mut)}
@@ -442,7 +442,7 @@ a{color:inherit}
    中身があると気づいてもらう入口になる。小さいピル（.7rem）では見落とされるため、大きいピル
    （.8rem・8px 20px。.pillbtn と同じ寸法）にしている（2026-11-15） */
 .tl-togglerow{margin:24px 0}
-.tl-toggle{display:inline-flex;align-items:center;gap:6px;font-size:.875rem;color:var(--stamp);background:#fff;
+.tl-toggle{display:inline-flex;align-items:center;gap:6px;font-size:.75rem;color:var(--stamp);background:#fff;
   border:1px solid rgba(185,50,38,.35);border-radius:999px;padding:8px 20px;cursor:pointer;line-height:1.5;font-family:inherit}
 .tl-toggle:hover{border-color:rgba(185,50,38,.6)}
 .tl-toggle .bi{font-size:.8rem;line-height:1;color:var(--stamp)}
@@ -469,7 +469,7 @@ a{color:inherit}
 .mmain{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;min-width:0}
 /* PDF・本文・要約のボタン列。無いものはグレーで押せない */
 .btns{display:flex;gap:8px;flex-wrap:wrap}
-.btn{display:inline-flex;align-items:center;gap:4px;font-size:.875rem;color:var(--ink);
+.btn{display:inline-flex;align-items:center;gap:4px;font-size:.75rem;color:var(--ink);
   background:#fff;border:1px solid #e6e4dd;border-radius:999px;padding:4px 12px;
   cursor:pointer;text-decoration:none;line-height:1.5;font-family:inherit}
 .btn:hover{border-color:#c9c6bc}
@@ -558,7 +558,7 @@ a{color:inherit}
    寸法は .btn（.pdf/.md/要約ボタン）と同じにそろえ、色だけ朱色にする */
 .bwrite a{display:inline-flex;align-items:center;gap:4px;background:none;
   border:1px solid rgba(185,50,38,.35);border-radius:999px;padding:4px 12px;
-  font-size:.875rem;color:var(--stamp);cursor:pointer;line-height:1.5}
+  font-size:.75rem;color:var(--stamp);cursor:pointer;line-height:1.5}
 .bwrite a:hover{border-color:rgba(185,50,38,.6)}
 .bwrite a .bi{font-size:.8rem;line-height:1;color:var(--stamp)}
 .pform{margin-top:12px;background:#fff;border-radius:12px;padding:16px}
@@ -580,7 +580,7 @@ a{color:inherit}
 .pform .count{color:var(--mut);font-size:.875rem;margin-top:8px}
 .pform .acts{display:flex;gap:12px;align-items:center;margin-top:16px}
 /* line-height:inherit が無いと button 既定の normal になり、.pillbtn より8px低くなる */
-.pform button{font-family:inherit;font-size:.875rem;line-height:inherit;cursor:pointer;border:none;border-radius:999px;padding:8px 20px}
+.pform button{font-family:inherit;font-size:.75rem;line-height:inherit;cursor:pointer;border:none;border-radius:999px;padding:8px 20px}
 .pform .send{background:var(--ink);color:#fff}
 .pform .cancel{background:transparent;color:var(--mut)}
 .pform button:disabled{opacity:.5;cursor:default}
@@ -659,7 +659,7 @@ a{color:inherit}
    色だけ主役の朱色ではなく、.btn と同じ控えめなグレー枠にする（サイトの主操作ではないため） */
 .pillbtn{display:inline-flex;align-items:center;background:none;border:1px solid #e6e4dd;
   border-radius:999px;padding:4px 12px;margin:0 8px 8px 0;
-  font-size:.875rem;color:var(--ink);text-decoration:none;line-height:1.5}
+  font-size:.75rem;color:var(--ink);text-decoration:none;line-height:1.5}
 .pillbtn:hover{border-color:#c9c6bc}
 .pillbtn i{color:var(--stamp);margin-left:.4em;line-height:1}
 /* 正円のアイコンボタン＋下に添えたラベル。地味な.pillbtn（戻る等）の並びに紛れないよう、
@@ -691,7 +691,7 @@ a{color:inherit}
 .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 /* .btn と同じ高さにそろえる（同じ .7rem のピル型部品）。枠線は引かないが、
    .btn の1px枠のぶんだけ高さがずれるので、透明な枠で埋める */
-.tag{font-size:.875rem;color:var(--mut);background:var(--tint);border-radius:999px;padding:4px 12px;
+.tag{font-size:.75rem;color:var(--mut);background:var(--tint);border-radius:999px;padding:4px 12px;
   text-decoration:none;cursor:pointer;border:1px solid transparent;font-family:inherit;line-height:1.5}
 a.tag:hover{color:var(--ink);background:#ece9e0}
 .tag.on{background:var(--ink);color:#fff}
