@@ -399,12 +399,11 @@ a{color:inherit}
 /* 左に縦線と節。済んだ回は塗りつぶし、次回は朱色、これからの回は輪郭だけ。最後の節で線を止める */
 .tl{list-style:none;margin-top:12px;padding-left:0}
 .tl-item{position:relative;padding:0 0 16px 24px}
-.tl-item::before{content:"";position:absolute;left:6px;top:14px;bottom:-4px;width:1.5px;background:#dedbd2}
+.tl-item::before{content:"";position:absolute;left:6px;top:14px;bottom:-4px;width:1.5px;background:#f6cdd3}
 .tl-item:last-child::before{display:none}
 .tl-item:last-child{padding-bottom:4px}
-.tl-dot{position:absolute;left:0;top:7px;width:13px;height:13px;border-radius:50%;background:#fff;border:1.5px solid #a9a7a0;box-sizing:border-box}
-.tl-item.past .tl-dot{background:#a9a7a0;border-color:#a9a7a0}
-.tl-item.next .tl-dot{background:var(--stamp);border-color:var(--stamp);box-shadow:0 0 0 3px rgba(185,50,38,.15)}
+.tl-dot{position:absolute;left:0;top:7px;width:13px;height:13px;border-radius:50%;background:#fff;border:1.5px solid #f3b6c0;box-sizing:border-box}
+.tl-item.past .tl-dot,.tl-item.next .tl-dot{background:#f3b6c0;border-color:#f3b6c0}
 .tl-head{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:12px;row-gap:4px;font-size:.9rem;line-height:1.7}
 /* 期日の行（○の隣）は型スケールの段に乗せる（2026-11-15）：期日の名前＝小見出し1rem、日付＝本文.9rem（黒）、
    法廷＝キャプション.8rem（灰、.tl-meta）。以前は日付が.8remの灰色、名前が.9remで、直下の主張カード（.9rem）と
@@ -417,7 +416,6 @@ a{color:inherit}
   .tl-date{color:var(--ink);font-size:.9rem}
   .tl-type{font-size:1rem}
 }
-.tl-item.next .tl-type{color:var(--stamp)}
 .tl-meta{color:var(--mut);font-size:.8rem}
 /* 期日の行（節）と中身（主張カード・資料）を余白で切り離す（2026-11-15）。展開すると中身が期日の行に
    くっついて続き、節が縦に並ぶタイムラインに見えなかったため。上下をあけて「期日ごとのひとかたまり」に
@@ -427,12 +425,12 @@ a{color:inherit}
 @media(min-width:560px){.tl-body{margin:24px 0 40px;padding-left:32px}}
 /* 期日ごとの開け閉め（2026-11-15）：中身のある期日（.xp）は、日付と名前をひとつのボタン（.tl-tog）にして、
    押すと中身（主張・資料）を開け閉めする。閉じている回（.xp:not(.open)）は中身を隠し、行間を少し詰める。
-   末尾の山形が「押せる」目印で、開くと下向きに回る。枠や線は足さない。上下の padding は押しやすさのため */
+   冒頭の山形（ピンク）が「押せる」目印で、開くと下向きに回る。枠や線は足さない。上下の padding は押しやすさのため */
 .tl-tog{display:inline-flex;align-items:baseline;gap:12px;background:none;border:none;padding:4px 0;
   font:inherit;color:inherit;cursor:pointer;text-align:left;line-height:inherit}
-.tl-tog .bi{align-self:center;font-size:.75rem;color:var(--mut);transition:transform .15s ease}
+.tl-tog .bi{align-self:center;font-size:.75rem;color:#ec9aa6;transition:transform .15s ease}
 .tl-item.open .tl-tog .bi{transform:rotate(90deg)}
-.tl-tog:hover .bi{color:var(--ink)}
+.tl-tog:hover .bi{color:#e27a8a}
 .tl-item.xp:not(.open) .tl-body{display:none}
 .tl-item.xp:not(.open){padding-bottom:12px}
 /* 見出し「タイムライン」の下の一括スイッチ（「原告・被告の主張の要約を読む」）。既定で全部閉じているので、

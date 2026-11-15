@@ -823,7 +823,7 @@ window.CC = (function(){
       // 開くと下向きに回る）。中身の無い期日は、これまでどおり文字だけ
       const dateType = `<span class="tl-date">${escapeHtml(jpDate(ev.date))}${ev.time?" "+escapeHtml(ev.time):""}</span><span class="tl-type">${escapeHtml(ev.type||"期日")}</span>`;
       const headMain = expandable
-        ? `<button type="button" class="tl-tog" data-evtoggle="${escapeAttr(ev.id)}" aria-expanded="${isOpen}">${dateType}<i class="bi bi-chevron-right" aria-hidden="true"></i></button>`
+        ? `<button type="button" class="tl-tog" data-evtoggle="${escapeAttr(ev.id)}" aria-expanded="${isOpen}"><i class="bi bi-chevron-right" aria-hidden="true"></i>${dateType}</button>`
         : dateType;
       return `<li class="tl-item ${state}${expandable?" xp":""}${isOpen?" open":""}" data-evid="${escapeAttr(ev.id)}">
         <span class="tl-dot" aria-hidden="true"></span>
