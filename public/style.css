@@ -343,7 +343,7 @@ a{color:inherit}
 /* ファクトシート：期日・手続・争点・原告・被告・裁判官・掲載・事件番号を1つの定義リストにまとめる
    （旧・見出し3つ＋本文3つの構成を統合。掲載・事件番号は2026-08-24に「裁判について」の後ろの
    別シートから、この1本にまとめ直した） */
-.facts{display:grid;grid-template-columns:max-content 1fr;column-gap:16px;row-gap:8px;margin-top:12px;font-size:.9rem;line-height:1.7}
+.facts{display:grid;grid-template-columns:max-content 1fr;column-gap:16px;row-gap:8px;margin-top:12px;font-size:1rem;line-height:1.7}
 .facts dt{color:var(--mut);font-size:.7rem;letter-spacing:.18em;padding-top:4px;white-space:nowrap}
 .facts dd{margin:0;min-width:0}
 .facts-links{display:inline;margin-left:8px}
@@ -390,6 +390,8 @@ a{color:inherit}
    二重にかかり、他の行（.court-lineや素のテキスト）よりラベルとの間が8px広くなって
    斜めにずれて見えていた。ファクトシートの中でだけ打ち消す */
 .facts dd .pts{margin-top:0}
+/* 2026-11-15 事件ページ上部の情報欄（期日・手続・原告・被告・掲載）の値は、代理人・争点・掲載の行も含め16pxにそろえる */
+.facts dd .pts,.facts .party-sub{font-size:1rem}
 .pts li{padding-left:1.2em;text-indent:-1.2em;margin-bottom:3px}
 .pts li::before{content:"・";color:var(--faint)}
 /* 期日（この事件の全回）: 争点と同じ見た目のリストを流用 */
