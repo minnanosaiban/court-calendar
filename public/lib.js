@@ -1086,7 +1086,7 @@ window.CC = (function(){
       await ensureTurnstileScript();
       window.turnstile.render(el,{sitekey:me.turnstileSiteKey, action:"board-post", callback:(t)=>{ tsToken=t; }});
     }catch(e){
-      el.innerHTML=`<span style="color:var(--mut);font-size:.75rem">スパム対策の読み込みに失敗しました。再読み込みしてください。</span>`;
+      el.innerHTML=`<span style="color:var(--mut);font-size:.875rem">スパム対策の読み込みに失敗しました。再読み込みしてください。</span>`;
     }
   }
 

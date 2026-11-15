@@ -27,7 +27,7 @@ html{-webkit-text-size-adjust:100%}
 body{
   background:var(--bg);color:var(--ink);
   font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
-  font-size:15px;line-height:1.85;-webkit-font-smoothing:antialiased;
+  font-size:1rem;line-height:1.85;-webkit-font-smoothing:antialiased;
   font-feature-settings:"palt" 1;
   /* .gal（写真ギャラリー）が100vwで.wrapの外まではみ出す際、スクロールバー分の誤差で
      横スクロールが出ないようにする（2026-09-05） */
@@ -50,7 +50,7 @@ a{color:inherit}
    動く内容は止められなければならない（WCAG 2.2.2）。ポインタを乗せている間はここだけで止まり、
    ⏸ボタン・キーボード操作・OSの「視差効果を減らす」のときは、流すのをやめて全件を並べる（.is-still）。
    止めたあとも全部のリンクに届くようにするため。 */
-.announce{--announce-h:48px;background:var(--ink);color:#fff;font-size:.9rem;line-height:1.4}
+.announce{--announce-h:48px;background:var(--ink);color:#fff;font-size:1rem;line-height:1.4}
 .announce-inner{display:flex;align-items:flex-start;max-width:720px;margin:0 auto}
 /* 端の16pxだけ薄れさせて、文字が切れ目なく出入りするように見せる（Safari 15.3以前用に -webkit- も） */
 .announce-view{flex:1;min-width:0;display:flex;overflow:hidden;
@@ -62,7 +62,7 @@ a{color:inherit}
 @keyframes announce-flow{to{transform:translateX(-100%)}}
 /* ホバーのないスマホで「押したまま止まる」ことがないよう、ポインタで乗せられる環境だけに限る */
 @media(hover:hover){.announce-view:hover .announce-group{animation-play-state:paused}}
-.announce-label{font-size:.7rem;letter-spacing:.2em;color:rgba(255,255,255,.7)}
+.announce-label{font-size:.875rem;letter-spacing:.2em;color:rgba(255,255,255,.7)}
 /* リンクは帯の高さいっぱいを押せる範囲にする。流れているものを押すので縦は広めに取る */
 .announce a{display:block;line-height:var(--announce-h);color:inherit;text-decoration:underline;text-underline-offset:3px}
 .announce a .bi{margin-left:.4em;font-size:.7rem;line-height:1;opacity:.7}
@@ -97,7 +97,7 @@ a{color:inherit}
    折り返す。何もしないと「応援傍聴ナ／ビ」と語の途中で割れていたため、HTML側で2語を<span class="nb">に
    分け、それぞれを塊（inline-block）にしている。文字サイズは縮めない（2026-09-10） */
 .masthead h1 .nb{display:inline-block}
-.masthead p{font-size:.8rem;color:var(--mut);letter-spacing:.02em;margin-top:2px}
+.masthead p{font-size:.875rem;color:var(--mut);letter-spacing:.02em;margin-top:2px}
 /* スマホ幅だけで改行したい箇所に <br class="mobile-break"> を挟む（例：キャッチコピー） */
 .mobile-break{display:inline}
 /* 「←トップに戻る」は .pillbtn（「事件をさがす→」等）と同じ見た目にする（HTML側は
@@ -108,7 +108,7 @@ a{color:inherit}
 .pillbtn i:first-child{margin-left:0;margin-right:.4em}
 
 /* ---- section label ---- */
-.sech{font-size:.7rem;letter-spacing:.26em;color:var(--mut);margin:48px 4px 12px}
+.sech{font-size:.875rem;letter-spacing:.26em;color:var(--mut);margin:48px 4px 12px}
 /* ホームの呼びかけ見出し。事件名(.d-title)より一段大きくして、見出しの上位だと分かるようにする */
 .home-title{font-family:"Shippori Mincho",serif;font-size:1.6rem;font-weight:700;letter-spacing:.03em;margin:48px 4px 2px}
 .home-title + .sech{margin-top:4px}
@@ -169,7 +169,7 @@ a{color:inherit}
 .gal-item{position:relative;display:block}
 .gal-item img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;
   border-radius:14px;background:var(--tint);box-shadow:0 6px 20px rgba(0,0,0,.14)}
-.gal-cap{position:absolute;left:0;right:0;bottom:0;padding:20px 14px 10px;font-size:.8rem;letter-spacing:.02em;
+.gal-cap{position:absolute;left:0;right:0;bottom:0;padding:20px 14px 10px;font-size:.875rem;letter-spacing:.02em;
   border-radius:0 0 14px 14px;background:linear-gradient(transparent,rgba(0,0,0,.55));color:#fff}
 /* ページ送りの点は、写真の上に重ねず下に置く（隣の写真がチラ見えする分、写真に重ねると窮屈なため）。
    中央の1枚が下にも約21pxはみ出す分、詰まって見えないよう間隔を広げてある（14px→35px、2026-09-07） */
@@ -186,13 +186,13 @@ a{color:inherit}
 .gal .swiper-pagination-bullet-active{background:var(--stamp)}
 /* 写真の管理（編集権限があるときだけ）：ギャラリーの下に小さな一覧 */
 .imgmanage{margin-top:16px}
-.imglist{list-style:none;font-size:.9rem}
+.imglist{list-style:none;font-size:1rem}
 .imgrow{display:flex;align-items:center;gap:12px;padding:8px 0}
 .imgrow + .imgrow{border-top:1px solid var(--tint)}
 .imgrow .ithumb{width:44px;height:44px;border-radius:8px;object-fit:cover;flex:none;background:var(--tint)}
 .imgrow .icap{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--mut)}
 .imgrow .iacts{display:flex;gap:12px;flex:none}
-.imgrow .iacts a{font-size:.8rem;color:var(--edit);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.imgrow .iacts a{font-size:.875rem;color:var(--edit);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 /* 事件アイコン（Twitterのアバターのように、一覧やカレンダーで事件を見分けるための小さな画像）。
    未登録なら .cicon-ph（頭文字の丸い札）で代わりを出す。大きさは56px1種類
    （サイズ違い sm/md/lg は2026-08-24に廃止。事件をさがすの行・popover 等の小さい面でも、
@@ -225,7 +225,7 @@ a{color:inherit}
      アイコンは本文の左端にあり吹き出しの方がずっと幅広なので、左へはみ出していた
      （スマホでは画面外に切れていた。2026-09-10） */
   content:attr(data-tip);position:absolute;left:0;bottom:100%;
-  margin-bottom:6px;background:var(--ink);color:#fff;font-size:.7rem;line-height:1.4;
+  margin-bottom:6px;background:var(--ink);color:#fff;font-size:.875rem;line-height:1.4;
   white-space:nowrap;padding:4px 10px;border-radius:6px;
   opacity:0;pointer-events:none;transition:opacity .12s;z-index:20}
 [data-tip]:hover::after,[data-tip]:focus-visible::after{opacity:1}
@@ -242,14 +242,14 @@ a{color:inherit}
    アイコン／ニックネームから。ホバー演出（矢印・下線）もアイコン上で行側が動くようになる */
 /* 事件名の下に添える、問題提起人のニックネーム（presenter.htmlへのリンク）。アイコンの下だと
    幅が狭く長い名前が省略されてしまうため、タイトルの下の広い幅で全文出す（2026-08-26） */
-.presenter-name{display:block;font-family:"Zen Kaku Gothic New",sans-serif;font-size:.8rem;
+.presenter-name{display:block;font-family:"Zen Kaku Gothic New",sans-serif;font-size:.875rem;
   color:var(--mut);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;margin-top:2px}
 /* Xアカウント登録時だけ、ニックネームの右にXアイコンのリンクを添える箱（2026-08-30）。
    .presenter-nameは元がdisplay:blockだが、この箱の中ではflexアイテムとして横並びになるので、
    自身のmargin-topは打ち消して箱側に持たせる */
 .presenter-line{display:inline-flex;align-items:center;gap:2px;margin-top:2px}
 .presenter-line .presenter-name{margin-top:0}
-.presenter-links{color:var(--mut);font-size:14.4px;white-space:nowrap}
+.presenter-links{color:var(--mut);font-size:.875rem;white-space:nowrap}
 .presenter-x{color:var(--mut);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
 .presenter-x:hover{color:var(--ink)}
 /* 事件ページの見出し（.d-head-main）だけ、問題提起人名とアイコンを一段大きくする（2026-11-14）。
@@ -257,9 +257,9 @@ a{color:inherit}
    名前と本文の差は1.1倍にして、名前が本文に埋もれず、かつ事件名を食わない大きさにする */
 .d-head-main .presenter-name{font-size:1rem}
 .d-head-main .presenter-line{gap:2px;margin-top:4px}
-.d-head-main .presenter-links{font-size:14.4px}
+.d-head-main .presenter-links{font-size:.875rem}
 .d-title{font-family:"Shippori Mincho",serif;font-size:1.6rem;font-weight:600;line-height:1.4}
-.d-body{font-size:.9rem;margin-top:8px}
+.d-body{font-size:1rem;margin-top:8px}
 .mut{color:var(--mut)}
 /* タイトル行 */
 .d-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
@@ -268,7 +268,7 @@ a{color:inherit}
    右の列にして、スマホ幅でも折り返さずに同じ形で収まるようにする */
 .ph-head{align-items:flex-start;justify-content:flex-start}
 .ph-id{display:flex;flex-direction:column;align-items:center;gap:6px;flex:none}
-.ph-count{font-size:.8rem;text-align:center;line-height:1.4}
+.ph-count{font-size:.875rem;text-align:center;line-height:1.4}
 .ph-head .d-head-main .selfbar{justify-content:flex-start;margin-top:10px}
 
 /* 問題提起人が自分としてログイン中の目印（presenter.html）。状態（バッジ）と操作
@@ -276,20 +276,20 @@ a{color:inherit}
 /* 一番上のバー（全ページ共通。2026-09-10）。見出し（応援傍聴ナビ）より上に、
    ログインの入り口／ログイン中の目印だけを右寄せで置く。罫線は引かず余白で切る */
 .topbar{display:flex;align-items:center;justify-content:flex-end;gap:8px;
-  font-size:.8rem;color:var(--mut);margin-bottom:12px;min-height:36px}
+  font-size:.875rem;color:var(--mut);margin-bottom:12px;min-height:36px}
 .topbar a{cursor:pointer;color:var(--mut);text-decoration:underline;text-underline-offset:3px}
 .topbar a:hover{color:var(--ink)}
 .topbar .cicon,.topbar .cicon-ph{width:36px;height:36px}
-.topbar .cicon-ph{font-size:.9rem}
+.topbar .cicon-ph{font-size:1rem}
 /* ログアウト中の「ログイン」だけは、押せる入り口とわかるよう下線ではなく枠の無いピル型に寄せる */
 .topbar-login{text-decoration:none !important}
 .topbar-login:hover{text-decoration:underline !important}
 /* 事件ページの「編集」ボタンを収める帯（旧・自己確認バー） */
 .selfbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px;
-  font-size:.85rem;color:var(--mut);margin-top:8px}
+  font-size:.875rem;color:var(--mut);margin-top:8px}
 /* 文字色だけ.edit-fab（右端の編集ボタン）と同じ赤系に揃える。以前は薄い赤の背景で囲んだピル型
    だったが、枠っぽく見えるため外し、地の文に朱色の文字だけを乗せる形にした（2026-09-01） */
-.selfbar .badge{color:var(--stamp);font-size:.78rem}
+.selfbar .badge{color:var(--stamp);font-size:.875rem}
 .selfbar a{cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .selfbar .sep{color:var(--faint)}
 /* ご本人としてログイン中のバー：case.html（#caseSelfBar）・case-edit.html（#ceSelfBar）で
@@ -298,13 +298,13 @@ a{color:inherit}
    アイコンは2行ぶんの高さに見合うよう、通常の.cicon（56px）より少し大きくする */
 .selfbar-body{display:flex;flex-direction:column;gap:4px}
 .selfbar .cicon,.selfbar .cicon-ph{width:36px;height:36px}
-.selfbar .cicon-ph{font-size:.9rem}
+.selfbar .cicon-ph{font-size:1rem}
 /* いいね：タイトルに続けて置く。押すと朱色で塗る。
    枠・背景は持たず、タイトルに寄り添う"添え物"にする（2026-08-24。それまでは枠線のピル型だった）。
    押した状態はハートの塗り（bi-heart-fill）と朱色で示すので、面で囲う必要がない。
    padding は枠が無くても指で押せる大きさを残すために置いている（見た目には出ない） */
 .like{display:inline-flex;align-items:center;gap:4px;vertical-align:middle;margin-left:.35em;
-  font-family:"Zen Kaku Gothic New",sans-serif;font-size:.8rem;color:var(--mut);
+  font-family:"Zen Kaku Gothic New",sans-serif;font-size:.875rem;color:var(--mut);
   background:none;border:none;padding:4px 6px;cursor:pointer;line-height:1.5}
 .like:hover{color:var(--stamp)}
 .like .bi{font-size:.85rem;line-height:1}
@@ -322,21 +322,21 @@ a{color:inherit}
 .bookmark:disabled{opacity:.6;cursor:default}
 /* 掲示板の中の事件名(.board-name、.9rem)に添えるいいねは、地の文の大きさに合わせて一段小さくする
    （既定の.like は1.6remの事件名の隣に置く前提のサイズなので、そのままだと大きすぎる） */
-.board-name .like{font-size:.7rem;margin-left:2px}
+.board-name .like{font-size:.875rem;margin-left:2px}
 .board-name .like .bi{font-size:.75rem}
-.d-edit{display:inline-block;margin-top:8px;font-size:.8rem;color:var(--edit);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.d-edit{display:inline-block;margin-top:8px;font-size:.875rem;color:var(--edit);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 /* シェア（X・LINE・リンクをコピー） */
 .share{display:flex;gap:2px;align-items:center;margin-top:12px}
-.share-lab{font-size:.7rem;color:var(--mut);letter-spacing:.1em;margin-right:6px}
+.share-lab{font-size:.875rem;color:var(--mut);letter-spacing:.1em;margin-right:6px}
 .share a,.share button{display:grid;place-content:center;width:30px;height:30px;border-radius:50%;
-  color:var(--faint);font-size:.9rem;text-decoration:none;background:none;border:none;cursor:pointer;font-family:inherit}
+  color:var(--faint);font-size:1rem;text-decoration:none;background:none;border:none;cursor:pointer;font-family:inherit}
 .share a:hover,.share button:hover{color:var(--ink)}
 .share button.copied{color:#2f7d4f}
-.lede{margin-top:24px;background:var(--card);border-radius:4px 12px 12px 4px;border-left:4px solid var(--stamp);padding:16px;font-size:.9rem}
+.lede{margin-top:24px;background:var(--card);border-radius:4px 12px 12px 4px;border-left:4px solid var(--stamp);padding:16px;font-size:1rem}
 .lede-title{font-family:"Shippori Mincho",serif;font-size:1.2rem;font-weight:600}
 .lede p + p{margin-top:12px}
 .lede .call{font-family:"Shippori Mincho",serif}
-.minih{font-size:.7rem;letter-spacing:.22em;color:var(--mut);margin-top:24px}
+.minih{font-size:.875rem;letter-spacing:.22em;color:var(--mut);margin-top:24px}
 /* 節見出し(1.2rem)。タイムライン・訴訟資料一覧など、事件ページ内の大きめの区切り見出しに使う。
    .lede-title と同じ字形・サイズ（節見出しの型スケール） */
 .subhead{font-family:"Shippori Mincho",serif;font-size:1.2rem;font-weight:600;margin-top:24px}
@@ -344,14 +344,14 @@ a{color:inherit}
    （旧・見出し3つ＋本文3つの構成を統合。掲載・事件番号は2026-08-24に「裁判について」の後ろの
    別シートから、この1本にまとめ直した） */
 .facts{display:grid;grid-template-columns:max-content 1fr;column-gap:16px;row-gap:8px;margin-top:12px;font-size:1rem;line-height:1.7}
-.facts dt{color:var(--mut);font-size:.7rem;letter-spacing:.18em;padding-top:4px;white-space:nowrap}
+.facts dt{color:var(--mut);font-size:.875rem;letter-spacing:.18em;padding-top:4px;white-space:nowrap}
 .facts dd{margin:0;min-width:0}
 .facts-links{display:inline;margin-left:8px}
 /* 裁判官・事件番号で、行頭の審級（地裁／高裁／最高裁 など）だけ幅をそろえ、名前・番号の位置を合わせる。
    「最高裁」(3文字)が最長なのでそれに合わせた幅にする */
 .court-line{display:grid;grid-template-columns:3.4em 1fr;column-gap:4px}
 .cl-level{color:var(--mut)}
-.facts .plink{display:inline-block;margin-left:4px;margin-right:2px;font-size:.86rem;color:var(--faint);vertical-align:-1px;text-decoration:none}
+.facts .plink{display:inline-block;margin-left:4px;margin-right:2px;font-size:.875rem;color:var(--faint);vertical-align:-1px;text-decoration:none}
 .facts .plink:hover{color:var(--ink)}
 /* 報道がWEB記事のときのリンク（.pts内、URLがそのまま文字で見える）は下線で示す */
 .pts a{text-decoration:underline;text-underline-offset:3px}
@@ -360,10 +360,10 @@ a{color:inherit}
 .pts a.plink-text:hover{text-decoration-color:currentColor}
 /* 裁判官マップ等へのリンク（.jlink）はアイコンだけなので下線は付けない（当事者アイコン.plinkと同じ扱い）。
    色・フォントサイズも当事者アイコン.plinkの薄いほうに完全にそろえる（2026-08-28） */
-.jlink{display:inline-block;font-size:.86rem;color:var(--faint);text-decoration:none;vertical-align:-1px}
+.jlink{display:inline-block;font-size:.875rem;color:var(--faint);text-decoration:none;vertical-align:-1px}
 .pts .bi{font-size:.8em}
 /* 原告・被告：1行目は本人の名前と同じ並び、2行目以降（代理人など）はひとまわり小さく添える */
-.party-sub{font-size:.8rem;color:var(--mut);margin-top:2px}
+.party-sub{font-size:.875rem;color:var(--mut);margin-top:2px}
 
 /* ---- 期日案内（支援者が作る一覧チラシの埋め込み。PDFまたは画像。2026-08-27） ----
    PDFはブラウザのネイティブビューアで表示（拡大・ページ送りはそちら任せ）。
@@ -371,7 +371,7 @@ a{color:inherit}
    埋め込みが効かない環境に備え「新しいタブで開く」を必ず添える */
 .notice{margin-top:16px}
 .notice-head{margin-bottom:8px}
-.notice-lab{font-size:.7rem;letter-spacing:.14em;color:var(--mut)}
+.notice-lab{font-size:.875rem;letter-spacing:.14em;color:var(--mut)}
 /* 見出し「期日案内」の隣に畳み込む「（新しいタブで開く）」リンク（2026-08-29）。
    外部リンクのアイコンが付いているので下線は引かない */
 .notice-lab-link{color:inherit;text-decoration:none}
@@ -385,7 +385,7 @@ a{color:inherit}
 .notice-frame iframe{display:block;width:100%;aspect-ratio:210/297;border:0}
 /* 画像は決め打ちの比率を持たせず、画像自身の縦横比のまま幅いっぱいに出す（どの向きでも余白が出ない） */
 .notice-frame img{display:block;width:100%;height:auto;object-fit:contain}
-.pts{list-style:none;margin-top:8px;font-size:.9rem}
+.pts{list-style:none;margin-top:8px;font-size:1rem}
 /* ファクトシート内（争点・掲載）では、.pts自身のmargin-topが dt の位置合わせ用padding-topと
    二重にかかり、他の行（.court-lineや素のテキスト）よりラベルとの間が8px広くなって
    斜めにずれて見えていた。ファクトシートの中でだけ打ち消す */
@@ -396,8 +396,8 @@ a{color:inherit}
 .pts li::before{content:"・";color:var(--faint)}
 /* 期日（この事件の全回）: 争点と同じ見た目のリストを流用 */
 .rounds li{padding-left:1.2em;text-indent:-1.2em;margin-bottom:6px}
-.round-closed,.round-note{color:var(--mut);font-size:.8rem;margin-left:.5em}
-.round-edit{color:var(--edit);font-size:.8rem;margin-left:.6em;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.round-closed,.round-note{color:var(--mut);font-size:.875rem;margin-left:.5em}
+.round-edit{color:var(--edit);font-size:.875rem;margin-left:.6em;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 
 /* ---- タイムライン ---- */
 /* 左に縦線と節。済んだ回は塗りつぶし、次回は朱色、これからの回は輪郭だけ。最後の節で線を止める */
@@ -409,19 +409,19 @@ a{color:inherit}
 .tl-dot{position:absolute;left:0;top:11px;width:13px;height:13px;border-radius:50%;background:#eac1be;box-sizing:border-box}
 .tl-item.xp::before{top:19px}
 .tl-item.xp .tl-dot{top:13px}
-.tl-head{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:12px;row-gap:4px;font-size:.9rem;line-height:1.7}
+.tl-head{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:12px;row-gap:4px;font-size:1rem;line-height:1.7}
 /* 期日の行（○の隣）は型スケールの段に乗せる（2026-11-15）：期日の名前＝小見出し1rem、日付＝本文.9rem（黒）、
    法廷＝キャプション.8rem（灰、.tl-meta）。以前は日付が.8remの灰色、名前が.9remで、直下の主張カード（.9rem）と
    同じ大きさだったため、展開すると期日の行が中身に埋もれてタイムラインに見えなかった */
-.tl-date{color:var(--mut);font-size:.8rem;font-variant-numeric:tabular-nums}
+.tl-date{color:var(--mut);font-size:.875rem;font-variant-numeric:tabular-nums}
 .tl-type{font-family:"Shippori Mincho",serif;font-weight:600}
 /* 上の大きさはPC幅（560px以上）だけ。スマホは元の大きさ（日付.8rem・灰、名前.9rem）のまま。
    スマホは1画面に入る量が少なく、節が縦に並んで見えにくい問題はPC幅のもの（2026-11-15） */
 @media(min-width:560px){
-  .tl-date{color:var(--ink);font-size:.9rem}
+  .tl-date{color:var(--ink);font-size:1rem}
   .tl-type{font-size:1rem}
 }
-.tl-meta{color:var(--mut);font-size:.8rem}
+.tl-meta{color:var(--mut);font-size:.875rem}
 /* 期日の行（節）と中身（主張カード・資料）を余白で切り離す（2026-11-15）。展開すると中身が期日の行に
    くっついて続き、節が縦に並ぶタイムラインに見えなかったため。上下をあけて「期日ごとのひとかたまり」に
    し、PC幅では中身を左に32px下げて、縦線の右に期日の行だけが立つようにする（枠や線は足さない）。
@@ -442,34 +442,34 @@ a{color:inherit}
    中身があると気づいてもらう入口になる。小さいピル（.7rem）では見落とされるため、大きいピル
    （.8rem・8px 20px。.pillbtn と同じ寸法）にしている（2026-11-15） */
 .tl-togglerow{margin:24px 0}
-.tl-toggle{display:inline-flex;align-items:center;gap:6px;font-size:.7rem;color:var(--stamp);background:#fff;
+.tl-toggle{display:inline-flex;align-items:center;gap:6px;font-size:.875rem;color:var(--stamp);background:#fff;
   border:1px solid rgba(185,50,38,.35);border-radius:999px;padding:8px 20px;cursor:pointer;line-height:1.5;font-family:inherit}
 .tl-toggle:hover{border-color:rgba(185,50,38,.6)}
 .tl-toggle .bi{font-size:.8rem;line-height:1;color:var(--stamp)}
 
 /* ---- 訴訟資料（タイムラインの中身／一覧） ---- */
-.mat{font-size:.9rem}
+.mat{font-size:1rem}
 .mat + .mat{margin-top:16px}
 /* 原告/被告の主張（.args）のすぐ下に資料が来るときも、資料どうしと同じだけあける（無いと箱にくっついて見える） */
 .args + .mat{margin-top:16px}
-.mat-name{font-weight:500;font-size:.8rem}
-.mlist{list-style:none;margin-top:8px;font-size:.9rem}
+.mat-name{font-weight:500;font-size:.875rem}
+.mlist{list-style:none;margin-top:8px;font-size:1rem}
 /* 訴訟資料一覧を提出者側ごとに束ねる見出し（色は .arg h4 と同じ組） */
-.mside-h{margin:16px 0 4px;font-size:.7rem;font-weight:700;letter-spacing:.14em}
+.mside-h{margin:16px 0 4px;font-size:.875rem;font-weight:700;letter-spacing:.14em}
 .mside-h.g{color:#47705a}
 .mside-h.k{color:#4a5a74}
 .mside-h.j{color:#8a5c46}
 .mside-h + .mlist{margin-top:0}
 .mrow{display:flex;gap:12px;padding:8px 0;border-top:1px solid var(--tint)}
 .mrow:first-child{border-top:none}
-.mside-tag{color:var(--mut);font-size:.8rem;margin-left:8px;white-space:nowrap}
-.mdate{flex:none;width:6.2em;color:var(--mut);font-size:.8rem;font-variant-numeric:tabular-nums;padding-top:1px}
+.mside-tag{color:var(--mut);font-size:.875rem;margin-left:8px;white-space:nowrap}
+.mdate{flex:none;width:6.2em;color:var(--mut);font-size:.875rem;font-variant-numeric:tabular-nums;padding-top:1px}
 /* スマホ幅では提出日の列を削り、資料名＋ボタン列（.mmain）をなるべく1行に収める（2026-09-04） */
 @media(max-width:559.98px){.mdate{display:none}}
 .mmain{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;min-width:0}
 /* PDF・本文・要約のボタン列。無いものはグレーで押せない */
 .btns{display:flex;gap:8px;flex-wrap:wrap}
-.btn{display:inline-flex;align-items:center;gap:4px;font-size:.7rem;color:var(--ink);
+.btn{display:inline-flex;align-items:center;gap:4px;font-size:.875rem;color:var(--ink);
   background:#fff;border:1px solid #e6e4dd;border-radius:999px;padding:4px 12px;
   cursor:pointer;text-decoration:none;line-height:1.5;font-family:inherit}
 .btn:hover{border-color:#c9c6bc}
@@ -490,7 +490,7 @@ a{color:inherit}
 .mdmenu{position:absolute;top:calc(100% + 4px);left:0;z-index:5;background:var(--card);
   border-radius:12px;box-shadow:0 14px 40px rgba(0,0,0,.2);padding:4px;min-width:150px}
 .mdmenu:not([hidden]){display:flex;flex-direction:column}
-.mdmenu button{display:flex;align-items:center;gap:6px;font-size:.8rem;color:var(--ink);
+.mdmenu button{display:flex;align-items:center;gap:6px;font-size:.875rem;color:var(--ink);
   background:none;border:none;border-radius:8px;padding:8px 10px;cursor:pointer;text-align:left;
   font-family:inherit;line-height:1.5;white-space:nowrap}
 .mdmenu button:hover{background:var(--tint)}
@@ -499,10 +499,10 @@ a{color:inherit}
 .args{display:grid;gap:12px;margin-top:12px}
 @media(min-width:560px){.args{grid-template-columns:1fr 1fr}}
 .arg{background:var(--tint);border-radius:12px;padding:12px 16px}
-.arg h4{font-size:.7rem;font-weight:700;letter-spacing:.08em;margin-bottom:4px}
+.arg h4{font-size:.875rem;font-weight:700;letter-spacing:.08em;margin-bottom:4px}
 .arg.g h4{color:#47705a}
 .arg.k h4{color:#4a5a74}
-.arg ul{list-style:none;font-size:.9rem}
+.arg ul{list-style:none;font-size:1rem}
 .arg li{padding-left:1.1em;text-indent:-1.1em;line-height:1.75}
 .arg li::before{content:"・";color:var(--faint)}
 
@@ -525,31 +525,31 @@ a{color:inherit}
 .bt-bang{display:inline-block;color:var(--stamp);transform:rotate(-14deg)}
 /* 「掲示板」が「掲」と「示板」で改行で割れてしまうのを防ぐ（狭い画面向け） */
 .nowrap{white-space:nowrap}
-.bcount{font-size:.8rem;color:var(--mut)}
+.bcount{font-size:.875rem;color:var(--mut)}
 /* 掲示板の中に置く「どの事件の掲示板か」の一角。アイコン（.cicon、56px）の右に、事件名（.board-name）と
    「報告を書く」（.bwrite-top）を縦に2段重ねる（2026-08-24）。事件名だけだと1行でアイコンの高さが余るため、
    ボタンと合わせてアイコンの高さに近づけている */
 .board-id{display:flex;gap:12px;margin-top:12px}
 .board-id-main{min-width:0;flex:1}
-.board-name{font-size:.9rem}
+.board-name{font-size:1rem}
 .board-id .bwrite-top{margin-top:4px}
 /* 問題提起人名（本来は.d-titleの下に置く前提でdisplay:block）を、掲示板枠では事件名と同じ行に
    並べて出す（2026-08-29）。字下げ用のmargin-topも打ち消す */
 .board-name .presenter-name{display:inline;margin-top:0}
 .board-name .presenter-line{display:inline-flex;margin-top:0}
 /* 報告は吹き出しで「声」として並べる */
-.bubble{background:#fff;border-radius:12px;padding:12px 16px;margin-top:12px;position:relative;font-size:.9rem}
+.bubble{background:#fff;border-radius:12px;padding:12px 16px;margin-top:12px;position:relative;font-size:1rem}
 /* しっぽ（三角形）は本体の左端ぴったり（left:-6px）だと、境目に薄い線が出る（三角の斜辺のアンチエイリアス）。
    1px だけ本体に食い込ませて継ぎ目を隠す（2026-08-27） */
 .bubble::before{content:"";position:absolute;left:-5px;top:16px;
   border:6px solid transparent;border-right-color:#fff;border-left:0}
-.bwho{font-size:.8rem;font-weight:700;margin-right:.45em}
+.bwho{font-size:.875rem;font-weight:700;margin-right:.45em}
 .bwho.g{color:#47705a}
 .bwho.k{color:#4a5a74}
 .bwho.j{color:#8a5c46}
-.bround{font-size:.8rem;color:var(--mut);margin-left:.5em}
-.bubble .del{color:var(--mut);font-size:.8rem;margin-left:.5em;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
-.board-empty{color:var(--mut);font-size:.9rem;margin-top:12px}
+.bround{font-size:.875rem;color:var(--mut);margin-left:.5em}
+.bubble .del{color:var(--mut);font-size:.875rem;margin-left:.5em;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.board-empty{color:var(--mut);font-size:1rem;margin-top:12px}
 .board-empty a{color:var(--ink);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 /* 右下（既定の位置）。左上にも同じボタンを .bwrite-top で重ねて置く（boardHtml参照） */
 .bwrite{margin-top:12px;text-align:right}
@@ -558,36 +558,36 @@ a{color:inherit}
    寸法は .btn（.pdf/.md/要約ボタン）と同じにそろえ、色だけ朱色にする */
 .bwrite a{display:inline-flex;align-items:center;gap:4px;background:none;
   border:1px solid rgba(185,50,38,.35);border-radius:999px;padding:4px 12px;
-  font-size:.7rem;color:var(--stamp);cursor:pointer;line-height:1.5}
+  font-size:.875rem;color:var(--stamp);cursor:pointer;line-height:1.5}
 .bwrite a:hover{border-color:rgba(185,50,38,.6)}
 .bwrite a .bi{font-size:.8rem;line-height:1;color:var(--stamp)}
 .pform{margin-top:12px;background:#fff;border-radius:12px;padding:16px}
 /* フォームの先頭に置く「どの裁判への報告か」の行。報告が溜まると上の事件名の行は画面外に出るので、
    投稿ボタンの直前でもう一度示す。区切りは罫線1本だけにして、フォーム本体と混ざらないようにする */
-.pform-case{display:flex;align-items:center;gap:8px;font-size:.9rem;
+.pform-case{display:flex;align-items:center;gap:8px;font-size:1rem;
   padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid var(--tint)}
 /* 折り返してでも事件名を全部見せる（誤って報告先を間違えないための行なので、途中で省略しない） */
 .pform-case span{min-width:0}
 .pform .field{margin-bottom:12px}
-.pform .field label{display:block;font-size:.7rem;color:var(--mut);margin-bottom:4px}
-.pform .line{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:.9rem}
-.pform select,.pform input{font-family:inherit;font-size:.9rem;color:var(--ink);
+.pform .field label{display:block;font-size:.875rem;color:var(--mut);margin-bottom:4px}
+.pform .line{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:1rem}
+.pform select,.pform input{font-family:inherit;font-size:1rem;color:var(--ink);
   border:1px solid #e6e4dd;border-radius:12px;padding:8px 12px;background:#fff}
 .pform .field select{width:100%}
 /* 「法廷で聞いたこと」欄は独立した1行を占有させて、60字まで打てるだけの幅を確保する
    （flex:1 1 100% で、幅が余っていてもこの要素だけ折り返させる） */
 .pform .line input{flex:1 1 100%;min-width:0}
-.pform .count{color:var(--mut);font-size:.8rem;margin-top:8px}
+.pform .count{color:var(--mut);font-size:.875rem;margin-top:8px}
 .pform .acts{display:flex;gap:12px;align-items:center;margin-top:16px}
 /* line-height:inherit が無いと button 既定の normal になり、.pillbtn より8px低くなる */
-.pform button{font-family:inherit;font-size:.8rem;line-height:inherit;cursor:pointer;border:none;border-radius:999px;padding:8px 20px}
+.pform button{font-family:inherit;font-size:.875rem;line-height:inherit;cursor:pointer;border:none;border-radius:999px;padding:8px 20px}
 .pform .send{background:var(--ink);color:#fff}
 .pform .cancel{background:transparent;color:var(--mut)}
 .pform button:disabled{opacity:.5;cursor:default}
-.pform .note{color:var(--mut);font-size:.8rem;margin-top:12px;line-height:1.8}
+.pform .note{color:var(--mut);font-size:.875rem;margin-top:12px;line-height:1.8}
 .pform .ts{margin-top:12px}
 
-.qact{margin-top:16px;font-size:.8rem;color:var(--mut)}
+.qact{margin-top:16px;font-size:.875rem;color:var(--mut)}
 .qact a{color:var(--edit);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 /* 訴訟資料一覧の「PDF/mdをまとめてダウンロード」。見た目は各資料の.pdf/.md/要約ボタン（.btn）と
    そろえ、2つ並ぶ時は折り返せるようにする（2026-09-04） */
@@ -600,15 +600,15 @@ a{color:inherit}
 .mbulk .btn{color:var(--stamp);border-color:rgba(185,50,38,.35)}
 .mbulk .btn:hover{border-color:rgba(185,50,38,.6)}
 .mbulk .btn .bi{color:var(--stamp)}
-.empty-msg{color:var(--mut);font-size:.9rem;padding:24px 16px;text-align:center}
+.empty-msg{color:var(--mut);font-size:1rem;padding:24px 16px;text-align:center}
 
 /* ---- calendar ---- */
 .calhead{display:flex;align-items:baseline;gap:16px;margin:0 4px 16px;flex-wrap:wrap}
-.navbtns{color:var(--mut);font-size:.8rem;display:flex;gap:16px}
+.navbtns{color:var(--mut);font-size:.875rem;display:flex;gap:16px}
 .calhead .favtoggle{margin-left:0}
 /* 2026-11-15 スマホでは「お気に入りのみ」の上の余白が見出し(.home-title の下余白2px)だけで窮屈だったので、
    下の余白(16px)と同じ高さにそろえる（2px+14px=16px） */
-@media(max-width:559.98px){.calhead{margin-top:14px}}
+@media(max-width:559.98px){.calhead{margin-top:14px}.navbtns{gap:12px}}
 .calhead .navbtns{margin-left:auto}
 .navbtns span{cursor:pointer;user-select:none}
 .navbtns span:hover{color:var(--ink)}
@@ -617,7 +617,7 @@ a{color:inherit}
    しおりのアイコンをbi-bookmark-fillに差し替え、赤く塗りつぶされた状態にする（JS側） */
 .favtoggle{display:inline-flex;align-items:center;gap:4px;margin-left:auto;background:none;
   border:1px solid rgba(185,50,38,.35);border-radius:999px;padding:4px 12px;
-  font-size:.7rem;color:var(--stamp);cursor:pointer;user-select:none;line-height:1.5}
+  font-size:.875rem;color:var(--stamp);cursor:pointer;user-select:none;line-height:1.5}
 .favtoggle:hover{border-color:rgba(185,50,38,.6)}
 .favtoggle .bi{font-size:.8rem;line-height:1;color:var(--stamp)}
 .cal-row{display:flex;flex-direction:column;gap:32px}
@@ -626,9 +626,9 @@ a{color:inherit}
   font-variant-numeric:tabular-nums;letter-spacing:.03em;margin:0 4px 12px}
 .calcard{padding:16px 8px 12px}
 .dow,.grid{display:grid;grid-template-columns:repeat(7,1fr);text-align:center}
-.dow{color:var(--mut);font-size:.7rem;letter-spacing:.1em;padding-bottom:8px}
+.dow{color:var(--mut);font-size:.875rem;letter-spacing:.1em;padding-bottom:8px}
 .cell{padding:8px 0;font-variant-numeric:tabular-nums;position:relative;border-radius:12px}
-.cell .n{display:inline-grid;place-content:center;width:27px;height:27px;border-radius:50%;font-size:.82rem}
+.cell .n{display:inline-grid;place-content:center;width:27px;height:27px;border-radius:50%;font-size:.875rem}
 .cell.out .n{color:#ccc9c1}
 .cell.we .n{color:#8a877d}
 .cell.today .n{background:var(--ink);color:#fff}
@@ -644,10 +644,10 @@ a{color:inherit}
 .bar.shut{background:none !important;box-shadow:inset 0 0 0 1.5px #a9a7a0}
 .bars .more{color:var(--mut);font-size:.58rem;line-height:1}
 /* 凡例はカレンダーの上に置く（2026-08-27）。下に敷く余白を持つ */
-.leg{color:var(--mut);font-size:.8rem;margin:16px 8px 16px;display:flex;gap:24px;flex-wrap:wrap}
+.leg{color:var(--mut);font-size:.875rem;margin:16px 8px 16px;display:flex;gap:24px;flex-wrap:wrap}
 .leg i{display:inline-block;width:15px;height:3px;border-radius:999px;background:var(--stamp);margin-right:8px;vertical-align:4px}
 .leg i.o{background:none;box-shadow:inset 0 0 0 1.5px #a9a7a0}
-.hint{color:var(--mut);font-size:.8rem;margin:12px 8px 24px}
+.hint{color:var(--mut);font-size:.875rem;margin:12px 8px 24px}
 /* スマホ幅では、カレンダーを画面の上のほうに出したいので、案内文（.hint）はカレンダーの下に回す（2026-11-15）。
    同じ文はページ下部の .disc にもある */
 @media(max-width:559.98px){.hint{order:1;margin:16px 8px 0}section[aria-labelledby=cal-h]{display:flex;flex-direction:column}}
@@ -659,7 +659,7 @@ a{color:inherit}
    色だけ主役の朱色ではなく、.btn と同じ控えめなグレー枠にする（サイトの主操作ではないため） */
 .pillbtn{display:inline-flex;align-items:center;background:none;border:1px solid #e6e4dd;
   border-radius:999px;padding:4px 12px;margin:0 8px 8px 0;
-  font-size:.7rem;color:var(--ink);text-decoration:none;line-height:1.5}
+  font-size:.875rem;color:var(--ink);text-decoration:none;line-height:1.5}
 .pillbtn:hover{border-color:#c9c6bc}
 .pillbtn i{color:var(--stamp);margin-left:.4em;line-height:1}
 /* 正円のアイコンボタン＋下に添えたラベル。地味な.pillbtn（戻る等）の並びに紛れないよう、
@@ -674,7 +674,7 @@ a{color:inherit}
 .edit-fab-circle{display:grid;place-content:center;width:48px;height:48px;border-radius:50%;
   background:var(--stamp);color:#fff}
 .edit-fab-circle i{font-size:1.1rem;line-height:1}
-.edit-fab-label{font-size:.7rem;line-height:1;letter-spacing:.02em;color:var(--stamp)}
+.edit-fab-label{font-size:.875rem;line-height:1;letter-spacing:.02em;color:var(--stamp)}
 .edit-fab:hover .edit-fab-circle{background:#9c2a20}
 /* .selfbar a{text-decoration:underline} より詳しく指定して、下線を確実に消す
    （.edit-fab単体だと.selfbar aと詳しさが同点で、後者の下線が勝ってしまうため） */
@@ -691,7 +691,7 @@ a{color:inherit}
 .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 /* .btn と同じ高さにそろえる（同じ .7rem のピル型部品）。枠線は引かないが、
    .btn の1px枠のぶんだけ高さがずれるので、透明な枠で埋める */
-.tag{font-size:.7rem;color:var(--mut);background:var(--tint);border-radius:999px;padding:4px 12px;
+.tag{font-size:.875rem;color:var(--mut);background:var(--tint);border-radius:999px;padding:4px 12px;
   text-decoration:none;cursor:pointer;border:1px solid transparent;font-family:inherit;line-height:1.5}
 a.tag:hover{color:var(--ink);background:#ece9e0}
 .tag.on{background:var(--ink);color:#fff}
@@ -699,10 +699,10 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 /* ---- 事件をさがす（検索・一覧） ---- */
 .search{display:flex;gap:12px;align-items:center;background:var(--card);border-radius:999px;
   padding:8px 16px;box-shadow:0 1px 2px rgba(0,0,0,.06)}
-.search input{flex:1;border:none;font-family:inherit;font-size:.9rem;color:var(--ink);background:transparent;outline:none}
+.search input{flex:1;border:none;font-family:inherit;font-size:1rem;color:var(--ink);background:transparent;outline:none}
 .search .bi{color:var(--mut)}
 /* 進行中／終結 の切り替え */
-.tabs{display:flex;gap:24px;margin:24px 4px 0;font-size:.9rem;color:var(--mut);border-bottom:1px solid var(--tint)}
+.tabs{display:flex;gap:24px;margin:24px 4px 0;font-size:1rem;color:var(--mut);border-bottom:1px solid var(--tint)}
 .tabs span{padding-bottom:8px;cursor:pointer;border-bottom:2px solid transparent}
 .tabs span.on{color:var(--ink);font-weight:500;border-bottom-color:var(--ink)}
 .clist{display:grid;gap:12px;margin-top:16px}
@@ -727,7 +727,7 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 #ceTierPick .ccard.on:hover{box-shadow:inset 0 0 0 .5px var(--stamp),0 2px 12px rgba(0,0,0,.07)}
 /* 期日をさがす：並べ替えの切り替え（期日が古い順⇄新しい順）。タブの下・一覧の上に右寄せで置く */
 .sortrow{display:flex;justify-content:flex-end;gap:16px;flex-wrap:wrap;margin:8px 4px 12px}
-.sortlink{display:inline-flex;align-items:center;gap:4px;font-size:.8rem;color:var(--mut);cursor:pointer}
+.sortlink{display:inline-flex;align-items:center;gap:4px;font-size:.875rem;color:var(--mut);cursor:pointer}
 .sortlink:hover{color:var(--ink)}
 .sortlink .bi{font-size:.8rem;line-height:1}
 /* text-decoration:noneは.ccardを<a>で使う場合の保険（ツール紹介カード、2026-09-07）。
@@ -743,9 +743,9 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
   text-decoration:underline;text-decoration-color:transparent;text-decoration-thickness:1px;
   text-underline-offset:3px;transition:text-decoration-color .15s ease}
 .ccard:hover:not(:has(.cicon-link:hover)) .ctitle{text-decoration-color:var(--stamp)}
-.c-arrow{flex:none;align-self:center;color:var(--stamp);font-size:.85rem;transition:transform .15s ease}
+.c-arrow{flex:none;align-self:center;color:var(--stamp);font-size:.875rem;transition:transform .15s ease}
 .ccard:hover:not(:has(.cicon-link:hover)) .c-arrow{transform:translateX(3px)}
-.cnext{font-size:.8rem;color:var(--mut);margin-top:4px;font-variant-numeric:tabular-nums}
+.cnext{font-size:.875rem;color:var(--mut);margin-top:4px;font-variant-numeric:tabular-nums}
 .cnext b{color:var(--stamp);font-weight:600;margin-right:.4em}
 
 /* ---- 証拠整理や分析に使えるツール（トップページ最下部、姉妹アプリの紹介カード）2026-09-07 ----
@@ -772,10 +772,10 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
    目立ちすぎたため、印象をそろえる目的で薄い朱色（45%）に落としている（2026-09-08） */
 .ticon{flex:none;align-self:center;width:52px;height:52px;border:2.5px solid rgba(185,50,38,.45);
   border-radius:8px;display:grid;place-content:center;color:rgba(185,50,38,.45);font-size:1.3rem}
-.tdesc{font-size:.9rem;color:var(--mut);margin-top:4px;line-height:1.6}
+.tdesc{font-size:1rem;color:var(--mut);margin-top:4px;line-height:1.6}
 .cfoot{display:flex;align-items:center;gap:12px;margin-top:8px}
 .cfoot .tags{margin-top:0}
-.clike{margin-left:auto;font-size:.8rem;color:var(--mut);white-space:nowrap}
+.clike{margin-left:auto;font-size:.875rem;color:var(--mut);white-space:nowrap}
 .clike .bi{color:var(--stamp);margin-right:2px}
 
 /* ---- 日付のプレビュー（ホバー／タップ） ---- */
@@ -785,7 +785,7 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .pop-row{position:relative;padding:12px 32px 12px 12px;border-radius:12px;cursor:pointer}
 .pop-row:hover{background:var(--tint)}
 .pop-row + .pop-row{margin-top:4px;border-top:1px solid var(--tint);padding-top:12px}
-.pop-arrow{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--stamp);font-size:.85rem;
+.pop-arrow{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--stamp);font-size:.875rem;
   transition:transform .15s ease}
 /* カードに触れると矢印が少し右へ動く（クリックできる目印）。スマホには「ホバー」が無いので、
    触れている間だけ付く.touchingでも同じように動かす（.touchingはJS側でアイコンに触れたときは
@@ -794,7 +794,7 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .pop-row:hover:not(:has(.cicon-link:hover)) .pop-arrow,.pop-row.touching .pop-arrow{transform:translateY(-50%) translateX(3px)}
 .pop-main{display:flex;gap:10px;align-items:flex-start}
 .pop-text{min-width:0;flex:1}
-.pop-date{font-size:.8rem;color:var(--mut);font-variant-numeric:tabular-nums;
+.pop-date{font-size:.875rem;color:var(--mut);font-variant-numeric:tabular-nums;
   text-decoration:underline;text-decoration-color:transparent;text-underline-offset:3px;
   transition:text-decoration-color .15s ease}
 /* 矢印と同じく、触れている間だけ日付「9/18（金） 10:30」に下線が引かれる
@@ -803,8 +803,8 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 /* 日付の数字だけ一段大きくして目立たせる（事件名.pop-title=.9remより大きい1.05rem・
    「今後の期日」.ud b と同じ扱い） */
 .pop-date b{color:var(--ink);font-weight:600;font-size:1.05rem;font-family:"Shippori Mincho",serif}
-.pop-title{font-size:.9rem;font-weight:500;margin-top:1px;font-family:"Shippori Mincho",serif}
-.pop-meta{font-size:.8rem;color:var(--mut);margin-top:1px}
+.pop-title{font-size:1rem;font-weight:500;margin-top:1px;font-family:"Shippori Mincho",serif}
+.pop-meta{font-size:.875rem;color:var(--mut);margin-top:1px}
 /* 種別／場所（CC.typePlaceHtml、.pop-meta と .um で共通）。PCは全角スラッシュでつないだ1行のまま、
    スマホは読みやすいよう種別・場所をそれぞれ改行して2行にする（2026-09-05）。
    裁判所名（.court-full＝正式名称／.court-abbr＝略称）もあわせて出し分ける：
@@ -818,7 +818,7 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 }
 /* プレビュー下の操作行：右下に「閉じる×」 */
 .pop-foot{display:flex;justify-content:flex-end;align-items:center;gap:16px;margin-top:4px;padding:8px 12px 4px;border-top:1px solid var(--tint)}
-.pop-close{font-size:.8rem;color:var(--mut);background:none;border:none;cursor:pointer;padding:4px}
+.pop-close{font-size:.875rem;color:var(--mut);background:none;border:none;cursor:pointer;padding:4px}
 .pop-close:hover{color:var(--ink)}
 .pop-close i{margin-left:.3em}
 
@@ -842,7 +842,7 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 /* flex:1 が無いと、事件名の短い行では矢印(.u-arrow)が文字のすぐ右で止まってしまい、
    行ごとに矢印の位置が揃わなかった。残りの幅を持たせて、矢印を常にカード右端に揃える（2026-08-30） */
 .ubody{min-width:0;flex:1}
-.ud{color:var(--mut);font-size:.8rem;font-variant-numeric:tabular-nums;
+.ud{color:var(--mut);font-size:.875rem;font-variant-numeric:tabular-nums;
   text-decoration:underline;text-decoration-color:transparent;text-underline-offset:3px;
   transition:text-decoration-color .15s ease}
 /* 日付の数字だけ一段大きくして目立たせる（事件名.9remより大きい1.05rem・2026-08-27） */
@@ -852,21 +852,21 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
    まずPC（:hover）から。スマホの「触れている間」対応は次の段階で。2026-08-30） */
 .u:hover:not(:has(.cicon-link:hover)) .ud{text-decoration-color:var(--stamp)}
 /* 事件名。ルールが無く body の15pxをそのまま継承していたので、本文段（.9rem）に載せる（2026-08-27） */
-.ut{font-size:.9rem}
-.um{color:var(--mut);font-size:.8rem;overflow:hidden;text-overflow:ellipsis}
-.u-empty{color:var(--mut);font-size:.9rem;padding:24px 12px;text-align:center}
+.ut{font-size:1rem}
+.um{color:var(--mut);font-size:.875rem;overflow:hidden;text-overflow:ellipsis}
+.u-empty{color:var(--mut);font-size:1rem;padding:24px 12px;text-align:center}
 /* 行末の矢印。.pop-arrowと同じく、カードに触れると少し右へ動く（クリックできる目印。2026-08-30） */
-.u-arrow{flex:none;align-self:center;color:var(--stamp);font-size:.85rem;transition:transform .15s ease}
+.u-arrow{flex:none;align-self:center;color:var(--stamp);font-size:.875rem;transition:transform .15s ease}
 .u:hover:not(:has(.cicon-link:hover)) .u-arrow{transform:translateX(3px)}
 
 /* ---- footer最終行：ソースコードリンク＋事務局用ステータスを1行に並べる（2026-08-25） ---- */
-.status-row{margin-top:8px;color:var(--mut);font-size:.8rem;line-height:1.9}
+.status-row{margin-top:8px;color:var(--mut);font-size:.875rem;line-height:1.9}
 .status-row a{color:var(--mut);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 .status-row .sep{margin:0 .5em;color:#d5d3cc}
-.status-sub{display:inline-block;margin-top:4px;font-size:.7rem;color:var(--faint)}
+.status-sub{display:inline-block;margin-top:4px;font-size:.875rem;color:var(--faint)}
 
 /* ---- footer ---- */
-.site-footer{margin-top:48px;color:var(--mut);font-size:.8rem;line-height:1.9}
+.site-footer{margin-top:48px;color:var(--mut);font-size:.875rem;line-height:1.9}
 .site-footer a{color:var(--mut);text-decoration:underline;text-underline-offset:3px}
 .site-footer .sep{margin:0 .5em;color:#d5d3cc;text-decoration:none}
 .site-footer .disc{margin-top:8px}
@@ -880,7 +880,7 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .footer-request .subhead{margin-top:0}
 .footer-request .pts{margin-bottom:0}
 /* 連絡先はメールアドレスとして箇条書きから独立させ、枠の下部にまとめて出す（2026-08-26） */
-.footer-mail{margin-top:12px;font-size:.9rem;color:var(--ink);padding-right:88px}
+.footer-mail{margin-top:12px;font-size:1rem;color:var(--ink);padding-right:88px}
 .footer-mail a{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
 .request-frog{position:absolute;right:16px;bottom:16px;width:72px;height:auto;pointer-events:none}
 /* 「すでに掲載されている方へ」＝問題提起人ログインへの入口。「掲載をご希望の方へ」の続きとして
@@ -911,32 +911,32 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .modal .tabs[hidden]{display:none}
 .modal .mhead{padding:24px 24px 4px;font-family:"Shippori Mincho",serif;font-size:1.2rem;font-weight:600}
 /* 見出し右の「＊のみ必須」。冒頭の注意書き（箇条書き2行）の置き換え（2026-08-27） */
-.mhead .mreq{font-family:"Zen Kaku Gothic New",sans-serif;font-size:.8rem;font-weight:400;color:var(--mut);margin-left:8px}
+.mhead .mreq{font-family:"Zen Kaku Gothic New",sans-serif;font-size:.875rem;font-weight:400;color:var(--mut);margin-left:8px}
 .reqmark{color:var(--stamp)}
 .modal .mbody{padding:16px 24px 4px}
 /* モーダル内の小見出し。以前は「ラベル」段（.7rem・字間広め・グレー）だったが、それだと
    欄名（.field label）や注記（.fnote）と強さの差がほとんど付かず、フォームが同じ薄いグレーの
    文字で埋まって見づらかった。ここだけ「節見出し」段（.9rem・地色）に上げ、太字にはしない
    （見出しは太字でなくサイズで立てる、というサイト全体の方針のまま）。2026-08-26 */
-.msec{font-size:.9rem;color:var(--ink);margin:32px 0 12px}
+.msec{font-size:1rem;color:var(--ink);margin:32px 0 12px}
 .msec:first-child{margin-top:0}
 .sum-modal{max-width:560px}
-.sum-text{font-size:.9rem;line-height:1.9;white-space:pre-wrap}
+.sum-text{font-size:1rem;line-height:1.9;white-space:pre-wrap}
 .field{margin-bottom:16px}
 /* 欄名は明朝・.9rem にして、節見出し（明朝1.2rem）の下位見出しとして読めるようにする
    （ゴシック.8rem・地色だと、注記(.fnote)やチェックの表示設定と強さの差が付かず沈んで見えた。
    2026-08-26に一度.8rem・地色まで上げていたが、チェックボックスを項目ごとに増やしたことで
    欄名がさらに埋もれたため、書体で立てる方向へ変更・2026-08-28） */
-.field label{display:block;font-family:"Shippori Mincho",serif;font-size:.9rem;font-weight:600;color:var(--ink);margin-bottom:4px}
+.field label{display:block;font-family:"Shippori Mincho",serif;font-size:1rem;font-weight:600;color:var(--ink);margin-bottom:4px}
 /* 書式の説明（「1行に1つ」など）は欄名の行から外し、入力欄のすぐ上に単独行で置く。同じ行に
    同居させると、欄名（明朝）から書式説明（ゴシック）へ行の途中で書体が切り替わってしまうため。
    冒頭の注意書きの置き換え（2026-08-27）→ 単独行に変更（2026-08-28） */
-.field > .lhint{display:block;font-size:.7rem;color:var(--mut);margin-bottom:4px;line-height:1.7}
+.field > .lhint{display:block;font-size:.875rem;color:var(--mut);margin-bottom:4px;line-height:1.7}
 /* 入れ子の欄（.subfield）の中でも、欄名の下の一言は同じ小ささにする（2026-09-10） */
-.subfield > .lhint{display:block;font-size:.7rem;color:var(--mut);margin-bottom:4px;line-height:1.7}
+.subfield > .lhint{display:block;font-size:.875rem;color:var(--mut);margin-bottom:4px;line-height:1.7}
 /* 期日タブで、事件が決まっているときの固定表示（入力欄の代わり。書き換え事故を防ぐ） */
-.fixedcase{font-size:.9rem;padding:4px 0}
-.field .check{display:flex;align-items:center;gap:8px;font-size:.9rem;color:var(--ink)}
+.fixedcase{font-size:1rem;padding:4px 0}
+.field .check{display:flex;align-items:center;gap:8px;font-size:1rem;color:var(--ink)}
 .field .check input{width:auto}
 /* 欄に付く表示設定のチェック（「公開する」）。欄名の直下・入力欄の上に置く。
    .field .check の既定（.9rem・地色）のままだと、欄名（.8rem）より大きく同じ濃さになり、
@@ -945,17 +945,17 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
    （「トップにも表示する」は応援ピックアップ廃止に伴い2026-09-05に削除。flex-wrapは複数個
    並ぶ場合に備えて残す） */
 .checkrow{display:flex;flex-wrap:wrap;gap:2px 20px;margin-bottom:8px}
-.checkrow .check{font-size:.8rem;color:var(--mut)}
+.checkrow .check{font-size:.875rem;color:var(--mut)}
 .checkrow .check input{accent-color:var(--mut)}
 .field input,.field textarea{
-  width:100%;font-family:inherit;font-size:.9rem;color:var(--ink);
+  width:100%;font-family:inherit;font-size:1rem;color:var(--ink);
   border:1px solid #e6e4dd;border-radius:12px;padding:8px 12px;background:#fff;
 }
 .field select{
-  width:100%;font-family:inherit;font-size:.9rem;color:var(--ink);
+  width:100%;font-family:inherit;font-size:1rem;color:var(--ink);
   border:1px solid #e6e4dd;border-radius:12px;padding:8px 12px;background:#fff;
 }
-.field input[type=file]{font-size:.8rem}
+.field input[type=file]{font-size:.875rem}
 /* 案内チラシ欄：ブラウザ既定の「選択されていません」が、隣の「いまの案内：…」表示と紛らわしいため
    隠す。文字色を透明にしてから、選択ボタン（::file-selector-button）だけ文字色を戻す
    （2026-09-01。Chromeでの見え方を確認して採用。ボタンの見た目自体は変えない） */
@@ -970,14 +970,14 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
    flex で潰れて文字が縦積みになっていた（2026-08-26）。隣の入力欄と高さをそろえる。
    .mfoot button と違い line-height:inherit は指定しない（input と同じ normal のままにして
    高さを38.4pxにそろえるため。詳しくは DESIGN_SYSTEM.md「3. 部品の大きさ」） */
-.cicon-row button{flex:none;white-space:nowrap;font-family:inherit;font-size:.9rem;cursor:pointer;
+.cicon-row button{flex:none;white-space:nowrap;font-family:inherit;font-size:1rem;cursor:pointer;
   border:1px solid transparent;border-radius:999px;padding:8px 20px}
 /* 変更・保存・作成（2文字）は正円にする（2026-09-02）。paddingでなく固定サイズ＋flexで中央寄せする。
    円の直径は「同じ役割の部品どうしは同じ高さ」（DESIGN_SYSTEM.md）にそろえて、置かれる文脈ごとの
    本来の高さ（.cicon-row=38.4px・.ihead-actions=35.7px）に合わせる。文字は円に収まるよう縮める */
 .btn-round{padding:0;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;border-radius:50%}
-.cicon-row .btn-round{width:38.4px;height:38.4px;font-size:.78rem}
-.ihead-actions .btn-round{width:35.7px;height:35.7px;font-size:.72rem}
+.cicon-row .btn-round{width:38.4px;height:38.4px;font-size:.875rem}
+.ihead-actions .btn-round{width:35.7px;height:35.7px;font-size:.875rem}
 /* 選んだ問題提起人に属する操作（ニックネームの新規作成・アイコン）は、事件そのものの入力欄と
    区別できるよう、薄い地に載せて1つのまとまりに見せる（2026-08-26） */
 .subfield{background:var(--tint);border-radius:12px;padding:12px;margin-top:8px}
@@ -989,11 +989,11 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
    （実機で発覚。横長版の.cicon-rowと正方形版の.cicon-rowで左右端が12pxずれていた） */
 .subfield-plain{background:none;padding:0}
 .cicon-remove{color:var(--edit);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
-.fnote{color:var(--mut);font-size:.8rem;margin-top:4px;line-height:1.7}
+.fnote{color:var(--mut);font-size:.875rem;margin-top:4px;line-height:1.7}
 /* 事件ページの先頭に置く、非公式・AI要約・原典確認の注意書き。アイコンも枠も付けず、カードの左端に
    そろえた小さな補助文字だけにする（--mut。読み飛ばされにくい濃さ）。中央揃え。上は
    「事件をさがすに戻る」との間を広めにあける（上107px・下16px。黒いバー下〜ロゴ上の120pxに、ボタン下〜注意書きの見た目をそろえた） */
-.unofficial-note{color:var(--mut);font-size:.8rem;line-height:1.7;letter-spacing:.04em;text-align:center;margin:107px 0 16px}
+.unofficial-note{color:var(--mut);font-size:.875rem;line-height:1.7;letter-spacing:.04em;text-align:center;margin:107px 0 16px}
 /* スマホ幅（.mdateなどと同じ559.98px境界）では折り返すので、中央ではなく左揃えにする */
 @media(max-width:559.98px){.unofficial-note{text-align:left}}
 .fnote a{text-underline-offset:3px}
@@ -1019,11 +1019,11 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .mfoot{position:sticky;bottom:0;z-index:3;background:var(--card);border-top:1px solid var(--tint);
   padding:12px 24px;display:flex;gap:12px;align-items:center}
 .mfoot .spacer{flex:1}
-.mfoot button{font-family:inherit;font-size:.9rem;line-height:inherit;cursor:pointer;border:none;border-radius:999px;padding:8px 24px}
+.mfoot button{font-family:inherit;font-size:1rem;line-height:inherit;cursor:pointer;border:none;border-radius:999px;padding:8px 24px}
 .btn-save{background:var(--ink);color:#fff}
 .btn-cancel{background:transparent;color:var(--mut)}
 /* 削除は「この期日を削除」等のリンク風にして、保存と押し間違えにくくする（2026-08-27） */
-.mfoot .btn-del{background:none;border:none;color:var(--stamp);font-size:.8rem;padding:4px 0;
+.mfoot .btn-del{background:none;border:none;color:var(--stamp);font-size:.875rem;padding:4px 0;
   text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 .mfoot button:disabled{opacity:.5;cursor:default}
 
@@ -1048,8 +1048,8 @@ body:has(.wrap-case) .announce-inner,body:has(.wrap-home) .announce-inner,body:h
 /* タイトルの隣に「入力は公開情報」の注意を添える（2026-08-30）。折り返しても崩れないよう
    align-items:baseline＋flex-wrap（.ce-title 側の margin-top は行が2つに分かれても保つ） */
 .ce-title-row{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 14px}
-.ce-title-warn{font-size:.8rem;color:var(--stamp);font-weight:600}
-.ce-case{font-size:.9rem;color:var(--mut);margin-top:2px}
+.ce-title-warn{font-size:.875rem;color:var(--stamp);font-weight:600}
+.ce-case{font-size:1rem;color:var(--mut);margin-top:2px}
 /* case-edit.htmlでは事件名をタイトルの上に置く（2026-09-01）。事件名がタイトルに寄り添うよう、
    間の余白は上（事件名側）に持たせ、直後のタイトルは詰める */
 #ceCaseName{margin-top:24px}
@@ -1063,7 +1063,7 @@ body:has(.wrap-case) .announce-inner,body:has(.wrap-home) .announce-inner,body:h
 #ceTierPick{border-bottom:1px solid var(--tint);padding-bottom:24px}
 #ceTierPick .tierhead{font-family:"Shippori Mincho",serif;font-size:1.2rem;font-weight:600;margin-bottom:16px}
 #ceTierPick .clist{margin-top:0}
-#ceTierPick .ctitle{font-size:.9rem}
+#ceTierPick .ctitle{font-size:1rem}
 .editgrid{margin-top:24px}
 /* 権限が無い間は hidden 属性で隠す。かつては860px以上で .editgrid{display:grid} を当てていて、
    それが [hidden] の display:none を上書きしてしまう事故があったため、この行で明示的に勝たせている
@@ -1090,13 +1090,13 @@ body:has(.wrap-case) .announce-inner,body:has(.wrap-home) .announce-inner,body:h
    何を設定しているのかが一目で分かることを優先して、見出しだけは実物に寄せた青にする
    （サイト本体の「装飾は無彩色寄り」の例外。ここは実物の再現そのものが目的） */
 .gprev{border:1px solid var(--tint);border-radius:12px;padding:14px 16px;background:#fff;margin-bottom:16px}
-.gprev-url{font-size:.75rem;color:var(--mut);word-break:break-all}
+.gprev-url{font-size:.875rem;color:var(--mut);word-break:break-all}
 .gprev-title{font-family:"Shippori Mincho",serif;font-size:1.1rem;font-weight:600;color:#1a4fa0;margin-top:4px;line-height:1.5}
-.gprev-desc{font-size:.8rem;color:var(--mut);margin-top:6px;line-height:1.7}
+.gprev-desc{font-size:.875rem;color:var(--mut);margin-top:6px;line-height:1.7}
 /* 「アカウントのページ」の設定と「この事件のページ」の設定を分ける線。
    同じ見出し（Twitterカード／SEOとタイトル）が2度出るので、群の切れ目をはっきりさせる */
 .ce-rule{border:0;border-top:1px solid var(--tint);margin:40px 0 0}
-.editcol .msec .lhint{font-family:"Zen Kaku Gothic New",sans-serif;font-size:.8rem;color:var(--mut);font-weight:400;margin-left:8px}
+.editcol .msec .lhint{font-family:"Zen Kaku Gothic New",sans-serif;font-size:.875rem;color:var(--mut);font-weight:400;margin-left:8px}
 /* 4つの囲み（アカウントについて／事件について／TwitterカードとSEO／運営者用）。2026-09-11。
    罫線ではなく背景色差で区切る（.subfield・.arg と同じ薄いグレー地 --tint。.editcol の白地に対する
    「箱の中の箱」＝角丸12px）。見出しは太字にせず、節見出し（.msec）と同じ1.2remのサイズだけで
@@ -1115,8 +1115,8 @@ body:has(.wrap-case) .announce-inner,body:has(.wrap-home) .announce-inner,body:h
 .listsec:first-child{border-top:none;padding-top:0}
 .listsec .msec{margin:0}
 .lshead{display:flex;align-items:baseline;gap:12px;cursor:pointer;user-select:none}
-.lscount{font-size:.8rem;color:var(--mut);font-variant-numeric:tabular-nums}
-.lschev{margin-left:auto;color:var(--faint);font-size:.8rem;transition:transform .2s}
+.lscount{font-size:.875rem;color:var(--mut);font-variant-numeric:tabular-nums}
+.lschev{margin-left:auto;color:var(--faint);font-size:.875rem;transition:transform .2s}
 .lssec.open .lschev{transform:rotate(180deg)}
 .lsbody{display:none;margin-top:12px}
 .lssec.open .lsbody{display:block}
@@ -1141,17 +1141,17 @@ body:has(.wrap-case) .announce-inner,body:has(.wrap-home) .announce-inner,body:h
 #ceForm.focus .focus-target{border-top:none;padding-top:0}
 #ceForm.focus .focus-target .lsbody{margin-top:0}
 #ceForm.focus .ihead > span:first-child{visibility:hidden}
-.irow{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;cursor:pointer;font-size:.9rem}
+.irow{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;cursor:pointer;font-size:1rem}
 .irow:hover{background:var(--tint)}
 .irow.editing{background:var(--tint)}
-.idate{flex:none;width:6.2em;color:var(--mut);font-size:.8rem;font-variant-numeric:tabular-nums}
+.idate{flex:none;width:6.2em;color:var(--mut);font-size:.875rem;font-variant-numeric:tabular-nums}
 .ititle{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.iside{flex:none;font-size:.7rem;letter-spacing:.1em;font-weight:700}
+.iside{flex:none;font-size:.875rem;letter-spacing:.1em;font-weight:700}
 .iside.g{color:#47705a}
 .iside.k{color:#4a5a74}
 .ithumb{width:44px;height:32px;border-radius:8px;flex:none;object-fit:cover;background:var(--tint)}
 .imove{flex:none;display:flex;gap:8px}
-.imove a{color:var(--faint);font-size:.9rem;cursor:pointer;text-decoration:none}
+.imove a{color:var(--faint);font-size:1rem;cursor:pointer;text-decoration:none}
 .imove a:hover{color:var(--ink)}
 /* 画像・期日・資料（とニックネームの管理画面）を追加・編集するときのグレー地の箱。
    グレー地だけだと外形が読み取りにくいため、細い黒枠で外枠を囲む（2026-09-05）。
@@ -1159,17 +1159,17 @@ body:has(.wrap-case) .announce-inner,body:has(.wrap-home) .announce-inner,body:h
 .ieditor{background:var(--tint);border:1px solid #000;border-radius:12px;padding:16px;margin:4px 0}
 /* 「閉じる」「保存」は枠の右上（見出しと同じ行）に置く。下の保存バーの「保存」との
    被りを避けるため（2026-08-30。以前は下部.ifootにあった） */
-.ieditor .ihead{font-size:.8rem;color:var(--mut);margin-bottom:12px;
+.ieditor .ihead{font-size:.875rem;color:var(--mut);margin-bottom:12px;
   display:flex;align-items:center;justify-content:space-between;gap:12px}
 .ihead-actions{display:flex;gap:8px;flex:none}
-.ihead-actions button{font-family:inherit;font-size:.8rem;line-height:inherit;cursor:pointer;border:none;border-radius:999px;padding:6px 16px}
+.ihead-actions button{font-family:inherit;font-size:.875rem;line-height:inherit;cursor:pointer;border:none;border-radius:999px;padding:6px 16px}
 .ieditor .field input,.ieditor .field textarea,.ieditor .field select{background:#fff}
 .ifoot{display:flex;gap:12px;align-items:center;margin-top:4px}
 .ifoot .spacer{flex:1}
-.ifoot button{font-family:inherit;font-size:.8rem;line-height:inherit;cursor:pointer;border:none;border-radius:999px;padding:6px 16px}
-.ifoot .del{background:none;color:var(--stamp);font-size:.8rem;text-decoration:underline;text-underline-offset:3px;padding:4px 0;cursor:pointer}
+.ifoot button{font-family:inherit;font-size:.875rem;line-height:inherit;cursor:pointer;border:none;border-radius:999px;padding:6px 16px}
+.ifoot .del{background:none;color:var(--stamp);font-size:.875rem;text-decoration:underline;text-underline-offset:3px;padding:4px 0;cursor:pointer}
 .addbtn{display:inline-flex;align-items:center;gap:4px;background:none;border:1px solid #e6e4dd;
-  border-radius:999px;padding:4px 12px;font-size:.7rem;color:var(--ink);cursor:pointer;font-family:inherit;
+  border-radius:999px;padding:4px 12px;font-size:.875rem;color:var(--ink);cursor:pointer;font-family:inherit;
   line-height:1.5;margin-top:12px}
 .addbtn:hover{border-color:#c9c6bc}
 
@@ -1179,10 +1179,10 @@ body:has(.wrap-case) .announce-inner,body:has(.wrap-home) .announce-inner,body:h
 /* .savebar の非固定版（小さいカード内の短いフォーム用。パスワード変更など。2026-08-30）。
    ページ下に貼り付けるほどの長さが無いフォームで、固定されると浮いて見えるため分けた */
 .formfoot{display:flex;gap:12px;align-items:center;justify-content:flex-end;margin-top:8px}
-.formfoot button{font-family:inherit;font-size:.9rem;line-height:inherit;cursor:pointer;border:none;border-radius:999px;padding:8px 24px}
+.formfoot button{font-family:inherit;font-size:1rem;line-height:inherit;cursor:pointer;border:none;border-radius:999px;padding:8px 24px}
 .formfoot button:disabled{opacity:.5;cursor:default}
-.savebar button{font-family:inherit;font-size:.9rem;line-height:inherit;cursor:pointer;border:none;border-radius:999px;padding:8px 24px}
-.savebar .btn-del{background:none;border:none;color:var(--stamp);font-size:.8rem;margin-right:auto;
+.savebar button{font-family:inherit;font-size:1rem;line-height:inherit;cursor:pointer;border:none;border-radius:999px;padding:8px 24px}
+.savebar .btn-del{background:none;border:none;color:var(--stamp);font-size:.875rem;margin-right:auto;
   text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:4px 0}
 .savebar button:disabled{opacity:.5;cursor:default}
 /* 「保存」は主操作なので、他の保存ボタン（.btn-save、地色）とは別に朱色の正円にして目立たせる
@@ -1200,7 +1200,7 @@ body:has(.wrap-case) .announce-inner,body:has(.wrap-home) .announce-inner,body:h
 @media(min-width:560px){
   .wrap{padding:48px 24px 88px}
   .cell{padding:12px 0 8px}
-  .cell .n{width:30px;height:30px;font-size:.88rem}
+  .cell .n{width:30px;height:30px;font-size:.875rem}
   .calcard{padding:24px 16px 16px}
   /* 「ひとつの塊」の2枚（掲示板・事件本体）は同じ padding にそろえる（左端をそろえるため） */
   .dcard{padding:32px}
@@ -1220,7 +1220,7 @@ body:has(.wrap-case) .announce-inner,body:has(.wrap-home) .announce-inner,body:h
   .cal-row{flex-direction:row;gap:24px}
   .cal-block{flex:1;min-width:0}
   .cal-block2{display:block}
-  .cell .n{width:26px;height:26px;font-size:.8rem}
+  .cell .n{width:26px;height:26px;font-size:.875rem}
 }
 /* 960px以上は3か月（列の幅が960pxに届くのはこのとき。1か月あたり約288px・マス約37px） */
 @media(min-width:960px){
