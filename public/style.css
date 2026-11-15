@@ -249,7 +249,7 @@ a{color:inherit}
    自身のmargin-topは打ち消して箱側に持たせる */
 .presenter-line{display:inline-flex;align-items:center;gap:2px;margin-top:2px}
 .presenter-line .presenter-name{margin-top:0}
-.presenter-links{color:var(--mut);font-size:.8rem;white-space:nowrap}
+.presenter-links{color:var(--mut);font-size:14.4px;white-space:nowrap}
 .presenter-x{color:var(--mut);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
 .presenter-x:hover{color:var(--ink)}
 /* 事件ページの見出し（.d-head-main）だけ、問題提起人名とアイコンを一段大きくする（2026-11-14）。
@@ -257,7 +257,7 @@ a{color:inherit}
    名前と本文の差は1.1倍にして、名前が本文に埋もれず、かつ事件名を食わない大きさにする */
 .d-head-main .presenter-name{font-size:1rem}
 .d-head-main .presenter-line{gap:2px;margin-top:4px}
-.d-head-main .presenter-links{font-size:.85rem}
+.d-head-main .presenter-links{font-size:14.4px}
 .d-title{font-family:"Shippori Mincho",serif;font-size:1.6rem;font-weight:600;line-height:1.4}
 .d-body{font-size:.9rem;margin-top:8px}
 .mut{color:var(--mut)}
