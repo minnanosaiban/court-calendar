@@ -327,7 +327,7 @@ a{color:inherit}
 .d-edit{display:inline-block;margin-top:8px;font-size:.875rem;color:var(--edit);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 /* シェア（X・LINE・リンクをコピー） */
 .share{display:flex;gap:2px;align-items:center;margin-top:12px}
-.share-lab{font-size:.875rem;color:var(--mut);letter-spacing:.1em;margin-right:6px}
+.share-lab{font-size:.75rem;color:var(--mut);letter-spacing:.1em;margin-right:6px}
 .share a,.share button{display:grid;place-content:center;width:30px;height:30px;border-radius:50%;
   color:var(--faint);font-size:1rem;text-decoration:none;background:none;border:none;cursor:pointer;font-family:inherit}
 .share a:hover,.share button:hover{color:var(--ink)}
@@ -344,7 +344,7 @@ a{color:inherit}
    （旧・見出し3つ＋本文3つの構成を統合。掲載・事件番号は2026-08-24に「裁判について」の後ろの
    別シートから、この1本にまとめ直した） */
 .facts{display:grid;grid-template-columns:max-content 1fr;column-gap:16px;row-gap:8px;margin-top:12px;font-size:1rem;line-height:1.7}
-.facts dt{color:var(--mut);font-size:.875rem;letter-spacing:.18em;padding-top:4px;white-space:nowrap}
+.facts dt{color:var(--mut);font-size:.75rem;letter-spacing:.18em;padding-top:4px;white-space:nowrap}
 .facts dd{margin:0;min-width:0}
 .facts-links{display:inline;margin-left:8px}
 /* 裁判官・事件番号で、行頭の審級（地裁／高裁／最高裁 など）だけ幅をそろえ、名前・番号の位置を合わせる。
