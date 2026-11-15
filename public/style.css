@@ -236,9 +236,10 @@ a{color:inherit}
    スマホではアイコンへのリンクを無効にし、行のどこを押しても事件ページへ行くようにする
    （pointer-events:noneでクリックを素通しし、行側のクリック判定に任せる。当事者ページへは
    事件ページ側のアイコン／ニックネームから行ける。見た目は変えない・2026-09-05） */
-@media(max-width:559.98px){
-  .u .cicon-link,.pop-row .cicon-link{pointer-events:none}
-}
+.u .cicon-link,.pop-row .cicon-link{pointer-events:none}
+/* 2026-11-15 PCでもスマホと同じく無効化。アイコンを押してしまう事故が続いたため（日付を押したいのに
+   アイコンの別リンクに入ってしまう）。行内のアイコンも事件ページへ行く。当事者ページへは事件ページの
+   アイコン／ニックネームから。ホバー演出（矢印・下線）もアイコン上で行側が動くようになる */
 /* 事件名の下に添える、問題提起人のニックネーム（presenter.htmlへのリンク）。アイコンの下だと
    幅が狭く長い名前が省略されてしまうため、タイトルの下の広い幅で全文出す（2026-08-26） */
 .presenter-name{display:block;font-family:"Zen Kaku Gothic New",sans-serif;font-size:.8rem;
