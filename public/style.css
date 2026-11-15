@@ -243,20 +243,21 @@ a{color:inherit}
 /* 事件名の下に添える、問題提起人のニックネーム（presenter.htmlへのリンク）。アイコンの下だと
    幅が狭く長い名前が省略されてしまうため、タイトルの下の広い幅で全文出す（2026-08-26） */
 .presenter-name{display:block;font-family:"Zen Kaku Gothic New",sans-serif;font-size:.8rem;
-  color:var(--mut);text-decoration:underline;text-underline-offset:3px;margin-top:2px}
+  color:var(--mut);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;margin-top:2px}
 /* Xアカウント登録時だけ、ニックネームの右にXアイコンのリンクを添える箱（2026-08-30）。
    .presenter-nameは元がdisplay:blockだが、この箱の中ではflexアイテムとして横並びになるので、
    自身のmargin-topは打ち消して箱側に持たせる */
-.presenter-line{display:inline-flex;align-items:center;gap:6px;margin-top:2px}
+.presenter-line{display:inline-flex;align-items:center;gap:2px;margin-top:2px}
 .presenter-line .presenter-name{margin-top:0}
-.presenter-x{color:var(--mut);font-size:.85rem;line-height:1}
+.presenter-links{color:var(--mut);font-size:.8rem;white-space:nowrap}
+.presenter-x{color:var(--mut);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
 .presenter-x:hover{color:var(--ink)}
 /* 事件ページの見出し（.d-head-main）だけ、問題提起人名とアイコンを一段大きくする（2026-11-14）。
    文字の段：事件名1.6rem／問題提起人名1rem／本文.9rem／補助.8rem・.7rem。事件名と名前の差は1.6倍、
    名前と本文の差は1.1倍にして、名前が本文に埋もれず、かつ事件名を食わない大きさにする */
 .d-head-main .presenter-name{font-size:1rem}
-.d-head-main .presenter-line{gap:8px;margin-top:4px}
-.d-head-main .presenter-x{font-size:1.1rem}
+.d-head-main .presenter-line{gap:2px;margin-top:4px}
+.d-head-main .presenter-links{font-size:.85rem}
 .d-title{font-family:"Shippori Mincho",serif;font-size:1.6rem;font-weight:600;line-height:1.4}
 .d-body{font-size:.9rem;margin-top:8px}
 .mut{color:var(--mut)}

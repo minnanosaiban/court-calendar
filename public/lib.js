@@ -361,15 +361,19 @@ window.CC = (function(){
   // 読めなくなるため、タイトルの下の広い幅で全文出す（2026-08-26）。
   // 閲覧者向けの表示なので敬称「さん」を付ける（管理画面のプルダウン等、運営者向けの表示には付けない）
   // 問題提起人のウェブサイト（地球儀）・Xのアイコンリンク。どちらも複数並べられる（ウェブサイト→Xの順）
+  // 2026-11-15 アイコン（地球儀・X）をやめ、「Tansaさん（ウェブサイト・X-Twitter）」の文字リンクにした。
+  // 複数あるときは「ウェブサイト1・ウェブサイト2」のように番号を付ける
   function presenterLinksHtml(webs, xs, style){
     const st = style ? ` style="${style}"` : "";
-    const mk=(u,icon,label)=>`<a class="presenter-x"${st} href="${escapeAttr(u)}" target="_blank" rel="noopener" title="${escapeAttr(u)}" aria-label="${label}"><i class="bi ${icon}" aria-hidden="true"></i></a>`;
-    return (webs||[]).map(u=>mk(u,"bi-globe2","ウェブサイトを見る")).join("") + (xs||[]).map(u=>mk(u,"bi-twitter-x","Xで見る")).join("");
+    const mk=(list,label)=>(list||[]).map((u,i)=>`<a class="presenter-x" href="${escapeAttr(u)}" target="_blank" rel="noopener" title="${escapeAttr(u)}">${label}${list.length>1?i+1:""}</a>`);
+    const links=[...mk(webs,"ウェブサイト"),...mk(xs,"X-Twitter")];
+    if(!links.length) return "";
+    return `<span class="presenter-links"${st}>（${links.join("・")}）</span>`;
   }
   function presenterNameHtml(c){
     if(!c.presenterId || !c.presenterNickname) return "";
     const nameLink = `<a class="presenter-name" href="presenter?id=${encodeURIComponent(c.presenterId)}">${escapeHtml(c.presenterNickname)}さん</a>`;
-    // Xアカウントを登録している問題提起人だけ、ニックネームの右にXアイコンのリンクを添える（2026-08-30）
+    // ウェブサイト・Xを登録している問題提起人だけ、ニックネームの右に「（ウェブサイト・X-Twitter）」を添える
     const icons = presenterLinksHtml(c.presenterWebsiteUrls, c.presenterXUrls);
     if(!icons) return nameLink;
     return `<span class="presenter-line">${nameLink}${icons}</span>`;
