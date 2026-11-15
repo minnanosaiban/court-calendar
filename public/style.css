@@ -617,7 +617,7 @@ a{color:inherit}
    しおりのアイコンをbi-bookmark-fillに差し替え、赤く塗りつぶされた状態にする（JS側） */
 .favtoggle{display:inline-flex;align-items:center;gap:4px;margin-left:auto;background:none;
   border:1px solid rgba(185,50,38,.35);border-radius:999px;padding:4px 12px;
-  font-size:.875rem;color:var(--stamp);cursor:pointer;user-select:none;line-height:1.5}
+  font-size:.75rem;color:var(--stamp);cursor:pointer;user-select:none;line-height:1.5}
 .favtoggle:hover{border-color:rgba(185,50,38,.6)}
 .favtoggle .bi{font-size:.8rem;line-height:1;color:var(--stamp)}
 .cal-row{display:flex;flex-direction:column;gap:32px}
@@ -654,7 +654,7 @@ a{color:inherit}
 /* ヘッダーと掲示板の間に置く案内ボタンの帯。上下に同じだけ余白をとって「帯」として独立させる
    （掲示板パネル側に margin を足すと、事件ページで写真カードとの継ぎ目に隙間ができてしまう） */
 .jumplink{margin:24px 0 32px;text-align:center}
-.jumplink .pillbtn{margin:0 4px 8px}
+.jumplink .pillbtn{margin:0 4px 8px;font-size:.75rem} /* 2026-11-15 トップの「事件をさがす」「期日をさがす」は12px */
 /* .bwrite a（報告を書く）・.btn と同じ枠線ピルのイメージ・同じ寸法にそろえる。
    色だけ主役の朱色ではなく、.btn と同じ控えめなグレー枠にする（サイトの主操作ではないため） */
 .pillbtn{display:inline-flex;align-items:center;background:none;border:1px solid #e6e4dd;
