@@ -664,7 +664,7 @@ window.CC = (function(){
         ${facts1?`<dl class="facts">${facts1}</dl>`:""}
         ${noticeHtml(c)}`;
 
-    html += callHtml(c) + relatedCasesHtml(c) + timelineHtml(caseId) + materialsListHtml(caseId);
+    html += callHtml(c) + relatedCasesHtml(c) + judgmentHtml(caseId) + timelineHtml(caseId) + materialsListHtml(caseId);
     html += `</div>`;
     return html;
   }
@@ -805,9 +805,22 @@ window.CC = (function(){
       : (allOpen ? "資料を閉じる" : "各期日の資料を表示");
     return `<i class="bi ${allOpen?"bi-arrows-collapse":"bi-arrows-expand"}" aria-hidden="true"></i>${label}`;
   }
+  // 判決文（資料名に「判決」を含む資料）は、タイムラインの上の「判決」の項にまとめる（2026-11-15）。
+  // 資料名・PDF/.md/要約ボタンの下に、資料の「要約」欄の文章を解説としてそのまま出す
+  function isJudgment(m){ return /判決/.test(m.title||""); }
+  function judgmentHtml(caseId){
+    const js=caseMaterials(caseId).filter(isJudgment).sort((a,b)=>(a.filedOn||"9999").localeCompare(b.filedOn||"9999"));
+    if(!js.length) return "";
+    return `<p class="subhead">判決</p>
+      <div class="jlist">${js.map(m=>`<div class="jd">
+        <div class="mat"><span class="mmain">${m.filedOn?`<span class="jd-date">${escapeHtml(dotDate(m.filedOn))}</span>`:""}<span class="mat-name">${escapeHtml(m.title)}</span>${matButtonsHtml(m)}</span></div>
+        ${m.summary?`<p class="d-body jd-text">${escapeHtml(m.summary)}</p>`:""}
+      </div>`).join("")}</div>`;
+  }
   function timelineHtml(caseId){
     const rounds=caseEvents(caseId);
-    const mats=caseMaterials(caseId);
+    // 判決文は上の「判決」の項に出すので、期日にはぶら下げない
+    const mats=caseMaterials(caseId).filter(m=>!isJudgment(m));
     const today=todayStr();
     const next=nextEvent(caseId);
     const hasBody = ev => !!(mats.some(m=>m.eventId===ev.id) || (ev.plaintiffArgument&&ev.plaintiffArgument.length) || (ev.defendantArgument&&ev.defendantArgument.length));
