@@ -836,7 +836,7 @@ window.CC = (function(){
           ${headMain}
           <span class="tl-meta">${escapeHtml(place)}${closed}${reportNote}${bookmarkHtml(ev)}${editLink}</span>
         </div>
-        ${expandable?`<div class="tl-body">${argsHtml(ev)}${own.map(matBlockHtml).join("")}</div>`:""}
+        ${expandable?`<div class="tl-body">${own.map(matBlockHtml).join("")}${argsHtml(ev)}</div>`:""}
       </li>`;
     }).join("");
     // 一括スイッチは、中身のある期日があるときだけ出す

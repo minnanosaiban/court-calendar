@@ -453,6 +453,8 @@ a{color:inherit}
 .mat + .mat{margin-top:16px}
 /* 原告/被告の主張（.args）のすぐ下に資料が来るときも、資料どうしと同じだけあける（無いと箱にくっついて見える） */
 .args + .mat{margin-top:16px}
+/* 2026-11-15 タイムラインは「書面 → 原告・被告の主張」の順に変えたので、書面の後ろに来る主張カードにも同じ間隔をあける */
+.mat + .args{margin-top:16px}
 .mat-name{font-weight:500;font-size:.875rem}
 .mlist{list-style:none;margin-top:8px;font-size:1rem}
 /* 訴訟資料一覧を提出者側ごとに束ねる見出し（色は .arg h4 と同じ組） */
