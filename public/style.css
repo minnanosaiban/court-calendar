@@ -456,9 +456,9 @@ a{color:inherit}
 /* 2026-11-15 タイムラインは「書面 → 原告・被告の主張」の順に変えたので、書面の後ろに来る主張カードにも同じ間隔をあける */
 .mat + .args{margin-top:16px}
 .mat-name{font-weight:500;font-size:.875rem}
-.jd{margin-top:16px}
+.jd{margin-top:24px}
 .jd-date{color:var(--mut);font-size:.875rem;font-variant-numeric:tabular-nums;margin-right:10px}
-.jd-text{margin:6px 0 0;font-size:1rem}
+.jd-text{margin:24px 0 0;font-size:1rem}
 .mlist{list-style:none;margin-top:8px;font-size:1rem}
 /* 訴訟資料一覧を提出者側ごとに束ねる見出し（色は .arg h4 と同じ組） */
 .mside-h{margin:16px 0 4px;font-size:.875rem;font-weight:700;letter-spacing:.14em}
