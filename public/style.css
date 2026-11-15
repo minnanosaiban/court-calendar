@@ -604,6 +604,9 @@ a{color:inherit}
 .calhead{display:flex;align-items:baseline;gap:16px;margin:0 4px 16px;flex-wrap:wrap}
 .navbtns{color:var(--mut);font-size:.8rem;display:flex;gap:16px}
 .calhead .favtoggle{margin-left:0}
+/* 2026-11-15 スマホでは「お気に入りのみ」の上の余白が見出し(.home-title の下余白2px)だけで窮屈だったので、
+   下の余白(16px)と同じ高さにそろえる（2px+14px=16px） */
+@media(max-width:559.98px){.calhead{margin-top:14px}}
 .calhead .navbtns{margin-left:auto}
 .navbtns span{cursor:pointer;user-select:none}
 .navbtns span:hover{color:var(--ink)}
