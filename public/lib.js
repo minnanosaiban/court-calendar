@@ -819,8 +819,7 @@ window.CC = (function(){
   }
   function timelineHtml(caseId){
     const rounds=caseEvents(caseId);
-    // 判決文は上の「判決」の項に出すので、期日にはぶら下げない
-    const mats=caseMaterials(caseId).filter(m=>!isJudgment(m));
+    const mats=caseMaterials(caseId);
     const today=todayStr();
     const next=nextEvent(caseId);
     const hasBody = ev => !!(mats.some(m=>m.eventId===ev.id) || (ev.plaintiffArgument&&ev.plaintiffArgument.length) || (ev.defendantArgument&&ev.defendantArgument.length));
