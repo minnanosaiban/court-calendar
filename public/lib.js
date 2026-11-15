@@ -620,7 +620,8 @@ window.CC = (function(){
     const points=(c.points||[]).map(p=>`<li>${escapeHtml(p)}</li>`).join("");
 
     // ファクトシート：最近の期日・手続・事件番号・争点・原告・被告・裁判官・掲載（値がある行だけ出す）
-    const nextRow = next
+    // 終結した事件（終結フラグまたはアーカイブ済み）は、期日・手続の行を出さない（2026-11-15）
+    const nextRow = (next && !isArchived(caseId))
       ? factRow("期日",
           `<div>${escapeHtml(jpDate(next.date))}${next.time?" "+escapeHtml(next.time):""}${next.open===false?`<span class="round-closed">非公開・その他手続き</span>`:""}${next.reportMeeting?`<span class="round-note">期日報告会あり</span>`:""}</div>`+
           ([next.court,next.place].filter(Boolean).length?`<div>${escapeHtml([next.court,next.place].filter(Boolean).join(" "))}</div>`:"")
