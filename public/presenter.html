@@ -150,7 +150,7 @@
           <p class="mut ph-count">${p.caseCount||0}件の事件</p>
         </div>
         <div class="d-head-main">
-          <h2 class="d-title" id="presenter-h">${CC.escapeHtml(p.nickname)}さん${CC.presenterLinksHtml(p.websiteUrls,p.xUrls,"margin-left:6px")}</h2>
+          <h2 class="d-title" id="presenter-h">${CC.escapeHtml(p.nickname)}さん${CC.presenterLinksHtml(p.websiteUrls,p.xUrls,"margin-left:6px",p.noteUrls)}</h2>
           ${selfNote}
         </div>
       </div>`;

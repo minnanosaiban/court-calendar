@@ -75,6 +75,7 @@ CREATE TABLE IF NOT EXISTS presenters (
   icon_r2_key TEXT,                 -- アイコン画像（正方形推奨）のR2オブジェクトキー。/api/presenters/:id/icon で登録・削除
   x_url       TEXT,                 -- X（Twitter）アカウントのURL（任意。ニックネームの右にアイコンリンクとして表示）
   website_url TEXT,                 -- ウェブサイトのURL（任意。Xアイコンの隣に地球儀アイコンのリンクとして表示。migrate_046）
+  note_url    TEXT,                 -- note（note.com）のURL（任意。ウェブサイト・Xの右に「note」の文字リンクとして表示。migrate_048）
   login_username      TEXT,         -- ログインID（運営が設定。メールアドレス等・任意の文字列。未発行ならNULL）
   login_password_salt TEXT,         -- パスワードのソルト（16byte・16進）
   login_password_hash TEXT,         -- PBKDF2-SHA256 ハッシュ（16進）。平文は保存しない

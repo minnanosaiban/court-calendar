@@ -363,10 +363,11 @@ window.CC = (function(){
   // 問題提起人のウェブサイト（地球儀）・Xのアイコンリンク。どちらも複数並べられる（ウェブサイト→Xの順）
   // 2026-11-15 アイコン（地球儀・X）をやめ、「Tansaさん（ウェブサイト・X-Twitter）」の文字リンクにした。
   // 複数あるときは「ウェブサイト1・ウェブサイト2」のように番号を付ける
-  function presenterLinksHtml(webs, xs, style){
+  // 2026-11-19 noteを追加（ウェブサイト→X→noteの順。引数は既存の呼び出しを変えないよう末尾に足した）
+  function presenterLinksHtml(webs, xs, style, notes){
     const st = style ? ` style="${style}"` : "";
     const mk=(list,label)=>(list||[]).map((u,i)=>`<a class="presenter-x" href="${escapeAttr(u)}" target="_blank" rel="noopener" title="${escapeAttr(u)}">${label}${list.length>1?i+1:""}</a>`);
-    const links=[...mk(webs,"ウェブサイト"),...mk(xs,"X-Twitter")];
+    const links=[...mk(webs,"ウェブサイト"),...mk(xs,"X-Twitter"),...mk(notes,"note")];
     if(!links.length) return "";
     return `<span class="presenter-links"${st}>（${links.join("・")}）</span>`;
   }
@@ -374,7 +375,7 @@ window.CC = (function(){
     if(!c.presenterId || !c.presenterNickname) return "";
     const nameLink = `<a class="presenter-name" href="presenter?id=${encodeURIComponent(c.presenterId)}">${escapeHtml(c.presenterNickname)}さん</a>`;
     // ウェブサイト・Xを登録している問題提起人だけ、ニックネームの右に「（ウェブサイト・X-Twitter）」を添える
-    const icons = presenterLinksHtml(c.presenterWebsiteUrls, c.presenterXUrls);
+    const icons = presenterLinksHtml(c.presenterWebsiteUrls, c.presenterXUrls, "", c.presenterNoteUrls);
     if(!icons) return nameLink;
     return `<span class="presenter-line">${nameLink}${icons}</span>`;
   }
@@ -1426,6 +1427,7 @@ window.CC = (function(){
           cPresenterRenameRow=$("cPresenterRenameRow"), cPresenterRenameNickname=$("cPresenterRenameNickname"), cPresenterRenameSave=$("cPresenterRenameSave"),
           cPresenterWebsiteUrlRow=$("cPresenterWebsiteUrlRow"), cPresenterWebsiteUrl=$("cPresenterWebsiteUrl"), cPresenterWebsiteUrlSave=$("cPresenterWebsiteUrlSave"),
           cPresenterXUrlRow=$("cPresenterXUrlRow"), cPresenterXUrl=$("cPresenterXUrl"), cPresenterXUrlSave=$("cPresenterXUrlSave"),
+          cPresenterNoteUrlRow=$("cPresenterNoteUrlRow"), cPresenterNoteUrl=$("cPresenterNoteUrl"), cPresenterNoteUrlSave=$("cPresenterNoteUrlSave"),
           cPresenterStatus=$("cPresenterStatus"),
           cPresenterLoginRow=$("cPresenterLoginRow"), cPresenterLoginUsername=$("cPresenterLoginUsername"),
           cPresenterLoginUsernameSave=$("cPresenterLoginUsernameSave"), cPresenterLoginReset=$("cPresenterLoginReset"),
@@ -1548,7 +1550,7 @@ window.CC = (function(){
       cPresenterStatus.hidden = true;
       if(v==="__new__"){
         cPresenterNewRow.hidden=false; cPresenterIconRow.hidden=true; cPresenterRenameRow.hidden=true;
-        cPresenterXUrlRow.hidden=true; cPresenterWebsiteUrlRow.hidden=true; cPresenterLoginRow.hidden=true;
+        cPresenterXUrlRow.hidden=true; cPresenterWebsiteUrlRow.hidden=true; cPresenterNoteUrlRow.hidden=true; cPresenterLoginRow.hidden=true;
         cPresenterCardRow.hidden=true; cPresenterSeoRow.hidden=true;
         cPresenterNewNickname.value="";
       }else if(v){
@@ -1565,6 +1567,8 @@ window.CC = (function(){
         cPresenterXUrl.value = (p && p.xUrls || []).join("\n");
         cPresenterWebsiteUrlRow.hidden = !tierAllows(cPresenterWebsiteUrlRow.dataset.tierMin);
         cPresenterWebsiteUrl.value = (p && p.websiteUrls || []).join("\n");
+        cPresenterNoteUrlRow.hidden = !tierAllows(cPresenterNoteUrlRow.dataset.tierMin);
+        cPresenterNoteUrl.value = (p && p.noteUrls || []).join("\n");
         // ログイン設定は運営専用（問題提起人本人が自分の付け替え等をできないのと同じ理由）。
         // 掲載レベルが「詳細」でないときも隠す
         cPresenterLoginRow.hidden = !edIsAdmin || !tierAllows(cPresenterLoginRow.dataset.tierMin);
@@ -1580,7 +1584,7 @@ window.CC = (function(){
         }
       }else{
         cPresenterNewRow.hidden=true; cPresenterIconRow.hidden=true; cPresenterRenameRow.hidden=true;
-        cPresenterXUrlRow.hidden=true; cPresenterWebsiteUrlRow.hidden=true; cPresenterLoginRow.hidden=true;
+        cPresenterXUrlRow.hidden=true; cPresenterWebsiteUrlRow.hidden=true; cPresenterNoteUrlRow.hidden=true; cPresenterLoginRow.hidden=true;
         cPresenterCardRow.hidden=true; cPresenterSeoRow.hidden=true;
       }
       // 「運営者用」の囲み（.ceGroup#grp-admin）は、中身がログイン設定（cPresenterLoginRow）1つだけ
@@ -1652,6 +1656,23 @@ window.CC = (function(){
         await reloadCases();
       }catch(err){ cPresenterStatus.hidden=false; cPresenterStatus.textContent="変更できませんでした：" + (err && err.message || err); }
       finally{ cPresenterWebsiteUrlSave.disabled=false; }
+    });
+    // note URLの変更（X URLと同じ作り。2026-11-19）
+    cPresenterNoteUrlSave.addEventListener("click", async ()=>{
+      const pid=cPresenterSelect.value;
+      if(!pid || pid==="__new__") return;
+      const p = presenterById(pid);
+      const noteUrl = cPresenterNoteUrl.value.trim();
+      cPresenterNoteUrlSave.disabled=true;
+      cPresenterStatus.hidden=false; cPresenterStatus.textContent="変更しています…";
+      try{
+        const up = await apiUpdatePresenter(pid, {nickname:p?p.nickname:"", noteUrl});
+        const i=presenters.findIndex(x=>x.id===pid); if(i>=0) presenters[i]=up;
+        updatePresenterFieldUI();
+        cPresenterStatus.hidden=false; cPresenterStatus.textContent="note URLを変更しました。";
+        await reloadCases();
+      }catch(err){ cPresenterStatus.hidden=false; cPresenterStatus.textContent="変更できませんでした：" + (err && err.message || err); }
+      finally{ cPresenterNoteUrlSave.disabled=false; }
     });
     cPresenterIconFile.addEventListener("change", async ()=>{
       const f=cPresenterIconFile.files[0];

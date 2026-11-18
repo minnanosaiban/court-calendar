@@ -44,8 +44,8 @@ export async function onRequestPut({ request, env, params }) {
 
   let sql = `UPDATE presenters SET nickname=?, updated_by=?, updated_at=?`;
   const bind = [nickname, admin ? id.email : ("presenter:" + params.id), new Date().toISOString()];
-  // X・ウェブサイトのURLは複数持てる（改行区切りで1行1つ。DBの列も同じ形で保存。最大10個まで）
-  for (const [key, col, label] of [["xUrl", "x_url", "X URL"], ["websiteUrl", "website_url", "ウェブサイトURL"]]) {
+  // X・ウェブサイト・noteのURLは複数持てる（改行区切りで1行1つ。DBの列も同じ形で保存。最大10個まで）
+  for (const [key, col, label] of [["xUrl", "x_url", "X URL"], ["websiteUrl", "website_url", "ウェブサイトURL"], ["noteUrl", "note_url", "note URL"]]) {
     if (typeof body[key] !== "string") continue;
     const urls = textToLines(body[key]);
     if (urls.length > 10) return json({ error: label + "は10個までです" }, 400);
