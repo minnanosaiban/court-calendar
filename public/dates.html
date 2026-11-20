@@ -30,7 +30,7 @@
 
   <section aria-labelledby="search-h" style="margin-top:28px">
     <p class="sech" id="search-h">期日をさがす</p>
-    <div class="search"><i class="bi bi-search" aria-hidden="true"></i><input type="text" id="q" placeholder="事件名で検索" aria-label="事件名で検索"></div>
+    <div class="search"><i class="bi bi-search" aria-hidden="true"></i><input type="text" id="q" placeholder="事件名・当事者・弁護士で検索" aria-label="事件名・当事者・弁護士で検索"></div>
     <div class="tags" id="tagFilters" style="margin-top:14px"></div>
     <div class="tabs" id="periodTabs"></div>
     <div class="sortrow">
@@ -121,12 +121,12 @@
     </div>`;
   }
   // 検索・タグだけを反映した候補（タブの件数表示に使う。期間では絞らない）。
-  // 検索は「事件をさがす」と同じく事件名だけを見る（種別・裁判所などは対象外）
+  // 検索は「事件をさがす」と同じく事件名と当事者・弁護士の行を見る（種別・裁判所などは対象外）
   function filteredBase(){
-    const q=qEl.value.trim().toLowerCase();
+    const q=qEl.value;
     return CC.events.filter(ev=>{
       const c=CC.caseById(ev.caseId);
-      return (!q || ev.case.toLowerCase().includes(q)) && (!activeTag || (c&&c.tags||[]).includes(activeTag))
+      return (c ? CC.caseSearchHit(c,q) : (!q.trim() || ev.case.toLowerCase().includes(q.trim().toLowerCase()))) && (!activeTag || (c&&c.tags||[]).includes(activeTag))
         && (!favOnly || ev.bookmarked);
     });
   }

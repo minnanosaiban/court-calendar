@@ -30,7 +30,7 @@
 
   <section aria-labelledby="search-h" style="margin-top:28px">
     <p class="sech" id="search-h">事件をさがす</p>
-    <div class="search"><i class="bi bi-search" aria-hidden="true"></i><input type="text" id="q" placeholder="事件名で検索" aria-label="事件名で検索"></div>
+    <div class="search"><i class="bi bi-search" aria-hidden="true"></i><input type="text" id="q" placeholder="事件名・当事者・弁護士で検索" aria-label="事件名・当事者・弁護士で検索"></div>
     <div class="tags" id="tagFilters" style="margin-top:14px"></div>
     <div class="tabs" id="statusTabs"></div>
     <div class="clist" id="clist"></div>
@@ -73,7 +73,10 @@
   const statusTabs=document.getElementById("statusTabs");
   const clistEl=document.getElementById("clist");
   const statusEl=document.getElementById("status");
-  let activeTag = new URLSearchParams(location.search).get("tag") || "";
+  const urlParams = new URLSearchParams(location.search);
+  let activeTag = urlParams.get("tag") || "";
+  // 事件ページの代理人名のリンク（cases.html?q=名前）から来たときは、その名前で検索した状態で開く
+  qEl.value = urlParams.get("q") || "";
   let activeStatus = "open";   // "open"=進行中 / "archived"=終結
 
   function allTagsWithCount(){
@@ -93,6 +96,8 @@
   }
   function rowHtml(c){
     const next = CC.nextEvent(c.id);
+    // 事件名ではなく当事者・弁護士の行で検索に合ったときは、合った行を添える（なぜ出てきたか分かるように）
+    const hitLine = CC.searchHitHtml(CC.caseSearchHit(c, qEl.value));
     // 終結日が分からない（isClosedだけの）事件は、日付なしで「終結」とだけ出す
     const nextLine = c.archivedAt
       ? `終結：${CC.escapeHtml(CC.jpDate(c.archivedAt))}${c.closeType?"　"+CC.escapeHtml(c.closeType):""}`
@@ -104,6 +109,7 @@
       <div class="cbody">
         <div class="ctitle">${CC.escapeHtml(c.name)}</div>
         <div class="cnext">${nextLine}</div>
+        ${hitLine}
         <div class="cfoot">
           <div class="tags">${(c.tags||[]).map(t=>`<span class="tag">${CC.escapeHtml(t)}</span>`).join("")}</div>
           <span class="clike"><i class="bi bi-heart-fill" aria-hidden="true"></i>${c.likes||0}</span>
@@ -114,8 +120,8 @@
   }
   // 検索・タグだけを反映した候補（タブの件数表示に使う。ステータスでは絞らない）
   function filteredBase(){
-    const q=qEl.value.trim().toLowerCase();
-    return CC.cases.filter(c=> (!q || c.name.toLowerCase().includes(q)) && (!activeTag || (c.tags||[]).includes(activeTag)));
+    const q=qEl.value;
+    return CC.cases.filter(c=> CC.caseSearchHit(c,q) && (!activeTag || (c.tags||[]).includes(activeTag)));
   }
   function renderTabs(){
     const base=filteredBase();
@@ -160,6 +166,11 @@
   (async function init(){
     renderAll();
     await CC.load();
+    // 検索語つきで開いたとき、進行中に1件も無く終結にだけあるなら、終結タブを開いておく
+    if(qEl.value.trim()){
+      const base=filteredBase();
+      if(base.length && !base.some(c=>!c.archivedAt && !c.isClosed)) activeStatus="archived";
+    }
     renderAll();
   })();
 })();

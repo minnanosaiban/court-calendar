@@ -281,8 +281,59 @@ window.CC = (function(){
       }
       return i===0
         ? escapeHtml(line) + linkHtml
-        : `<div class="party-sub">${escapeHtml(line)}${linkHtml}</div>`;
+        : `<div class="party-sub">${personLineHtml(line)}${linkHtml}</div>`;
     }).join("");
+  }
+
+  // ---- 弁護士（代理人）でさがす（2026-11-20）----
+  // 弁護士の名前は専用の欄ではなく、原告名・被告名の2行目以降に自由に書かれている
+  // （「代理人　秋田一恵弁護士」「高野 隆　（高野隆法律事務所）」など書き方はまちまち）。
+  // DBは変えず、その行をそのまま検索対象にする。
+  // 空白の有無（「高野 隆」と「高野隆」）で取りこぼさないよう、空白を除いてから比べる
+  function searchNorm(s){ return String(s||"").toLowerCase().replace(/[\s　]+/g,""); }
+  // 原告名・被告名を、行末のURLを除いた行の並びにする
+  function partyTextLines(raw){
+    return String(raw||"").split("\n").map(s=>s.trim().replace(/[\s　]https?:\/\/\S+$/,"").trim()).filter(Boolean);
+  }
+  // 2行目以降の1行から人名の部分を取り出す。前置きの「代理人」、後ろの「弁護士」や
+  // （事務所名）を除いた残りが名前。「弁護士（第二東京弁護士会所属）」のように名前が無い行は null
+  function parsePersonLine(line){
+    const m = String(line||"").match(/^((?:(?:原告|被告)?(?:訴訟)?代理人(?:弁護士)?[\s　:：]*)?)([^（(]*?)((?:弁護士)?[\s　]*(?:[（(].*)?)$/);
+    if(!m) return null;
+    const key = searchNorm(m[2]);
+    return key.length>=2 ? { pre:m[1], name:m[2], post:m[3], key } : null;
+  }
+  // その名前が（2行目以降に）出てくる事件の数。見えている事件だけを数える
+  function personCaseCount(key){
+    return cases.filter(c=>[c.plaintiffName,c.defendantName].some(raw=>
+      partyTextLines(raw).slice(1).some(l=>{ const p=parsePersonLine(l); return p && p.key===key; }))).length;
+  }
+  // 事件ページの代理人などの行。同じ名前がほかの事件にも出てくるときだけ、名前を
+  // 「事件をさがす」の検索結果へのリンクにする（この事件しか出てこないリンクは作らない）
+  function personLineHtml(line){
+    const p = parsePersonLine(line);
+    if(!p || personCaseCount(p.key)<2) return escapeHtml(line);
+    return `${escapeHtml(p.pre)}<a href="cases.html?q=${encodeURIComponent(p.key)}" title="この名前で事件をさがす">${escapeHtml(p.name)}</a>${escapeHtml(p.post)}`;
+  }
+  // 事件が検索語に合うか。合わなければ null。事件名ではなく当事者・代理人の行で合ったときは、
+  // どの行で合ったのか一覧に出せるよう、その行を lines に入れて返す
+  function caseSearchHit(c, query){
+    const q = searchNorm(query);
+    if(!q) return { lines:[] };
+    if(!c) return null;
+    if(searchNorm(c.name).includes(q)) return { lines:[] };
+    const lines = [];
+    [["原告側",c.plaintiffName],["被告側",c.defendantName]].forEach(([side,raw])=>{
+      partyTextLines(raw).forEach(l=>{ if(searchNorm(l).includes(q)) lines.push({ side, text:l }); });
+    });
+    return lines.length ? { lines } : null;
+  }
+  // 一覧の行に添える「原告側　喜田村洋一（ミネルバ法律事務所）」。多いときは2行までにする
+  function searchHitHtml(hit){
+    if(!hit || !hit.lines.length) return "";
+    const more = hit.lines.length>2 ? ` ほか${hit.lines.length-2}名` : "";
+    return hit.lines.slice(0,2).map((l,i,a)=>
+      `<div class="cnext">${escapeHtml(l.side)}　${escapeHtml(l.text)}${i===a.length-1?more:""}</div>`).join("");
   }
   // ファクトシートの1行。値が無ければ何も出さない（dt/ddのペアをまとめて返す）
   function factRow(label, valueHtml){ return valueHtml ? `<dt>${escapeHtml(label)}</dt><dd>${valueHtml}</dd>` : ""; }
@@ -2909,6 +2960,7 @@ window.CC = (function(){
     get images(){ return images; },
     get me(){ return me; },
     get loaded(){ return loaded; },
+    caseSearchHit, searchHitHtml,
     caseById, caseByName, presenterById, caseEvents, casePosts, caseMaterials, caseImages, nearestCase, nextEvent, eventLine, jpDate,
     likeHtml, toggleLike, bookmarkHtml, toggleBookmark, typePlaceHtml, isArchived, iconHtml, presenterHeaderHtml, presenterLinksHtml,
     apiListPresenters, apiCreatePresenter, apiUpdatePresenter, apiDeletePresenter,
