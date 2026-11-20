@@ -271,7 +271,20 @@ window.CC = (function(){
   function partyNameHtml(raw){
     const lines = String(raw||"").split("\n").map(s=>s.trim()).filter(Boolean);
     const urlRe = /[\s　](https?:\/\/\S+)$/;
-    return lines.map((line,i)=>{
+    // 2行目以降のうち、弁護士の行（「弁護士」「事務所」「（同）」を含み、大学・教授ではない行）で、
+    // 行頭に「代理人」と書かれていないものは、本人と見分けがつくよう、連続するかたまりの頭に
+    // 「代理人」の小さな見出しを1つ添える（名前の位置は見出しの分だけ右にそろえる）。
+    // 書いた人が「代理人　〇〇」と明記した行はそのまま（見出しは足さない）
+    const labeled = /^(?:(?:原告|被告)?(?:訴訟)?代理人)/;
+    // 最初に弁護士とわかる行が出たあとは、事務所名のない行（「伊藤真（伊藤塾）」など）も代理人の続きとして
+    // 扱う。大学・教授の行でかたまりは終わる
+    let seenLawyer = false;
+    const lawyerish = (t)=>{
+      if(labeled.test(t) || /大学|教授/.test(t)) return false;
+      if(/弁護士|事務所|[（(]同[）)]/.test(t)) seenLawyer = true;
+      return seenLawyer;
+    };
+    const items = lines.map((line,i)=>{
       let linkHtml = "";
       const um = line.match(urlRe);
       if(um){
@@ -279,10 +292,19 @@ window.CC = (function(){
         linkHtml = ` <a class="plink" href="${escapeAttr(um[1])}" target="_blank" rel="noopener" title="${escapeAttr(label)}" aria-label="${escapeAttr(label)}"><i class="bi ${cls}" aria-hidden="true"></i></a>`;
         line = line.slice(0, um.index).trim();
       }
-      return i===0
-        ? escapeHtml(line) + linkHtml
-        : `<div class="party-sub">${escapeHtml(line)}${linkHtml}</div>`;
-    }).join("");
+      return { i, agent: i>0 && lawyerish(line), html: `${escapeHtml(line)}${linkHtml}` };
+    });
+    let out = "";
+    for(let k=0; k<items.length; k++){
+      const it = items[k];
+      if(it.i===0){ out += it.html; continue; }
+      if(!it.agent){ out += `<div class="party-sub">${it.html}</div>`; continue; }
+      let rows = "";
+      while(k<items.length && items[k].agent){ rows += `<div>${items[k].html}</div>`; k++; }
+      k--;
+      out += `<div class="party-sub party-agents"><span class="pa-label">代理人</span><div>${rows}</div></div>`;
+    }
+    return out;
   }
 
   // ---- 弁護士（代理人）でさがす（2026-11-20）----

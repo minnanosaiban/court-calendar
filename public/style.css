@@ -366,6 +366,9 @@ a{color:inherit}
 .pts .bi{font-size:.8em}
 /* 原告・被告：1行目は本人の名前と同じ並び、2行目以降（代理人など）はひとまわり小さく添える */
 .party-sub{font-size:.875rem;color:var(--mut);margin-top:2px}
+/* 代理人のかたまり：頭に小さな「代理人」の見出し（枠や地色は付けない）。名前は見出しの右にそろえる */
+.party-agents{display:flex;gap:.7em;align-items:baseline}
+.pa-label{flex:none;font-size:.75rem;color:var(--faint)}
 
 /* ---- 期日案内（支援者が作る一覧チラシの埋め込み。PDFまたは画像。2026-08-27） ----
    PDFはブラウザのネイティブビューアで表示（拡大・ページ送りはそちら任せ）。
