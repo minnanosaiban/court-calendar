@@ -271,19 +271,12 @@ window.CC = (function(){
   function partyNameHtml(raw){
     const lines = String(raw||"").split("\n").map(s=>s.trim()).filter(Boolean);
     const urlRe = /[\s　](https?:\/\/\S+)$/;
-    // 2行目以降のうち、弁護士の行（「弁護士」「事務所」「（同）」を含み、大学・教授ではない行）で、
-    // 行頭に「代理人」と書かれていないものは、本人と見分けがつくよう、連続するかたまりの頭に
-    // 「代理人」の小さな見出しを1つ添える（名前の位置は見出しの分だけ右にそろえる）。
+    // 2行目以降は代理人とみなす（大学教授などの肩書きがあっても、弁護士として代理人をしている人がいるので
+    // 区別しない。事務所名が書かれていなくても見分けがつくよう、事務所名なども目印にしない）。行頭に「代理人」と書かれていない行は、本人と見分けがつくよう、
+    // 連続するかたまりの頭に「代理人」の小さな見出しを1つ添える（名前の位置は見出しの分だけ右にそろえる）。
     // 書いた人が「代理人　〇〇」と明記した行はそのまま（見出しは足さない）
     const labeled = /^(?:(?:原告|被告)?(?:訴訟)?代理人)/;
-    // 最初に弁護士とわかる行が出たあとは、事務所名のない行（「伊藤真（伊藤塾）」など）も代理人の続きとして
-    // 扱う。大学・教授の行でかたまりは終わる
-    let seenLawyer = false;
-    const lawyerish = (t)=>{
-      if(labeled.test(t) || /大学|教授/.test(t)) return false;
-      if(/弁護士|事務所|[（(]同[）)]/.test(t)) seenLawyer = true;
-      return seenLawyer;
-    };
+    const lawyerish = (t)=> !labeled.test(t);
     const items = lines.map((line,i)=>{
       let linkHtml = "";
       const um = line.match(urlRe);
@@ -326,14 +319,13 @@ window.CC = (function(){
     return key.length>=2 ? { pre:m[1], name:m[2], post:m[3], key } : null;
   }
   // その事件の代理人（原告側・被告側の2行目以降に書かれた人）。「事件をさがす」の弁護士の札に使う。
-  // 2行目以降には「〇〇（△△大学教授）」のような弁護士でない人も書かれることがあるので、
-  // 肩書きに大学・教授とある行は札にしない（検索欄からは引ける）
+  // 2行目以降は、肩書きに関係なくすべて代理人（弁護士）として札にする
   function caseLawyers(c){
     const seen=new Set(), out=[];
     [c.plaintiffName,c.defendantName].forEach(raw=>{
       partyTextLines(raw).slice(1).forEach(l=>{
         const p=parsePersonLine(l);
-        if(!p || seen.has(p.key) || /大学|教授/.test(p.post)) return;
+        if(!p || seen.has(p.key)) return;
         seen.add(p.key); out.push({ key:p.key, name:p.name.trim() });
       });
     });
