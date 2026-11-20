@@ -339,13 +339,31 @@ window.CC = (function(){
     });
     return out;
   }
-  // 見えている事件に出てくる弁護士の一覧（担当事件の多い順→名前順）
+  // 読み（lawyer-readings.js）。カタカナで入力されても同じに扱うため、ひらがなにそろえて比べる
+  function toHira(s){ return String(s||"").replace(/[ァ-ヶ]/g, ch=>String.fromCharCode(ch.charCodeAt(0)-0x60)); }
+  function lawyerKana(key){ return toHira((window.LAWYER_KANA||{})[key]||""); }
+  // 読みの先頭から「あ行」「か行」…を決める。濁点・小書き文字は元の字にそろえる。読みが無ければ「ほか」
+  const GYOU = [["あ","ぁぃぅぇぉあいうえお"],["か","かきくけこ"],["さ","さしすせそ"],["た","たちつてとっ"],
+                ["な","なにぬねの"],["は","はひふへほ"],["ま","まみむめも"],["や","ゃゅょやゆよ"],["ら","らりるれろ"],["わ","ゎわをん"]];
+  function lawyerGyou(kana){
+    const ch = String(kana||"").normalize("NFD")[0] || "";
+    const g = GYOU.find(([,chars])=>chars.includes(ch));
+    return g ? g[0] : "";
+  }
+  // 見えている事件に出てくる弁護士の一覧。読みのある人を読み順（あいうえお順）に並べ、
+  // 読みの無い人は最後に、担当事件の多い順→名前順で並べる
   function allLawyers(){
     const m=new Map();
     cases.forEach(c=>caseLawyers(c).forEach(l=>{
-      const e=m.get(l.key); if(e) e.count++; else m.set(l.key,{ key:l.key, name:l.name, count:1 });
+      const e=m.get(l.key);
+      if(e) e.count++;
+      else { const kana=lawyerKana(l.key); m.set(l.key,{ key:l.key, name:l.name, count:1, kana, gyou:lawyerGyou(kana) }); }
     }));
-    return [...m.values()].sort((a,b)=> b.count-a.count || a.name.localeCompare(b.name,"ja"));
+    return [...m.values()].sort((a,b)=>{
+      if(a.kana && b.kana) return a.kana<b.kana?-1:a.kana>b.kana?1:0;
+      if(a.kana || b.kana) return a.kana?-1:1;
+      return b.count-a.count || a.name.localeCompare(b.name,"ja");
+    });
   }
   // 事件が検索語に合うか。合わなければ null。事件名ではなく当事者・代理人の行で合ったときは、
   // どの行で合ったのか一覧に出せるよう、その行を lines に入れて返す
@@ -355,8 +373,12 @@ window.CC = (function(){
     if(!c) return null;
     if(searchNorm(c.name).includes(q)) return { lines:[] };
     const lines = [];
+    const qh = toHira(q);   // 読み（ひらがな・カタカナ）で入れたときは、読みの表と照らす
     [["原告側",c.plaintiffName],["被告側",c.defendantName]].forEach(([side,raw])=>{
-      partyTextLines(raw).forEach(l=>{ if(searchNorm(l).includes(q)) lines.push({ side, text:l }); });
+      partyTextLines(raw).forEach(l=>{
+        const p = parsePersonLine(l);
+        if(searchNorm(l).includes(q) || (p && /^[ぁ-ゖー]+$/.test(qh) && lawyerKana(p.key).includes(qh))) lines.push({ side, text:l });
+      });
     });
     return lines.length ? { lines } : null;
   }

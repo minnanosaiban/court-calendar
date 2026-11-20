@@ -30,13 +30,13 @@
 
   <section aria-labelledby="search-h" style="margin-top:28px">
     <p class="sech" id="search-h">事件をさがす</p>
-    <div class="search"><i class="bi bi-search" aria-hidden="true"></i><input type="text" id="q" placeholder="事件名・当事者・弁護士で検索" aria-label="事件名・当事者・弁護士で検索"></div>
+    <div class="search"><i class="bi bi-search" aria-hidden="true"></i><input type="text" id="q" placeholder="事件名・当事者・弁護士（名前・読み）で検索" aria-label="事件名・当事者・弁護士（名前・読み）で検索"></div>
     <div class="tags" id="tagFilters" style="margin-top:14px"></div>
     <!-- 弁護士の札。名前を正確に打たなくても選べるように（数が多いので、開いたときだけ並べる） -->
-    <details class="lawyer-filter" id="lawyerBox" hidden>
-      <summary>弁護士でさがす<span id="lawyerPicked"></span></summary>
+    <div class="lawyer-filter" id="lawyerBox" hidden>
+      <p class="lawyer-h">弁護士でさがす</p>
       <div class="tags" id="lawyerFilters"></div>
-    </details>
+    </div>
     <div class="tabs" id="statusTabs"></div>
     <div class="clist" id="clist"></div>
   </section>
@@ -69,6 +69,7 @@
 
 <!-- 期日・事件情報・資料・写真の編集モーダルは lib.js が1つの窓として生成する（EXTRA_MODALS） -->
 
+<script src="lawyer-readings.js"></script>
 <script src="lib.js"></script>
 <script>
 (function(){
@@ -86,7 +87,6 @@
   let activeLawyer = "";
   const lawyerBox=document.getElementById("lawyerBox");
   const lawyerFilters=document.getElementById("lawyerFilters");
-  const lawyerPicked=document.getElementById("lawyerPicked");
   let activeStatus = "open";   // "open"=進行中 / "archived"=終結
 
   function allTagsWithCount(){
@@ -107,11 +107,15 @@
   function renderLawyerFilters(){
     const all=CC.allLawyers();
     lawyerBox.hidden = !all.length;
-    const cur=all.find(l=>l.key===activeLawyer);
-    // 閉じていても、いま誰で絞り込んでいるかは見えるようにする
-    lawyerPicked.textContent = cur ? `：${cur.name}` : "";
-    lawyerFilters.innerHTML = `<a class="tag${!activeLawyer?" on":""}" data-lawf="">すべて</a>` +
-      all.map(l=>`<a class="tag${activeLawyer===l.key?" on":""}" data-lawf="${CC.escapeAttr(l.key)}">${CC.escapeHtml(l.name)}</a>`).join("");
+    const chip=l=>`<a class="tag${activeLawyer===l.key?" on":""}" data-lawf="${CC.escapeAttr(l.key)}">${CC.escapeHtml(l.name)}</a>`;
+    // あいうえお順に「あ行」「か行」…で区切る。読みの表に無い人は最後の「ほか」
+    const groups=[];
+    all.forEach(l=>{
+      const last=groups[groups.length-1];
+      if(last && last.g===l.gyou) last.items.push(l); else groups.push({ g:l.gyou, items:[l] });
+    });
+    lawyerFilters.innerHTML = `<div class="tags"><a class="tag${!activeLawyer?" on":""}" data-lawf="">すべて</a></div>` +
+      groups.map(({g,items})=>`<div class="lawyer-row"><span class="pa-label">${g?g+"行":"ほか"}</span><div class="tags">${items.map(chip).join("")}</div></div>`).join("");
     lawyerFilters.querySelectorAll("[data-lawf]").forEach(a=>{
       a.addEventListener("click",(e)=>{ e.preventDefault(); activeLawyer=a.dataset.lawf; renderLawyerFilters(); renderTabs(); renderList(); });
     });

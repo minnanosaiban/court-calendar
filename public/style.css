@@ -708,8 +708,12 @@ a.tag:hover{color:var(--ink);background:#ece9e0}
 .tag.on{background:var(--ink);color:#fff}
 /* 「事件をさがす」の弁護士の札。数が多いので、見出しを押したときだけ開く（2026-11-20） */
 .lawyer-filter{margin:14px 4px 0}
-.lawyer-filter summary{font-size:.875rem;color:var(--mut);cursor:pointer}
+.lawyer-filter .lawyer-h{font-size:.875rem;color:var(--mut);margin:0}
 .lawyer-filter .tags{margin-top:8px}
+.lawyer-filter > div > .tags,.lawyer-row .tags{margin-top:0}
+.lawyer-filter > div{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.lawyer-row{display:flex;gap:.9em;align-items:baseline}
+.lawyer-row .pa-label{width:2.6em}
 
 /* ---- 事件をさがす（検索・一覧） ---- */
 .search{display:flex;gap:12px;align-items:center;background:var(--card);border-radius:999px;
