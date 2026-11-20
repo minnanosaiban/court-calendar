@@ -32,6 +32,11 @@
     <p class="sech" id="search-h">事件をさがす</p>
     <div class="search"><i class="bi bi-search" aria-hidden="true"></i><input type="text" id="q" placeholder="事件名・当事者・弁護士で検索" aria-label="事件名・当事者・弁護士で検索"></div>
     <div class="tags" id="tagFilters" style="margin-top:14px"></div>
+    <!-- 弁護士の札。名前を正確に打たなくても選べるように（数が多いので、開いたときだけ並べる） -->
+    <details class="lawyer-filter" id="lawyerBox" hidden>
+      <summary>弁護士でさがす<span id="lawyerPicked"></span></summary>
+      <div class="tags" id="lawyerFilters"></div>
+    </details>
     <div class="tabs" id="statusTabs"></div>
     <div class="clist" id="clist"></div>
   </section>
@@ -75,8 +80,14 @@
   const statusEl=document.getElementById("status");
   const urlParams = new URLSearchParams(location.search);
   let activeTag = urlParams.get("tag") || "";
-  // 事件ページの代理人名のリンク（cases.html?q=名前）から来たときは、その名前で検索した状態で開く
+  // cases.html?q=検索語 で、検索した状態で開ける
   qEl.value = urlParams.get("q") || "";
+  // 弁護士の札で選んだ人（名前から空白を除いたもの）。事件ページの代理人名のリンク（cases.html?lawyer=名前）からも入る
+  let activeLawyer = urlParams.get("lawyer") || "";
+  const lawyerBox=document.getElementById("lawyerBox");
+  const lawyerFilters=document.getElementById("lawyerFilters");
+  const lawyerPicked=document.getElementById("lawyerPicked");
+  if(activeLawyer) lawyerBox.open = true;
   let activeStatus = "open";   // "open"=進行中 / "archived"=終結
 
   function allTagsWithCount(){
@@ -92,6 +103,18 @@
     tagFilters.innerHTML = html;
     tagFilters.querySelectorAll("[data-tagf]").forEach(a=>{
       a.addEventListener("click",(e)=>{ e.preventDefault(); activeTag=a.dataset.tagf; renderTagFilters(); renderTabs(); renderList(); });
+    });
+  }
+  function renderLawyerFilters(){
+    const all=CC.allLawyers();
+    lawyerBox.hidden = !all.length;
+    const cur=all.find(l=>l.key===activeLawyer);
+    // 閉じていても、いま誰で絞り込んでいるかは見えるようにする
+    lawyerPicked.textContent = cur ? `：${cur.name}` : "";
+    lawyerFilters.innerHTML = `<a class="tag${!activeLawyer?" on":""}" data-lawf="">すべて</a>` +
+      all.map(l=>`<a class="tag${activeLawyer===l.key?" on":""}" data-lawf="${CC.escapeAttr(l.key)}">${CC.escapeHtml(l.name)}</a>`).join("");
+    lawyerFilters.querySelectorAll("[data-lawf]").forEach(a=>{
+      a.addEventListener("click",(e)=>{ e.preventDefault(); activeLawyer=a.dataset.lawf; renderLawyerFilters(); renderTabs(); renderList(); });
     });
   }
   function rowHtml(c){
@@ -121,7 +144,8 @@
   // 検索・タグだけを反映した候補（タブの件数表示に使う。ステータスでは絞らない）
   function filteredBase(){
     const q=qEl.value;
-    return CC.cases.filter(c=> CC.caseSearchHit(c,q) && (!activeTag || (c.tags||[]).includes(activeTag)));
+    return CC.cases.filter(c=> CC.caseSearchHit(c,q) && (!activeTag || (c.tags||[]).includes(activeTag))
+      && (!activeLawyer || CC.caseLawyers(c).some(l=>l.key===activeLawyer)));
   }
   function renderTabs(){
     const base=filteredBase();
@@ -156,6 +180,7 @@
   }
   function renderAll(){
     renderTagFilters();
+    renderLawyerFilters();
     renderTabs();
     renderList();
     CC.renderStatus(statusEl);
@@ -166,8 +191,8 @@
   (async function init(){
     renderAll();
     await CC.load();
-    // 検索語つきで開いたとき、進行中に1件も無く終結にだけあるなら、終結タブを開いておく
-    if(qEl.value.trim()){
+    // 検索語や弁護士を指定して開いたとき、進行中に1件も無く終結にだけあるなら、終結タブを開いておく
+    if(qEl.value.trim() || activeLawyer){
       const base=filteredBase();
       if(base.length && !base.some(c=>!c.archivedAt && !c.isClosed)) activeStatus="archived";
     }

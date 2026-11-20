@@ -308,12 +308,34 @@ window.CC = (function(){
     return cases.filter(c=>[c.plaintiffName,c.defendantName].some(raw=>
       partyTextLines(raw).slice(1).some(l=>{ const p=parsePersonLine(l); return p && p.key===key; }))).length;
   }
+  // その事件の代理人（原告側・被告側の2行目以降に書かれた人）。「事件をさがす」の弁護士の札に使う。
+  // 2行目以降には「〇〇（△△大学教授）」のような弁護士でない人も書かれることがあるので、
+  // 肩書きに大学・教授とある行は札にしない（検索欄からは引ける）
+  function caseLawyers(c){
+    const seen=new Set(), out=[];
+    [c.plaintiffName,c.defendantName].forEach(raw=>{
+      partyTextLines(raw).slice(1).forEach(l=>{
+        const p=parsePersonLine(l);
+        if(!p || seen.has(p.key) || /大学|教授/.test(p.post)) return;
+        seen.add(p.key); out.push({ key:p.key, name:p.name.trim() });
+      });
+    });
+    return out;
+  }
+  // 見えている事件に出てくる弁護士の一覧（担当事件の多い順→名前順）
+  function allLawyers(){
+    const m=new Map();
+    cases.forEach(c=>caseLawyers(c).forEach(l=>{
+      const e=m.get(l.key); if(e) e.count++; else m.set(l.key,{ key:l.key, name:l.name, count:1 });
+    }));
+    return [...m.values()].sort((a,b)=> b.count-a.count || a.name.localeCompare(b.name,"ja"));
+  }
   // 事件ページの代理人などの行。同じ名前がほかの事件にも出てくるときだけ、名前を
   // 「事件をさがす」の検索結果へのリンクにする（この事件しか出てこないリンクは作らない）
   function personLineHtml(line){
     const p = parsePersonLine(line);
     if(!p || personCaseCount(p.key)<2) return escapeHtml(line);
-    return `${escapeHtml(p.pre)}<a href="cases.html?q=${encodeURIComponent(p.key)}" title="この名前で事件をさがす">${escapeHtml(p.name)}</a>${escapeHtml(p.post)}`;
+    return `${escapeHtml(p.pre)}<a href="cases.html?lawyer=${encodeURIComponent(p.key)}" title="この名前で事件をさがす">${escapeHtml(p.name)}</a>${escapeHtml(p.post)}`;
   }
   // 事件が検索語に合うか。合わなければ null。事件名ではなく当事者・代理人の行で合ったときは、
   // どの行で合ったのか一覧に出せるよう、その行を lines に入れて返す
@@ -2960,7 +2982,7 @@ window.CC = (function(){
     get images(){ return images; },
     get me(){ return me; },
     get loaded(){ return loaded; },
-    caseSearchHit, searchHitHtml,
+    caseSearchHit, searchHitHtml, caseLawyers, allLawyers,
     caseById, caseByName, presenterById, caseEvents, casePosts, caseMaterials, caseImages, nearestCase, nextEvent, eventLine, jpDate,
     likeHtml, toggleLike, bookmarkHtml, toggleBookmark, typePlaceHtml, isArchived, iconHtml, presenterHeaderHtml, presenterLinksHtml,
     apiListPresenters, apiCreatePresenter, apiUpdatePresenter, apiDeletePresenter,
