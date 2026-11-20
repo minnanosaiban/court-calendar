@@ -346,7 +346,8 @@ window.CC = (function(){
   const GYOU = [["あ","ぁぃぅぇぉあいうえお"],["か","かきくけこ"],["さ","さしすせそ"],["た","たちつてとっ"],
                 ["な","なにぬねの"],["は","はひふへほ"],["ま","まみむめも"],["や","ゃゅょやゆよ"],["ら","らりるれろ"],["わ","ゎわをん"]];
   function lawyerGyou(kana){
-    const ch = String(kana||"").normalize("NFD")[0] || "";
+    const ch = String(kana||"").normalize("NFD")[0];
+    if(!ch) return "";   // 読みが無い（空文字は includes("") が真になって「あ行」に入ってしまうので先に除く）
     const g = GYOU.find(([,chars])=>chars.includes(ch));
     return g ? g[0] : "";
   }
