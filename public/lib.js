@@ -281,7 +281,7 @@ window.CC = (function(){
       }
       return i===0
         ? escapeHtml(line) + linkHtml
-        : `<div class="party-sub">${personLineHtml(line)}${linkHtml}</div>`;
+        : `<div class="party-sub">${escapeHtml(line)}${linkHtml}</div>`;
     }).join("");
   }
 
@@ -302,11 +302,6 @@ window.CC = (function(){
     if(!m) return null;
     const key = searchNorm(m[2]);
     return key.length>=2 ? { pre:m[1], name:m[2], post:m[3], key } : null;
-  }
-  // その名前が（2行目以降に）出てくる事件の数。見えている事件だけを数える
-  function personCaseCount(key){
-    return cases.filter(c=>[c.plaintiffName,c.defendantName].some(raw=>
-      partyTextLines(raw).slice(1).some(l=>{ const p=parsePersonLine(l); return p && p.key===key; }))).length;
   }
   // その事件の代理人（原告側・被告側の2行目以降に書かれた人）。「事件をさがす」の弁護士の札に使う。
   // 2行目以降には「〇〇（△△大学教授）」のような弁護士でない人も書かれることがあるので、
@@ -329,13 +324,6 @@ window.CC = (function(){
       const e=m.get(l.key); if(e) e.count++; else m.set(l.key,{ key:l.key, name:l.name, count:1 });
     }));
     return [...m.values()].sort((a,b)=> b.count-a.count || a.name.localeCompare(b.name,"ja"));
-  }
-  // 事件ページの代理人などの行。同じ名前がほかの事件にも出てくるときだけ、名前を
-  // 「事件をさがす」の検索結果へのリンクにする（この事件しか出てこないリンクは作らない）
-  function personLineHtml(line){
-    const p = parsePersonLine(line);
-    if(!p || personCaseCount(p.key)<2) return escapeHtml(line);
-    return `${escapeHtml(p.pre)}<a href="cases.html?lawyer=${encodeURIComponent(p.key)}" title="この名前で事件をさがす">${escapeHtml(p.name)}</a>${escapeHtml(p.post)}`;
   }
   // 事件が検索語に合うか。合わなければ null。事件名ではなく当事者・代理人の行で合ったときは、
   // どの行で合ったのか一覧に出せるよう、その行を lines に入れて返す

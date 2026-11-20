@@ -82,12 +82,11 @@
   let activeTag = urlParams.get("tag") || "";
   // cases.html?q=検索語 で、検索した状態で開ける
   qEl.value = urlParams.get("q") || "";
-  // 弁護士の札で選んだ人（名前から空白を除いたもの）。事件ページの代理人名のリンク（cases.html?lawyer=名前）からも入る
-  let activeLawyer = urlParams.get("lawyer") || "";
+  // 弁護士の札で選んだ人（名前から空白を除いたもの）
+  let activeLawyer = "";
   const lawyerBox=document.getElementById("lawyerBox");
   const lawyerFilters=document.getElementById("lawyerFilters");
   const lawyerPicked=document.getElementById("lawyerPicked");
-  if(activeLawyer) lawyerBox.open = true;
   let activeStatus = "open";   // "open"=進行中 / "archived"=終結
 
   function allTagsWithCount(){
